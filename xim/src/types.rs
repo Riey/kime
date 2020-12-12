@@ -9,6 +9,52 @@ pub type CHAR = u8;
 pub type WINDOW = C32;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
+pub struct RequestPacketHeader {
+    pub major_opcode: Opcode,
+    pub minor_opcode: C8,
+    pub length: C16,
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug, FromPrimitive)]
+#[repr(u8)]
+pub enum Opcode {
+    Connect = 1,
+    ConnectReply = 2,
+    Disconnect = 3,
+    DisconnectReply = 4,
+
+    OpenReply = 31,
+    CloseReply = 33,
+    RegisterTriggerkeys = 34,
+    TriggerNotifyReply = 36,
+
+    SetEventMask = 37,
+    EncodingNegotiationReply = 39,
+    QueryExtensionReply = 41,
+    SetImValuesReply = 43,
+    GetImValuesReply = 45,
+
+    CreateIcReply = 51,
+    DestroyIcReply = 53,
+    SetIcValuesReply = 55,
+    GetIcValuesReply = 57,
+    SyncReply = 62,
+    Commit = 63,
+    ResetIcReply = 65,
+
+    Geometry = 70,
+    StrConversion = 71,
+    PreeditStart = 73,
+    PreeditDraw = 75,
+    PreeditCaret = 76,
+    PreeditDone = 78,
+    StatusStart = 79,
+    StatusDraw = 80,
+    StatusDone = 81,
+    Preeditstate = 82,
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Attr<'a> {
     pub id: C16,
     pub type_: C16,

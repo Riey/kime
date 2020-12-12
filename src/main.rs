@@ -4,7 +4,7 @@ use x11rb::wrapper::ConnectionExt as _;
 use x11rb::{atom_manager, COPY_DEPTH_FROM_PARENT, CURRENT_TIME, NONE};
 use xim::{
     Endianness,
-    Reader,
+    read as read_xim,
 };
 use ahash::AHashMap;
 
@@ -38,8 +38,12 @@ impl KimeConnection {
             &Default::default(),
         )?;
 
-        let [client_win, major, minor] = msg.data.as_data32();
+        let [client_win, major, minor, ..] = msg.data.as_data32();
         log::info!("version {}.{}", major, minor);
+
+        if major > 0 {
+            log::error!("kime doesn't support 1.0 > protocol yet!");
+        }
 
         let ev = ClientMessageEvent {
             response_type: CLIENT_MESSAGE_EVENT,
@@ -66,16 +70,20 @@ impl KimeConnection {
 
     pub fn get_msg(&mut self, conn: &impl Connection, msg: ClientMessageEvent) -> anyhow::Result<()> {
         if msg.format == 32 {
-            todo!()
+            todo!("property pass")
         } else {
-            let data = msg.data.as_data8();
-            let item_count = data[2] as usize;
-            let req_length = item_count * 4 + 4;
+            if msg.type_ == self.atoms.XIM_PROTOCOL {
+                let data = msg.data.as_data8();
+                let item_count = data[2] as usize;
+                let req_length = item_count * 4 + 4;
 
-            let data = &data[..req_length];
+                let data = &data[..req_length];
 
-            Request::
-            conn.reply
+            } else if msg.type_ == self.atoms.XIM_MOREDATA {
+                return Err(anyhow::anyhow!("MOREDATA not yet support"));
+            } else {
+                log::error!("Unknown client message");
+            }
         }
         Ok(())
     }
@@ -85,6 +93,8 @@ atom_manager! {
     KimeAtoms: KimeAtomCookie {
         XIM_SERVERS,
         XIM_XCONNECT: b"_XIM_XCONNECT",
+        XIM_PROTOCOL: b"_XIM_PROTOCOL",
+        XIM_MOREDATA: b"_XIM_MOREDATA",
         LOCALES,
         TRANSPORT,
         SERVER_NAME: b"@server=kime",
@@ -216,7 +226,7 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
         } else {
             match self.clients.get_mut(&msg.window) {
                 Some(client) => {
-                    client.get_msg(msg)?;
+                    client.get_msg(&self.conn, msg)?;
                 }
                 None => {
                     log::error!("Packet for unknown window {}", msg.window);

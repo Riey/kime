@@ -98,11 +98,56 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
         })
     }
 
+    fn send_selection_notify(&mut self, req: SelectionRequestEvent, data: &str) -> anyhow::Result<()> {
+        let e = SelectionNotifyEvent {
+            response_type: SELECTION_NOTIFY_EVENT,
+            property: req.property,
+            time: req.time,
+            target: req.target,
+            selection: req.selection,
+            requestor: req.requestor,
+            sequence: 0
+        };
+
+        self.conn.change_property8(PropMode::Replace, req.requestor, req.property, req.target, data.as_bytes())?;
+        self.conn.send_event(false, req.requestor, 0u32, e)?;
+        self.conn.flush()?;
+
+        Ok(())
+    }
+
+    fn notify_transport(&mut self, req: SelectionRequestEvent) -> anyhow::Result<()> {
+        log::info!("send transport");
+        self.send_selection_notify(req, "@transport=X/")
+    }
+
+    fn notify_locale(&mut self, req: SelectionRequestEvent) -> anyhow::Result<()> {
+        log::info!("send locale");
+        self.send_selection_notify(req, "@locale=en_US")
+    }
+
     pub fn event_loop(&mut self) -> anyhow::Result<()> {
         loop {
             let ev = self.conn.wait_for_event()?;
 
             log::trace!("ev: {:?}", ev);
+
+            match ev {
+                Event::SelectionRequest(req) => {
+                    if req.property == self.atoms.LOCALES {
+                        self.notify_locale(req)?;
+                    } else if req.property == self.atoms.TRANSPORT {
+                        self.notify_transport(req)?;
+                    } else {
+                        let name = self.conn.get_atom_name(req.property)?.reply()?.name;
+                        log::info!("ignore unknown {}", String::from_utf8(name)?);
+                    }
+                }
+                Event::Error(err) => {
+                    log::error!("X11 Error occur: {:?}", err);
+                }
+                _ => {}
+            }
         }
     }
 }

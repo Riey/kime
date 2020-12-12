@@ -1,0 +1,11 @@
+[package]
+name = "xim"
+description = "Read and Write xim client data"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0.118", features = ["derive"] }
+serde_repr = "0.1.6"
+thiserror = "1.0.22"

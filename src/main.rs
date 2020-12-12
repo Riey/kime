@@ -1,11 +1,90 @@
 use x11rb::connection::Connection;
-use x11rb::protocol::{xproto::*, Event};
+use x11rb::protocol::{xproto::*, Event, Request};
 use x11rb::wrapper::ConnectionExt as _;
 use x11rb::{atom_manager, COPY_DEPTH_FROM_PARENT, CURRENT_TIME, NONE};
+use xim::{
+    Endianness,
+    Reader,
+};
+use ahash::AHashMap;
+
+const TRANSPORT_MAX: u32 = 20;
+
+fn atom_name(conn: &impl ConnectionExt, atom: Atom) -> anyhow::Result<String> {
+    let name = conn.get_atom_name(atom)?.reply()?;
+    Ok(String::from_utf8(name.name)?)
+}
+
+struct KimeConnection {
+    com_win: Window,
+    client_win: Window,
+    atoms: KimeAtoms,
+}
+
+impl KimeConnection {
+    pub fn new(conn: &impl Connection, atoms: KimeAtoms, msg: ClientMessageEvent) -> anyhow::Result<Self> {
+        let com_win = conn.generate_id()?;
+        conn.create_window(
+            COPY_DEPTH_FROM_PARENT,
+            com_win,
+            msg.window,
+            0,
+            0,
+            1,
+            1,
+            0,
+            WindowClass::CopyFromParent,
+            0,
+            &Default::default(),
+        )?;
+
+        let [client_win, major, minor] = msg.data.as_data32();
+        log::info!("version {}.{}", major, minor);
+
+        let ev = ClientMessageEvent {
+            response_type: CLIENT_MESSAGE_EVENT,
+            window: client_win,
+            type_: atoms.XIM_XCONNECT,
+            format: 32,
+            data: [com_win, 0, 2, TRANSPORT_MAX, 0].into(),
+            sequence: 0,
+        };
+
+        conn.send_event(false, client_win, 0u32, ev)?;
+        conn.flush()?;
+
+        Ok(Self {
+            client_win,
+            com_win,
+            atoms,
+        })
+    }
+
+    pub fn com_win(&self) -> Window {
+        self.com_win
+    }
+
+    pub fn get_msg(&mut self, conn: &impl Connection, msg: ClientMessageEvent) -> anyhow::Result<()> {
+        if msg.format == 32 {
+            todo!()
+        } else {
+            let data = msg.data.as_data8();
+            let item_count = data[2] as usize;
+            let req_length = item_count * 4 + 4;
+
+            let data = &data[..req_length];
+
+            Request::
+            conn.reply
+        }
+        Ok(())
+    }
+}
 
 atom_manager! {
     KimeAtoms: KimeAtomCookie {
         XIM_SERVERS,
+        XIM_XCONNECT: b"_XIM_XCONNECT",
         LOCALES,
         TRANSPORT,
         SERVER_NAME: b"@server=kime",
@@ -16,6 +95,7 @@ struct KimeContext<C: Connection + ConnectionExt + Send + Sync> {
     conn: C,
     im_win: u32,
     atoms: KimeAtoms,
+    clients: AHashMap<Window, KimeConnection>,
 }
 
 impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
@@ -32,8 +112,8 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
             0,
             1,
             1,
-            1,
-            WindowClass::InputOutput,
+            0,
+            WindowClass::CopyFromParent,
             screen.root_visual,
             &Default::default(),
         )?;
@@ -95,6 +175,7 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
             conn,
             im_win,
             atoms,
+            clients: AHashMap::new(),
         })
     }
 
@@ -126,6 +207,26 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
         self.send_selection_notify(req, "@locale=en_US")
     }
 
+    fn client_msg(&mut self, msg: ClientMessageEvent) -> anyhow::Result<()> {
+        log::trace!("client msg ty: {}", atom_name(&self.conn, msg.type_)?);
+
+        if msg.type_ == self.atoms.XIM_XCONNECT {
+            let connection = KimeConnection::new(&self.conn, self.atoms, msg)?;
+            self.clients.insert(connection.com_win(), connection);
+        } else {
+            match self.clients.get_mut(&msg.window) {
+                Some(client) => {
+                    client.get_msg(msg)?;
+                }
+                None => {
+                    log::error!("Packet for unknown window {}", msg.window);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn event_loop(&mut self) -> anyhow::Result<()> {
         loop {
             let ev = self.conn.wait_for_event()?;
@@ -142,6 +243,9 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
                         let name = self.conn.get_atom_name(req.property)?.reply()?.name;
                         log::info!("ignore unknown {}", String::from_utf8(name)?);
                     }
+                }
+                Event::ClientMessage(msg) => {
+                    self.client_msg(msg)?;
                 }
                 Event::Error(err) => {
                     log::error!("X11 Error occur: {:?}", err);

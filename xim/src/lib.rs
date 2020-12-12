@@ -3,6 +3,8 @@ mod types;
 
 pub use self::reader::ReadError;
 pub use self::types::*;
+use crate::reader::Readable;
+use crate::reader::Reader;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Endianness {
@@ -11,16 +13,13 @@ pub enum Endianness {
     Native,
 }
 
-pub fn read<'a, T: serde::Deserialize<'a>>(
-    b: &'a [u8],
-    endian: Endianness,
-) -> Result<T, ReadError> {
-    T::deserialize(&mut self::reader::Reader::new(b, endian))
+pub fn read<'a, T: Readable<'a>>(bytes: &'a [u8], endian: Endianness) -> Result<T, ReadError> {
+    T::read(&mut Reader::new(bytes, endian))
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{read, Endianness, PreeditDone, Feedback, FeedbackType};
+    use crate::{read, Endianness, PreeditDone};
 
     #[test]
     fn read_preedit_done() {
@@ -32,11 +31,5 @@ mod tests {
                 context_id: 0x0101
             }
         );
-    }
-
-    #[test]
-    fn read_feedback() {
-        let feedback: Feedback = read(b"\x02\x00\x00\x00\x01\x00\x00\x00\x04\x00\x00\x00", Endianness::Little).unwrap();
-        assert_eq!(feedback.arr, [FeedbackType::Reverse, FeedbackType::Highlight]);
     }
 }

@@ -1,9 +1,8 @@
 #![allow(unused_variables)]
 
-use crate::{Endianness, C16, C8, C32};
-use serde::de::{DeserializeSeed, SeqAccess, Visitor};
-use serde::*;
-use std::io;
+use crate::types::*;
+use crate::Endianness;
+use num_traits::FromPrimitive;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -12,20 +11,11 @@ pub enum ReadError {
     EndOfStream,
     #[error("Utf8 error: {0}")]
     Utf8(#[from] std::str::Utf8Error),
-    #[error("Serde error: {0}")]
-    Serde(String),
+    #[error("Invalid Data")]
+    InvalidData,
 }
 
 pub type Result<T> = std::result::Result<T, ReadError>;
-
-impl de::Error for ReadError {
-    fn custom<T>(msg: T) -> Self
-    where
-        T: std::fmt::Display,
-    {
-        ReadError::Serde(msg.to_string())
-    }
-}
 
 pub struct Reader<'a> {
     b: &'a [u8],
@@ -44,7 +34,6 @@ macro_rules! read_int {
             let arr: [u8; std::mem::size_of::<$ty>()] = bytes
                 .try_into()
                 .unwrap_or_else(|_| unsafe { std::hint::unreachable_unchecked() });
-            dbg!(arr);
             Ok(match $self.endian {
                 Endianness::Little => <$ty>::from_le_bytes(arr),
                 Endianness::Big => <$ty>::from_be_bytes(arr),
@@ -56,7 +45,11 @@ macro_rules! read_int {
 
 impl<'a> Reader<'a> {
     pub fn new(b: &'a [u8], endian: Endianness) -> Self {
-        Self { b, start: b.as_ptr() as usize, endian }
+        Self {
+            b,
+            start: b.as_ptr() as usize,
+            endian,
+        }
     }
 
     fn c8(&mut self) -> Result<C8> {
@@ -86,272 +79,113 @@ impl<'a> Reader<'a> {
         self.b = &self.b[p..];
     }
 
-    fn string(&mut self) -> Result<&'a str> {
-        let len = self.c16()? as usize;
-        let (bytes, left) = self.b.split_at(len);
-        self.pad();
-        self.b = left;
+    fn string(&mut self, len: usize) -> Result<&'a str> {
+        let bytes = self.bytes(len)?;
         Ok(std::str::from_utf8(bytes)?)
     }
 
-    fn feedback(&mut self) -> Result<Vec<u32>> {
-        let m = self.c16()? as usize;
-        let _ = self.c16()?;
-
-        let mut ret = Vec::with_capacity(m);
-
-        for _ in 0..m {
-            ret.push(self.c32()?);
-        }
-
-        Ok(ret)
-    }
-}
-
-impl<'a, 'de> SeqAccess<'de> for &'a mut Reader<'de> {
-    type Error = ReadError;
-
-    fn next_element_seed<T>(
-        &mut self,
-        seed: T,
-    ) -> Result<Option<<T as DeserializeSeed<'de>>::Value>>
-    where
-        T: DeserializeSeed<'de>,
-    {
-        if self.b.is_empty() {
-            Ok(None)
+    fn bytes(&mut self, len: usize) -> Result<&'a [u8]> {
+        if self.b.len() < len {
+            Err(ReadError::EndOfStream)
         } else {
-            seed.deserialize(&mut **self).map(Some)
+            let (bytes, left) = self.b.split_at(len);
+            self.b = left;
+            Ok(bytes)
         }
     }
 }
 
-impl<'a, 'de> Deserializer<'de> for &'a mut Reader<'de> {
-    type Error = ReadError;
+pub trait Readable<'a>: Sized {
+    fn read(reader: &mut Reader<'a>) -> Result<Self>;
+}
 
-    fn deserialize_any<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        self.deserialize_seq(visitor)
+macro_rules! impl_number {
+    (C8) => {
+        impl<'a> Readable<'a> for C8 {
+            fn read(reader: &mut Reader<'a>) -> Result<Self> {
+                reader.c8()
+            }
+        }
+    };
+    ($ty:ty) => {
+        impl<'a> Readable<'a> for $ty {
+            fn read(reader: &mut Reader<'a>) -> Result<Self> {
+                read_int!(reader, $ty)
+            }
+        }
+    };
+}
+
+impl_number!(C16);
+impl_number!(C32);
+impl_number!(i32);
+
+macro_rules! impl_enum {
+    ($ty:ty, $repr:ty) => {
+        impl<'a> Readable<'a> for $ty {
+            fn read(reader: &mut Reader<'a>) -> Result<Self> {
+                let repr = <$repr>::read(reader)?;
+                <$ty as FromPrimitive>::from_u32(repr as u32).ok_or(ReadError::InvalidData)
+            }
+        }
+    };
+}
+
+impl_enum!(CaretDirection, u32);
+impl_enum!(CaretStyle, u32);
+impl_enum!(StrConvFeedbackType, u16);
+impl_enum!(Feedback, u32);
+impl_enum!(PreeditState, u32);
+impl_enum!(HotkeyState, u32);
+impl_enum!(ResetState, u32);
+
+macro_rules! impl_struct {
+    ($ty:ident, $($field:ident),+) => {
+        impl<'a> Readable<'a> for $ty {
+            fn read(reader: &mut Reader<'a>) -> Result<Self> {
+                Ok($ty {
+                    $(
+                        $field: Readable::read(reader)?,
+                    )+
+                })
+            }
+        }
+    };
+}
+
+impl_struct!(
+    PreeditCaret,
+    method_id,
+    context_id,
+    position,
+    direction,
+    style
+);
+impl_struct!(PreeditCaretReply, method_id, context_id, position);
+impl_struct!(PreeditDone, method_id, context_id);
+
+impl<'a> Readable<'a> for Extension<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let major_opcode = reader.c8()?;
+        let minor_opcode = reader.c8()?;
+        let len = reader.c16()?;
+        let name = reader.string(len as usize)?;
+        reader.pad();
+        Ok(Self {
+            major_opcode,
+            minor_opcode,
+            name,
+        })
     }
+}
 
-    fn deserialize_bool<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_i8<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_i8(self.c8()? as i8)
-    }
-
-    fn deserialize_i16<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_i16(read_int!(self, i16)?)
-    }
-
-    fn deserialize_i32<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_i32(read_int!(self, i32)?)
-    }
-
-    fn deserialize_i64<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_i64(read_int!(self, i64)?)
-    }
-
-    fn deserialize_u8<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_u8(self.c8()?)
-    }
-
-    fn deserialize_u16<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_u16(read_int!(self, u16)?)
-    }
-
-    fn deserialize_u32<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_u32(read_int!(self, u32)?)
-    }
-
-    fn deserialize_u64<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_u64(read_int!(self, u64)?)
-    }
-
-    fn deserialize_f32<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_f64<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_char<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_str<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_borrowed_str(self.string()?)
-    }
-
-    fn deserialize_string<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_string(self.string()?.to_string())
-    }
-
-    fn deserialize_bytes<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_byte_buf<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_option<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_unit<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_unit_struct<V>(
-        self,
-        name: &'static str,
-        visitor: V,
-    ) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_newtype_struct<V>(
-        self,
-        name: &'static str,
-        visitor: V,
-    ) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        self.deserialize_seq(visitor)
-    }
-
-    fn deserialize_seq<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        visitor.visit_seq(self)
-    }
-
-    fn deserialize_tuple<V>(self, len: usize, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_tuple_struct<V>(
-        self,
-        name: &'static str,
-        len: usize,
-        visitor: V,
-    ) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_map<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        self.deserialize_seq(visitor)
-    }
-
-    fn deserialize_struct<V>(
-        self,
-        name: &'static str,
-        fields: &'static [&'static str],
-        visitor: V,
-    ) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        self.deserialize_map(visitor)
-    }
-
-    fn deserialize_enum<V>(
-        self,
-        name: &'static str,
-        variants: &'static [&'static str],
-        visitor: V,
-    ) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_identifier<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
-    }
-
-    fn deserialize_ignored_any<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>
-    where
-        V: Visitor<'de>,
-    {
-        unimplemented!()
+impl<'a> Readable<'a> for Attr<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let id = reader.c16()?;
+        let type_ = reader.c16()?;
+        let len = reader.c16()?;
+        let name = reader.string(len as usize)?;
+        reader.pad();
+        Ok(Self { id, type_, name })
     }
 }

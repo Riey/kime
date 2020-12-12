@@ -1,7 +1,6 @@
 #![allow(unused_variables)]
 
 use crate::types::*;
-use crate::Endianness;
 use num_traits::FromPrimitive;
 use thiserror::Error;
 
@@ -20,7 +19,6 @@ pub type Result<T> = std::result::Result<T, ReadError>;
 pub struct Reader<'a> {
     b: &'a [u8],
     start: usize,
-    endian: Endianness,
 }
 
 macro_rules! read_int {
@@ -34,21 +32,16 @@ macro_rules! read_int {
             let arr: [u8; std::mem::size_of::<$ty>()] = bytes
                 .try_into()
                 .unwrap_or_else(|_| unsafe { std::hint::unreachable_unchecked() });
-            Ok(match $self.endian {
-                Endianness::Little => <$ty>::from_le_bytes(arr),
-                Endianness::Big => <$ty>::from_be_bytes(arr),
-                Endianness::Native => <$ty>::from_ne_bytes(arr),
-            })
+            Ok(<$ty>::from_ne_bytes(arr))
         }
     };
 }
 
 impl<'a> Reader<'a> {
-    pub fn new(b: &'a [u8], endian: Endianness) -> Self {
+    pub fn new(b: &'a [u8]) -> Self {
         Self {
             b,
             start: b.as_ptr() as usize,
-            endian,
         }
     }
 
@@ -153,6 +146,17 @@ macro_rules! impl_struct {
             }
         }
     };
+    (@$ty:ident, $($field:ident),+) => {
+        impl<'a> Readable<'a> for $ty<'a> {
+            fn read(reader: &mut Reader<'a>) -> Result<Self> {
+                Ok($ty {
+                    $(
+                        $field: Readable::read(reader)?,
+                    )+
+                })
+            }
+        }
+    };
 }
 
 impl_struct!(
@@ -166,29 +170,55 @@ impl_struct!(
 impl_struct!(PreeditCaretReply, method_id, context_id, position);
 impl_struct!(PreeditDone, method_id, context_id);
 impl_struct!(RequestPacketHeader, major_opcode, minor_opcode, length);
+impl_struct!(@Attr, id, type_, name);
 
-impl<'a> Readable<'a> for Extension<'a> {
+impl<'a> Readable<'a> for XimString<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
-        let major_opcode = reader.c8()?;
-        let minor_opcode = reader.c8()?;
         let len = reader.c16()?;
-        let name = reader.string(len as usize)?;
+        let string = reader.string(len as usize)?;
         reader.pad();
+        Ok(XimString(string))
+    }
+}
+
+impl<'a> Readable<'a> for Connect<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let endian = reader.c8()?;
+
+        match (
+            endian,
+            cfg!(target_endian = "big"),
+            cfg!(target_endian = "little"),
+        ) {
+            (b'\x6c', _, true) | (b'\x42', true, _) => {}
+            (_, _, _) => return Err(ReadError::InvalidData),
+        }
+
+        let major_ver = reader.c16()?;
+        let minor_ver = reader.c16()?;
+        let protocol_count = reader.c16()?;
+
+        let mut names = Vec::with_capacity(protocol_count as usize);
+
+        for _ in 0..protocol_count {
+            names.push(XimString::read(reader)?);
+        }
+
         Ok(Self {
-            major_opcode,
-            minor_opcode,
-            name,
+            client_major_protocol_version: major_ver,
+            client_minor_protocol_version: minor_ver,
+            client_auth_protocol_names: names,
         })
     }
 }
 
-impl<'a> Readable<'a> for Attr<'a> {
+impl<'a> Readable<'a> for Request<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
-        let id = reader.c16()?;
-        let type_ = reader.c16()?;
-        let len = reader.c16()?;
-        let name = reader.string(len as usize)?;
-        reader.pad();
-        Ok(Self { id, type_, name })
+        let header = RequestPacketHeader::read(reader)?;
+
+        match header.major_opcode {
+            Opcode::Connect => Ok(Request::Connect(Connect::read(reader)?)),
+            _ => todo!(),
+        }
     }
 }

@@ -6,30 +6,25 @@ pub use self::types::*;
 use crate::reader::Readable;
 use crate::reader::Reader;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum Endianness {
-    Little,
-    Big,
-    Native,
-}
-
-pub fn read<'a, T: Readable<'a>>(bytes: &'a [u8], endian: Endianness) -> Result<T, ReadError> {
-    T::read(&mut Reader::new(bytes, endian))
+pub fn read(bytes: &[u8]) -> Result<Request, ReadError> {
+    let mut reader = Reader::new(bytes);
+    Request::read(&mut reader)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{read, Endianness, PreeditDone};
+    use crate::{read, Connect, PreeditDone, Request};
 
     #[test]
-    fn read_preedit_done() {
-        let done: PreeditDone = read(b"\x00\x04\x01\x01", Endianness::Little).unwrap();
+    fn read_connect_req() {
+        let req: Request = read(b"\x01\x00\x00\x00\x6c\x00\x00\x00\x00\x00\x00").unwrap();
         assert_eq!(
-            done,
-            PreeditDone {
-                method_id: 0x0400,
-                context_id: 0x0101
-            }
+            req,
+            Request::Connect(Connect {
+                client_auth_protocol_names: vec![],
+                client_minor_protocol_version: 0,
+                client_major_protocol_version: 0,
+            })
         );
     }
 }

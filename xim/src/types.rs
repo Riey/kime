@@ -8,6 +8,22 @@ pub type C64 = u64;
 pub type CHAR = u8;
 pub type WINDOW = C32;
 
+#[derive(Eq, PartialEq, Clone, Debug)]
+pub enum Request<'a> {
+    Connect(Connect<'a>),
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+#[repr(transparent)]
+pub struct XimString<'a>(pub &'a str);
+
+#[derive(Eq, PartialEq, Clone, Debug)]
+pub struct Connect<'a> {
+    pub client_major_protocol_version: C16,
+    pub client_minor_protocol_version: C16,
+    pub client_auth_protocol_names: Vec<XimString<'a>>,
+}
+
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct RequestPacketHeader {
     pub major_opcode: Opcode,
@@ -58,24 +74,24 @@ pub enum Opcode {
 pub struct Attr<'a> {
     pub id: C16,
     pub type_: C16,
-    pub name: &'a str,
+    pub name: XimString<'a>,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Attribute<'a> {
     pub id: C16,
-    pub value: &'a str,
+    pub name: XimString<'a>,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct EncodingInfo<'a> {
-    pub name: &'a str,
+    pub name: XimString<'a>,
 }
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct StrConvText<'a> {
     pub type_: C16,
-    pub text: &'a str,
+    pub text: XimString<'a>,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -83,13 +99,6 @@ pub struct TriggerKey {
     pub keysym: C32,
     pub modifier: C32,
     pub modifier_mask: C32,
-}
-
-#[derive(Eq, PartialEq, Copy, Clone, Debug)]
-pub struct Extension<'a> {
-    pub major_opcode: C8,
-    pub minor_opcode: C8,
-    pub name: &'a str,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]

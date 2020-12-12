@@ -68,8 +68,9 @@ impl KimeConnection {
         self.com_win
     }
 
-    pub fn get_msg(&mut self, conn: &impl Connection, msg: ClientMessageEvent) -> anyhow::Result<()> {
+    pub fn get_msg(&mut self, conn: &impl Connection + ConnectionExt, msg: ClientMessageEvent) -> anyhow::Result<()> {
         if msg.format == 32 {
+            conn.change_property8()
             todo!("property pass")
         } else {
             if msg.type_ == self.atoms.XIM_PROTOCOL {

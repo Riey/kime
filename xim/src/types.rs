@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer, Deserializer};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 pub type C8 = u8;
@@ -9,15 +9,42 @@ pub type CHAR = u8;
 pub type WINDOW = C32;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
-pub struct Attr<'a> {
+pub struct AttributeSpec<'a> {
     pub id: C16,
     pub type_: C16,
-    pub attribute: &'a str,
+    pub name: &'a str,
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
+pub struct Attribute<'a> {
+    pub id: C16,
+    pub value: &'a str,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct EncodingInfo<'a> {
     pub name: &'a str,
+}
+
+#[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct Feedback {
+    _m: C16,
+    _pad: C16,
+    pub arr: Vec<FeedbackType>,
+}
+
+#[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct StrConvText<'a> {
+    pub type_: C16,
+    pub text: &'a str,
+    pub feedback: Feedback,
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
+pub struct TriggerKey {
+    pub keysym: C32,
+    pub modifier: C32,
+    pub modifier_mask: C32,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
@@ -76,7 +103,7 @@ pub enum CaretStyle {
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u32)]
-pub enum Feedback {
+pub enum FeedbackType {
     Reverse = 0x1,
     Underline = 0x2,
     Highlight = 0x4,

@@ -1,6 +1,6 @@
 #![allow(unused_variables)]
 
-use crate::{Endianness, C16, C8};
+use crate::{Endianness, C16, C8, C32};
 use serde::de::{DeserializeSeed, SeqAccess, Visitor};
 use serde::*;
 use std::io;
@@ -29,6 +29,7 @@ impl de::Error for ReadError {
 
 pub struct Reader<'a> {
     b: &'a [u8],
+    start: usize,
     endian: Endianness,
 }
 
@@ -55,7 +56,7 @@ macro_rules! read_int {
 
 impl<'a> Reader<'a> {
     pub fn new(b: &'a [u8], endian: Endianness) -> Self {
-        Self { b, endian }
+        Self { b, start: b.as_ptr() as usize, endian }
     }
 
     fn c8(&mut self) -> Result<C8> {
@@ -72,17 +73,38 @@ impl<'a> Reader<'a> {
         read_int!(self, C16)
     }
 
-    fn pad(&mut self, len: usize) {
-        let p = (4 - (len % 4)) % 4;
+    fn c32(&mut self) -> Result<C32> {
+        read_int!(self, C32)
+    }
+
+    fn ptr_offset(&self) -> usize {
+        self.b.as_ptr() as usize - self.start
+    }
+
+    fn pad(&mut self) {
+        let p = (4 - (self.ptr_offset() % 4)) % 4;
         self.b = &self.b[p..];
     }
 
     fn string(&mut self) -> Result<&'a str> {
         let len = self.c16()? as usize;
         let (bytes, left) = self.b.split_at(len);
-        self.pad(len + 2);
+        self.pad();
         self.b = left;
         Ok(std::str::from_utf8(bytes)?)
+    }
+
+    fn feedback(&mut self) -> Result<Vec<u32>> {
+        let m = self.c16()? as usize;
+        let _ = self.c16()?;
+
+        let mut ret = Vec::with_capacity(m);
+
+        for _ in 0..m {
+            ret.push(self.c32()?);
+        }
+
+        Ok(ret)
     }
 }
 
@@ -259,7 +281,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut Reader<'de> {
     where
         V: Visitor<'de>,
     {
-        unimplemented!()
+        self.deserialize_seq(visitor)
     }
 
     fn deserialize_seq<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value>

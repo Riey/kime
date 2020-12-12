@@ -20,7 +20,7 @@ pub fn read<'a, T: serde::Deserialize<'a>>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{read, Endianness, PreeditDone};
+    use crate::{read, Endianness, PreeditDone, Feedback, FeedbackType};
 
     #[test]
     fn read_preedit_done() {
@@ -32,5 +32,11 @@ mod tests {
                 context_id: 0x0101
             }
         );
+    }
+
+    #[test]
+    fn read_feedback() {
+        let feedback: Feedback = read(b"\x02\x00\x00\x00\x01\x00\x00\x00\x04\x00\x00\x00", Endianness::Little).unwrap();
+        assert_eq!(feedback.arr, [FeedbackType::Reverse, FeedbackType::Highlight]);
     }
 }

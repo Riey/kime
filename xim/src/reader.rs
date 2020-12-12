@@ -116,6 +116,7 @@ macro_rules! impl_number {
     };
 }
 
+impl_number!(C8);
 impl_number!(C16);
 impl_number!(C32);
 impl_number!(i32);
@@ -131,13 +132,14 @@ macro_rules! impl_enum {
     };
 }
 
-impl_enum!(CaretDirection, u32);
-impl_enum!(CaretStyle, u32);
-impl_enum!(StrConvFeedbackType, u16);
-impl_enum!(Feedback, u32);
-impl_enum!(PreeditState, u32);
-impl_enum!(HotkeyState, u32);
-impl_enum!(ResetState, u32);
+impl_enum!(Opcode, C8);
+impl_enum!(CaretDirection, C32);
+impl_enum!(CaretStyle, C32);
+impl_enum!(StrConvFeedbackType, C16);
+impl_enum!(Feedback, C32);
+impl_enum!(PreeditState, C32);
+impl_enum!(HotkeyState, C32);
+impl_enum!(ResetState, C32);
 
 macro_rules! impl_struct {
     ($ty:ident, $($field:ident),+) => {
@@ -163,6 +165,7 @@ impl_struct!(
 );
 impl_struct!(PreeditCaretReply, method_id, context_id, position);
 impl_struct!(PreeditDone, method_id, context_id);
+impl_struct!(RequestPacketHeader, major_opcode, minor_opcode, length);
 
 impl<'a> Readable<'a> for Extension<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {

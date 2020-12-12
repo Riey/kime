@@ -1,16 +1,21 @@
 use enumflags2::BitFlags;
 use num_derive::FromPrimitive;
 
-pub type C8 = u8;
-pub type C16 = u16;
-pub type C32 = u32;
-pub type C64 = u64;
-pub type CHAR = u8;
-pub type WINDOW = C32;
+pub type WINDOW = u32;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub enum Request<'a> {
     Connect(Connect<'a>),
+    ConnectReply(ConnectReply),
+}
+
+impl<'a> Request<'a> {
+    pub fn opcode(&self) -> Opcode {
+        match self {
+            Request::Connect(..) => Opcode::Connect,
+            Request::ConnectReply(..) => Opcode::ConnectReply,
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -19,16 +24,22 @@ pub struct XimString<'a>(pub &'a str);
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Connect<'a> {
-    pub client_major_protocol_version: C16,
-    pub client_minor_protocol_version: C16,
+    pub client_major_protocol_version: u16,
+    pub client_minor_protocol_version: u16,
     pub client_auth_protocol_names: Vec<XimString<'a>>,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
-pub struct RequestPacketHeader {
+pub struct ConnectReply {
+    pub server_major_protocol_version: u16,
+    pub server_minor_protocol_version: u16,
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+pub struct RequestHeader {
     pub major_opcode: Opcode,
-    pub minor_opcode: C8,
-    pub length: C16,
+    pub minor_opcode: u8,
+    pub length: u16,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, FromPrimitive)]
@@ -41,7 +52,7 @@ pub enum Opcode {
 
     OpenReply = 31,
     CloseReply = 33,
-    RegisterTriggerkeys = 34,
+    RegisterTriggerKeys = 34,
     TriggerNotifyReply = 36,
 
     SetEventMask = 37,
@@ -67,19 +78,19 @@ pub enum Opcode {
     StatusStart = 79,
     StatusDraw = 80,
     StatusDone = 81,
-    Preeditstate = 82,
+    PreeditState = 82,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Attr<'a> {
-    pub id: C16,
-    pub type_: C16,
+    pub id: u16,
+    pub type_: u16,
     pub name: XimString<'a>,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Attribute<'a> {
-    pub id: C16,
+    pub id: u16,
     pub name: XimString<'a>,
 }
 
@@ -90,21 +101,21 @@ pub struct EncodingInfo<'a> {
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct StrConvText<'a> {
-    pub type_: C16,
+    pub type_: u16,
     pub text: XimString<'a>,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct TriggerKey {
-    pub keysym: C32,
-    pub modifier: C32,
-    pub modifier_mask: C32,
+    pub keysym: u32,
+    pub modifier: u32,
+    pub modifier_mask: u32,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct PreeditCaret {
-    pub method_id: C16,
-    pub context_id: C16,
+    pub method_id: u16,
+    pub context_id: u16,
     pub position: i32,
     pub direction: CaretDirection,
     pub style: CaretStyle,
@@ -112,15 +123,15 @@ pub struct PreeditCaret {
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct PreeditCaretReply {
-    pub method_id: C16,
-    pub context_id: C16,
+    pub method_id: u16,
+    pub context_id: u16,
     pub position: i32,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct PreeditDone {
-    pub method_id: C16,
-    pub context_id: C16,
+    pub method_id: u16,
+    pub context_id: u16,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, FromPrimitive)]

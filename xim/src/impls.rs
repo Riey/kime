@@ -1,33 +1,24 @@
 use crate::reader::{ReadError, Readable, Reader, Result};
 use crate::types::*;
-use crate::writer::Writable;
+use crate::writer::{Writable, Writer};
 use num_traits::FromPrimitive;
 use std::marker::PhantomData;
 
-fn pad_size(len: impl Into<usize>) -> usize {
-    (4 - (len.into() % 4)) % 4
-}
-
-fn pad_write(out: &mut Vec<u8>) {
-    let pad_bytes = [0; 4];
-    let p = pad_size(out.len());
-    out.extend_from_slice(&pad_bytes[..p]);
+fn padded_size(len: impl Into<usize>) -> usize {
+    let len = len.into();
+    let pad = (4 - (len % 4)) % 4;
+    len + pad
 }
 
 macro_rules! read_int {
-    ($self:expr, $ty:ty) => {
-        if $self.b.len() < std::mem::size_of::<$ty>() {
-            Err($self.eos())
-        } else {
-            use std::convert::TryInto;
-            let (bytes, b) = $self.b.split_at(std::mem::size_of::<$ty>());
-            $self.b = b;
-            let arr: [u8; std::mem::size_of::<$ty>()] = bytes
-                .try_into()
-                .unwrap_or_else(|_| unsafe { std::hint::unreachable_unchecked() });
-            Ok(<$ty>::from_ne_bytes(arr))
-        }
-    };
+    ($self:expr, $ty:ty) => {{
+        use std::convert::TryInto;
+        let bytes = $self.consume(std::mem::size_of::<$ty>())?;
+        let arr: [u8; std::mem::size_of::<$ty>()] = bytes
+            .try_into()
+            .unwrap_or_else(|_| unsafe { std::hint::unreachable_unchecked() });
+        Ok(<$ty>::from_ne_bytes(arr))
+    }};
 }
 
 macro_rules! impl_number {
@@ -39,8 +30,8 @@ macro_rules! impl_number {
         }
 
         impl Writable for $ty {
-            fn write(&self, out: &mut Vec<u8>) {
-                out.extend_from_slice(&self.to_ne_bytes());
+            fn write(&self, writer: &mut Writer) {
+                writer.write(&self.to_ne_bytes());
             }
             fn size(&self) -> usize {
                 std::mem::size_of::<$ty>()
@@ -56,8 +47,8 @@ impl<'a> Readable<'a> for u8 {
 }
 
 impl Writable for u8 {
-    fn write(&self, out: &mut Vec<u8>) {
-        out.push(*self);
+    fn write(&self, writer: &mut Writer) {
+        writer.u8(*self);
     }
 
     fn size(&self) -> usize {
@@ -74,13 +65,14 @@ macro_rules! impl_enum {
         impl<'a> Readable<'a> for $ty {
             fn read(reader: &mut Reader<'a>) -> Result<Self> {
                 let repr = <$repr>::read(reader)?;
-                <$ty as FromPrimitive>::from_u32(repr as u32).ok_or_else(|| reader.invalid_data(stringify!($ty), repr))
+                <$ty as FromPrimitive>::from_u32(repr as u32)
+                    .ok_or_else(|| reader.invalid_data(stringify!($ty), repr))
             }
         }
 
         impl Writable for $ty {
-            fn write(&self, out: &mut Vec<u8>) {
-                (*self as $repr).write(out)
+            fn write(&self, writer: &mut Writer) {
+                (*self as $repr).write(writer)
             }
 
             fn size(&self) -> usize {
@@ -112,9 +104,9 @@ macro_rules! impl_struct {
         }
 
         impl Writable for $ty {
-            fn write(&self, out: &mut Vec<u8>) {
+            fn write(&self, writer: &mut Writer) {
                 $(
-                    self.$field.write(out);
+                    self.$field.write(writer);
                 )+
             }
             fn size(&self) -> usize {
@@ -138,9 +130,9 @@ macro_rules! impl_struct {
         }
 
         impl<'a> Writable for $ty<'a> {
-            fn write(&self, out: &mut Vec<u8>) {
+            fn write(&self, writer: &mut Writer) {
                 $(
-                    self.$field.write(out);
+                    self.$field.write(writer);
                 )+
             }
             fn size(&self) -> usize {
@@ -171,8 +163,6 @@ impl_struct!(
     server_minor_protocol_version,
     _marker
 );
-impl_struct!(@Open, name);
-impl_struct!(@Extension, major_opcode, minor_opcode, name);
 
 impl<'a, T> Readable<'a> for PhantomData<T> {
     #[inline(always)]
@@ -183,7 +173,7 @@ impl<'a, T> Readable<'a> for PhantomData<T> {
 
 impl<T> Writable for PhantomData<T> {
     #[inline(always)]
-    fn write(&self, _out: &mut Vec<u8>) {}
+    fn write(&self, _writer: &mut Writer) {}
 
     #[inline(always)]
     fn size(&self) -> usize {
@@ -194,36 +184,33 @@ impl<T> Writable for PhantomData<T> {
 impl<'a> Readable<'a> for XimString<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
         let len = reader.u16()?;
-        let string = reader.string(len as usize)?;
-        reader.pad();
+        let string = reader.consume(len)?;
         Ok(XimString(string))
     }
 }
 
 impl<'a> Writable for XimString<'a> {
-    fn write(&self, out: &mut Vec<u8>) {
-        (self.0.len() as u16).write(out);
-        out.extend_from_slice(self.0);
-        pad_write(out);
+    fn write(&self, writer: &mut Writer) {
+        (self.0.len() as u16).write(writer);
+        writer.write(self.0);
     }
     fn size(&self) -> usize {
-        let size = 2 + self.0.len();
-        size + pad_size(size)
+        self.0.len() + 2
     }
 }
 
 impl<'a> Readable<'a> for XimStr<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
         let len = reader.u8()?;
-        let string = reader.string(len as usize)?;
+        let string = reader.consume(len)?;
         Ok(XimStr(string))
     }
 }
 
 impl<'a> Writable for XimStr<'a> {
-    fn write(&self, out: &mut Vec<u8>) {
-        (self.0.len() as u8).write(out);
-        out.extend_from_slice(self.0);
+    fn write(&self, writer: &mut Writer) {
+        (self.0.len() as u8).write(writer);
+        writer.write(self.0);
     }
     fn size(&self) -> usize {
         self.0.len() + 1
@@ -263,7 +250,7 @@ impl<'a> Readable<'a> for Connect<'a> {
 }
 
 impl<'a> Writable for Connect<'a> {
-    fn write(&self, _out: &mut Vec<u8>) {
+    fn write(&self, _writer: &mut Writer) {
         unimplemented!()
     }
 
@@ -281,37 +268,42 @@ impl<'a> Readable<'a> for Attr<'a> {
         let id = u16::read(reader)?;
         let type_ = AttrType::read(reader)?;
         let name = XimString::read(reader)?;
+        reader.pad();
 
-        Ok(Self {
-            id,
-            type_,
-            name,
-        })
+        Ok(Self { id, type_, name })
     }
 }
 
 impl<'a> Writable for Attr<'a> {
-    fn write(&self, out: &mut Vec<u8>) {}
-    fn size(&self) -> usize { 0 }
+    fn write(&self, writer: &mut Writer) {
+        self.id.write(writer);
+        self.type_.write(writer);
+        self.name.write(writer);
+        writer.pad();
+    }
+    fn size(&self) -> usize {
+        padded_size(4 + self.name.size())
+    }
 }
 
 impl<'a> Readable<'a> for OpenReply<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
         let id = reader.u16()?;
-        let n = reader.u16()?;
-        let mut xim = reader.cut(n as usize);
+        let len = reader.u16()? as usize;
         let mut xim_attributes = Vec::new();
 
-        while !xim.b.is_empty() {
-            xim_attributes.push(Readable::read(&mut xim)?);
+        let target = reader.bytes_len() - len;
+        while reader.bytes_len() > target {
+            xim_attributes.push(Attr::read(reader)?);
         }
 
-        let m = reader.u16()?;
-        let mut xic = reader.cut(m as usize);
+        let len = reader.u16()? as usize;
+        reader.u16()?;
         let mut xic_attributes = Vec::new();
 
-        while !xic.b.is_empty() {
-            xic_attributes.push(Readable::read(&mut xic)?);
+        let target = reader.bytes_len() - len;
+        while reader.bytes_len() > target {
+            xic_attributes.push(Attr::read(reader)?);
         }
 
         Ok(Self {
@@ -323,8 +315,8 @@ impl<'a> Readable<'a> for OpenReply<'a> {
 }
 
 impl<'a> Writable for OpenReply<'a> {
-    fn write(&self, out: &mut Vec<u8>) {
-        self.input_method_id.write(out);
+    fn write(&self, writer: &mut Writer) {
+        self.input_method_id.write(writer);
 
         let n = self
             .xim_attributes
@@ -337,15 +329,15 @@ impl<'a> Writable for OpenReply<'a> {
             .map(Writable::size)
             .sum::<usize>() as u16;
 
-        n.write(out);
+        n.write(writer);
         for attr in self.xim_attributes.iter() {
-            attr.write(out);
+            attr.write(writer);
         }
 
-        m.write(out);
-        0u16.write(out);
+        m.write(writer);
+        0u16.write(writer);
         for attr in self.xic_attributes.iter() {
-            attr.write(out);
+            attr.write(writer);
         }
     }
 
@@ -366,14 +358,13 @@ impl<'a> Writable for OpenReply<'a> {
 impl<'a> Readable<'a> for QueryExtension<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
         let id = reader.u16()?;
-        let len = reader.u16()?;
-
-        let mut ex = reader.cut(len as usize);
+        let len = reader.u16()? as usize;
 
         let mut extensions = Vec::new();
 
-        while !ex.is_empty() {
-            extensions.push(XimStr::read(&mut ex)?);
+        let target = reader.bytes_len() - len;
+        while reader.bytes_len() > target {
+            extensions.push(XimStr::read(reader)?);
         }
 
         reader.pad();
@@ -386,27 +377,28 @@ impl<'a> Readable<'a> for QueryExtension<'a> {
 }
 
 impl<'a> Writable for QueryExtension<'a> {
-    fn write(&self, out: &mut Vec<u8>) {
-        self.input_method_id.write(out);
+    fn write(&self, writer: &mut Writer) {
+        self.input_method_id.write(writer);
     }
 
     fn size(&self) -> usize {
-        let len = 4 + self.extensions.iter().map(Writable::size).sum::<usize>();
-        len + pad_size(len)
+        padded_size(4 + self.extensions.iter().map(Writable::size).sum::<usize>())
     }
 }
 
 impl<'a> Readable<'a> for QueryExtensionReply<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
         let id = reader.u16()?;
-        let len = reader.u16()?;
-        reader.b = &reader.b[..len as usize];
+        let len = reader.u16()? as usize;
 
         let mut extensions = Vec::new();
 
-        while !reader.b.is_empty() {
+        let target = reader.bytes_len() - len;
+        while reader.bytes_len() > target {
             extensions.push(Extension::read(reader)?);
         }
+
+        reader.pad();
 
         Ok(Self {
             input_method_id: id,
@@ -416,16 +408,64 @@ impl<'a> Readable<'a> for QueryExtensionReply<'a> {
 }
 
 impl<'a> Writable for QueryExtensionReply<'a> {
-    fn write(&self, out: &mut Vec<u8>) {
-        self.input_method_id.write(out);
+    fn write(&self, writer: &mut Writer) {
+        self.input_method_id.write(writer);
         let size = self.extensions.iter().map(Writable::size).sum::<usize>() as u16;
-        size.write(out);
+        size.write(writer);
         for ex in self.extensions.iter() {
-            ex.write(out);
+            ex.write(writer);
         }
+        writer.pad();
     }
 
     fn size(&self) -> usize {
         4 + self.extensions.iter().map(Writable::size).sum::<usize>()
+    }
+}
+
+impl<'a> Readable<'a> for Open<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let name = XimStr::read(reader)?;
+        reader.pad();
+        Ok(Self { name })
+    }
+}
+
+impl<'a> Writable for Open<'a> {
+    fn write(&self, writer: &mut Writer) {
+        self.name.write(writer);
+        writer.pad();
+    }
+
+    fn size(&self) -> usize {
+        padded_size(self.name.size())
+    }
+}
+
+impl<'a> Readable<'a> for Extension<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let major_opcode = reader.u8()?;
+        let minor_opcode = reader.u8()?;
+        let name = XimString::read(reader)?;
+        reader.pad();
+
+        Ok(Self {
+            major_opcode,
+            minor_opcode,
+            name,
+        })
+    }
+}
+
+impl<'a> Writable for Extension<'a> {
+    fn write(&self, out: &mut Writer) {
+        self.major_opcode.write(out);
+        self.minor_opcode.write(out);
+        self.name.write(out);
+        out.pad();
+    }
+
+    fn size(&self) -> usize {
+        padded_size(4 + self.name.size())
     }
 }

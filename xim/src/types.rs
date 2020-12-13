@@ -1,5 +1,5 @@
 use crate::reader::{ReadError, Readable, Reader, Result};
-use crate::writer::Writable;
+use crate::writer::{Writable, Writer};
 use enumflags2::BitFlags;
 use num_derive::FromPrimitive;
 use std::fmt;
@@ -52,8 +52,8 @@ macro_rules! define_request {
         }
 
         impl Writable for Opcode {
-            fn write(&self, out: &mut Vec<u8>) {
-                out.push(*self as u8);
+            fn write(&self, writer: &mut Writer) {
+                writer.u8(*self as u8);
             }
 
             fn size(&self) -> usize {
@@ -72,17 +72,17 @@ macro_rules! define_request {
         }
 
         impl<'a> Writable for Request<'a> {
-            fn write(&self, out: &mut Vec<u8>) {
+            fn write(&self, writer: &mut Writer) {
                 let header = RequestHeader {
                     major_opcode: self.opcode(),
                     minor_opcode: 0,
                     size: (self.content_size() / 4) as u16,
                 };
 
-                header.write(out);
+                header.write(writer);
 
                 match self {
-                    $(Request::$op(req) => req.write(out),)+
+                    $(Request::$op(req) => req.write(writer),)+
                 }
             }
 

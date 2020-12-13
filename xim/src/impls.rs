@@ -2,17 +2,22 @@ use crate::reader::{ReadError, Readable, Reader, Result};
 use crate::types::*;
 use crate::writer::Writable;
 use num_traits::FromPrimitive;
+use std::marker::PhantomData;
+
+fn pad_size(len: usize) -> usize {
+    (4 - (len % 4)) % 4
+}
 
 fn pad_write(out: &mut Vec<u8>) {
     let pad_bytes = [0; 4];
-    let p = (4 - (out.len() % 4)) % 4;
+    let p = pad_size(out.len());
     out.extend_from_slice(&pad_bytes[..p]);
 }
 
 macro_rules! read_int {
     ($self:expr, $ty:ty) => {
         if $self.b.len() < std::mem::size_of::<$ty>() {
-            Err(ReadError::EndOfStream)
+            Err($self.eos())
         } else {
             use std::convert::TryInto;
             let (bytes, b) = $self.b.split_at(std::mem::size_of::<$ty>());
@@ -37,6 +42,9 @@ macro_rules! impl_number {
             fn write(&self, out: &mut Vec<u8>) {
                 out.extend_from_slice(&self.to_ne_bytes());
             }
+            fn size(&self) -> usize {
+                std::mem::size_of::<$ty>()
+            }
         }
     };
 }
@@ -50,6 +58,10 @@ impl<'a> Readable<'a> for u8 {
 impl Writable for u8 {
     fn write(&self, out: &mut Vec<u8>) {
         out.push(*self);
+    }
+
+    fn size(&self) -> usize {
+        1
     }
 }
 
@@ -68,13 +80,16 @@ macro_rules! impl_enum {
 
         impl Writable for $ty {
             fn write(&self, out: &mut Vec<u8>) {
-                unsafe { (*(self as *const Self as *const $repr)).write(out) }
+                (*self as $repr).write(out)
+            }
+
+            fn size(&self) -> usize {
+                (*self as $repr).size()
             }
         }
     };
 }
 
-impl_enum!(Opcode, u8);
 impl_enum!(CaretDirection, u32);
 impl_enum!(CaretStyle, u32);
 impl_enum!(StrConvFeedbackType, u16);
@@ -101,6 +116,13 @@ macro_rules! impl_struct {
                     self.$field.write(out);
                 )+
             }
+            fn size(&self) -> usize {
+                let mut len = 0;
+                $(
+                    len += self.$field.size();
+                )+
+                len
+            }
         }
     };
     (@$ty:ident, $($field:ident),+) => {
@@ -120,6 +142,13 @@ macro_rules! impl_struct {
                     self.$field.write(out);
                 )+
             }
+            fn size(&self) -> usize {
+                let mut len = 0;
+                $(
+                    len += self.$field.size();
+                )+
+                len
+            }
         }
     };
 }
@@ -134,13 +163,32 @@ impl_struct!(
 );
 impl_struct!(PreeditCaretReply, method_id, context_id, position);
 impl_struct!(PreeditDone, method_id, context_id);
-impl_struct!(RequestHeader, major_opcode, minor_opcode, length);
+impl_struct!(RequestHeader, major_opcode, minor_opcode, size);
 impl_struct!(@Attr, id, type_, name);
 impl_struct!(
-    ConnectReply,
+    @ConnectReply,
     server_major_protocol_version,
-    server_minor_protocol_version
+    server_minor_protocol_version,
+    _marker
 );
+impl_struct!(@Open, name);
+
+impl<'a, T> Readable<'a> for PhantomData<T> {
+    #[inline(always)]
+    fn read(_reader: &mut Reader<'a>) -> Result<Self> {
+        Ok(PhantomData)
+    }
+}
+
+impl<T> Writable for PhantomData<T> {
+    #[inline(always)]
+    fn write(&self, _out: &mut Vec<u8>) {}
+
+    #[inline(always)]
+    fn size(&self) -> usize {
+        0
+    }
+}
 
 impl<'a> Readable<'a> for XimString<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
@@ -154,14 +202,37 @@ impl<'a> Readable<'a> for XimString<'a> {
 impl<'a> Writable for XimString<'a> {
     fn write(&self, out: &mut Vec<u8>) {
         (self.0.len() as u16).write(out);
-        out.extend_from_slice(self.0.as_bytes());
+        out.extend_from_slice(self.0);
         pad_write(out);
+    }
+    fn size(&self) -> usize {
+        let size = 2 + self.0.len();
+        size + pad_size(size)
+    }
+}
+
+impl<'a> Readable<'a> for XimStr<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let len = reader.u8()?;
+        let string = reader.string(len as usize)?;
+        Ok(XimStr(string))
+    }
+}
+
+impl<'a> Writable for XimStr<'a> {
+    fn write(&self, out: &mut Vec<u8>) {
+        (self.0.len() as u8).write(out);
+        out.extend_from_slice(self.0);
+    }
+    fn size(&self) -> usize {
+        self.0.len() + 1
     }
 }
 
 impl<'a> Readable<'a> for Connect<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
         let endian = reader.u8()?;
+        let _unused = reader.u8()?;
 
         match (
             endian,
@@ -190,42 +261,64 @@ impl<'a> Readable<'a> for Connect<'a> {
     }
 }
 
-impl<'a> Readable<'a> for Request<'a> {
-    fn read(reader: &mut Reader<'a>) -> Result<Self> {
-        let header = RequestHeader::read(reader)?;
+impl<'a> Writable for Connect<'a> {
+    fn write(&self, out: &mut Vec<u8>) {
+        unimplemented!()
+    }
 
-        let this = match header.major_opcode {
-            Opcode::Connect => Request::Connect(Connect::read(reader)?),
-            Opcode::ConnectReply => Request::ConnectReply(ConnectReply::read(reader)?),
-            _ => todo!(),
-        };
-
-        Ok(this)
+    fn size(&self) -> usize {
+        self.client_auth_protocol_names
+            .iter()
+            .map(Writable::size)
+            .sum::<usize>()
+            + 8
     }
 }
 
-impl<'a> Writable for Request<'a> {
+impl<'a> Readable<'a> for OpenReply<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        unimplemented!()
+    }
+}
+
+impl<'a> Writable for OpenReply<'a> {
     fn write(&self, out: &mut Vec<u8>) {
-        let header = RequestHeader {
-            major_opcode: self.opcode(),
-            minor_opcode: 0,
-            length: 0,
-        };
+        self.input_method_id.write(out);
+        0u16.write(out);
 
-        header.write(out);
+        let n = self
+            .xim_attributes
+            .iter()
+            .map(Writable::size)
+            .sum::<usize>() as u16;
+        let m = self
+            .xic_attributes
+            .iter()
+            .map(Writable::size)
+            .sum::<usize>() as u16;
 
-        let prev = out.len();
-
-        match self {
-            // Request::Connect(connect) => connect.write(out),
-            Request::ConnectReply(reply) => reply.write(out),
-            _ => todo!(),
+        n.write(out);
+        for attr in self.xim_attributes.iter() {
+            attr.write(out);
         }
 
-        let size = out.len() - prev;
+        m.write(out);
+        0u16.write(out);
+        for attr in self.xic_attributes.iter() {
+            attr.write(out);
+        }
+    }
 
-        let len_byte = (size as u16).to_ne_bytes();
-
-        out[(prev - 2)..prev].copy_from_slice(&len_byte);
+    fn size(&self) -> usize {
+        self.xim_attributes
+            .iter()
+            .map(Writable::size)
+            .sum::<usize>()
+            + self
+                .xic_attributes
+                .iter()
+                .map(Writable::size)
+                .sum::<usize>()
+            + 8
     }
 }

@@ -6,8 +6,6 @@ use thiserror::Error;
 pub enum ReadError {
     #[error("End of Stream")]
     EndOfStream,
-    #[error("Utf8 error: {0}")]
-    Utf8(#[from] std::str::Utf8Error),
     #[error("Invalid Data")]
     InvalidData,
 }
@@ -27,13 +25,17 @@ impl<'a> Reader<'a> {
         }
     }
 
+    pub fn eos(&self) -> ReadError {
+        ReadError::EndOfStream
+    }
+
     pub fn u8(&mut self) -> Result<u8> {
         match self.b {
             [b, other @ ..] => {
                 self.b = other;
                 Ok(*b)
             }
-            [] => Err(ReadError::EndOfStream),
+            [] => Err(self.eos()),
         }
     }
 
@@ -50,14 +52,9 @@ impl<'a> Reader<'a> {
         self.b = &self.b[p..];
     }
 
-    pub fn string(&mut self, len: usize) -> Result<&'a str> {
-        let bytes = self.bytes(len)?;
-        Ok(std::str::from_utf8(bytes)?)
-    }
-
-    pub fn bytes(&mut self, len: usize) -> Result<&'a [u8]> {
+    pub fn string(&mut self, len: usize) -> Result<&'a [u8]> {
         if self.b.len() < len {
-            Err(ReadError::EndOfStream)
+            Err(self.eos())
         } else {
             let (bytes, left) = self.b.split_at(len);
             self.b = left;

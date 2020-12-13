@@ -4,8 +4,6 @@ use enumflags2::BitFlags;
 use num_derive::FromPrimitive;
 use std::marker::PhantomData;
 
-pub type WINDOW = u32;
-
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct RequestHeader {
     pub major_opcode: Opcode,
@@ -133,6 +131,26 @@ define_request! {
     // PreeditState = 82,
 }
 
+#[derive(Eq, PartialEq, Copy, Clone, Debug, FromPrimitive)]
+#[repr(u16)]
+pub enum AttrType {
+    Separator = 0,
+    Byte = 1,
+    Word = 2,
+    Long = 3,
+    Char = 4,
+    Window = 5,
+    Style = 10,
+    XRectangle = 11,
+    XPoint = 12,
+    XFontSet = 13,
+    HotkeyTriggers = 15,
+    StringConversion = 17,
+    PreeditState = 18,
+    ResetState = 19,
+    NestedList = 0x7fff,
+}
+
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 #[repr(transparent)]
 pub struct XimString<'a>(pub &'a [u8]);
@@ -170,7 +188,7 @@ pub struct OpenReply<'a> {
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Attr<'a> {
     pub id: u16,
-    pub type_: u16,
+    pub type_: AttrType,
     pub name: XimString<'a>,
 }
 

@@ -4,8 +4,8 @@ use crate::writer::Writable;
 use num_traits::FromPrimitive;
 use std::marker::PhantomData;
 
-fn pad_size(len: usize) -> usize {
-    (4 - (len % 4)) % 4
+fn pad_size(len: impl Into<usize>) -> usize {
+    (4 - (len.into() % 4)) % 4
 }
 
 fn pad_write(out: &mut Vec<u8>) {
@@ -74,7 +74,7 @@ macro_rules! impl_enum {
         impl<'a> Readable<'a> for $ty {
             fn read(reader: &mut Reader<'a>) -> Result<Self> {
                 let repr = <$repr>::read(reader)?;
-                <$ty as FromPrimitive>::from_u32(repr as u32).ok_or(ReadError::InvalidData)
+                <$ty as FromPrimitive>::from_u32(repr as u32).ok_or_else(|| reader.invalid_data(stringify!($ty), repr))
             }
         }
 
@@ -165,7 +165,6 @@ impl_struct!(
 impl_struct!(PreeditCaretReply, method_id, context_id, position);
 impl_struct!(PreeditDone, method_id, context_id);
 impl_struct!(RequestHeader, major_opcode, minor_opcode, size);
-impl_struct!(@Attr, id, type_, name);
 impl_struct!(
     @ConnectReply,
     server_major_protocol_version,
@@ -242,7 +241,7 @@ impl<'a> Readable<'a> for Connect<'a> {
             cfg!(target_endian = "little"),
         ) {
             (b'\x6c', _, true) | (b'\x42', true, _) => {}
-            (_, _, _) => return Err(ReadError::InvalidData),
+            (_, _, _) => return Err(reader.invalid_data("Endian", endian)),
         }
 
         let major_ver = reader.u16()?;
@@ -264,7 +263,7 @@ impl<'a> Readable<'a> for Connect<'a> {
 }
 
 impl<'a> Writable for Connect<'a> {
-    fn write(&self, out: &mut Vec<u8>) {
+    fn write(&self, _out: &mut Vec<u8>) {
         unimplemented!()
     }
 
@@ -277,16 +276,55 @@ impl<'a> Writable for Connect<'a> {
     }
 }
 
+impl<'a> Readable<'a> for Attr<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let id = u16::read(reader)?;
+        let type_ = AttrType::read(reader)?;
+        let name = XimString::read(reader)?;
+
+        Ok(Self {
+            id,
+            type_,
+            name,
+        })
+    }
+}
+
+impl<'a> Writable for Attr<'a> {
+    fn write(&self, out: &mut Vec<u8>) {}
+    fn size(&self) -> usize { 0 }
+}
+
 impl<'a> Readable<'a> for OpenReply<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
-        unimplemented!()
+        let id = reader.u16()?;
+        let n = reader.u16()?;
+        let mut xim = reader.cut(n as usize);
+        let mut xim_attributes = Vec::new();
+
+        while !xim.b.is_empty() {
+            xim_attributes.push(Readable::read(&mut xim)?);
+        }
+
+        let m = reader.u16()?;
+        let mut xic = reader.cut(m as usize);
+        let mut xic_attributes = Vec::new();
+
+        while !xic.b.is_empty() {
+            xic_attributes.push(Readable::read(&mut xic)?);
+        }
+
+        Ok(Self {
+            input_method_id: id,
+            xim_attributes,
+            xic_attributes,
+        })
     }
 }
 
 impl<'a> Writable for OpenReply<'a> {
     fn write(&self, out: &mut Vec<u8>) {
         self.input_method_id.write(out);
-        0u16.write(out);
 
         let n = self
             .xim_attributes
@@ -329,15 +367,16 @@ impl<'a> Readable<'a> for QueryExtension<'a> {
     fn read(reader: &mut Reader<'a>) -> Result<Self> {
         let id = reader.u16()?;
         let len = reader.u16()?;
-        reader.b = &reader.b[..len as usize];
+
+        let mut ex = reader.cut(len as usize);
 
         let mut extensions = Vec::new();
 
-        while !reader.b.is_empty() {
-            extensions.push(XimStr::read(reader)?);
+        while !ex.is_empty() {
+            extensions.push(XimStr::read(&mut ex)?);
         }
 
-        // reader.pad();
+        reader.pad();
 
         Ok(Self {
             input_method_id: id,

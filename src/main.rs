@@ -8,11 +8,10 @@ use x11rb::wrapper::ConnectionExt as _;
 use x11rb::{atom_manager, COPY_DEPTH_FROM_PARENT, CURRENT_TIME, NONE};
 
 const TRANSPORT_MAX: u32 = 20;
-const XIM_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] = &[
-        //(xim::XimString(b"queryInputStyle"), xim::AttrType::Style)
-        ];
-const XIC_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] = &[];
-// &[(xim::XimString(b"inputStyle"), xim::AttrType::Long)];
+const XIM_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] =
+    &[(xim::XimString(b"queryInputStyle"), xim::AttrType::Style)];
+const XIC_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] =
+    &[(xim::XimString(b"inputStyle"), xim::AttrType::Long)];
 const SERVER_PROTOCOL: (u32, u32) = (2, 0);
 
 fn atom_name(conn: &impl ConnectionExt, atom: Atom) -> anyhow::Result<String> {
@@ -120,20 +119,20 @@ impl KimeConnection {
                 },
             )?
             .check()?;
-        // conn.send_event(
-        //     false,
-        //     self.client_win,
-        //     0u32,
-        //     ClientMessageEvent {
-        //         window: self.client_win,
-        //         type_: self.atoms.XIM_PROTOCOL,
-        //         format: 32,
-        //         sequence: 0,
-        //         response_type: CLIENT_MESSAGE_EVENT,
-        //         data: ClientMessageData::from(data),
-        //     },
-        // )?
-        // .check()?;
+            conn.send_event(
+                false,
+                self.client_win,
+                0u32,
+                ClientMessageEvent {
+                    window: self.client_win,
+                    type_: self.atoms.XIM_PROTOCOL,
+                    format: 32,
+                    sequence: 0,
+                    response_type: CLIENT_MESSAGE_EVENT,
+                    data: ClientMessageData::from(data),
+                },
+            )?
+            .check()?;
         } else {
             self.buf.resize(20, 0);
 

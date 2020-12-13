@@ -46,7 +46,7 @@ macro_rules! define_request {
             fn read(reader: &mut Reader<'a>) -> Result<Self> {
                 match reader.u8()? {
                     $($n => Ok(Opcode::$op),)+
-                    _ => Err(ReadError::InvalidData),
+                    other => Err(reader.invalid_data("Opcode", other)),
                 }
             }
         }

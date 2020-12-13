@@ -370,6 +370,7 @@ version = "0.1.0"
 dependencies = [
  "ahash",
  "anyhow",
+ "criterion",
  "cstr",
  "log",
  "pretty_env_logger",
@@ -893,7 +894,6 @@ dependencies = [
 name = "xim"
 version = "0.1.0"
 dependencies = [
- "criterion",
  "enumflags2",
  "log",
  "num-derive",

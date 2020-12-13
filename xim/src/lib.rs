@@ -7,7 +7,7 @@ pub use self::reader::ReadError;
 pub use self::types::*;
 use crate::reader::Readable;
 use crate::reader::Reader;
-use crate::writer::Writable;
+use crate::writer::{Writable, Writer};
 
 pub fn read(bytes: &[u8]) -> Result<Request, ReadError> {
     let mut reader = Reader::new(bytes);
@@ -15,11 +15,13 @@ pub fn read(bytes: &[u8]) -> Result<Request, ReadError> {
 }
 
 pub fn write(request: Request, out: &mut Vec<u8>) {
-    request.write(out);
+    let mut writer = Writer::new(out);
+    request.write(&mut writer);
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::writer::Writer;
     use crate::*;
     use pretty_assertions::assert_eq;
     use std::marker::PhantomData;
@@ -88,7 +90,93 @@ mod tests {
                 type_: AttrType::Style,
                 name: XimString(b"queryInputStyle"),
             }],
-            xic_attributes: vec![],
+            xic_attributes: vec![
+                Attr {
+                    id: 1,
+                    type_: AttrType::Long,
+                    name: XimString(b"inputStyle"),
+                },
+                Attr {
+                    id: 2,
+                    type_: AttrType::Window,
+                    name: XimString(b"clientWindow"),
+                },
+                Attr {
+                    id: 3,
+                    type_: AttrType::Window,
+                    name: XimString(b"focusWindow"),
+                },
+                Attr {
+                    id: 4,
+                    type_: AttrType::Long,
+                    name: XimString(b"filterEvents"),
+                },
+                Attr {
+                    id: 5,
+                    type_: AttrType::NestedList,
+                    name: XimString(b"preeditAttributes"),
+                },
+                Attr {
+                    id: 6,
+                    type_: AttrType::NestedList,
+                    name: XimString(b"statusAttributes"),
+                },
+                Attr {
+                    id: 7,
+                    type_: AttrType::XFontSet,
+                    name: XimString(b"fontSet"),
+                },
+                Attr {
+                    id: 8,
+                    type_: AttrType::XRectangle,
+                    name: XimString(b"area"),
+                },
+                Attr {
+                    id: 9,
+                    type_: AttrType::XRectangle,
+                    name: XimString(b"areaNeeded"),
+                },
+                Attr {
+                    id: 10,
+                    type_: AttrType::Long,
+                    name: XimString(b"colorMap"),
+                },
+                Attr {
+                    id: 11,
+                    type_: AttrType::Long,
+                    name: XimString(b"stdColorMap"),
+                },
+                Attr {
+                    id: 12,
+                    type_: AttrType::Long,
+                    name: XimString(b"foreground"),
+                },
+                Attr {
+                    id: 13,
+                    type_: AttrType::Long,
+                    name: XimString(b"background"),
+                },
+                Attr {
+                    id: 14,
+                    type_: AttrType::Long,
+                    name: XimString(b"backgroundPixmap"),
+                },
+                Attr {
+                    id: 15,
+                    type_: AttrType::XPoint,
+                    name: XimString(b"spotLocation"),
+                },
+                Attr {
+                    id: 16,
+                    type_: AttrType::Long,
+                    name: XimString(b"lineSpace"),
+                },
+                Attr {
+                    id: 17,
+                    type_: AttrType::Separator,
+                    name: XimString(b"separatorofNestedList"),
+                },
+            ],
         }
     }
 
@@ -102,7 +190,7 @@ mod tests {
     fn write_open_reply() {
         let mut out = Vec::new();
         let value = open_reply_value();
-        value.write(&mut out);
+        value.write(&mut Writer::new(&mut out));
         let new_value = OpenReply::read(&mut Reader::new(&out)).unwrap();
         assert_eq!(value, new_value);
         assert_eq!(OPEN_REPLY.len(), out.len());

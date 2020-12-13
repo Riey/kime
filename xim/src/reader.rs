@@ -13,20 +13,13 @@ pub enum ReadError {
 pub type Result<T> = std::result::Result<T, ReadError>;
 
 pub struct Reader<'a> {
-    pub b: &'a [u8],
-    start: usize,
+    b: &'a [u8],
+    len: usize,
 }
 
 impl<'a> Reader<'a> {
     pub fn new(b: &'a [u8]) -> Self {
-        Self {
-            b,
-            start: b.as_ptr() as usize,
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.b.is_empty()
+        Self { b, len: 0 }
     }
 
     pub fn eos(&self) -> ReadError {
@@ -37,7 +30,28 @@ impl<'a> Reader<'a> {
         ReadError::InvalidData(ty, item.to_string())
     }
 
+    pub fn clear_len(&mut self) {
+        self.len = 0;
+    }
+
+    pub fn bytes_len(&self) -> usize {
+        self.b.len()
+    }
+
+    pub fn consume(&mut self, len: impl Into<usize>) -> Result<&'a [u8]> {
+        let len = len.into();
+        if self.b.len() >= len {
+            let (out, new) = self.b.split_at(len);
+            self.b = new;
+            self.len += len;
+            Ok(out)
+        } else {
+            Err(self.eos())
+        }
+    }
+
     pub fn u8(&mut self) -> Result<u8> {
+        self.len += 1;
         match self.b {
             [b, other @ ..] => {
                 self.b = other;
@@ -47,38 +61,14 @@ impl<'a> Reader<'a> {
         }
     }
 
-    pub fn cut(&mut self, end: usize) -> Self {
-        let (cut, new) = self.b.split_at(end);
-        self.b = new;
-
-        Self {
-            b: cut,
-            start: self.start,
-        }
-    }
-
     pub fn u16(&mut self) -> Result<u16> {
         Readable::read(self)
     }
 
-    fn ptr_offset(&self) -> usize {
-        self.b.as_ptr() as usize - self.start
-    }
-
     pub fn pad(&mut self) {
-        let p = (4 - (self.ptr_offset() % 4)) % 4;
-
+        let p = (4 - (self.len % 4)) % 4;
+        self.len = 0;
         self.b = &self.b[p..];
-    }
-
-    pub fn string(&mut self, len: usize) -> Result<&'a [u8]> {
-        if self.b.len() < len {
-            Err(self.eos())
-        } else {
-            let (bytes, left) = self.b.split_at(len);
-            self.b = left;
-            Ok(bytes)
-        }
     }
 }
 

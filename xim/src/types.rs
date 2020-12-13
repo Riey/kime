@@ -2,6 +2,7 @@ use crate::reader::{ReadError, Readable, Reader, Result};
 use crate::writer::Writable;
 use enumflags2::BitFlags;
 use num_derive::FromPrimitive;
+use std::fmt;
 use std::marker::PhantomData;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -107,7 +108,9 @@ define_request! {
     //
     // SetEventMask = 37,
     // EncodingNegotiationReply = 39,
-    // QueryExtensionReply = 41,
+
+    QueryExtension = 40,
+    QueryExtensionReply = 41,
     // SetImValuesReply = 43,
     // GetImValuesReply = 45,
     //
@@ -151,13 +154,47 @@ pub enum AttrType {
     NestedList = 0x7fff,
 }
 
-#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+/// len(u16) + STRING8 + padding
+#[derive(Eq, PartialEq, Copy, Clone)]
 #[repr(transparent)]
 pub struct XimString<'a>(pub &'a [u8]);
 
-#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+/// len(u8) + STRING8
+#[derive(Eq, PartialEq, Copy, Clone)]
 #[repr(transparent)]
 pub struct XimStr<'a>(pub &'a [u8]);
+
+impl<'a> fmt::Display for XimString<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(std::str::from_utf8(self.0).unwrap_or("NOT_UTF8"))
+    }
+}
+
+impl<'a> fmt::Debug for XimString<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(std::str::from_utf8(self.0).unwrap_or("NOT_UTF8"))
+    }
+}
+
+impl<'a> fmt::Display for XimStr<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(std::str::from_utf8(self.0).unwrap_or("NOT_UTF8"))
+    }
+}
+
+impl<'a> fmt::Debug for XimStr<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(std::str::from_utf8(self.0).unwrap_or("NOT_UTF8"))
+    }
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+pub struct XimExtMove {
+    pub input_method_id: u16,
+    pub input_context_id: u16,
+    pub x: i16,
+    pub y: i16,
+}
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Connect<'a> {
@@ -183,6 +220,25 @@ pub struct OpenReply<'a> {
     pub input_method_id: u16,
     pub xim_attributes: Vec<Attr<'a>>,
     pub xic_attributes: Vec<Attr<'a>>,
+}
+
+#[derive(Eq, PartialEq, Clone, Debug)]
+pub struct QueryExtension<'a> {
+    pub input_method_id: u16,
+    pub extensions: Vec<XimStr<'a>>,
+}
+
+#[derive(Eq, PartialEq, Clone, Debug)]
+pub struct QueryExtensionReply<'a> {
+    pub input_method_id: u16,
+    pub extensions: Vec<Extension<'a>>,
+}
+
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
+pub struct Extension<'a> {
+    pub major_opcode: u8,
+    pub minor_opcode: u8,
+    pub name: XimString<'a>,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]

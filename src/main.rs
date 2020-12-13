@@ -8,10 +8,11 @@ use x11rb::wrapper::ConnectionExt as _;
 use x11rb::{atom_manager, COPY_DEPTH_FROM_PARENT, CURRENT_TIME, NONE};
 
 const TRANSPORT_MAX: u32 = 20;
-const XIM_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] =
-    &[(xim::XimString(b"queryInputStyle"), xim::AttrType::Style)];
-const XIC_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] =
-    &[(xim::XimString(b"inputStyle"), xim::AttrType::Long)];
+const XIM_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] = &[
+        //(xim::XimString(b"queryInputStyle"), xim::AttrType::Style)
+        ];
+const XIC_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] = &[];
+// &[(xim::XimString(b"inputStyle"), xim::AttrType::Long)];
 const SERVER_PROTOCOL: (u32, u32) = (2, 0);
 
 fn atom_name(conn: &impl ConnectionExt, atom: Atom) -> anyhow::Result<String> {
@@ -83,12 +84,14 @@ impl KimeConnection {
         self.com_win
     }
 
-    fn send_reply(&mut self, reply: xim::Request) {
+    fn send_reply(
+        &mut self,
+        conn: &(impl Connection + ConnectionExt),
+        reply: xim::Request,
+    ) -> anyhow::Result<()> {
         log::trace!("Send reply: {:?}", reply);
         xim::write(reply, &mut self.buf);
-    }
 
-    fn flush_reply(&mut self, conn: &(impl Connection + ConnectionExt)) -> anyhow::Result<()> {
         if self.buf.len() > TRANSPORT_MAX as usize {
             let mut data = [0; 5];
             data[0] = self.buf.len() as _;
@@ -117,20 +120,20 @@ impl KimeConnection {
                 },
             )?
             .check()?;
-            // conn.send_event(
-            //     false,
-            //     self.client_win,
-            //     0u32,
-            //     ClientMessageEvent {
-            //         window: self.client_win,
-            //         type_: self.atoms.XIM_PROTOCOL,
-            //         format: 32,
-            //         sequence: 0,
-            //         response_type: CLIENT_MESSAGE_EVENT,
-            //         data: ClientMessageData::from(data),
-            //     },
-            // )?
-            // .check()?;
+        // conn.send_event(
+        //     false,
+        //     self.client_win,
+        //     0u32,
+        //     ClientMessageEvent {
+        //         window: self.client_win,
+        //         type_: self.atoms.XIM_PROTOCOL,
+        //         format: 32,
+        //         sequence: 0,
+        //         response_type: CLIENT_MESSAGE_EVENT,
+        //         data: ClientMessageData::from(data),
+        //     },
+        // )?
+        // .check()?;
         } else {
             self.buf.resize(20, 0);
 
@@ -153,8 +156,6 @@ impl KimeConnection {
             .check()?;
         }
 
-        conn.flush()?;
-
         self.buf.clear();
 
         Ok(())
@@ -174,12 +175,10 @@ impl KimeConnection {
                     server_minor_protocol_version: connect.client_minor_protocol_version,
                     _marker: PhantomData,
                 });
-                self.send_reply(reply);
+                self.send_reply(conn, reply)?;
             }
-            xim::Request::Open(xim::Open {
-                name: xim::XimStr(name),
-            }) => {
-                log::trace!("Open {}", std::str::from_utf8(name).unwrap());
+            xim::Request::Open(xim::Open { name }) => {
+                log::trace!("Open {}", name);
                 let reply = xim::Request::OpenReply(xim::OpenReply {
                     input_method_id: self.im_id,
                     xim_attributes: XIM_ATTRIBUTES
@@ -203,14 +202,26 @@ impl KimeConnection {
                         })
                         .collect(),
                 });
-                self.send_reply(reply);
+                self.send_reply(conn, reply)?;
             }
-            xim::Request::ConnectReply(..) | xim::Request::OpenReply(..) => {
+            xim::Request::QueryExtension(query) => {
+                for ex in query.extensions.iter() {
+                    log::trace!("Requested extension: {}", ex);
+                }
+                let reply = xim::Request::QueryExtensionReply(xim::QueryExtensionReply {
+                    input_method_id: query.input_method_id,
+                    extensions: vec![],
+                });
+                self.send_reply(conn, reply)?;
+            }
+            xim::Request::ConnectReply(..)
+            | xim::Request::OpenReply(..)
+            | xim::Request::QueryExtensionReply(..) => {
                 return Err(anyhow::anyhow!("Invalid request"))
             }
         };
 
-        self.flush_reply(conn)?;
+        conn.flush()?;
 
         Ok(())
     }

@@ -20,7 +20,10 @@ pub fn write(request: Request, out: &mut Vec<u8>) {
 
 #[cfg(test)]
 mod tests {
-    use crate::{read, write, Connect, ConnectReply, Open, Request, XimStr, XimString};
+    use crate::{
+        read, write, Connect, ConnectReply, Open, QueryExtension, Request, XimStr, XimString,
+    };
+    use pretty_assertions::assert_eq;
     use std::marker::PhantomData;
 
     #[test]
@@ -46,6 +49,21 @@ mod tests {
             req,
             Request::Open(Open {
                 name: XimStr(b"en_US"),
+            })
+        );
+    }
+
+    #[test]
+    fn read_query() {
+        let req = read(&[
+            40, 0, 5, 0, 0, 0, 13, 0, 12, 88, 73, 77, 95, 69, 88, 84, 95, 77, 79, 86, 69, 0, 0, 0,
+        ])
+        .unwrap();
+        assert_eq!(
+            req,
+            Request::QueryExtension(QueryExtension {
+                input_method_id: 0,
+                extensions: vec![XimStr(b"XIM_EXT_MOVE"),],
             })
         );
     }

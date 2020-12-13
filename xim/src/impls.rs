@@ -208,8 +208,22 @@ impl<'a> Readable<'a> for Connect<'a> {
 }
 
 impl<'a> Writable for Connect<'a> {
-    fn write(&self, _writer: &mut Writer) {
-        unimplemented!()
+    fn write(&self, writer: &mut Writer) {
+        let endian = if cfg!(target_endian = "little") {
+            b'\x6c'
+        } else {
+            b'\x42'
+        };
+
+        endian.write(writer);
+        0u8.write(writer);
+        self.client_major_protocol_version.write(writer);
+        self.client_minor_protocol_version.write(writer);
+        (self.client_auth_protocol_names.len() as u16).write(writer);
+
+        for name in self.client_auth_protocol_names.iter() {
+            name.write(writer);
+        }
     }
 }
 

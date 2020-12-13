@@ -14,3 +14,8 @@ thiserror = "1.0.22"
 
 [dev-dependencies]
 pretty_assertions = "0.6.1"
+criterion = "0.3.3"
+
+[[bench]]
+name = "rw"
+harness = false

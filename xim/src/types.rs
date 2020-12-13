@@ -1,4 +1,4 @@
-use crate::reader::{ReadError, Readable, Reader, Result};
+use crate::reader::{Readable, Reader, Result};
 use crate::writer::{Writable, Writer};
 use enumflags2::BitFlags;
 use num_derive::FromPrimitive;
@@ -29,12 +29,6 @@ macro_rules! define_request {
         }
 
         impl<'a> Request<'a> {
-            fn content_size(&self) -> usize {
-                match self {
-                    $(Request::$op(req) => req.size(),)+
-                }
-            }
-
             fn opcode(&self) -> Opcode {
                 match self {
                     $(Request::$op(req) => Opcode::$op,)+
@@ -55,10 +49,6 @@ macro_rules! define_request {
             fn write(&self, writer: &mut Writer) {
                 writer.u8(*self as u8);
             }
-
-            fn size(&self) -> usize {
-                1
-            }
         }
 
         impl<'a> Readable<'a> for Request<'a> {
@@ -76,18 +66,17 @@ macro_rules! define_request {
                 let header = RequestHeader {
                     major_opcode: self.opcode(),
                     minor_opcode: 0,
-                    size: (self.content_size() / 4) as u16,
+                    size: 0,
                 };
 
                 header.write(writer);
+                let mark = writer.mark_len();
 
                 match self {
                     $(Request::$op(req) => req.write(writer),)+
                 }
-            }
 
-            fn size(&self) -> usize {
-                self.content_size() + 4
+                writer.write_u16_len_div4(mark);
             }
         }
     };

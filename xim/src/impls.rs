@@ -173,6 +173,7 @@ impl_struct!(
     _marker
 );
 impl_struct!(@Open, name);
+impl_struct!(@Extension, major_opcode, minor_opcode, name);
 
 impl<'a, T> Readable<'a> for PhantomData<T> {
     #[inline(always)]
@@ -321,5 +322,71 @@ impl<'a> Writable for OpenReply<'a> {
                 .map(Writable::size)
                 .sum::<usize>()
             + 8
+    }
+}
+
+impl<'a> Readable<'a> for QueryExtension<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let id = reader.u16()?;
+        let len = reader.u16()?;
+        reader.b = &reader.b[..len as usize];
+
+        let mut extensions = Vec::new();
+
+        while !reader.b.is_empty() {
+            extensions.push(XimStr::read(reader)?);
+        }
+
+        // reader.pad();
+
+        Ok(Self {
+            input_method_id: id,
+            extensions,
+        })
+    }
+}
+
+impl<'a> Writable for QueryExtension<'a> {
+    fn write(&self, out: &mut Vec<u8>) {
+        self.input_method_id.write(out);
+    }
+
+    fn size(&self) -> usize {
+        let len = 4 + self.extensions.iter().map(Writable::size).sum::<usize>();
+        len + pad_size(len)
+    }
+}
+
+impl<'a> Readable<'a> for QueryExtensionReply<'a> {
+    fn read(reader: &mut Reader<'a>) -> Result<Self> {
+        let id = reader.u16()?;
+        let len = reader.u16()?;
+        reader.b = &reader.b[..len as usize];
+
+        let mut extensions = Vec::new();
+
+        while !reader.b.is_empty() {
+            extensions.push(Extension::read(reader)?);
+        }
+
+        Ok(Self {
+            input_method_id: id,
+            extensions,
+        })
+    }
+}
+
+impl<'a> Writable for QueryExtensionReply<'a> {
+    fn write(&self, out: &mut Vec<u8>) {
+        self.input_method_id.write(out);
+        let size = self.extensions.iter().map(Writable::size).sum::<usize>() as u16;
+        size.write(out);
+        for ex in self.extensions.iter() {
+            ex.write(out);
+        }
+    }
+
+    fn size(&self) -> usize {
+        4 + self.extensions.iter().map(Writable::size).sum::<usize>()
     }
 }

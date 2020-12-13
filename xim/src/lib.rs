@@ -20,11 +20,12 @@ pub fn write(request: Request, out: &mut Vec<u8>) {
 
 #[cfg(test)]
 mod tests {
-    use crate::{read, write, Connect, ConnectReply, Request};
+    use crate::{read, write, Connect, ConnectReply, Open, Request, XimStr, XimString};
+    use std::marker::PhantomData;
 
     #[test]
     fn read_connect_req() {
-        let req: Request = read(b"\x01\x00\x00\x00\x6c\x00\x00\x00\x00\x00\x00").unwrap();
+        let req: Request = read(b"\x01\x00\x00\x00\x6c\x00\x00\x00\x00\x00\x00\x00").unwrap();
         assert_eq!(
             req,
             Request::Connect(Connect {
@@ -36,14 +37,29 @@ mod tests {
     }
 
     #[test]
+    fn read_open() {
+        let req = read(&[
+            30, 0, 2, 0, 5, 101, 110, 95, 85, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ])
+        .unwrap();
+        assert_eq!(
+            req,
+            Request::Open(Open {
+                name: XimStr(b"en_US"),
+            })
+        );
+    }
+
+    #[test]
     fn write_connect_reply() {
         let reply = ConnectReply {
             server_minor_protocol_version: 0,
             server_major_protocol_version: 1,
+            _marker: PhantomData,
         };
         let mut out = Vec::new();
         write(Request::ConnectReply(reply), &mut out);
 
-        assert_eq!(out, b"\x02\x00\x04\x00\x01\x00\x00\x00");
+        assert_eq!(out, b"\x02\x00\x01\x00\x01\x00\x00\x00");
     }
 }

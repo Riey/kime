@@ -1,12 +1,11 @@
+use ahash::AHashMap;
+use static_assertions::_core::marker::PhantomData;
+use std::convert::{TryFrom, TryInto};
+use std::iter;
 use x11rb::connection::Connection;
 use x11rb::protocol::{xproto::*, Event, Request};
 use x11rb::wrapper::ConnectionExt as _;
 use x11rb::{atom_manager, COPY_DEPTH_FROM_PARENT, CURRENT_TIME, NONE};
-use xim::{
-    Endianness,
-    read as read_xim,
-};
-use ahash::AHashMap;
 
 const TRANSPORT_MAX: u32 = 20;
 
@@ -19,10 +18,15 @@ struct KimeConnection {
     com_win: Window,
     client_win: Window,
     atoms: KimeAtoms,
+    buf: Vec<u8>,
 }
 
 impl KimeConnection {
-    pub fn new(conn: &impl Connection, atoms: KimeAtoms, msg: ClientMessageEvent) -> anyhow::Result<Self> {
+    pub fn new(
+        conn: &impl Connection,
+        atoms: KimeAtoms,
+        msg: ClientMessageEvent,
+    ) -> anyhow::Result<Self> {
         let com_win = conn.generate_id()?;
         conn.create_window(
             COPY_DEPTH_FROM_PARENT,
@@ -38,12 +42,7 @@ impl KimeConnection {
             &Default::default(),
         )?;
 
-        let [client_win, major, minor, ..] = msg.data.as_data32();
-        log::info!("version {}.{}", major, minor);
-
-        if major > 0 {
-            log::error!("kime doesn't support 1.0 > protocol yet!");
-        }
+        let [client_win, ..] = msg.data.as_data32();
 
         let ev = ClientMessageEvent {
             response_type: CLIENT_MESSAGE_EVENT,
@@ -54,13 +53,14 @@ impl KimeConnection {
             sequence: 0,
         };
 
-        conn.send_event(false, client_win, 0u32, ev)?;
+        conn.send_event(false, client_win, 0u32, ev)?.check()?;
         conn.flush()?;
 
         Ok(Self {
             client_win,
             com_win,
             atoms,
+            buf: Vec::with_capacity(512),
         })
     }
 
@@ -68,24 +68,125 @@ impl KimeConnection {
         self.com_win
     }
 
-    pub fn get_msg(&mut self, conn: &impl Connection + ConnectionExt, msg: ClientMessageEvent) -> anyhow::Result<()> {
+    fn proc_request(
+        &mut self,
+        conn: &(impl Connection + ConnectionExt),
+        req: xim::Request,
+    ) -> anyhow::Result<()> {
+        log::trace!("Get request: {:?}", req);
+
+        match req {
+            xim::Request::Connect(connect) => {
+                let reply = xim::Request::ConnectReply(xim::ConnectReply {
+                    server_major_protocol_version: connect.client_major_protocol_version,
+                    server_minor_protocol_version: connect.client_minor_protocol_version,
+                    _marker: PhantomData,
+                });
+                log::trace!("Send {:?}", reply);
+                xim::write(reply, &mut self.buf);
+            }
+            xim::Request::Open(open) => {}
+            xim::Request::ConnectReply(..) | xim::Request::OpenReply(..) => {
+                return Err(anyhow::anyhow!("Invalid request"))
+            }
+        };
+
+        if self.buf.len() > TRANSPORT_MAX as usize {
+            let mut data = [0; 5];
+            data[0] = self.buf.len() as _;
+            data[1] = self.atoms.KIME_COMM;
+            log::trace!("Send property");
+
+            conn.change_property8(
+                PropMode::Append,
+                self.com_win,
+                self.atoms.KIME_COMM,
+                AtomEnum::STRING,
+                &self.buf,
+            )?
+            .check()?;
+            // conn.send_event(
+            //     false,
+            //     self.client_win,
+            //     0u32,
+            //     PropertyNotifyEvent {
+            //         window: self.client_win,
+            //         atom: self.atoms.KIME_COMM,
+            //         state: Property::NewValue,
+            //         time: CURRENT_TIME,
+            //         sequence: 0,
+            //         response_type: PROPERTY_NOTIFY_EVENT,
+            //     },
+            // )?
+            // .check()?;
+
+            conn.send_event(
+                false,
+                self.client_win,
+                0u32,
+                ClientMessageEvent {
+                    window: self.client_win,
+                    type_: self.atoms.XIM_PROTOCOL,
+                    format: 32,
+                    sequence: 0,
+                    response_type: CLIENT_MESSAGE_EVENT,
+                    data: ClientMessageData::from(data),
+                },
+            )?
+            .check()?;
+        } else {
+            self.buf.resize(20, 0);
+
+            let data = <[u8; 20]>::try_from(self.buf.as_slice())?.into();
+            log::trace!("Send CM, {:?}", data);
+
+            conn.send_event(
+                false,
+                self.client_win,
+                0u32,
+                ClientMessageEvent {
+                    window: self.client_win,
+                    type_: self.atoms.XIM_PROTOCOL,
+                    format: 8,
+                    sequence: 0,
+                    response_type: CLIENT_MESSAGE_EVENT,
+                    data,
+                },
+            )?
+            .check()?;
+        }
+
+        conn.flush()?;
+
+        self.buf.clear();
+
+        Ok(())
+    }
+
+    pub fn get_msg(
+        &mut self,
+        conn: &(impl Connection + ConnectionExt),
+        msg: ClientMessageEvent,
+    ) -> anyhow::Result<()> {
         if msg.format == 32 {
-            conn.change_property8()
-            todo!("property pass")
+            let [length, atom, ..] = msg.data.as_data32();
+            let data = conn
+                .get_property(true, msg.window, atom, AtomEnum::Any, 0, length)?
+                .reply()?
+                .value;
+            log::trace!("prop data: {:?}", data);
+            self.proc_request(conn, xim::read(&data)?)?;
         } else {
             if msg.type_ == self.atoms.XIM_PROTOCOL {
                 let data = msg.data.as_data8();
-                let item_count = data[2] as usize;
-                let req_length = item_count * 4 + 4;
-
-                let data = &data[..req_length];
-
+                self.proc_request(conn, xim::read(&data)?)?;
             } else if msg.type_ == self.atoms.XIM_MOREDATA {
                 return Err(anyhow::anyhow!("MOREDATA not yet support"));
             } else {
                 log::error!("Unknown client message");
             }
         }
+
         Ok(())
     }
 }
@@ -96,6 +197,7 @@ atom_manager! {
         XIM_XCONNECT: b"_XIM_XCONNECT",
         XIM_PROTOCOL: b"_XIM_PROTOCOL",
         XIM_MOREDATA: b"_XIM_MOREDATA",
+        KIME_COMM: b"KIME_COMM",
         LOCALES,
         TRANSPORT,
         SERVER_NAME: b"@server=kime",
@@ -190,7 +292,11 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
         })
     }
 
-    fn send_selection_notify(&mut self, req: SelectionRequestEvent, data: &str) -> anyhow::Result<()> {
+    fn send_selection_notify(
+        &mut self,
+        req: SelectionRequestEvent,
+        data: &str,
+    ) -> anyhow::Result<()> {
         let e = SelectionNotifyEvent {
             response_type: SELECTION_NOTIFY_EVENT,
             property: req.property,
@@ -198,11 +304,21 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
             target: req.target,
             selection: req.selection,
             requestor: req.requestor,
-            sequence: 0
+            sequence: 0,
         };
 
-        self.conn.change_property8(PropMode::Replace, req.requestor, req.property, req.target, data.as_bytes())?;
-        self.conn.send_event(false, req.requestor, 0u32, e)?;
+        self.conn
+            .change_property8(
+                PropMode::Replace,
+                req.requestor,
+                req.property,
+                req.target,
+                data.as_bytes(),
+            )?
+            .check()?;
+        self.conn
+            .send_event(false, req.requestor, 0u32, e)?
+            .check()?;
         self.conn.flush()?;
 
         Ok(())
@@ -261,6 +377,7 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
                 Event::Error(err) => {
                     log::error!("X11 Error occur: {:?}", err);
                 }
+                Event::PropertyNotify(notify) => {}
                 _ => {}
             }
         }

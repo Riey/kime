@@ -8,6 +8,11 @@ use x11rb::wrapper::ConnectionExt as _;
 use x11rb::{atom_manager, COPY_DEPTH_FROM_PARENT, CURRENT_TIME, NONE};
 
 const TRANSPORT_MAX: u32 = 20;
+const XIM_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] =
+    &[(xim::XimString(b"queryInputStyle"), xim::AttrType::Style)];
+const XIC_ATTRIBUTES: &[(xim::XimString, xim::AttrType)] =
+    &[(xim::XimString(b"inputStyle"), xim::AttrType::Long)];
+const SERVER_PROTOCOL: (u32, u32) = (2, 0);
 
 fn atom_name(conn: &impl ConnectionExt, atom: Atom) -> anyhow::Result<String> {
     let name = conn.get_atom_name(atom)?.reply()?;
@@ -19,12 +24,14 @@ struct KimeConnection {
     client_win: Window,
     atoms: KimeAtoms,
     buf: Vec<u8>,
+    im_id: u16,
 }
 
 impl KimeConnection {
     pub fn new(
         conn: &impl Connection,
         atoms: KimeAtoms,
+        im_id: u16,
         msg: ClientMessageEvent,
     ) -> anyhow::Result<Self> {
         let com_win = conn.generate_id()?;
@@ -49,7 +56,14 @@ impl KimeConnection {
             window: client_win,
             type_: atoms.XIM_XCONNECT,
             format: 32,
-            data: [com_win, 0, 2, TRANSPORT_MAX, 0].into(),
+            data: [
+                com_win,
+                SERVER_PROTOCOL.0,
+                SERVER_PROTOCOL.1,
+                TRANSPORT_MAX,
+                0,
+            ]
+            .into(),
             sequence: 0,
         };
 
@@ -60,6 +74,7 @@ impl KimeConnection {
             client_win,
             com_win,
             atoms,
+            im_id,
             buf: Vec::with_capacity(512),
         })
     }
@@ -68,29 +83,12 @@ impl KimeConnection {
         self.com_win
     }
 
-    fn proc_request(
-        &mut self,
-        conn: &(impl Connection + ConnectionExt),
-        req: xim::Request,
-    ) -> anyhow::Result<()> {
-        log::trace!("Get request: {:?}", req);
+    fn send_reply(&mut self, reply: xim::Request) {
+        log::trace!("Send reply: {:?}", reply);
+        xim::write(reply, &mut self.buf);
+    }
 
-        match req {
-            xim::Request::Connect(connect) => {
-                let reply = xim::Request::ConnectReply(xim::ConnectReply {
-                    server_major_protocol_version: connect.client_major_protocol_version,
-                    server_minor_protocol_version: connect.client_minor_protocol_version,
-                    _marker: PhantomData,
-                });
-                log::trace!("Send {:?}", reply);
-                xim::write(reply, &mut self.buf);
-            }
-            xim::Request::Open(open) => {}
-            xim::Request::ConnectReply(..) | xim::Request::OpenReply(..) => {
-                return Err(anyhow::anyhow!("Invalid request"))
-            }
-        };
-
+    fn flush_reply(&mut self, conn: &(impl Connection + ConnectionExt)) -> anyhow::Result<()> {
         if self.buf.len() > TRANSPORT_MAX as usize {
             let mut data = [0; 5];
             data[0] = self.buf.len() as _;
@@ -99,41 +97,40 @@ impl KimeConnection {
 
             conn.change_property8(
                 PropMode::Append,
-                self.com_win,
+                self.client_win,
                 self.atoms.KIME_COMM,
                 AtomEnum::STRING,
                 &self.buf,
+            )?
+            .check()?;
+            conn.send_event(
+                false,
+                self.client_win,
+                0u32,
+                PropertyNotifyEvent {
+                    window: self.client_win,
+                    atom: self.atoms.KIME_COMM,
+                    state: Property::NewValue,
+                    time: CURRENT_TIME,
+                    sequence: 0,
+                    response_type: PROPERTY_NOTIFY_EVENT,
+                },
             )?
             .check()?;
             // conn.send_event(
             //     false,
             //     self.client_win,
             //     0u32,
-            //     PropertyNotifyEvent {
+            //     ClientMessageEvent {
             //         window: self.client_win,
-            //         atom: self.atoms.KIME_COMM,
-            //         state: Property::NewValue,
-            //         time: CURRENT_TIME,
+            //         type_: self.atoms.XIM_PROTOCOL,
+            //         format: 32,
             //         sequence: 0,
-            //         response_type: PROPERTY_NOTIFY_EVENT,
+            //         response_type: CLIENT_MESSAGE_EVENT,
+            //         data: ClientMessageData::from(data),
             //     },
             // )?
             // .check()?;
-
-            conn.send_event(
-                false,
-                self.client_win,
-                0u32,
-                ClientMessageEvent {
-                    window: self.client_win,
-                    type_: self.atoms.XIM_PROTOCOL,
-                    format: 32,
-                    sequence: 0,
-                    response_type: CLIENT_MESSAGE_EVENT,
-                    data: ClientMessageData::from(data),
-                },
-            )?
-            .check()?;
         } else {
             self.buf.resize(20, 0);
 
@@ -159,6 +156,61 @@ impl KimeConnection {
         conn.flush()?;
 
         self.buf.clear();
+
+        Ok(())
+    }
+
+    fn proc_request(
+        &mut self,
+        conn: &(impl Connection + ConnectionExt),
+        req: xim::Request,
+    ) -> anyhow::Result<()> {
+        log::trace!("Get request: {:?}", req);
+
+        match req {
+            xim::Request::Connect(connect) => {
+                let reply = xim::Request::ConnectReply(xim::ConnectReply {
+                    server_major_protocol_version: connect.client_major_protocol_version,
+                    server_minor_protocol_version: connect.client_minor_protocol_version,
+                    _marker: PhantomData,
+                });
+                self.send_reply(reply);
+            }
+            xim::Request::Open(xim::Open {
+                name: xim::XimStr(name),
+            }) => {
+                log::trace!("Open {}", std::str::from_utf8(name).unwrap());
+                let reply = xim::Request::OpenReply(xim::OpenReply {
+                    input_method_id: self.im_id,
+                    xim_attributes: XIM_ATTRIBUTES
+                        .iter()
+                        .copied()
+                        .enumerate()
+                        .map(|(id, (name, type_))| xim::Attr {
+                            name,
+                            type_,
+                            id: id as _,
+                        })
+                        .collect(),
+                    xic_attributes: XIC_ATTRIBUTES
+                        .iter()
+                        .copied()
+                        .enumerate()
+                        .map(|(id, (name, type_))| xim::Attr {
+                            name,
+                            type_,
+                            id: id as _,
+                        })
+                        .collect(),
+                });
+                self.send_reply(reply);
+            }
+            xim::Request::ConnectReply(..) | xim::Request::OpenReply(..) => {
+                return Err(anyhow::anyhow!("Invalid request"))
+            }
+        };
+
+        self.flush_reply(conn)?;
 
         Ok(())
     }
@@ -338,7 +390,7 @@ impl<C: Connection + ConnectionExt + Send + Sync> KimeContext<C> {
         log::trace!("client msg ty: {}", atom_name(&self.conn, msg.type_)?);
 
         if msg.type_ == self.atoms.XIM_XCONNECT {
-            let connection = KimeConnection::new(&self.conn, self.atoms, msg)?;
+            let connection = KimeConnection::new(&self.conn, self.atoms, 0, msg)?;
             self.clients.insert(connection.com_win(), connection);
         } else {
             match self.clients.get_mut(&msg.window) {

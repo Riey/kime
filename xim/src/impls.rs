@@ -94,6 +94,7 @@ impl_enum!(CaretDirection, u32);
 impl_enum!(CaretStyle, u32);
 impl_enum!(StrConvFeedbackType, u16);
 impl_enum!(Feedback, u32);
+impl_enum!(AttrType, u16);
 impl_enum!(PreeditState, u32);
 impl_enum!(HotkeyState, u32);
 impl_enum!(ResetState, u32);

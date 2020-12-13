@@ -398,6 +398,7 @@ name = "xim"
 version = "0.1.0"
 dependencies = [
  "enumflags2",
+ "log",
  "num-derive",
  "num-traits",
  "thiserror",

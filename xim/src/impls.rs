@@ -4,12 +4,6 @@ use crate::writer::{Writable, Writer};
 use num_traits::FromPrimitive;
 use std::marker::PhantomData;
 
-fn padded_size(len: impl Into<usize>) -> usize {
-    let len = len.into();
-    let pad = (4 - (len % 4)) % 4;
-    len + pad
-}
-
 macro_rules! read_int {
     ($self:expr, $ty:ty) => {{
         use std::convert::TryInto;
@@ -33,9 +27,6 @@ macro_rules! impl_number {
             fn write(&self, writer: &mut Writer) {
                 writer.write(&self.to_ne_bytes());
             }
-            fn size(&self) -> usize {
-                std::mem::size_of::<$ty>()
-            }
         }
     };
 }
@@ -49,10 +40,6 @@ impl<'a> Readable<'a> for u8 {
 impl Writable for u8 {
     fn write(&self, writer: &mut Writer) {
         writer.u8(*self);
-    }
-
-    fn size(&self) -> usize {
-        1
     }
 }
 
@@ -73,10 +60,6 @@ macro_rules! impl_enum {
         impl Writable for $ty {
             fn write(&self, writer: &mut Writer) {
                 (*self as $repr).write(writer)
-            }
-
-            fn size(&self) -> usize {
-                (*self as $repr).size()
             }
         }
     };
@@ -109,13 +92,6 @@ macro_rules! impl_struct {
                     self.$field.write(writer);
                 )+
             }
-            fn size(&self) -> usize {
-                let mut len = 0;
-                $(
-                    len += self.$field.size();
-                )+
-                len
-            }
         }
     };
     (@$ty:ident, $($field:ident),+) => {
@@ -134,13 +110,6 @@ macro_rules! impl_struct {
                 $(
                     self.$field.write(writer);
                 )+
-            }
-            fn size(&self) -> usize {
-                let mut len = 0;
-                $(
-                    len += self.$field.size();
-                )+
-                len
             }
         }
     };
@@ -174,11 +143,6 @@ impl<'a, T> Readable<'a> for PhantomData<T> {
 impl<T> Writable for PhantomData<T> {
     #[inline(always)]
     fn write(&self, _writer: &mut Writer) {}
-
-    #[inline(always)]
-    fn size(&self) -> usize {
-        0
-    }
 }
 
 impl<'a> Readable<'a> for XimString<'a> {
@@ -194,9 +158,6 @@ impl<'a> Writable for XimString<'a> {
         (self.0.len() as u16).write(writer);
         writer.write(self.0);
     }
-    fn size(&self) -> usize {
-        self.0.len() + 2
-    }
 }
 
 impl<'a> Readable<'a> for XimStr<'a> {
@@ -211,9 +172,6 @@ impl<'a> Writable for XimStr<'a> {
     fn write(&self, writer: &mut Writer) {
         (self.0.len() as u8).write(writer);
         writer.write(self.0);
-    }
-    fn size(&self) -> usize {
-        self.0.len() + 1
     }
 }
 
@@ -253,14 +211,6 @@ impl<'a> Writable for Connect<'a> {
     fn write(&self, _writer: &mut Writer) {
         unimplemented!()
     }
-
-    fn size(&self) -> usize {
-        self.client_auth_protocol_names
-            .iter()
-            .map(Writable::size)
-            .sum::<usize>()
-            + 8
-    }
 }
 
 impl<'a> Readable<'a> for Attr<'a> {
@@ -280,9 +230,6 @@ impl<'a> Writable for Attr<'a> {
         self.type_.write(writer);
         self.name.write(writer);
         writer.pad();
-    }
-    fn size(&self) -> usize {
-        padded_size(4 + self.name.size())
     }
 }
 
@@ -318,40 +265,24 @@ impl<'a> Writable for OpenReply<'a> {
     fn write(&self, writer: &mut Writer) {
         self.input_method_id.write(writer);
 
-        let n = self
-            .xim_attributes
-            .iter()
-            .map(Writable::size)
-            .sum::<usize>() as u16;
-        let m = self
-            .xic_attributes
-            .iter()
-            .map(Writable::size)
-            .sum::<usize>() as u16;
-
-        n.write(writer);
+        0u16.write(writer);
+        let mark = writer.mark_len();
         for attr in self.xim_attributes.iter() {
             attr.write(writer);
         }
 
-        m.write(writer);
+        writer.write_u16_len(mark);
+
+        0u16.write(writer);
+        let mark = writer.mark_len();
+
         0u16.write(writer);
         for attr in self.xic_attributes.iter() {
             attr.write(writer);
         }
-    }
 
-    fn size(&self) -> usize {
-        self.xim_attributes
-            .iter()
-            .map(Writable::size)
-            .sum::<usize>()
-            + self
-                .xic_attributes
-                .iter()
-                .map(Writable::size)
-                .sum::<usize>()
-            + 8
+        // sub 2 byte for ignore unused
+        writer.write_u16_len_sub(mark, 2);
     }
 }
 
@@ -380,10 +311,6 @@ impl<'a> Writable for QueryExtension<'a> {
     fn write(&self, writer: &mut Writer) {
         self.input_method_id.write(writer);
     }
-
-    fn size(&self) -> usize {
-        padded_size(4 + self.extensions.iter().map(Writable::size).sum::<usize>())
-    }
 }
 
 impl<'a> Readable<'a> for QueryExtensionReply<'a> {
@@ -410,16 +337,13 @@ impl<'a> Readable<'a> for QueryExtensionReply<'a> {
 impl<'a> Writable for QueryExtensionReply<'a> {
     fn write(&self, writer: &mut Writer) {
         self.input_method_id.write(writer);
-        let size = self.extensions.iter().map(Writable::size).sum::<usize>() as u16;
-        size.write(writer);
+        0u16.write(writer);
+        let mark = writer.mark_len();
         for ex in self.extensions.iter() {
             ex.write(writer);
         }
+        writer.write_u16_len(mark);
         writer.pad();
-    }
-
-    fn size(&self) -> usize {
-        4 + self.extensions.iter().map(Writable::size).sum::<usize>()
     }
 }
 
@@ -435,10 +359,6 @@ impl<'a> Writable for Open<'a> {
     fn write(&self, writer: &mut Writer) {
         self.name.write(writer);
         writer.pad();
-    }
-
-    fn size(&self) -> usize {
-        padded_size(self.name.size())
     }
 }
 
@@ -463,9 +383,5 @@ impl<'a> Writable for Extension<'a> {
         self.minor_opcode.write(out);
         self.name.write(out);
         out.pad();
-    }
-
-    fn size(&self) -> usize {
-        padded_size(4 + self.name.size())
     }
 }

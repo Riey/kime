@@ -1,11 +1,15 @@
 use x11rb::protocol::xproto::KeyPressEvent;
+use x11rb::protocol::xproto::{EventMask, KEY_PRESS_EVENT};
 use xim::{
     x11rb::{HasConnection, X11rbServer},
     InputStyle, Server, ServerHandler,
 };
 
-#[derive(Default)]
-pub struct KimeData {}
+use crate::engine::{DubeolSik, InputEngine, InputResult};
+
+pub struct KimeData {
+    engine: InputEngine<DubeolSik>,
+}
 
 pub struct KimeHandler {}
 
@@ -19,11 +23,17 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
     type InputStyleArray = [InputStyle; 1];
     type InputContextData = KimeData;
 
+    fn new_ic_data(&mut self) -> Self::InputContextData {
+        KimeData {
+            engine: InputEngine::new(DubeolSik::new()),
+        }
+    }
+
     fn input_styles(&self) -> Self::InputStyleArray {
         [InputStyle::PREEDITNOTHING | InputStyle::PREEDITNOTHING]
     }
 
-    fn handle_connect(&mut self, server: &mut X11rbServer<C>) -> Result<(), xim::ServerError> {
+    fn handle_connect(&mut self, _server: &mut X11rbServer<C>) -> Result<(), xim::ServerError> {
         Ok(())
     }
 
@@ -32,7 +42,16 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         server: &mut X11rbServer<C>,
         input_context: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        server.commit(input_context.client_win(), input_context.input_method_id(), input_context.input_context_id(), "가나다")?;
+        log::info!("Send event mask");
+        server.set_event_mask(
+            input_context.client_win(),
+            input_context.input_method_id(),
+            input_context.input_context_id(),
+            EventMask::KeyPress | EventMask::KeyRelease,
+            0,
+            // EventMask::KeyPress | EventMask::KeyRelease,
+        )?;
+
         Ok(())
     }
 
@@ -42,6 +61,36 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         input_context: &mut xim::InputContext<Self::InputContextData>,
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
-        Ok(true)
+        if xev.response_type == KEY_PRESS_EVENT {
+            let ret = input_context.user_data.engine.key_press(xev.detail);
+            log::trace!("ret: {:?}", ret);
+
+            match ret {
+                InputResult::Bypass => Ok(false),
+                InputResult::CommitBypass(ch) => {
+                    server.commit(
+                        input_context.client_win(),
+                        input_context.input_method_id(),
+                        input_context.input_context_id(),
+                        &ch.to_string(),
+                    )?;
+                    Ok(false)
+                }
+                InputResult::Commit(ch) => {
+                    server.commit(
+                        input_context.client_win(),
+                        input_context.input_method_id(),
+                        input_context.input_context_id(),
+                        &ch.to_string(),
+                    )?;
+                    Ok(true)
+                }
+                InputResult::Preedit(..) => Ok(true),
+            }
+        } else {
+            Ok(false)
+        }
     }
+
+    fn handle_destory_ic(&mut self, _input_context: xim::InputContext<Self::InputContextData>) {}
 }

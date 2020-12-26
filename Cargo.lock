@@ -152,12 +152,20 @@ dependencies = [
  "ahash",
  "anyhow",
  "cstr",
+ "korean",
  "log",
  "pretty_env_logger",
  "static_assertions",
  "x11rb",
  "xim",
+ "xkbcommon",
 ]
+
+[[package]]
+name = "korean"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82d10ac751a2e7439dd30e2f5231e8bfc775b9aa6a81826ef737ad76af103da2"
 
 [[package]]
 name = "lazy_static"
@@ -425,7 +433,6 @@ dependencies = [
 [[package]]
 name = "xim"
 version = "0.1.0"
-source = "git+https://github.com/Riey/xim-rs#eaf0365964117532b5f7c66aa533e1654834ec53"
 dependencies = [
  "ahash",
  "ctext",
@@ -438,7 +445,6 @@ dependencies = [
 [[package]]
 name = "xim-gen"
 version = "0.1.0"
-source = "git+https://github.com/Riey/xim-rs#eaf0365964117532b5f7c66aa533e1654834ec53"
 dependencies = [
  "serde",
  "serde_yaml",
@@ -447,12 +453,20 @@ dependencies = [
 [[package]]
 name = "xim-parser"
 version = "0.1.0"
-source = "git+https://github.com/Riey/xim-rs#eaf0365964117532b5f7c66aa533e1654834ec53"
 dependencies = [
  "bitflags",
  "bstr",
  "thiserror",
  "xim-gen",
+]
+
+[[package]]
+name = "xkbcommon"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fda0ea5f7ddabd51deeeda7799bee06274112f577da7dd3d954b8eda731b2fce"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

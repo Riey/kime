@@ -1,6 +1,7 @@
 use x11rb::connection::Connection;
 use xim::{ServerError, XimConnections};
 
+mod engine;
 mod handler;
 
 fn main() -> Result<(), ServerError> {

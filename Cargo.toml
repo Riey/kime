@@ -9,8 +9,11 @@ license = "GPL-3.0"
 ahash = "0.6.2"
 anyhow = "1.0.36"
 cstr = "0.2.8"
+korean = "0.3.1"
 log = "0.4.11"
 pretty_env_logger = "0.4.0"
 static_assertions = "1.1.0"
-x11rb = "0.7.0"
-xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server"] }
+x11rb = { version = "0.7.0" }
+# xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server"] }
+xim = { path = "../xim-rs", default-features = false, features = ["x11rb-server"] }
+xkbcommon = "0.4.0"

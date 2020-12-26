@@ -1,8 +1,99 @@
 use super::{
-    compose::{compose_syllable, decompose_syllable, jamo_to_chara, jong_to_cho},
+    compose::{compose_syllable, decompose_syllable},
     keycode::*,
     InputLayout, InputResult,
 };
+
+macro_rules! define_symbol {
+    (
+        @jaum [$(($jaum_key:tt, $jaum_ch:expr, $cho:expr, $jong:expr),)+]
+        @moum [$(($moum_key:tt, $moum_ch:expr, $moum:expr),)+]
+    ) => {
+        fn jong_to_cho(jong: char) -> char {
+            match jong {
+                $(
+                    $jong => $cho,
+                )+
+                _ => '\0',
+            }
+        }
+
+        fn cho_to_char(cho: char) -> char {
+            match cho {
+                $(
+                    $cho => $jaum_ch,
+                )+
+                _ => '\0',
+            }
+        }
+
+        fn moum_to_char(mo: char) -> char {
+            match mo {
+                $(
+                    $moum => $moum_ch,
+                )+
+                _ => '\0',
+            }
+        }
+
+        impl InputLayout for DubeolSik {
+            fn map_key(&mut self, keycode: u8) -> InputResult {
+                match keycode {
+                    $(
+                        $jaum_key => self.state.jaum($cho, $jong),
+                    )+
+                    $(
+                        $moum_key => self.state.moum($moum),
+                    )+
+                    _ => self.state.other(),
+                }
+            }
+        }
+    };
+}
+
+define_symbol! {
+    @jaum [
+        (Q, 'ㅂ', 'ᄇ', 'ᆸ'),
+        (W, 'ㅈ', 'ᄌ', 'ᆽ'),
+        (E, 'ㄷ', 'ᄃ', 'ᆮ'),
+        (R, 'ㄱ', 'ᄀ', 'ᆨ'),
+        (T, 'ㅅ', 'ᄉ', 'ᆺ'),
+        (A, 'ㅁ', 'ᄆ', 'ᆷ'),
+        (S, 'ㄴ', 'ᄂ', 'ᆫ'),
+        (D, 'ㅇ', 'ᄋ', 'ᆼ'),
+        (F, 'ㄹ', 'ᄅ', 'ᆯ'),
+        (G, 'ㅎ', 'ᄒ', 'ᇂ'),
+        (Z, 'ㅋ', 'ᄏ', 'ᆿ'),
+        (X, 'ㅌ', 'ᄐ', 'ᇀ'),
+        (C, 'ㅊ', 'ᄎ', 'ᆾ'),
+        (V, 'ㅍ', 'ᄑ', 'ᇁ'),
+    ]
+
+    @moum [
+        (Y, 'ㅛ', 'ᅭ'),
+        (I, 'ㅛ', 'ᅣ'),
+        (O, 'ㅐ', 'ᅢ'),
+        (P, 'ㅔ', 'ᅦ'),
+
+        (H, 'ㅗ', 'ᅩ'),
+        (J, 'ㅓ', 'ᅥ'),
+        (K, 'ㅏ', 'ᅡ'),
+        (L, 'ㅣ', 'ᅵ'),
+
+        (B, 'ㅠ', 'ᅲ'),
+        (N, 'ㅜ', 'ᅮ'),
+        (M, 'ㅡ', 'ᅳ'),
+    ]
+}
+
+macro_rules! check_compose {
+    ($prev_ch:expr, $current_ch:expr, $prev:expr, $current:expr, $out:expr) => {
+        if $prev_ch == $prev && $current_ch == $current {
+            return InputResult::
+        }
+    };
+}
 
 #[derive(Clone, Copy)]
 enum DubeolSikState {
@@ -22,12 +113,12 @@ impl DubeolSikState {
             }
             DubeolSikState::Choseong(ch) => {
                 *self = DubeolSikState::Choseong(choseong);
-                InputResult::Commit(jamo_to_chara(ch))
+                InputResult::Commit(cho_to_char(ch))
             }
             DubeolSikState::JungSeong(ch) => {
                 let ch = compose_syllable(choseong, ch).unwrap();
                 *self = DubeolSikState::ChoseongJungSeong(ch);
-                InputResult::Preedit(jamo_to_chara(ch))
+                InputResult::Preedit(moum_to_char(ch))
             }
             DubeolSikState::ChoseongJungSeong(ch) => {
                 let ch = compose_syllable(ch, jongseong).unwrap();
@@ -54,7 +145,7 @@ impl DubeolSikState {
             }
             DubeolSikState::JungSeong(ch) => {
                 *self = DubeolSikState::JungSeong(jungseong);
-                InputResult::Commit(jamo_to_chara(ch))
+                InputResult::Commit(moum_to_char(ch))
             }
             DubeolSikState::ChoseongJungSeong(ch) => {
                 *self = DubeolSikState::JungSeong(jungseong);
@@ -80,10 +171,11 @@ impl DubeolSikState {
     pub fn other(&mut self) -> InputResult {
         match *self {
             DubeolSikState::Empty => InputResult::Bypass,
-            DubeolSikState::Choseong(ch)
-            | DubeolSikState::ChoseongJungSeong(ch)
-            | DubeolSikState::JungSeong(ch)
-            | DubeolSikState::Complete(ch) => {
+            DubeolSikState::Choseong(ch) | DubeolSikState::JungSeong(ch) => {
+                *self = DubeolSikState::Empty;
+                InputResult::CommitBypass(moum_to_char(ch))
+            }
+            DubeolSikState::ChoseongJungSeong(ch) | DubeolSikState::Complete(ch) => {
                 *self = DubeolSikState::Empty;
                 InputResult::CommitBypass(ch)
             }
@@ -103,36 +195,7 @@ impl DubeolSik {
     }
 }
 
-impl InputLayout for DubeolSik {
-    fn map_key(&mut self, keycode: u8) -> InputResult {
-        match keycode {
-            Q => self.state.jaum('ᄇ', 'ᆸ'),
-            W => self.state.jaum('ᄌ', 'ᆽ'),
-            E => self.state.jaum('ᄃ', 'ᆮ'),
-            R => self.state.jaum('ᄀ', 'ᆨ'),
-            T => self.state.jaum('ᄉ', 'ᆺ'),
-            Y => self.state.moum('ᅭ'),
-            I => self.state.moum('ᅣ'),
-            O => self.state.moum('ᅢ'),
-            P => self.state.moum('ᅦ'),
-            A => self.state.jaum('ᄆ', 'ᆷ'),
-            S => self.state.jaum('ᄂ', 'ᆫ'),
-            D => self.state.jaum('ᄋ', 'ᆼ'),
-            F => self.state.jaum('ᄅ', 'ᆯ'),
-            G => self.state.jaum('ᄒ', 'ᇂ'),
-            H => self.state.moum('ᅩ'),
-            J => self.state.moum('ᅥ'),
-            K => self.state.moum('ᅡ'),
-            L => self.state.moum('ᅵ'),
-
-            Z => self.state.jaum('ᄏ', 'ᆿ'),
-            X => self.state.jaum('ᄐ', 'ᇀ'),
-            C => self.state.jaum('ᄎ', 'ᆾ'),
-            V => self.state.jaum('ᄑ', 'ᇁ'),
-            B => self.state.moum('ᅲ'),
-            N => self.state.moum('ᅮ'),
-            M => self.state.moum('ᅳ'),
-            _ => self.state.other(),
-        }
-    }
+#[test]
+fn jo_to_cho() {
+    assert_eq!(jong_to_cho('ᆺ'), 'ᄉ');
 }

@@ -26,31 +26,10 @@ pub const T_COUNT: u32 = 28;
 pub const N_COUNT: u32 = V_COUNT * T_COUNT;
 pub const S_COUNT: u32 = L_COUNT * N_COUNT;
 
-pub const JA_BASE: u32 = 0x3131;
-pub const MO_BASE: u32 = 0x314F;
-
 /// Whether the character is a (precomposed) Hangul Syllable
 pub fn is_syllable(ch: char) -> bool {
     let cp = ch as u32;
     cp >= S_BASE && cp < (S_BASE + S_COUNT)
-}
-
-#[inline]
-pub fn jong_to_cho(ch: char) -> char {
-    unsafe { char::from_u32_unchecked(ch as u32 - T_BASE + L_BASE - 2) }
-}
-
-#[inline]
-pub fn jamo_to_chara(ch: char) -> char {
-    let ch = ch as u32;
-
-    if ch > T_BASE {
-        unsafe { char::from_u32_unchecked(JA_BASE + ch - T_BASE - 2) }
-    } else if ch > V_BASE {
-        unsafe { char::from_u32_unchecked(MO_BASE + ch - V_BASE) }
-    } else {
-        unsafe { char::from_u32_unchecked(JA_BASE + ch - L_BASE) }
-    }
 }
 
 /// Decompose a precomposed Hangul syllable

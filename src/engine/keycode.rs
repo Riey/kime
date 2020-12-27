@@ -28,3 +28,6 @@ pub const V: u8 = 55;
 pub const B: u8 = 56;
 pub const N: u8 = 57;
 pub const M: u8 = 58;
+
+pub const HENKAN: u8 = 100;
+pub const R_ALT: u8 = 108;

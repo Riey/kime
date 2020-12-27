@@ -4,7 +4,7 @@ mod keycode;
 
 pub use self::dubeolsik::DubeolSik;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InputResult {
     Preedit(char),
     Commit(char),

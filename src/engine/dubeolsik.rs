@@ -61,6 +61,10 @@ macro_rules! define_symbol {
                     _ => self.state.other(),
                 }
             }
+
+            fn reset(&mut self) -> Option<char> {
+                self.state.reset()
+            }
         }
     };
 }
@@ -114,6 +118,15 @@ enum DubeolSikState {
 }
 
 impl DubeolSikState {
+    pub fn reset(&mut self) -> Option<char> {
+        match *self {
+            DubeolSikState::Empty => None,
+            DubeolSikState::ChoseongJungSeong(ch) | DubeolSikState::Complete(ch) => Some(ch),
+            DubeolSikState::Choseong(ch) => Some(cho_to_char(ch)),
+            DubeolSikState::JungSeong(ch) => Some(moum_to_char(ch)),
+        }
+    }
+
     pub fn jaum(&mut self, choseong: char, jongseong: char) -> InputResult {
         match *self {
             DubeolSikState::Empty => {

@@ -8,6 +8,7 @@ pub use self::dubeolsik::DubeolSik;
 pub enum InputResult {
     Preedit(char),
     Commit(char),
+    Consume,
     Bypass,
     CommitBypass(char),
     /// (commit, preedit)
@@ -16,6 +17,7 @@ pub enum InputResult {
 
 pub trait InputLayout {
     fn map_key(&mut self, keycode: u8) -> InputResult;
+    fn reset(&mut self) -> Option<char>;
 }
 
 pub struct InputEngine<Layout: InputLayout> {
@@ -26,16 +28,26 @@ pub struct InputEngine<Layout: InputLayout> {
 impl<Layout: InputLayout> InputEngine<Layout> {
     pub fn new(layout: Layout) -> Self {
         Self {
-            enable_hangul: true,
+            enable_hangul: false,
             layout,
         }
     }
 
     pub fn key_press(&mut self, keycode: u8) -> InputResult {
+        if matches!(keycode, keycode::HENKAN | keycode::R_ALT) {
+            log::trace!("Trigger hangul");
+            self.enable_hangul = !self.enable_hangul;
+            return InputResult::Consume;
+        }
+
         if self.enable_hangul {
             self.layout.map_key(keycode)
         } else {
             InputResult::Bypass
         }
+    }
+
+    pub fn reset(&mut self) -> String {
+        self.layout.reset().map_or(String::new(), Into::into)
     }
 }

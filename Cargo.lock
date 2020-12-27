@@ -21,10 +21,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.36"
+name = "ansi_term"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68803225a7b13e47191bab76f2687382b60d259e8cf37f6e1893658b84bb9479"
+checksum = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
+dependencies = [
+ "winapi",
+]
 
 [[package]]
 name = "atty"
@@ -73,19 +76,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
-name = "cstr"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c11a39d776a3b35896711da8a04dc1835169dcd36f710878187637314e47941b"
-dependencies = [
- "proc-macro2",
- "quote",
-]
-
-[[package]]
 name = "ctext"
 version = "0.1.0"
 source = "git+https://github.com/Riey/ctext-rs#94b83abb5e7a23e55b134a2fd1cfded9d8f7912d"
+
+[[package]]
+name = "ctor"
+version = "0.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fbaabec2c953050352311293be5c6aba8e141ba19d6811862b232d6fd020484"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "difference"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
 
 [[package]]
 name = "dtoa"
@@ -149,23 +158,12 @@ dependencies = [
 name = "kime"
 version = "0.1.0"
 dependencies = [
- "ahash",
- "anyhow",
- "cstr",
- "korean",
  "log",
+ "pretty_assertions",
  "pretty_env_logger",
- "static_assertions",
  "x11rb",
  "xim",
- "xkbcommon",
 ]
-
-[[package]]
-name = "korean"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d10ac751a2e7439dd30e2f5231e8bfc775b9aa6a81826ef737ad76af103da2"
 
 [[package]]
 name = "lazy_static"
@@ -210,6 +208,27 @@ dependencies = [
  "cc",
  "cfg-if",
  "libc",
+]
+
+[[package]]
+name = "output_vt100"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53cdc5b785b7a58c5aad8216b3dfa114df64b0b06ae6e1501cef91df2fbdf8f9"
+dependencies = [
+ "winapi",
+]
+
+[[package]]
+name = "pretty_assertions"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f81e1644e1b54f5a68959a29aa86cde704219254669da328ecfdf6a1f09d427"
+dependencies = [
+ "ansi_term",
+ "ctor",
+ "difference",
+ "output_vt100",
 ]
 
 [[package]]
@@ -304,12 +323,6 @@ dependencies = [
  "serde",
  "yaml-rust",
 ]
-
-[[package]]
-name = "static_assertions"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "syn"
@@ -458,15 +471,6 @@ dependencies = [
  "bstr",
  "thiserror",
  "xim-gen",
-]
-
-[[package]]
-name = "xkbcommon"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fda0ea5f7ddabd51deeeda7799bee06274112f577da7dd3d954b8eda731b2fce"
-dependencies = [
- "libc",
 ]
 
 [[package]]

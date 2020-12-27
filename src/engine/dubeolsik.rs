@@ -136,7 +136,7 @@ impl DubeolSikState {
             }
             DubeolSikState::Complete(ch) => {
                 *self = DubeolSikState::Choseong(choseong);
-                InputResult::Commit(ch)
+                InputResult::CommitPreedit(ch, cho_to_char(choseong))
             }
         }
     }
@@ -184,11 +184,11 @@ impl DubeolSikState {
 
                 debug_assert_ne!(jong, '\0');
 
-                *self = DubeolSikState::ChoseongJungSeong(
-                    compose_syllable(jong_to_cho(jong), jungseong).unwrap(),
-                );
+                let preedit = compose_syllable(jong_to_cho(jong), jungseong).unwrap();
 
-                InputResult::Commit(compose_syllable(cho, jung).unwrap())
+                *self = DubeolSikState::ChoseongJungSeong(preedit);
+
+                InputResult::CommitPreedit(compose_syllable(cho, jung).unwrap(), preedit)
             }
         }
     }
@@ -196,7 +196,11 @@ impl DubeolSikState {
     pub fn other(&mut self) -> InputResult {
         match *self {
             DubeolSikState::Empty => InputResult::Bypass,
-            DubeolSikState::Choseong(ch) | DubeolSikState::JungSeong(ch) => {
+            DubeolSikState::Choseong(ch) => {
+                *self = DubeolSikState::Empty;
+                InputResult::CommitBypass(cho_to_char(ch))
+            }
+            DubeolSikState::JungSeong(ch) => {
                 *self = DubeolSikState::Empty;
                 InputResult::CommitBypass(moum_to_char(ch))
             }
@@ -220,16 +224,35 @@ impl DubeolSik {
     }
 }
 
-#[test]
-fn jo_to_cho() {
-    assert_eq!(jong_to_cho('ᆺ'), 'ᄉ');
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
 
-#[test]
-fn com_moum() {
-    let mut layout = DubeolSik::new();
+    fn test_input(inputs: &[(u8, InputResult)]) {
+        let mut layout = DubeolSik::new();
 
-    assert_eq!(layout.map_key(D), InputResult::Preedit('ㅇ'));
-    assert_eq!(layout.map_key(H), InputResult::Preedit('오'));
-    assert_eq!(layout.map_key(L), InputResult::Preedit('외'));
+        for (code, expect_result) in inputs.iter().copied() {
+            assert_eq!(expect_result, layout.map_key(code));
+        }
+    }
+
+    #[test]
+    fn jo_to_cho() {
+        assert_eq!(jong_to_cho('ᆺ'), 'ᄉ');
+    }
+
+    #[test]
+    fn com_moum() {
+        test_input(&[
+            (D, InputResult::Preedit('ㅇ')),
+            (H, InputResult::Preedit('오')),
+            (L, InputResult::Preedit('외')),
+            (D, InputResult::Preedit('욍')),
+            (D, InputResult::CommitPreedit('욍', 'ㅇ')),
+            (K, InputResult::Preedit('아')),
+            (S, InputResult::Preedit('안')),
+            (E, InputResult::CommitPreedit('안', 'ㄷ')),
+        ]);
+    }
 }

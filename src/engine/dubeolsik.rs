@@ -8,6 +8,7 @@ macro_rules! define_symbol {
     (
         @jaum [$(($jaum_key:tt, $jaum_ch:expr, $cho:expr, $jong:expr),)+]
         @moum [$(($moum_key:tt, $moum_ch:expr, $moum:expr),)+]
+        @moum_compose [$(($moum_com_ch:expr, $moum_com:expr, $moum_com_left:expr, $moum_com_right:expr),)+]
     ) => {
         fn jong_to_cho(jong: char) -> char {
             match jong {
@@ -31,6 +32,18 @@ macro_rules! define_symbol {
             match mo {
                 $(
                     $moum => $moum_ch,
+                )+
+                $(
+                    $moum_com => $moum_com_ch,
+                )+
+                _ => '\0',
+            }
+        }
+
+        fn try_compose_moum(left: char, right: char) -> char {
+            match (left, right) {
+                $(
+                    ($moum_com_left, $moum_com_right) => $moum_com,
                 )+
                 _ => '\0',
             }
@@ -85,14 +98,10 @@ define_symbol! {
         (N, 'ㅜ', 'ᅮ'),
         (M, 'ㅡ', 'ᅳ'),
     ]
-}
 
-macro_rules! check_compose {
-    ($prev_ch:expr, $current_ch:expr, $prev:expr, $current:expr, $out:expr) => {
-        if $prev_ch == $prev && $current_ch == $current {
-            return InputResult::
-        }
-    };
+    @moum_compose [
+        ('ㅚ', 'ᅬ', 'ᅩ', 'ᅵ'),
+    ]
 }
 
 #[derive(Clone, Copy)]
@@ -109,7 +118,7 @@ impl DubeolSikState {
         match *self {
             DubeolSikState::Empty => {
                 *self = DubeolSikState::Choseong(choseong);
-                InputResult::Preedit(choseong)
+                InputResult::Preedit(cho_to_char(choseong))
             }
             DubeolSikState::Choseong(ch) => {
                 *self = DubeolSikState::Choseong(choseong);
@@ -144,20 +153,36 @@ impl DubeolSikState {
                 InputResult::Preedit(ch)
             }
             DubeolSikState::JungSeong(ch) => {
-                *self = DubeolSikState::JungSeong(jungseong);
-                InputResult::Commit(moum_to_char(ch))
+                let com = try_compose_moum(ch, jungseong);
+
+                // compose failed
+                if com == '\0' {
+                    *self = DubeolSikState::JungSeong(jungseong);
+                    InputResult::Commit(moum_to_char(ch))
+                } else {
+                    // 'ㅗ' + 'ㅣ' = 'ㅚ'
+                    *self = DubeolSikState::Complete(com);
+                    InputResult::Preedit(moum_to_char(com))
+                }
             }
             DubeolSikState::ChoseongJungSeong(ch) => {
-                *self = DubeolSikState::JungSeong(jungseong);
-                InputResult::Commit(ch)
+                let (cho, jung, _) = decompose_syllable(ch);
+
+                let com = try_compose_moum(jung, jungseong);
+
+                if com == '\0' {
+                    *self = DubeolSikState::JungSeong(jungseong);
+                    InputResult::Commit(ch)
+                } else {
+                    let ch = compose_syllable(cho, com).unwrap();
+                    *self = DubeolSikState::ChoseongJungSeong(ch);
+                    InputResult::Preedit(ch)
+                }
             }
             DubeolSikState::Complete(ch) => {
                 let (cho, jung, jong) = decompose_syllable(ch);
 
                 debug_assert_ne!(jong, '\0');
-
-                dbg!(jong);
-                dbg!(jungseong);
 
                 *self = DubeolSikState::ChoseongJungSeong(
                     compose_syllable(jong_to_cho(jong), jungseong).unwrap(),
@@ -198,4 +223,13 @@ impl DubeolSik {
 #[test]
 fn jo_to_cho() {
     assert_eq!(jong_to_cho('ᆺ'), 'ᄉ');
+}
+
+#[test]
+fn com_moum() {
+    let mut layout = DubeolSik::new();
+
+    assert_eq!(layout.map_key(D), InputResult::Preedit('ㅇ'));
+    assert_eq!(layout.map_key(H), InputResult::Preedit('오'));
+    assert_eq!(layout.map_key(L), InputResult::Preedit('외'));
 }

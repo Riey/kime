@@ -85,6 +85,15 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
                     )?;
                     Ok(true)
                 }
+                InputResult::CommitPreedit(commit, _preedit) => {
+                    server.commit(
+                        input_context.client_win(),
+                        input_context.input_method_id(),
+                        input_context.input_context_id(),
+                        &commit.to_string(),
+                    )?;
+                    Ok(true)
+                }
                 InputResult::Preedit(..) => Ok(true),
             }
         } else {

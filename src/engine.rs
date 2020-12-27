@@ -10,6 +10,8 @@ pub enum InputResult {
     Commit(char),
     Bypass,
     CommitBypass(char),
+    /// (commit, preedit)
+    CommitPreedit(char, char),
 }
 
 pub trait InputLayout {

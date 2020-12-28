@@ -47,7 +47,7 @@ impl KimeData {
                 0,
                 1,
                 1,
-                5,
+                0,
                 WindowClass::InputOutput,
                 screen.root_visual,
                 &CreateWindowAux::default()
@@ -66,7 +66,8 @@ impl KimeData {
                 &CreateGCAux::default()
                     .foreground(screen.white_pixel)
                     .background(screen.black_pixel),
-            )?.check()?;
+            )?
+            .check()?;
         }
 
         Ok(Self {
@@ -75,6 +76,16 @@ impl KimeData {
             pixmap,
             gc,
         })
+    }
+
+    pub fn clean<C: HasConnection>(self, c: C) -> Result<(), xim::ServerError> {
+        if self.preedit_window != x11rb::NONE {
+            let conn = c.conn();
+            conn.free_pixmap(self.pixmap)?.ignore_error();
+            conn.free_gc(self.gc)?.ignore_error();
+        }
+
+        Ok(())
     }
 }
 
@@ -103,7 +114,6 @@ impl KimeHandler {
             server.preedit_draw(ic, &self.buf)?;
         } else {
             // off-the-spot draw in server
-            
         }
         self.buf.clear();
 
@@ -178,9 +188,10 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_reset_ic(
         &mut self,
+        _server: &mut X11rbServer<C>,
         input_context: &mut xim::InputContext<Self::InputContextData>,
-    ) -> String {
-        input_context.user_data.engine.reset()
+    ) -> Result<String, xim::ServerError> {
+        Ok(input_context.user_data.engine.reset())
     }
 
     fn handle_forward_event(
@@ -219,7 +230,13 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         }
     }
 
-    fn handle_destory_ic(&mut self, _input_context: xim::InputContext<Self::InputContextData>) {}
+    fn handle_destory_ic(
+        &mut self,
+        server: &mut X11rbServer<C>,
+        input_context: xim::InputContext<Self::InputContextData>,
+    ) -> Result<(), xim::ServerError> {
+        input_context.user_data.clean(&*server)
+    }
 
     fn handle_preedit_start(
         &mut self,

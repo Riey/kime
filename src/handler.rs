@@ -1,5 +1,12 @@
-use x11rb::protocol::xproto::KeyPressEvent;
 use x11rb::protocol::xproto::{EventMask, KEY_PRESS_EVENT};
+use x11rb::{
+    connection::Connection,
+    protocol::xproto::{
+        ConnectionExt, CreateGCAux, CreateWindowAux, Gcontext, KeyPressEvent, Pixmap, Window,
+        WindowClass,
+    },
+    COPY_DEPTH_FROM_PARENT,
+};
 use xim::{
     x11rb::{HasConnection, X11rbServer},
     InputStyle, Server, ServerHandler,
@@ -9,12 +16,64 @@ use crate::engine::{DubeolSik, InputEngine, InputResult};
 
 pub struct KimeData {
     engine: InputEngine<DubeolSik>,
+    preedit_window: Window,
+    pixmap: Pixmap,
+    gc: Gcontext,
 }
 
 impl KimeData {
-    pub fn new<C: HasConnection>(_c: C) -> Result<Self, xim::ServerError> {
+    pub fn new<C: HasConnection>(c: C, input_style: InputStyle) -> Result<Self, xim::ServerError> {
+        let conn = c.conn();
+        let preedit_window;
+        let pixmap;
+        let gc;
+
+        if input_style.contains(InputStyle::PREEDITCALLBACKS) {
+            preedit_window = x11rb::NONE;
+            pixmap = x11rb::NONE;
+            gc = x11rb::NONE;
+        } else {
+            preedit_window = conn.generate_id()?;
+            pixmap = conn.generate_id()?;
+            gc = conn.generate_id()?;
+
+            let screen = &conn.setup().roots[0];
+
+            conn.create_window(
+                COPY_DEPTH_FROM_PARENT,
+                preedit_window,
+                screen.root,
+                0,
+                0,
+                1,
+                1,
+                5,
+                WindowClass::InputOutput,
+                screen.root_visual,
+                &CreateWindowAux::default()
+                    .background_pixel(screen.black_pixel)
+                    .border_pixel(screen.white_pixel)
+                    .event_mask(EventMask::Exposure | EventMask::StructureNotify),
+            )?
+            .check()?;
+
+            conn.create_pixmap(COPY_DEPTH_FROM_PARENT, pixmap, screen.root, 1, 1)?
+                .check()?;
+
+            conn.create_gc(
+                gc,
+                pixmap,
+                &CreateGCAux::default()
+                    .foreground(screen.white_pixel)
+                    .background(screen.black_pixel),
+            )?.check()?;
+        }
+
         Ok(Self {
             engine: InputEngine::new(DubeolSik::new()),
+            preedit_window,
+            pixmap,
+            gc,
         })
     }
 }
@@ -39,7 +98,13 @@ impl KimeHandler {
         ch: char,
     ) -> Result<(), xim::ServerError> {
         self.buf.push(ch);
-        server.preedit_draw(ic, &self.buf)?;
+        if ic.input_style().contains(InputStyle::PREEDITCALLBACKS) {
+            // on-the-spot send preedit callback
+            server.preedit_draw(ic, &self.buf)?;
+        } else {
+            // off-the-spot draw in server
+            
+        }
         self.buf.clear();
 
         Ok(())
@@ -65,8 +130,9 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
     fn new_ic_data(
         &mut self,
         server: &mut X11rbServer<C>,
+        input_style: InputStyle,
     ) -> Result<Self::InputContextData, xim::ServerError> {
-        KimeData::new(&*server)
+        KimeData::new(&*server, input_style)
     }
 
     fn input_styles(&self) -> Self::InputStyleArray {

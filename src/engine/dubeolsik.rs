@@ -7,13 +7,35 @@ use super::{
 macro_rules! define_symbol {
     (
         @jaum [$(($jaum_key:tt, $jaum_ch:expr, $cho:expr, $jong:expr),)+]
+        @jong_compose [$(($jong_com:expr, $jong_com_left:expr, $jong_com_right:expr),)+]
         @moum [$(($moum_key:tt, $moum_ch:expr, $moum:expr),)+]
         @moum_compose [$(($moum_com_ch:expr, $moum_com:expr, $moum_com_left:expr, $moum_com_right:expr),)+]
     ) => {
-        fn jong_to_cho(jong: char) -> char {
+        fn jong_direct_to_cho(jong: char) -> char {
             match jong {
                 $(
                     $jong => $cho,
+                )+
+                _ => '\0',
+            }
+        }
+
+        fn jong_to_cho(jong: char) -> (char, char) {
+            match jong_direct_to_cho(jong) {
+                '\0' => match jong {
+                    $(
+                        $jong_com => ($jong_com_left, $jong_com_right),
+                    )+
+                    _ => ('\0', '\0'),
+                }
+                cho => (cho, '\0'),
+            }
+        }
+
+        fn try_compose_jong(left: char, right: char) -> char {
+            match (left, right) {
+                $(
+                    ($jong_com_left, $jong_com_right) => $jong_com,
                 )+
                 _ => '\0',
             }
@@ -87,6 +109,10 @@ define_symbol! {
         (V, 'ㅍ', 'ᄑ', 'ᇁ'),
     ]
 
+    @jong_compose [
+        ('ᆭ', 'ᆫ', 'ᇂ'),
+    ]
+
     @moum [
         (Y, 'ㅛ', 'ᅭ'),
         (I, 'ㅛ', 'ᅣ'),
@@ -148,8 +174,23 @@ impl DubeolSikState {
                 InputResult::Preedit(ch)
             }
             DubeolSikState::Complete(ch) => {
-                *self = DubeolSikState::Choseong(choseong);
-                InputResult::CommitPreedit(ch, cho_to_char(choseong))
+                let (cho, jung, jong) = decompose_syllable(ch);
+                debug_assert_ne!(jong, '\0');
+
+                let com_jong = try_compose_jong(jong, jongseong);
+
+                match com_jong {
+                    '\0' => {
+                        *self = DubeolSikState::Choseong(choseong);
+                        InputResult::CommitPreedit(ch, cho_to_char(choseong))
+                    }
+                    _ => {
+                        let ch = compose_syllable(compose_syllable(cho, jung).unwrap(), com_jong)
+                            .unwrap();
+                        *self = DubeolSikState::Complete(ch);
+                        InputResult::Preedit(ch)
+                    }
+                }
             }
         }
     }
@@ -197,11 +238,21 @@ impl DubeolSikState {
 
                 debug_assert_ne!(jong, '\0');
 
-                let preedit = compose_syllable(jong_to_cho(jong), jungseong).unwrap();
+                let (jong_left, jong_right) = jong_to_cho(jong);
 
-                *self = DubeolSikState::ChoseongJungSeong(preedit);
-
-                InputResult::CommitPreedit(compose_syllable(cho, jung).unwrap(), preedit)
+                if jong_right != '\0' {
+                    let preedit =
+                        compose_syllable(jong_direct_to_cho(jong_right), jungseong).unwrap();
+                    *self = DubeolSikState::ChoseongJungSeong(preedit);
+                    InputResult::CommitPreedit(
+                        compose_syllable(compose_syllable(cho, jung).unwrap(), jong_left).unwrap(),
+                        preedit,
+                    )
+                } else {
+                    let preedit = compose_syllable(jong_direct_to_cho(jong), jungseong).unwrap();
+                    *self = DubeolSikState::ChoseongJungSeong(preedit);
+                    InputResult::CommitPreedit(compose_syllable(cho, jung).unwrap(), preedit)
+                }
             }
         }
     }
@@ -252,7 +303,8 @@ mod tests {
 
     #[test]
     fn jo_to_cho() {
-        assert_eq!(jong_to_cho('ᆺ'), 'ᄉ');
+        assert_eq!(jong_direct_to_cho('ᆺ'), 'ᄉ');
+        assert_eq!(jong_to_cho('ᆭ'), ('ᆫ', 'ᇂ'));
     }
 
     #[test]
@@ -265,7 +317,8 @@ mod tests {
             (D, InputResult::CommitPreedit('욍', 'ㅇ')),
             (K, InputResult::Preedit('아')),
             (S, InputResult::Preedit('안')),
-            (E, InputResult::CommitPreedit('안', 'ㄷ')),
+            (G, InputResult::Preedit('않')),
+            (E, InputResult::CommitPreedit('않', 'ㄷ')),
         ]);
     }
 }

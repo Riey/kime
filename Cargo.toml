@@ -9,8 +9,8 @@ license = "GPL-3.0"
 log = "0.4.11"
 pretty_env_logger = "0.4.0"
 x11rb = { version = "0.7.0" }
-xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server"] }
-# xim = { path = "../xim-rs", default-features = false, features = ["x11rb-server"] }
+# xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server"] }
+xim = { path = "../xim-rs", default-features = false, features = ["x11rb-server"] }
 
 [dev-dependencies]
 pretty_assertions = "0.6.1"

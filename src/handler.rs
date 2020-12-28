@@ -1,7 +1,5 @@
+use x11rb::protocol::xproto::KeyPressEvent;
 use x11rb::protocol::xproto::{EventMask, KEY_PRESS_EVENT};
-use x11rb::{
-    protocol::xproto::KeyPressEvent,
-};
 use xim::{
     x11rb::{HasConnection, X11rbServer},
     InputStyle, Server, ServerHandler,

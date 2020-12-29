@@ -33,7 +33,12 @@ impl<Layout: InputLayout> InputEngine<Layout> {
         }
     }
 
-    pub fn key_press(&mut self, keycode: u8) -> InputResult {
+    pub fn key_press(&mut self, keycode: u8, _shift: bool, ctrl: bool) -> InputResult {
+        // skip ctrl
+        if ctrl {
+            return InputResult::Bypass;
+        }
+
         if matches!(keycode, keycode::HENKAN | keycode::R_ALT) {
             log::trace!("Trigger hangul");
             self.enable_hangul = !self.enable_hangul;

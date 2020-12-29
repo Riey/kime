@@ -1,4 +1,4 @@
-use x11rb::connection::Connection;
+use x11rb::{connection::Connection, protocol::Event};
 use xim::{ServerError, XimConnections};
 
 mod engine;
@@ -14,6 +14,15 @@ fn main() -> Result<(), ServerError> {
 
     loop {
         let e = conn.wait_for_event()?;
-        server.filter_event(&e, &mut connections, &mut handler)?;
+        if !server.filter_event(&e, &mut connections, &mut handler)? {
+            match e {
+                Event::Expose(e) => {
+                    handler.expose(&conn, e)?;
+                }
+                e => {
+                    log::trace!("Unfiltered event: {:?}", e);
+                }
+            }
+        }
     }
 }

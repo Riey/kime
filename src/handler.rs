@@ -1,12 +1,12 @@
-use x11rb::protocol::xproto::{EventMask, KEY_PRESS_EVENT};
-use x11rb::{
-    connection::Connection,
-    protocol::xproto::{
-        ConnectionExt, CreateGCAux, CreateWindowAux, Gcontext, KeyPressEvent, Pixmap, Window,
-        WindowClass,
-    },
-    COPY_DEPTH_FROM_PARENT,
-};
+mod pe_window;
+
+use std::num::NonZeroU32;
+
+use ahash::AHashMap;
+use font_loader::system_fonts;
+use fontdue::Font;
+use pe_window::PeWindow;
+use x11rb::protocol::xproto::{EventMask, ExposeEvent, KeyPressEvent, KEY_PRESS_EVENT};
 use xim::{
     x11rb::{HasConnection, X11rbServer},
     InputStyle, Server, ServerHandler,
@@ -14,108 +14,97 @@ use xim::{
 
 use crate::engine::{DubeolSik, InputEngine, InputResult};
 
+fn load_font() -> Font {
+    if let Ok(bytes) = std::fs::read("/usr/share/fonts/TTF/D2Coding.ttc") {
+        Font::from_bytes(
+            bytes,
+            fontdue::FontSettings {
+                enable_offset_bounding_box: true,
+                scale: 15.0,
+                collection_index: 0,
+            },
+        )
+        .unwrap()
+    } else {
+        let prop = system_fonts::FontPropertyBuilder::new()
+            .family("Noto Sans")
+            .family("D2Coding")
+            .build();
+        let (bytes, idx) = system_fonts::get(&prop).expect("Loading fonts");
+
+        Font::from_bytes(
+            bytes,
+            fontdue::FontSettings {
+                enable_offset_bounding_box: true,
+                scale: 15.0,
+                collection_index: idx as _,
+            },
+        )
+        .unwrap()
+    }
+}
+
 pub struct KimeData {
     engine: InputEngine<DubeolSik>,
-    preedit_window: Window,
-    pixmap: Pixmap,
-    gc: Gcontext,
+    pe: Option<NonZeroU32>,
 }
 
 impl KimeData {
-    pub fn new<C: HasConnection>(c: C, input_style: InputStyle) -> Result<Self, xim::ServerError> {
-        let conn = c.conn();
-        let preedit_window;
-        let pixmap;
-        let gc;
-
-        if input_style.contains(InputStyle::PREEDITCALLBACKS) {
-            preedit_window = x11rb::NONE;
-            pixmap = x11rb::NONE;
-            gc = x11rb::NONE;
-        } else {
-            preedit_window = conn.generate_id()?;
-            pixmap = conn.generate_id()?;
-            gc = conn.generate_id()?;
-
-            let screen = &conn.setup().roots[0];
-
-            conn.create_window(
-                COPY_DEPTH_FROM_PARENT,
-                preedit_window,
-                screen.root,
-                0,
-                0,
-                1,
-                1,
-                0,
-                WindowClass::InputOutput,
-                screen.root_visual,
-                &CreateWindowAux::default()
-                    .background_pixel(screen.black_pixel)
-                    .border_pixel(screen.white_pixel)
-                    .event_mask(EventMask::Exposure | EventMask::StructureNotify),
-            )?
-            .check()?;
-
-            conn.create_pixmap(COPY_DEPTH_FROM_PARENT, pixmap, screen.root, 1, 1)?
-                .check()?;
-
-            conn.create_gc(
-                gc,
-                pixmap,
-                &CreateGCAux::default()
-                    .foreground(screen.white_pixel)
-                    .background(screen.black_pixel),
-            )?
-            .check()?;
-        }
-
-        Ok(Self {
+    pub fn new(pe: Option<NonZeroU32>) -> Self {
+        Self {
             engine: InputEngine::new(DubeolSik::new()),
-            preedit_window,
-            pixmap,
-            gc,
-        })
-    }
-
-    pub fn clean<C: HasConnection>(self, c: C) -> Result<(), xim::ServerError> {
-        if self.preedit_window != x11rb::NONE {
-            let conn = c.conn();
-            conn.free_pixmap(self.pixmap)?.ignore_error();
-            conn.free_gc(self.gc)?.ignore_error();
+            pe,
         }
-
-        Ok(())
     }
 }
 
 pub struct KimeHandler {
-    buf: String,
+    font: Font,
+    preedit_windows: AHashMap<NonZeroU32, PeWindow>,
 }
 
 impl KimeHandler {
     pub fn new() -> Self {
         Self {
-            buf: String::with_capacity(10),
+            font: load_font(),
+            preedit_windows: AHashMap::new(),
         }
     }
 }
 
 impl KimeHandler {
+    pub fn expose<C: HasConnection>(
+        &mut self,
+        c: C,
+        e: ExposeEvent,
+    ) -> Result<(), xim::ServerError> {
+        if let Some(win) = NonZeroU32::new(e.window) {
+            if let Some(pe) = self.preedit_windows.get_mut(&win) {
+                pe.expose(c, e)?;
+            }
+        }
+
+        Ok(())
+    }
+
     fn preedit<C: HasConnection>(
         &mut self,
         server: &mut X11rbServer<C>,
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
-        self.buf.push(ch);
         if ic.input_style().contains(InputStyle::PREEDITCALLBACKS) {
+            log::trace!("Preedit callback {}", ch);
             // on-the-spot send preedit callback
-            server.preedit_draw(ic, &self.buf)?;
-        } else {
+            let mut buf = [0; 4];
+            let s = ch.encode_utf8(&mut buf);
+            server.preedit_draw(ic, s)?;
+        } else if let Some(pe) = ic.user_data.pe.as_mut() {
+            log::trace!("Preedit draw {}", ch);
             // off-the-spot draw in server
+
+            self.preedit_windows.get_mut(pe).unwrap().set_preedit(ch);
         }
-        self.buf.clear();
 
         Ok(())
     }
@@ -126,15 +115,15 @@ impl KimeHandler {
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
-        self.buf.push(ch);
-        server.commit(ic, &self.buf)?;
-        self.buf.clear();
+        let mut buf = [0; 4];
+        let s = ch.encode_utf8(&mut buf);
+        server.commit(ic, s)?;
         Ok(())
     }
 }
 
 impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
-    type InputStyleArray = [InputStyle; 4];
+    type InputStyleArray = [InputStyle; 7];
     type InputContextData = KimeData;
 
     fn new_ic_data(
@@ -142,15 +131,30 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         server: &mut X11rbServer<C>,
         input_style: InputStyle,
     ) -> Result<Self::InputContextData, xim::ServerError> {
-        KimeData::new(&*server, input_style)
+        if input_style.contains(InputStyle::PREEDITCALLBACKS) {
+            // on-the-spot
+            Ok(KimeData::new(None))
+        } else {
+            // other
+            let pe = PeWindow::new(&*server)?;
+            let win = pe.window();
+            self.preedit_windows.insert(win, pe);
+            Ok(KimeData::new(Some(win)))
+        }
     }
 
     fn input_styles(&self) -> Self::InputStyleArray {
         [
+            // root
             InputStyle::PREEDITNOTHING | InputStyle::PREEDITNOTHING,
+            // off-the-spot
             InputStyle::PREEDITPOSITION | InputStyle::STATUSAREA,
             InputStyle::PREEDITPOSITION | InputStyle::STATUSNOTHING,
             InputStyle::PREEDITPOSITION | InputStyle::STATUSNONE,
+            // on-the-spot
+            InputStyle::PREEDITCALLBACKS | InputStyle::STATUSAREA,
+            InputStyle::PREEDITCALLBACKS | InputStyle::STATUSNOTHING,
+            InputStyle::PREEDITCALLBACKS | InputStyle::STATUSNONE,
         ]
     }
 
@@ -201,7 +205,13 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
         if xev.response_type == KEY_PRESS_EVENT {
-            let ret = input_context.user_data.engine.key_press(xev.detail);
+            let shift = (xev.state & 0x1) != 0;
+            let ctrl = (xev.state & 0x4) != 0;
+
+            let ret = input_context
+                .user_data
+                .engine
+                .key_press(xev.detail, shift, ctrl);
             log::trace!("ret: {:?}", ret);
 
             match ret {
@@ -235,7 +245,11 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         server: &mut X11rbServer<C>,
         input_context: xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        input_context.user_data.clean(&*server)
+        if let Some(pe) = input_context.user_data.pe {
+            self.preedit_windows.remove(&pe).unwrap().clean(&*server)?;
+        }
+
+        Ok(())
     }
 
     fn handle_preedit_start(

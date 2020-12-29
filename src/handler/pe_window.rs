@@ -101,8 +101,7 @@ impl PeWindow {
         Ok(Self {
             surface,
             preedit_window: NonZeroU32::new(preedit_window).unwrap(),
-            // preedit: String::with_capacity(10),
-            preedit: "ABC".into(),
+            preedit: String::with_capacity(10),
             size,
         })
     }

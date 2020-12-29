@@ -3,46 +3,17 @@ mod pe_window;
 use std::num::NonZeroU32;
 
 use ahash::AHashMap;
-use font_loader::system_fonts;
-use fontdue::Font;
 use pe_window::PeWindow;
-use x11rb::protocol::xproto::{EventMask, ExposeEvent, KeyPressEvent, KEY_PRESS_EVENT};
+use x11rb::{
+    protocol::xproto::{ConfigureNotifyEvent, EventMask, KeyPressEvent, KEY_PRESS_EVENT},
+    xcb_ffi::XCBConnection,
+};
 use xim::{
     x11rb::{HasConnection, X11rbServer},
     InputStyle, Server, ServerHandler,
 };
 
 use crate::engine::{DubeolSik, InputEngine, InputResult};
-
-fn load_font() -> Font {
-    if let Ok(bytes) = std::fs::read("/usr/share/fonts/TTF/D2Coding.ttc") {
-        Font::from_bytes(
-            bytes,
-            fontdue::FontSettings {
-                enable_offset_bounding_box: true,
-                scale: 15.0,
-                collection_index: 0,
-            },
-        )
-        .unwrap()
-    } else {
-        let prop = system_fonts::FontPropertyBuilder::new()
-            .family("Noto Sans")
-            .family("D2Coding")
-            .build();
-        let (bytes, idx) = system_fonts::get(&prop).expect("Loading fonts");
-
-        Font::from_bytes(
-            bytes,
-            fontdue::FontSettings {
-                enable_offset_bounding_box: true,
-                scale: 15.0,
-                collection_index: idx as _,
-            },
-        )
-        .unwrap()
-    }
-}
 
 pub struct KimeData {
     engine: InputEngine<DubeolSik>,
@@ -59,37 +30,39 @@ impl KimeData {
 }
 
 pub struct KimeHandler {
-    font: Font,
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
+    screen_num: usize,
 }
 
 impl KimeHandler {
-    pub fn new() -> Self {
+    pub fn new(screen_num: usize) -> Self {
         Self {
-            font: load_font(),
             preedit_windows: AHashMap::new(),
+            screen_num,
         }
     }
 }
 
 impl KimeHandler {
-    pub fn expose<C: HasConnection>(
-        &mut self,
-        c: C,
-        e: ExposeEvent,
-    ) -> Result<(), xim::ServerError> {
-        if let Some(win) = NonZeroU32::new(e.window) {
+    pub fn expose(&mut self, window: u32) {
+        if let Some(win) = NonZeroU32::new(window) {
             if let Some(pe) = self.preedit_windows.get_mut(&win) {
-                pe.expose(c, e)?;
+                pe.expose();
             }
         }
-
-        Ok(())
     }
 
-    fn preedit<C: HasConnection>(
+    pub fn configure_notify(&mut self, e: ConfigureNotifyEvent) {
+        if let Some(win) = NonZeroU32::new(e.window) {
+            if let Some(pe) = self.preedit_windows.get_mut(&win) {
+                pe.configure_notify(e);
+            }
+        }
+    }
+
+    fn preedit(
         &mut self,
-        server: &mut X11rbServer<C>,
+        server: &mut X11rbServer<XCBConnection>,
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
@@ -109,9 +82,9 @@ impl KimeHandler {
         Ok(())
     }
 
-    fn commit<C: HasConnection>(
+    fn commit(
         &mut self,
-        server: &mut X11rbServer<C>,
+        server: &mut X11rbServer<XCBConnection>,
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
@@ -122,13 +95,13 @@ impl KimeHandler {
     }
 }
 
-impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
+impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     type InputStyleArray = [InputStyle; 7];
     type InputContextData = KimeData;
 
     fn new_ic_data(
         &mut self,
-        server: &mut X11rbServer<C>,
+        server: &mut X11rbServer<XCBConnection>,
         input_style: InputStyle,
     ) -> Result<Self::InputContextData, xim::ServerError> {
         if input_style.contains(InputStyle::PREEDITCALLBACKS) {
@@ -136,7 +109,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
             Ok(KimeData::new(None))
         } else {
             // other
-            let pe = PeWindow::new(&*server)?;
+            let pe = PeWindow::new(server.conn(), self.screen_num)?;
             let win = pe.window();
             self.preedit_windows.insert(win, pe);
             Ok(KimeData::new(Some(win)))
@@ -158,13 +131,16 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         ]
     }
 
-    fn handle_connect(&mut self, _server: &mut X11rbServer<C>) -> Result<(), xim::ServerError> {
+    fn handle_connect(
+        &mut self,
+        _server: &mut X11rbServer<XCBConnection>,
+    ) -> Result<(), xim::ServerError> {
         Ok(())
     }
 
     fn handle_set_ic_values(
         &mut self,
-        _server: &mut X11rbServer<C>,
+        _server: &mut X11rbServer<XCBConnection>,
         _input_context: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         Ok(())
@@ -172,7 +148,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_create_ic(
         &mut self,
-        server: &mut X11rbServer<C>,
+        server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         log::info!(
@@ -192,7 +168,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_reset_ic(
         &mut self,
-        _server: &mut X11rbServer<C>,
+        _server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<String, xim::ServerError> {
         Ok(input_context.user_data.engine.reset())
@@ -200,7 +176,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_forward_event(
         &mut self,
-        server: &mut X11rbServer<C>,
+        server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<Self::InputContextData>,
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
@@ -242,7 +218,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_destory_ic(
         &mut self,
-        server: &mut X11rbServer<C>,
+        server: &mut X11rbServer<XCBConnection>,
         input_context: xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         if let Some(pe) = input_context.user_data.pe {
@@ -254,7 +230,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_preedit_start(
         &mut self,
-        _server: &mut X11rbServer<C>,
+        _server: &mut X11rbServer<XCBConnection>,
         _input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         log::info!("preedit started");
@@ -264,7 +240,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_caret(
         &mut self,
-        _server: &mut X11rbServer<C>,
+        _server: &mut X11rbServer<XCBConnection>,
         _input_context: &mut xim::InputContext<Self::InputContextData>,
         _position: i32,
     ) -> Result<(), xim::ServerError> {

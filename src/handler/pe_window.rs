@@ -2,33 +2,41 @@ use std::num::NonZeroU32;
 
 use x11rb::{
     connection::Connection,
-    protocol::xproto::{
-        AtomEnum, ConnectionExt, CreateGCAux, CreateWindowAux, EventMask, ExposeEvent, Gcontext,
-        PropMode, Window, WindowClass,
+    protocol::{
+        render::{self, ConnectionExt as _, PictType},
+        xproto::{
+            AtomEnum, ColormapAlloc, ConfigureNotifyEvent, ConnectionExt as _, CreateWindowAux,
+            EventMask, PropMode, Visualid, Visualtype, WindowClass,
+        },
     },
+    rust_connection::ReplyError,
     wrapper::ConnectionExt as _,
-    COPY_DEPTH_FROM_PARENT,
+    xcb_ffi::XCBConnection,
 };
 use xim::x11rb::HasConnection;
 
 pub struct PeWindow {
     preedit_window: NonZeroU32,
-    gc: Gcontext,
     preedit: String,
+    surface: cairo::XCBSurface,
     size: (u16, u16),
 }
 
 impl PeWindow {
-    pub fn new<C: HasConnection>(c: C) -> Result<Self, xim::ServerError> {
-        let size = (1, 1);
+    pub fn new(c: &XCBConnection, screen_num: usize) -> Result<Self, xim::ServerError> {
+        let size = (400, 30);
         let conn = c.conn();
         let preedit_window = conn.generate_id()?;
-        let gc = conn.generate_id()?;
+        let colormap = conn.generate_id()?;
+        let (depth, visual_id) = choose_visual(conn, screen_num)?;
 
-        let screen = &conn.setup().roots[0];
+        let screen = &conn.setup().roots[screen_num];
+
+        conn.create_colormap(ColormapAlloc::None, colormap, screen.root, visual_id)?
+            .check()?;
 
         conn.create_window(
-            COPY_DEPTH_FROM_PARENT,
+            depth,
             preedit_window,
             screen.root,
             0,
@@ -37,28 +45,23 @@ impl PeWindow {
             size.1,
             0,
             WindowClass::InputOutput,
-            screen.root_visual,
+            visual_id,
             &CreateWindowAux::default()
-                .background_pixel(screen.black_pixel)
-                .event_mask(EventMask::Exposure | EventMask::StructureNotify),
+                .background_pixel(x11rb::NONE)
+                .border_pixel(screen.white_pixel)
+                .event_mask(EventMask::Exposure | EventMask::StructureNotify)
+                .colormap(colormap),
         )?
         .check()?;
 
-        conn.create_gc(
-            gc,
-            preedit_window,
-            &CreateGCAux::default()
-                .foreground(screen.white_pixel)
-                .background(screen.black_pixel),
-        )?
-        .check()?;
+        conn.free_colormap(colormap)?;
 
         let window_type = conn
-            .intern_atom(false, b"_NET_WM_WINDOW_TYPE")?
+            .intern_atom(false, b"_NET_WM_WINDOW_TYPE\0")?
             .reply()?
             .atom;
         let popup = conn
-            .intern_atom(false, b"_NET_WM_WINDOW_TYPE_POPUP_MENU")?
+            .intern_atom(false, b"_NET_WM_WINDOW_TYPE_POPUP_MENU\0")?
             .reply()?
             .atom;
 
@@ -70,20 +73,42 @@ impl PeWindow {
             &[popup],
         )?;
 
+        conn.change_property8(
+            PropMode::Replace,
+            preedit_window,
+            AtomEnum::WM_CLASS,
+            AtomEnum::STRING,
+            b"kime\0kime\0",
+        )?;
+
         conn.map_window(preedit_window)?.check()?;
 
+        let mut visual = find_xcb_visualtype(conn, visual_id).unwrap();
+        let cairo_conn =
+            unsafe { cairo::XCBConnection::from_raw_none(conn.get_raw_xcb_connection() as _) };
+        let visual = unsafe { cairo::XCBVisualType::from_raw_none(&mut visual as *mut _ as _) };
+        let surface = cairo::XCBSurface::create(
+            &cairo_conn,
+            &cairo::XCBDrawable(preedit_window),
+            &visual,
+            size.0 as _,
+            size.1 as _,
+        )
+        .unwrap();
+
         conn.flush()?;
+
         Ok(Self {
+            surface,
             preedit_window: NonZeroU32::new(preedit_window).unwrap(),
-            preedit: String::with_capacity(10),
-            gc,
+            // preedit: String::with_capacity(10),
+            preedit: "ABC".into(),
             size,
         })
     }
 
     pub fn clean<C: HasConnection>(self, c: C) -> Result<(), xim::ServerError> {
         let conn = c.conn();
-        conn.free_gc(self.gc)?.ignore_error();
         conn.unmap_window(self.preedit_window.get())?.ignore_error();
 
         Ok(())
@@ -93,19 +118,123 @@ impl PeWindow {
         self.preedit_window
     }
 
-    pub fn expose<C: HasConnection>(
-        &mut self,
-        c: C,
-        e: ExposeEvent,
-    ) -> Result<(), xim::ServerError> {
+    fn redraw(&mut self) {
+        log::trace!("Redraw: {}", self.preedit);
+        let cr = cairo::Context::new(&self.surface);
+        cr.set_source_rgb(1.0, 1.0, 1.0);
+        cr.paint();
+
+        if !self.preedit.is_empty() {
+            cr.set_source_rgb(0.0, 0.0, 0.0);
+            cr.move_to(10.0, 15.0);
+            cr.select_font_face(
+                "D2Coding",
+                cairo::FontSlant::Normal,
+                cairo::FontWeight::Normal,
+            );
+            cr.set_font_size(15.0);
+            cr.show_text(&self.preedit);
+        }
+
+        self.surface.flush();
+    }
+
+    pub fn expose(&mut self) {
+        self.redraw();
+    }
+
+    pub fn configure_notify(&mut self, e: ConfigureNotifyEvent) {
         self.size = (e.width, e.height);
-        c.conn()
-            .poly_text8(self.preedit_window.get(), self.gc, 0, 0, b"ABC")?;
-        Ok(())
+        self.surface.set_size(e.width as _, e.height as _).unwrap();
+        self.redraw();
     }
 
     pub fn set_preedit(&mut self, ch: char) {
         self.preedit.clear();
         self.preedit.push(ch);
+        self.redraw();
     }
+}
+
+/// Choose a visual to use. This function tries to find a depth=32 visual and falls back to the
+/// screen's default visual.
+fn choose_visual(conn: &impl Connection, screen_num: usize) -> Result<(u8, Visualid), ReplyError> {
+    let depth = 32;
+    let screen = &conn.setup().roots[screen_num];
+
+    // Try to use XRender to find a visual with alpha support
+    let has_render = conn
+        .extension_information(render::X11_EXTENSION_NAME)?
+        .is_some();
+    if has_render {
+        let formats = conn.render_query_pict_formats()?.reply()?;
+        // Find the ARGB32 format that must be supported.
+        let format = formats
+            .formats
+            .iter()
+            .filter(|info| (info.type_, info.depth) == (PictType::Direct, depth))
+            .filter(|info| {
+                let d = info.direct;
+                (d.red_mask, d.green_mask, d.blue_mask, d.alpha_mask) == (0xff, 0xff, 0xff, 0xff)
+            })
+            .find(|info| {
+                let d = info.direct;
+                (d.red_shift, d.green_shift, d.blue_shift, d.alpha_shift) == (16, 8, 0, 24)
+            });
+        if let Some(format) = format {
+            // Now we need to find the visual that corresponds to this format
+            if let Some(visual) = formats.screens[screen_num]
+                .depths
+                .iter()
+                .flat_map(|d| &d.visuals)
+                .find(|v| v.format == format.id)
+            {
+                return Ok((format.depth, visual.visual));
+            }
+        }
+    }
+    Ok((screen.root_depth, screen.root_visual))
+}
+
+/// A rust version of XCB's `xcb_visualtype_t` struct. This is used in a FFI-way.
+#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+struct xcb_visualtype_t {
+    pub visual_id: u32,
+    pub class: u8,
+    pub bits_per_rgb_value: u8,
+    pub colormap_entries: u16,
+    pub red_mask: u32,
+    pub green_mask: u32,
+    pub blue_mask: u32,
+    pub pad0: [u8; 4],
+}
+
+impl From<Visualtype> for xcb_visualtype_t {
+    fn from(value: Visualtype) -> xcb_visualtype_t {
+        xcb_visualtype_t {
+            visual_id: value.visual_id,
+            class: value.class.into(),
+            bits_per_rgb_value: value.bits_per_rgb_value,
+            colormap_entries: value.colormap_entries,
+            red_mask: value.red_mask,
+            green_mask: value.green_mask,
+            blue_mask: value.blue_mask,
+            pad0: [0; 4],
+        }
+    }
+}
+
+/// Find a `xcb_visualtype_t` based on its ID number
+fn find_xcb_visualtype(conn: &impl Connection, visual_id: u32) -> Option<xcb_visualtype_t> {
+    for root in &conn.setup().roots {
+        for depth in &root.allowed_depths {
+            for visual in &depth.visuals {
+                if visual.visual_id == visual_id {
+                    return Some((*visual).into());
+                }
+            }
+        }
+    }
+    None
 }

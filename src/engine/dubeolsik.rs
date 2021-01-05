@@ -24,7 +24,7 @@ macro_rules! define_symbol {
             match jong_direct_to_cho(jong) {
                 '\0' => match jong {
                     $(
-                        $jong_com => ($jong_com_left, $jong_com_right),
+                        $jong_com => (jong_direct_to_cho($jong_com_left), jong_direct_to_cho($jong_com_right)),
                     )+
                     _ => ('\0', '\0'),
                 }
@@ -38,6 +38,15 @@ macro_rules! define_symbol {
                     ($jong_com_left, $jong_com_right) => $jong_com,
                 )+
                 _ => '\0',
+            }
+        }
+
+        fn try_decompose_jong(jong: char) -> (char, char) {
+            match jong {
+                $(
+                    $jong_com => ($jong_com_left, $jong_com_right),
+                )+
+                _ => ('\0', '\0'),
             }
         }
 
@@ -112,6 +121,7 @@ define_symbol! {
 
     @jong_compose [
         ('ᆭ', 'ᆫ', 'ᇂ'),
+        ('ᆹ', 'ᆸ', 'ᆺ'),
     ]
 
     @moum [
@@ -293,11 +303,20 @@ impl DubeolSikState {
             }
             // 강
             DubeolSikState::Complete(ch) => {
-                let (cho, jung, _jong) = decompose_syllable(ch);
+                let (cho, jung, jong) = decompose_syllable(ch);
 
-                let ch = compose_syllable(cho, jung).unwrap();
+                let mut ch = compose_syllable(cho, jung).unwrap();
+                let (jong_left, _jong_right) = try_decompose_jong(jong);
 
-                *self = DubeolSikState::ChoseongJungSeong(ch);
+                // '없' -> '업'
+
+                if jong_left != '\0' {
+                    ch = compose_syllable(ch, jong_left).unwrap();
+                    *self = DubeolSikState::Complete(ch);
+                } else {
+                    *self = DubeolSikState::ChoseongJungSeong(ch);
+                }
+
                 InputResult::Preedit(ch)
             }
         }
@@ -332,7 +351,13 @@ mod tests {
     #[test]
     fn jo_to_cho() {
         assert_eq!(jong_direct_to_cho('ᆺ'), 'ᄉ');
-        assert_eq!(jong_to_cho('ᆭ'), ('ᆫ', 'ᇂ'));
+        assert_eq!(jong_to_cho('ᆭ'), ('ᄂ', 'ᄒ'));
+    }
+
+    #[test]
+    fn decompose_jong() {
+        assert_eq!(try_decompose_jong('ᆭ'), ('ᆫ', 'ᇂ'));
+        assert_eq!(try_decompose_jong('ᆹ'), ('ᆸ', 'ᆺ'));
     }
 
     #[test]
@@ -360,6 +385,17 @@ mod tests {
             (BS, InputResult::Preedit('ㄱ')),
             (BS, InputResult::ClearPreedit),
             (R, InputResult::Preedit('ㄱ')),
+        ])
+    }
+
+    #[test]
+    fn compose_jong() {
+        test_input(&[
+            (D, InputResult::Preedit('ㅇ')),
+            (J, InputResult::Preedit('어')),
+            (Q, InputResult::Preedit('업')),
+            (T, InputResult::Preedit('없')),
+            (BS, InputResult::Preedit('업')),
         ])
     }
 }

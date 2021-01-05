@@ -80,6 +80,7 @@ macro_rules! define_symbol {
                     $(
                         $moum_key => self.state.moum($moum),
                     )+
+                    BS => self.state.backspace(),
                     _ => self.state.other(),
                 }
             }
@@ -117,6 +118,7 @@ define_symbol! {
         (Y, 'ㅛ', 'ᅭ'),
         (I, 'ㅛ', 'ᅣ'),
         (O, 'ㅐ', 'ᅢ'),
+        (U, 'ㅕ', 'ᅧ'),
         (P, 'ㅔ', 'ᅦ'),
 
         (H, 'ㅗ', 'ᅩ'),
@@ -274,6 +276,32 @@ impl DubeolSikState {
             }
         }
     }
+
+    pub fn backspace(&mut self) -> InputResult {
+        match *self {
+            DubeolSikState::Empty => InputResult::Bypass,
+            DubeolSikState::Choseong(..) | DubeolSikState::JungSeong(..) => {
+                *self = DubeolSikState::Empty;
+                InputResult::ClearPreedit
+            }
+            // 가 나 더
+            DubeolSikState::ChoseongJungSeong(ch) => {
+                let (cho, _jung, _) = decompose_syllable(ch);
+
+                *self = DubeolSikState::Choseong(cho);
+                InputResult::Preedit(cho_to_char(cho))
+            }
+            // 강
+            DubeolSikState::Complete(ch) => {
+                let (cho, jung, _jong) = decompose_syllable(ch);
+
+                let ch = compose_syllable(cho, jung).unwrap();
+
+                *self = DubeolSikState::ChoseongJungSeong(ch);
+                InputResult::Preedit(ch)
+            }
+        }
+    }
 }
 
 pub struct DubeolSik {
@@ -320,5 +348,18 @@ mod tests {
             (G, InputResult::Preedit('않')),
             (E, InputResult::CommitPreedit('않', 'ㄷ')),
         ]);
+    }
+
+    #[test]
+    fn backspace() {
+        test_input(&[
+            (R, InputResult::Preedit('ㄱ')),
+            (K, InputResult::Preedit('가')),
+            (D, InputResult::Preedit('강')),
+            (BS, InputResult::Preedit('가')),
+            (BS, InputResult::Preedit('ㄱ')),
+            (BS, InputResult::ClearPreedit),
+            (R, InputResult::Preedit('ㄱ')),
+        ])
     }
 }

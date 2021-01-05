@@ -80,6 +80,15 @@ macro_rules! define_symbol {
             }
         }
 
+        fn try_decompose_moum(moum: char) -> (char, char) {
+            match moum {
+                $(
+                    $moum_com => ($moum_com_left, $moum_com_right),
+                )+
+                _ => ('\0', '\0'),
+            }
+        }
+
         impl InputLayout for DubeolSik {
             fn map_key(&mut self, keycode: u8) -> InputResult {
                 match keycode {
@@ -153,7 +162,13 @@ define_symbol! {
     ]
 
     @moum_compose [
+        ('ㅘ', 'ᅪ', 'ᅩ', 'ᅡ'),
+        ('ㅙ', 'ᅫ', 'ᅩ', 'ᅢ'),
         ('ㅚ', 'ᅬ', 'ᅩ', 'ᅵ'),
+        ('ㅝ', 'ᅯ', 'ᅮ', 'ᅥ'),
+        ('ㅞ', 'ᅰ', 'ᅮ', 'ᅦ'),
+        ('ㅟ', 'ᅱ', 'ᅮ', 'ᅵ'),
+        ('ㅢ', 'ᅴ', 'ᅳ', 'ᅵ'),
     ]
 }
 
@@ -301,16 +316,35 @@ impl DubeolSikState {
     pub fn backspace(&mut self) -> InputResult {
         match *self {
             DubeolSikState::Empty => InputResult::Bypass,
-            DubeolSikState::Choseong(..) | DubeolSikState::JungSeong(..) => {
+            DubeolSikState::Choseong(..) => {
                 *self = DubeolSikState::Empty;
                 InputResult::ClearPreedit
             }
+            DubeolSikState::JungSeong(ch) => match try_decompose_moum(ch) {
+                ('\0', _) => {
+                    *self = DubeolSikState::Empty;
+                    InputResult::ClearPreedit
+                }
+                (left, _) => {
+                    *self = DubeolSikState::JungSeong(left);
+                    InputResult::Preedit(moum_to_char(left))
+                }
+            },
             // 가 나 더
             DubeolSikState::ChoseongJungSeong(ch) => {
-                let (cho, _jung, _) = decompose_syllable(ch);
+                let (cho, jung, _) = decompose_syllable(ch);
 
-                *self = DubeolSikState::Choseong(cho);
-                InputResult::Preedit(cho_to_char(cho))
+                match try_decompose_moum(jung) {
+                    ('\0', _) => {
+                        *self = DubeolSikState::Choseong(cho);
+                        InputResult::Preedit(cho_to_char(cho))
+                    }
+                    (left, _) => {
+                        let ch = compose_syllable(cho, left).unwrap();
+                        *self = DubeolSikState::ChoseongJungSeong(ch);
+                        InputResult::Preedit(ch)
+                    }
+                }
             }
             // 강
             DubeolSikState::Complete(ch) => {
@@ -407,6 +441,17 @@ mod tests {
             (Q, InputResult::Preedit('업')),
             (T, InputResult::Preedit('없')),
             (BS, InputResult::Preedit('업')),
+        ])
+    }
+
+    #[test]
+    fn backspace_moum_compose() {
+        test_input(&[
+            (D, InputResult::Preedit('ㅇ')),
+            (H, InputResult::Preedit('오')),
+            (K, InputResult::Preedit('와')),
+            (BS, InputResult::Preedit('오')),
+            (BS, InputResult::Preedit('ㅇ')),
         ])
     }
 }

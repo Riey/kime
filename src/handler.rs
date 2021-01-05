@@ -98,6 +98,7 @@ impl KimeHandler {
         let mut buf = [0; 4];
         let s = ch.encode_utf8(&mut buf);
         server.commit(ic, s)?;
+        self.clear_preedit(ic);
         Ok(())
     }
 }
@@ -213,8 +214,8 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
                     Ok(true)
                 }
                 InputResult::CommitPreedit(commit, preedit) => {
-                    self.preedit(server, input_context, preedit)?;
                     self.commit(server, input_context, commit)?;
+                    self.preedit(server, input_context, preedit)?;
                     Ok(true)
                 }
                 InputResult::Preedit(preedit) => {

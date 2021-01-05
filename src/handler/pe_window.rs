@@ -118,7 +118,6 @@ impl PeWindow {
     }
 
     fn redraw(&mut self) {
-        log::trace!("Redraw: {}", self.preedit);
         let cr = cairo::Context::new(&self.surface);
         cr.set_source_rgb(1.0, 1.0, 1.0);
         cr.paint();
@@ -145,6 +144,11 @@ impl PeWindow {
     pub fn configure_notify(&mut self, e: ConfigureNotifyEvent) {
         self.size = (e.width, e.height);
         self.surface.set_size(e.width as _, e.height as _).unwrap();
+        self.redraw();
+    }
+
+    pub fn clear_preedit(&mut self) {
+        self.preedit.clear();
         self.redraw();
     }
 

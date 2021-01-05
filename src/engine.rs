@@ -6,6 +6,7 @@ pub use self::dubeolsik::DubeolSik;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InputResult {
+    ClearPreedit,
     Preedit(char),
     Commit(char),
     Consume,

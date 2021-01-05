@@ -66,20 +66,27 @@ impl KimeHandler {
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
-        if ic.input_style().contains(InputStyle::PREEDITCALLBACKS) {
+        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
             log::trace!("Preedit callback {}", ch);
             // on-the-spot send preedit callback
             let mut buf = [0; 4];
             let s = ch.encode_utf8(&mut buf);
             server.preedit_draw(ic, s)?;
         } else if let Some(pe) = ic.user_data.pe.as_mut() {
-            log::trace!("Preedit draw {}", ch);
             // off-the-spot draw in server
 
             self.preedit_windows.get_mut(pe).unwrap().set_preedit(ch);
         }
 
         Ok(())
+    }
+
+    fn clear_preedit(&mut self, ic: &mut xim::InputContext<KimeData>) {
+        if let Some(pe) = ic.user_data.pe.as_mut() {
+            // off-the-spot draw in server
+
+            self.preedit_windows.get_mut(pe).unwrap().clear_preedit();
+        }
     }
 
     fn commit(
@@ -104,7 +111,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         input_style: InputStyle,
     ) -> Result<Self::InputContextData, xim::ServerError> {
-        if input_style.contains(InputStyle::PREEDITCALLBACKS) {
+        if input_style.contains(InputStyle::PREEDIT_CALLBACKS) {
             // on-the-spot
             Ok(KimeData::new(None))
         } else {
@@ -119,15 +126,15 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn input_styles(&self) -> Self::InputStyleArray {
         [
             // root
-            InputStyle::PREEDITNOTHING | InputStyle::PREEDITNOTHING,
+            InputStyle::PREEDIT_NOTHING | InputStyle::PREEDIT_NOTHING,
             // off-the-spot
-            InputStyle::PREEDITPOSITION | InputStyle::STATUSAREA,
-            InputStyle::PREEDITPOSITION | InputStyle::STATUSNOTHING,
-            InputStyle::PREEDITPOSITION | InputStyle::STATUSNONE,
+            InputStyle::PREEDIT_POSITION | InputStyle::STATUS_AREA,
+            InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,
+            InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NONE,
             // on-the-spot
-            InputStyle::PREEDITCALLBACKS | InputStyle::STATUSAREA,
-            InputStyle::PREEDITCALLBACKS | InputStyle::STATUSNOTHING,
-            InputStyle::PREEDITCALLBACKS | InputStyle::STATUSNONE,
+            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_AREA,
+            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NOTHING,
+            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NONE,
         ]
     }
 
@@ -193,6 +200,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             match ret {
                 InputResult::Bypass => Ok(false),
                 InputResult::Consume => Ok(true),
+                InputResult::ClearPreedit => {
+                    self.clear_preedit(input_context);
+                    Ok(true)
+                }
                 InputResult::CommitBypass(ch) => {
                     self.commit(server, input_context, ch)?;
                     Ok(false)

@@ -1,4 +1,7 @@
-use x11rb::{connection::Connection, protocol::Event};
+use x11rb::{
+    connection::Connection,
+    protocol::{ErrorKind, Event},
+};
 use xim::{x11rb::HasConnection, ServerError, XimConnections};
 
 mod engine;
@@ -23,6 +26,12 @@ fn main() -> Result<(), ServerError> {
                     handler.configure_notify(e);
                     server.conn().flush()?;
                 }
+                Event::UnmapNotify(..) => {}
+                Event::DestroyNotify(..) => {}
+                Event::Error(x11rb::x11_utils::X11Error {
+                    error_kind: ErrorKind::RenderPicture,
+                    ..
+                }) => {}
                 e => {
                     log::trace!("Unfiltered event: {:?}", e);
                 }

@@ -21,10 +21,10 @@ pub struct KimeData {
 }
 
 impl KimeData {
-    pub fn new(pe: Option<NonZeroU32>) -> Self {
+    pub fn new() -> Self {
         Self {
             engine: InputEngine::new(DubeolSik::new()),
-            pe,
+            pe: None,
         }
     }
 }
@@ -73,20 +73,35 @@ impl KimeHandler {
             let s = ch.encode_utf8(&mut buf);
             server.preedit_draw(ic, s)?;
         } else if let Some(pe) = ic.user_data.pe.as_mut() {
-            // off-the-spot draw in server
-
+            // off-the-spot draw in server (already have pe_window)
             self.preedit_windows.get_mut(pe).unwrap().set_preedit(ch);
+        } else {
+            // off-the-spot draw in server
+            let mut pe = PeWindow::new(server.conn(), ic.app_win(), self.screen_num)?;
+            pe.set_preedit(ch);
+
+            ic.user_data.pe = Some(pe.window());
+
+            self.preedit_windows.insert(pe.window(), pe);
         }
 
         Ok(())
     }
 
-    fn clear_preedit(&mut self, ic: &mut xim::InputContext<KimeData>) {
-        if let Some(pe) = ic.user_data.pe.as_mut() {
+    fn clear_preedit(
+        &mut self,
+        c: &XCBConnection,
+        ic: &mut xim::InputContext<KimeData>,
+    ) -> Result<(), xim::ServerError> {
+        if let Some(pe) = ic.user_data.pe.take() {
             // off-the-spot draw in server
-
-            self.preedit_windows.get_mut(pe).unwrap().clear_preedit();
+            if let Some(w) = self.preedit_windows.remove(&pe) {
+                log::trace!("Destory PeWindow: {}", w.window());
+                w.clean(c)?;
+            }
         }
+
+        Ok(())
     }
 
     fn commit(
@@ -98,7 +113,6 @@ impl KimeHandler {
         let mut buf = [0; 4];
         let s = ch.encode_utf8(&mut buf);
         server.commit(ic, s)?;
-        self.clear_preedit(ic);
         Ok(())
     }
 }
@@ -109,19 +123,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn new_ic_data(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
-        input_style: InputStyle,
+        _server: &mut X11rbServer<XCBConnection>,
+        _input_style: InputStyle,
     ) -> Result<Self::InputContextData, xim::ServerError> {
-        if input_style.contains(InputStyle::PREEDIT_CALLBACKS) {
-            // on-the-spot
-            Ok(KimeData::new(None))
-        } else {
-            // other
-            let pe = PeWindow::new(server.conn(), self.screen_num)?;
-            let win = pe.window();
-            self.preedit_windows.insert(win, pe);
-            Ok(KimeData::new(Some(win)))
-        }
+        Ok(KimeData::new())
     }
 
     fn input_styles(&self) -> Self::InputStyleArray {
@@ -202,15 +207,17 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
                 InputResult::Bypass => Ok(false),
                 InputResult::Consume => Ok(true),
                 InputResult::ClearPreedit => {
-                    self.clear_preedit(input_context);
+                    self.clear_preedit(server.conn(), input_context)?;
                     Ok(true)
                 }
                 InputResult::CommitBypass(ch) => {
                     self.commit(server, input_context, ch)?;
+                    self.clear_preedit(server.conn(), input_context)?;
                     Ok(false)
                 }
                 InputResult::Commit(ch) => {
                     self.commit(server, input_context, ch)?;
+                    self.clear_preedit(server.conn(), input_context)?;
                     Ok(true)
                 }
                 InputResult::CommitPreedit(commit, preedit) => {

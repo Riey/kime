@@ -25,7 +25,7 @@ pub struct PeWindow {
 impl PeWindow {
     pub fn new(
         conn: &XCBConnection,
-        client_win: Option<NonZeroU32>,
+        app_win: Option<NonZeroU32>,
         screen_num: usize,
     ) -> Result<Self, xim::ServerError> {
         let size = (200, 30);
@@ -34,9 +34,7 @@ impl PeWindow {
         let (depth, visual_id) = choose_visual(conn, screen_num)?;
 
         let screen = &conn.setup().roots[screen_num];
-        let pos = find_position(conn, screen.root, client_win)?;
-
-        dbg!(pos);
+        let pos = find_position(conn, screen.root, app_win)?;
 
         conn.create_colormap(ColormapAlloc::None, colormap, screen.root, visual_id)?
             .check()?;
@@ -88,7 +86,6 @@ impl PeWindow {
             b"kime\0kime\0",
         )?;
 
-        conn.map_window(preedit_window)?.check()?;
         let mut visual = find_xcb_visualtype(conn, visual_id).unwrap();
         let cairo_conn =
             unsafe { cairo::XCBConnection::from_raw_none(conn.get_raw_xcb_connection() as _) };
@@ -102,6 +99,8 @@ impl PeWindow {
         )
         .unwrap();
 
+        conn.map_window(preedit_window)?.check()?;
+
         conn.flush()?;
 
         Ok(Self {
@@ -114,7 +113,8 @@ impl PeWindow {
 
     pub fn clean<C: HasConnection>(self, c: C) -> Result<(), xim::ServerError> {
         let conn = c.conn();
-        conn.unmap_window(self.preedit_window.get())?.ignore_error();
+        conn.destroy_window(self.preedit_window.get())?
+            .ignore_error();
 
         Ok(())
     }
@@ -124,6 +124,7 @@ impl PeWindow {
     }
 
     fn redraw(&mut self) {
+        log::trace!("Redraw: {}", self.preedit);
         let cr = cairo::Context::new(&self.surface);
         cr.set_source_rgb(1.0, 1.0, 1.0);
         cr.paint();
@@ -150,11 +151,6 @@ impl PeWindow {
     pub fn configure_notify(&mut self, e: ConfigureNotifyEvent) {
         self.size = (e.width, e.height);
         self.surface.set_size(e.width as _, e.height as _).unwrap();
-        self.redraw();
-    }
-
-    pub fn clear_preedit(&mut self) {
-        self.preedit.clear();
         self.redraw();
     }
 

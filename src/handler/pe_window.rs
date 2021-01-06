@@ -23,14 +23,20 @@ pub struct PeWindow {
 }
 
 impl PeWindow {
-    pub fn new(c: &XCBConnection, screen_num: usize) -> Result<Self, xim::ServerError> {
-        let size = (400, 30);
-        let conn = c.conn();
+    pub fn new(
+        conn: &XCBConnection,
+        client_win: Option<NonZeroU32>,
+        screen_num: usize,
+    ) -> Result<Self, xim::ServerError> {
+        let size = (200, 30);
         let preedit_window = conn.generate_id()?;
         let colormap = conn.generate_id()?;
         let (depth, visual_id) = choose_visual(conn, screen_num)?;
 
         let screen = &conn.setup().roots[screen_num];
+        let pos = find_position(conn, screen.root, client_win)?;
+
+        dbg!(pos);
 
         conn.create_colormap(ColormapAlloc::None, colormap, screen.root, visual_id)?
             .check()?;
@@ -39,8 +45,8 @@ impl PeWindow {
             depth,
             preedit_window,
             screen.root,
-            0,
-            0,
+            pos.0,
+            pos.1,
             size.0,
             size.1,
             0,
@@ -48,7 +54,8 @@ impl PeWindow {
             visual_id,
             &CreateWindowAux::default()
                 .background_pixel(x11rb::NONE)
-                .border_pixel(screen.white_pixel)
+                .border_pixel(x11rb::NONE)
+                .override_redirect(1u32)
                 .event_mask(EventMask::Exposure | EventMask::StructureNotify)
                 .colormap(colormap),
         )?
@@ -61,7 +68,7 @@ impl PeWindow {
             .reply()?
             .atom;
         let popup = conn
-            .intern_atom(false, b"_NET_WM_WINDOW_TYPE_POPUP_MENU\0")?
+            .intern_atom(false, b"_NET_WM_WINDOW_TYPE_DOCK\0")?
             .reply()?
             .atom;
 
@@ -82,7 +89,6 @@ impl PeWindow {
         )?;
 
         conn.map_window(preedit_window)?.check()?;
-
         let mut visual = find_xcb_visualtype(conn, visual_id).unwrap();
         let cairo_conn =
             unsafe { cairo::XCBConnection::from_raw_none(conn.get_raw_xcb_connection() as _) };
@@ -240,4 +246,22 @@ fn find_xcb_visualtype(conn: &impl Connection, visual_id: u32) -> Option<xcb_vis
         }
     }
     None
+}
+
+fn find_position(
+    conn: &impl Connection,
+    root: u32,
+    app_win: Option<NonZeroU32>,
+) -> Result<(i16, i16), xim::ServerError> {
+    match app_win {
+        Some(app_win) => {
+            let geom = conn.get_geometry(app_win.get())?.reply()?;
+            let offset = conn
+                .translate_coordinates(app_win.get(), root, geom.x, geom.y)?
+                .reply()?;
+
+            Ok((offset.dst_x, offset.dst_y))
+        }
+        _ => Ok((0, 0)),
+    }
 }

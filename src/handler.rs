@@ -13,17 +13,17 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use crate::engine::{DubeolSik, InputEngine, InputResult};
+use crate::engine::{InputEngine, InputResult, Layout};
 
 pub struct KimeData {
-    engine: InputEngine<DubeolSik>,
+    engine: InputEngine,
     pe: Option<NonZeroU32>,
 }
 
 impl KimeData {
     pub fn new() -> Self {
         Self {
-            engine: InputEngine::new(DubeolSik::new()),
+            engine: InputEngine::new(Layout::dubeolsik()),
             pe: None,
         }
     }

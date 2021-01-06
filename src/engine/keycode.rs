@@ -1,34 +1,84 @@
-#![allow(unused)]
+use serde::{Deserialize, Serialize};
 
-pub const Q: u8 = 24;
-pub const W: u8 = 25;
-pub const E: u8 = 26;
-pub const R: u8 = 27;
-pub const T: u8 = 28;
-pub const Y: u8 = 29;
-pub const U: u8 = 30;
-pub const I: u8 = 31;
-pub const O: u8 = 32;
-pub const P: u8 = 33;
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum KeyCode {
+    Q,
+    W,
+    E,
+    R,
+    T,
+    Y,
+    U,
+    I,
+    O,
+    P,
 
-pub const A: u8 = 38;
-pub const S: u8 = 39;
-pub const D: u8 = 40;
-pub const F: u8 = 41;
-pub const G: u8 = 42;
-pub const H: u8 = 43;
-pub const J: u8 = 44;
-pub const K: u8 = 45;
-pub const L: u8 = 46;
+    A,
+    S,
+    D,
+    F,
+    G,
+    H,
+    J,
+    K,
+    L,
 
-pub const Z: u8 = 52;
-pub const X: u8 = 53;
-pub const C: u8 = 54;
-pub const V: u8 = 55;
-pub const B: u8 = 56;
-pub const N: u8 = 57;
-pub const M: u8 = 58;
+    Z,
+    X,
+    C,
+    V,
+    B,
+    N,
+    M,
 
-pub const BS: u8 = 22;
-pub const HENKAN: u8 = 100;
-pub const R_ALT: u8 = 108;
+    Bs,
+    Henkan,
+    Ralt,
+}
+
+impl KeyCode {
+    pub fn from_x11_code(code: u8) -> Option<Self> {
+        match code {
+            24 => Some(Self::Q),
+            25 => Some(Self::W),
+            26 => Some(Self::E),
+            27 => Some(Self::R),
+            28 => Some(Self::T),
+            29 => Some(Self::Y),
+            30 => Some(Self::U),
+            31 => Some(Self::I),
+            32 => Some(Self::O),
+            33 => Some(Self::P),
+
+            38 => Some(Self::A),
+            39 => Some(Self::S),
+            40 => Some(Self::D),
+            41 => Some(Self::F),
+            42 => Some(Self::G),
+            43 => Some(Self::H),
+            44 => Some(Self::J),
+            45 => Some(Self::K),
+            46 => Some(Self::L),
+
+            52 => Some(Self::Z),
+            53 => Some(Self::X),
+            54 => Some(Self::C),
+            55 => Some(Self::V),
+            56 => Some(Self::B),
+            57 => Some(Self::N),
+            58 => Some(Self::M),
+
+            22 => Some(Self::Bs),
+
+            100 => Some(Self::Henkan),
+            108 => Some(Self::Ralt),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct Key {
+    pub code: KeyCode,
+    pub shift: bool,
+}

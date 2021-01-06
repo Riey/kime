@@ -1,0 +1,24 @@
+- code: Q
+  shift: false
+  cho: ᄇ
+  jong: ᆸ
+
+- code: Q
+  shift: true
+  cho: ᄈ
+
+- code: W
+  shift: false
+  cho: ᄌ
+  jong: ᆽ
+
+- code: W
+  shift: true
+  cho: ᄍ
+
+- code: D
+  cho: ᄋ
+  jong: ᆼ
+
+- code: H
+  jung: ᅩ

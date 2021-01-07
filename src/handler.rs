@@ -13,17 +13,17 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use crate::engine::{DubeolSik, InputEngine, InputResult};
+use crate::engine::{InputEngine, InputResult, Layout};
 
 pub struct KimeData {
-    engine: InputEngine<DubeolSik>,
+    engine: InputEngine,
     pe: Option<NonZeroU32>,
 }
 
 impl KimeData {
     pub fn new() -> Self {
         Self {
-            engine: InputEngine::new(DubeolSik::new()),
+            engine: InputEngine::new(Layout::dubeolsik()),
             pe: None,
         }
     }
@@ -132,7 +132,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn input_styles(&self) -> Self::InputStyleArray {
         [
             // root
-            InputStyle::PREEDIT_NOTHING | InputStyle::PREEDIT_NOTHING,
+            InputStyle::PREEDIT_NOTHING | InputStyle::STATUS_NOTHING,
             // off-the-spot
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_AREA,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,
@@ -215,11 +215,11 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
                     self.clear_preedit(server.conn(), input_context)?;
                     Ok(false)
                 }
-                InputResult::Commit(ch) => {
-                    self.commit(server, input_context, ch)?;
-                    self.clear_preedit(server.conn(), input_context)?;
-                    Ok(true)
-                }
+                // InputResult::Commit(ch) => {
+                //     self.commit(server, input_context, ch)?;
+                //     self.clear_preedit(server.conn(), input_context)?;
+                //     Ok(true)
+                // }
                 InputResult::CommitPreedit(commit, preedit) => {
                     self.commit(server, input_context, commit)?;
                     self.preedit(server, input_context, preedit)?;

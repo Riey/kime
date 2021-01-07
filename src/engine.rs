@@ -128,7 +128,7 @@ impl Layout {
 pub enum InputResult {
     ClearPreedit,
     Preedit(char),
-    Commit(char),
+    // Commit(char),
     Consume,
     Bypass,
     CommitBypass(char),

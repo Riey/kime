@@ -215,11 +215,11 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
                     self.clear_preedit(server.conn(), input_context)?;
                     Ok(false)
                 }
-                InputResult::Commit(ch) => {
-                    self.commit(server, input_context, ch)?;
-                    self.clear_preedit(server.conn(), input_context)?;
-                    Ok(true)
-                }
+                // InputResult::Commit(ch) => {
+                //     self.commit(server, input_context, ch)?;
+                //     self.clear_preedit(server.conn(), input_context)?;
+                //     Ok(true)
+                // }
                 InputResult::CommitPreedit(commit, preedit) => {
                     self.commit(server, input_context, commit)?;
                     self.preedit(server, input_context, preedit)?;

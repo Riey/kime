@@ -16,9 +16,53 @@
   shift: true
   cho: ᄍ
 
+- code: E
+  shift: false
+  cho: ᄃ
+  jong: ᆮ
+
+- code: E
+  shift: true
+  cho: ᄄ
+
+- code: R
+  shift: false
+  cho: ᄀ
+  jong: ᆨ
+
+- code: R
+  shift: true
+  cho: ᄁ
+  jong: ᆩ
+
+- code: A
+  cho: ᄆ
+  jong: ᆷ
+
+- code: S
+  cho: ᄂ
+  jong: ᆫ
+
 - code: D
   cho: ᄋ
   jong: ᆼ
 
+- code: F
+  cho: ᄅ
+  jong: ᆯ
+
+- code: G
+  cho: ᄒ
+  jong: ᇂ
+
 - code: H
   jung: ᅩ
+
+- code: J
+  jung: ᅥ
+
+- code: K
+  jung: ᅡ
+
+- code: L
+  jung: ᅵ

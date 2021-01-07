@@ -123,27 +123,27 @@ pub enum Jongseong {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, FromPrimitive)]
 #[repr(u32)]
 pub enum Jungseong {
-    A = 0, // ㅏ
-    AE,    // ㅐ
-    YA,    // ㅑ
-    YAE,   // ㅒ
-    EO,    // ㅓ
-    E,     // ㅔ
-    YEO,   // ㅕ
-    YE,    // ㅖ
-    O,     // ㅗ
-    WA,    // ㅘ
-    WAE,   // ㅙ
-    OE,    // ㅚ
-    YO,    // ㅛ
-    U,     // ㅜ
-    WEO,   // ㅝ
-    WE,    // ㅞ
-    WI,    // ㅢ
-    YU,    // ㅠ
-    EU,    // ㅡ
-    YI,    // 의
-    I,     // ㅣ
+    A = 0,
+    AE,
+    YA,
+    YAE,
+    EO,
+    E,
+    YEO,
+    YE,
+    O,
+    WA,
+    WAE,
+    OE,
+    YO,
+    U,
+    WEO,
+    WE,
+    WI,
+    YU,
+    EU,
+    YI,
+    I,
 }
 
 impl_traits!(Choseong, 'ᄀ');
@@ -154,8 +154,19 @@ impl Choseong {
     pub fn compose(self, jung: Jungseong, jong: Option<Jongseong>) -> char {
         unsafe {
             std::char::from_u32_unchecked(
-                0xAC00 + self as u32 * 588 + jung as u32 * 28 + jong.map_or(0, |j| j as u32),
+                0xAC00 + self as u32 * 588 + jung as u32 * 28 + jong.map_or(0, |j| j as u32 + 1),
             )
+        }
+    }
+
+    pub const fn try_add(self, other: Self) -> Option<Self> {
+        match (self, other) {
+            (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
+            (Self::Bieup, Self::Bieup) => Some(Self::SsangBieup),
+            (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
+            (Self::Jieut, Self::Jieut) => Some(Self::SsangJieut),
+            (Self::Digeut, Self::Digeut) => Some(Self::SsangDigeut),
+            _ => None,
         }
     }
 
@@ -185,13 +196,107 @@ impl Choseong {
 }
 
 impl Jungseong {
-    pub fn jamo(self) -> char {
+    pub const fn jamo(self) -> char {
         match self {
             Self::A => 'ㅏ',
+            Self::AE => 'ㅐ',
+            Self::YA => 'ㅑ',
+            Self::YAE => 'ㅒ',
+            Self::EO => 'ㅓ',
+            Self::E => 'ㅔ',
+            Self::YEO => 'ㅕ',
+            Self::YE => 'ㅖ',
             Self::O => 'ㅗ',
+            Self::WA => 'ㅘ',
+            Self::WAE => 'ㅙ',
+            Self::OE => 'ㅚ',
+            Self::YO => 'ㅛ',
+            Self::U => 'ㅜ',
+            Self::WEO => 'ㅝ',
+            Self::WE => 'ㅞ',
+            Self::WI => 'ㅟ',
+            Self::YU => 'ㅠ',
+            Self::EU => 'ㅡ',
+            Self::YI => 'ㅢ',
+            Self::I => 'ㅣ',
+        }
+    }
+
+    pub const fn try_add(self, other: Self) -> Option<Self> {
+        match (self, other) {
+            (Self::A, Self::I) => Some(Self::AE),
+            (Self::YA, Self::I) => Some(Self::YAE),
+            (Self::O, Self::A) => Some(Self::WA),
+            (Self::O, Self::I) => Some(Self::OE),
+            _ => None,
+        }
+    }
+}
+
+impl Jongseong {
+    pub const fn jamo(self) -> char {
+        match self {
+            Self::Giyeok => 'ㄱ',
+            Self::GiyeokSiot => 'ㄳ',
+            Self::SsangGiyeok => 'ㄲ',
+            Self::Nieun => 'ㄴ',
+            Self::NieunJieut => 'ㄵ',
+            Self::NieunHieuh => 'ㄶ',
+            Self::Digeut => 'ㄷ',
+            Self::Rieul => 'ㄹ',
+            Self::RieulGiyeok => 'ㄺ',
+            Self::RieulMieum => 'ㄻ',
+            Self::RieulBieup => 'ㄼ',
+            Self::RieulSiot => 'ㄽ',
+            Self::RieulTieut => 'ㄾ',
+            Self::RieulPieup => 'ㄿ',
+            Self::RieulHieuh => 'ㅀ',
+            Self::Mieum => 'ㅁ',
+            Self::Bieup => 'ㅂ',
+            Self::BieupSiot => 'ㅄ',
+            Self::Siot => 'ㅅ',
+            Self::SsangSiot => 'ㅆ',
+            Self::Ieung => 'ㅇ',
+            Self::Jieut => 'ㅈ',
+            Self::Chieut => 'ㅊ',
+            Self::Kieuk => 'ㅋ',
+            Self::Tieut => 'ㅌ',
+            Self::Pieup => 'ㅍ',
+            Self::Hieuh => 'ㅎ',
+        }
+    }
+
+    pub const fn try_add(self, other: Self) -> Option<Self> {
+        match (self, other) {
+            (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
+            (Self::Giyeok, Self::Siot) => Some(Self::GiyeokSiot),
+            (Self::Nieun, Self::Hieuh) => Some(Self::NieunHieuh),
+            (Self::Nieun, Self::Jieut) => Some(Self::NieunJieut),
+            (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
+            // TODO: complete
+            _ => None,
+        }
+    }
+
+    pub fn to_cho(self) -> JongToCho {
+        use JongToCho::{Compose, Direct};
+        match self {
+            Self::Giyeok => Direct(Choseong::Giyeok),
+            Self::GiyeokSiot => Compose(Self::Giyeok, Choseong::Siot),
+            Self::SsangGiyeok => Direct(Choseong::SsangGiyeok),
+            Self::Ieung => Direct(Choseong::Ieung),
+            Self::NieunJieut => Compose(Self::Nieun, Choseong::Jieut),
+            Self::NieunHieuh => Compose(Self::Nieun, Choseong::Hieuh),
+            Self::BieupSiot => Compose(Self::Bieup, Choseong::Siot),
             _ => todo!(),
         }
     }
+}
+
+#[derive(Clone, Copy)]
+pub enum JongToCho {
+    Direct(Choseong),
+    Compose(Jongseong, Choseong),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -203,60 +308,10 @@ pub enum KeyValue {
     ChoJong(Choseong, Jongseong),
 }
 
-// impl Serialize for KeyValue {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: serde::Serializer,
-//     {
-//         match self {
-//             KeyValue::Choseong(cho) => cho.serialize(serializer),
-//             KeyValue::Jongseong(jong) => jong.serialize(serializer),
-//             KeyValue::Jungseong(jung) => jung.serialize(serializer),
-//             KeyValue::ChoJong(cho, jong) => {
-//                 [char::from(*cho), char::from(*jong)].serialize(serializer)
-//             }
-//         }
-//     }
-// }
-// struct KeyValueVisitor;
+#[test]
+fn compose() {
+    assert_eq!('ㅇ', Jongseong::Ieung.jamo());
+    assert_eq!('앙', Choseong::Ieung.compose(Jungseong::A, Some(Jongseong::Ieung)));
+    assert_eq!('아', Choseong::Ieung.compose(Jungseong::A, None));
+}
 
-// impl<'de> Visitor<'de> for KeyValueVisitor {
-//     type Value = KeyValue;
-
-//     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-//         formatter.write_str("char array")
-//     }
-
-//     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-//     where
-//         A: serde::de::SeqAccess<'de>,
-//     {
-//         use serde::de::Error;
-
-//         let c: char = seq
-//             .next_element()?
-//             .ok_or_else(|| A::Error::custom("Empty"))?;
-
-//         if let Ok(cho) = Choseong::try_from(c) {
-//             match seq.next_element()? {
-//                 Some(jong) => Ok(KeyValue::ChoJong(cho, jong)),
-//                 None => Ok(KeyValue::Choseong(cho)),
-//             }
-//         } else if let Ok(jung) = Jungseong::try_from(c) {
-//             Ok(KeyValue::Jungseong(jung))
-//         } else if let Ok(jong) = Jongseong::try_from(c) {
-//             Ok(KeyValue::Jongseong(jong))
-//         } else {
-//             Err(A::Error::invalid_value(Unexpected::Char(c), &self))
-//         }
-//     }
-// }
-
-// impl<'de> Deserialize<'de> for KeyValue {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: serde::Deserializer<'de>,
-//     {
-//         deserializer.deserialize_seq(KeyValueVisitor)
-//     }
-// }

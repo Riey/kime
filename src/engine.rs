@@ -95,21 +95,31 @@ impl Layout {
     pub fn map_key(
         &self,
         state: &mut CharacterState,
+        enable_hangul: &mut bool,
         keycode: KeyCode,
         shift: bool,
     ) -> InputResult {
-        if let Some(v) = self.keymap.get(&Key {
-            code: keycode,
-            shift,
-        }) {
-            match *v {
-                KeyValue::ChoJong(cho, jong) => state.cho_jong(cho, jong),
-                KeyValue::Jungseong(jung) => state.jung(jung),
-                KeyValue::Choseong(cho) => state.cho(cho),
-                KeyValue::Jongseong(jong) => state.jong(jong),
-            }
+        if keycode == KeyCode::Bs {
+            state.backspace()
+        } else if matches!(keycode, KeyCode::Henkan | KeyCode::Ralt) {
+            *enable_hangul = !*enable_hangul;
+            InputResult::Consume
         } else {
-            InputResult::Bypass
+            if !*enable_hangul {
+                InputResult::Bypass
+            } else if let Some(v) = self.keymap.get(&Key {
+                code: keycode,
+                shift,
+            }) {
+                match *v {
+                    KeyValue::ChoJong(cho, jong) => state.cho_jong(cho, jong),
+                    KeyValue::Jungseong(jung) => state.jung(jung),
+                    KeyValue::Choseong(cho) => state.cho(cho),
+                    KeyValue::Jongseong(jong) => state.jong(jong),
+                }
+            } else {
+                InputResult::Bypass
+            }
         }
     }
 
@@ -131,17 +141,17 @@ pub enum InputResult {
 }
 
 pub struct InputEngine {
-    enable_hangul: bool,
     state: CharacterState,
     layout: Layout,
+    enable_hangul: bool,
 }
 
 impl InputEngine {
     pub fn new(layout: Layout) -> Self {
         Self {
-            enable_hangul: false,
             state: CharacterState::default(),
             layout,
+            enable_hangul: false,
         }
     }
 
@@ -152,17 +162,8 @@ impl InputEngine {
         }
 
         if let Some(keycode) = KeyCode::from_x11_code(keycode) {
-            if matches!(keycode, KeyCode::Henkan | KeyCode::Ralt) {
-                log::trace!("Trigger hangul");
-                self.enable_hangul = !self.enable_hangul;
-                return InputResult::Consume;
-            }
-
-            if self.enable_hangul {
-                self.layout.map_key(&mut self.state, keycode, shift)
-            } else {
-                InputResult::Bypass
-            }
+            self.layout
+                .map_key(&mut self.state, &mut self.enable_hangul, keycode, shift)
         } else {
             InputResult::Bypass
         }

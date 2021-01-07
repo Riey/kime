@@ -170,6 +170,17 @@ impl Choseong {
         }
     }
 
+    pub const fn backspace(self) -> Option<Self> {
+        match self {
+            Self::SsangGiyeok => Some(Self::Giyeok),
+            Self::SsangBieup => Some(Self::Bieup),
+            Self::SsangSiot => Some(Self::Siot),
+            Self::SsangJieut => Some(Self::SsangJieut),
+            Self::SsangDigeut => Some(Self::Digeut),
+            _ => None,
+        }
+    }
+
     pub const fn jamo(self) -> char {
         match self {
             Self::Giyeok => 'ㄱ',
@@ -231,6 +242,15 @@ impl Jungseong {
             _ => None,
         }
     }
+
+    pub const fn backspace(self) -> Option<Self> {
+        match self {
+            Self::AE => Some(Self::A),
+            Self::YAE => Some(Self::YA),
+            Self::WA | Self::OE => Some(Self::O),
+            _ => None,
+        }
+    }
 }
 
 impl Jongseong {
@@ -281,6 +301,22 @@ impl Jongseong {
             (Self::Rieul, Self::Hieuh) => Some(Self::RieulHieuh),
             (Self::Bieup, Self::Siot) => Some(Self::BieupSiot),
             (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
+            _ => None,
+        }
+    }
+
+    pub const fn backspace(self) -> Option<Self> {
+        match self {
+            Self::SsangGiyeok | Self::GiyeokSiot => Some(Self::Giyeok),
+            Self::NieunHieuh | Self::NieunJieut => Some(Self::Nieun),
+            Self::RieulHieuh
+            | Self::RieulMieum
+            | Self::RieulBieup
+            | Self::RieulSiot
+            | Self::RieulTieut
+            | Self::RieulHieuh => Some(Self::Rieul),
+            Self::BieupSiot => Some(Self::Bieup),
+            Self::SsangSiot => Some(Self::Siot),
             _ => None,
         }
     }

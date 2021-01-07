@@ -309,8 +309,7 @@ impl Jongseong {
         match self {
             Self::SsangGiyeok | Self::GiyeokSiot => Some(Self::Giyeok),
             Self::NieunHieuh | Self::NieunJieut => Some(Self::Nieun),
-            Self::RieulHieuh
-            | Self::RieulMieum
+            Self::RieulMieum
             | Self::RieulBieup
             | Self::RieulSiot
             | Self::RieulTieut

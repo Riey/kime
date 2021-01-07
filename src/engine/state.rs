@@ -13,12 +13,30 @@ impl CharacterState {
     pub fn to_char(&self) -> char {
         match (self.cho, self.jung, self.jong) {
             (None, None, None) => '\0',
+            (Some(cho), Some(jung), jong) => cho.compose(jung, jong),
+
             (Some(cho), None, None) => cho.jamo(),
             (None, Some(jung), None) => jung.jamo(),
             (None, None, Some(jong)) => jong.jamo(),
-            (None, Some(_jung), Some(_jong)) => '\0',
+
+            // can't be render just workaround
+            (None, Some(_jung), Some(jong)) => jong.jamo(),
             (Some(cho), None, Some(_jong)) => cho.jamo(),
-            (Some(cho), Some(jung), jong) => cho.compose(jung, jong),
+        }
+    }
+
+    pub fn reset(&mut self) -> Option<char> {
+        match (self.cho.take(), self.jung.take(), self.jong.take()) {
+            (None, None, None) => None,
+            (Some(cho), Some(jung), jong) => Some(cho.compose(jung, jong)),
+
+            (Some(cho), None, None) => Some(cho.jamo()),
+            (None, Some(jung), None) => Some(jung.jamo()),
+            (None, None, Some(jong)) => Some(jong.jamo()),
+
+            // can't be char
+            (None, Some(_jung), Some(_jong)) => None,
+            (Some(_cho), None, Some(_jong)) => None,
         }
     }
 

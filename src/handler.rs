@@ -132,7 +132,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn input_styles(&self) -> Self::InputStyleArray {
         [
             // root
-            InputStyle::PREEDIT_NOTHING | InputStyle::PREEDIT_NOTHING,
+            InputStyle::PREEDIT_NOTHING | InputStyle::STATUS_NOTHING,
             // off-the-spot
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_AREA,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,

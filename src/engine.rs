@@ -122,10 +122,6 @@ impl Layout {
             }
         }
     }
-
-    fn reset(&self) -> Option<char> {
-        todo!()
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -170,6 +166,6 @@ impl InputEngine {
     }
 
     pub fn reset(&mut self) -> String {
-        self.layout.reset().map_or(String::new(), Into::into)
+        self.state.reset().map_or(String::new(), Into::into)
     }
 }

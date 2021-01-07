@@ -42,6 +42,10 @@ mod tests {
             (K, InputResult::Preedit('가')),
             (D, InputResult::Preedit('강')),
             (Bs, InputResult::Preedit('가')),
+            (Q, InputResult::Preedit('갑')),
+            (T, InputResult::Preedit('값')),
+            (Bs, InputResult::Preedit('갑')),
+            (Bs, InputResult::Preedit('가')),
             (Bs, InputResult::Preedit('ㄱ')),
             (Bs, InputResult::ClearPreedit),
             (R, InputResult::Preedit('ㄱ')),
@@ -55,7 +59,6 @@ mod tests {
             (J, InputResult::Preedit('어')),
             (Q, InputResult::Preedit('업')),
             (T, InputResult::Preedit('없')),
-            (Bs, InputResult::Preedit('업')),
         ])
     }
 

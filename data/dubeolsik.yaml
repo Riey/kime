@@ -35,6 +35,16 @@
   cho: ᄁ
   jong: ᆩ
 
+- code: T
+  shift: false
+  cho: ᄉ
+  jong: ᆺ
+
+- code: T
+  shift: true
+  cho: ᄊ
+  jong: ᆻ
+
 - code: A
   cho: ᄆ
   jong: ᆷ

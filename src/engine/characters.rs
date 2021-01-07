@@ -272,23 +272,49 @@ impl Jongseong {
             (Self::Giyeok, Self::Siot) => Some(Self::GiyeokSiot),
             (Self::Nieun, Self::Hieuh) => Some(Self::NieunHieuh),
             (Self::Nieun, Self::Jieut) => Some(Self::NieunJieut),
+            (Self::Rieul, Self::Giyeok) => Some(Self::RieulGiyeok),
+            (Self::Rieul, Self::Mieum) => Some(Self::RieulMieum),
+            (Self::Rieul, Self::Bieup) => Some(Self::RieulBieup),
+            (Self::Rieul, Self::Siot) => Some(Self::RieulSiot),
+            (Self::Rieul, Self::Tieut) => Some(Self::RieulTieut),
+            (Self::Rieul, Self::Pieup) => Some(Self::RieulPieup),
+            (Self::Rieul, Self::Hieuh) => Some(Self::RieulHieuh),
+            (Self::Bieup, Self::Siot) => Some(Self::BieupSiot),
             (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
-            // TODO: complete
             _ => None,
         }
     }
 
-    pub fn to_cho(self) -> JongToCho {
+    pub const fn to_cho(self) -> JongToCho {
         use JongToCho::{Compose, Direct};
         match self {
             Self::Giyeok => Direct(Choseong::Giyeok),
-            Self::GiyeokSiot => Compose(Self::Giyeok, Choseong::Siot),
             Self::SsangGiyeok => Direct(Choseong::SsangGiyeok),
-            Self::Ieung => Direct(Choseong::Ieung),
+            Self::GiyeokSiot => Compose(Self::Giyeok, Choseong::Siot),
+            Self::Nieun => Direct(Choseong::Nieun),
             Self::NieunJieut => Compose(Self::Nieun, Choseong::Jieut),
             Self::NieunHieuh => Compose(Self::Nieun, Choseong::Hieuh),
+            Self::Digeut => Direct(Choseong::Digeut),
+            Self::Rieul => Direct(Choseong::Rieul),
+            Self::RieulGiyeok => Compose(Self::Rieul, Choseong::Giyeok),
+            Self::RieulMieum => Compose(Self::Rieul, Choseong::Mieum),
+            Self::RieulBieup => Compose(Self::Rieul, Choseong::Bieup),
+            Self::RieulSiot => Compose(Self::Rieul, Choseong::Siot),
+            Self::RieulTieut => Compose(Self::Rieul, Choseong::Tieut),
+            Self::RieulPieup => Compose(Self::Rieul, Choseong::Pieup),
+            Self::RieulHieuh => Compose(Self::Rieul, Choseong::Hieuh),
+            Self::Mieum => Direct(Choseong::Mieum),
+            Self::Bieup => Direct(Choseong::Bieup),
             Self::BieupSiot => Compose(Self::Bieup, Choseong::Siot),
-            _ => todo!(),
+            Self::Siot => Direct(Choseong::Siot),
+            Self::SsangSiot => Direct(Choseong::SsangSiot),
+            Self::Ieung => Direct(Choseong::Ieung),
+            Self::Jieut => Direct(Choseong::Jieut),
+            Self::Chieut => Direct(Choseong::Chieut),
+            Self::Kieuk => Direct(Choseong::Kiyeok),
+            Self::Tieut => Direct(Choseong::Tieut),
+            Self::Pieup => Direct(Choseong::Pieup),
+            Self::Hieuh => Direct(Choseong::Hieuh),
         }
     }
 }
@@ -311,7 +337,9 @@ pub enum KeyValue {
 #[test]
 fn compose() {
     assert_eq!('ㅇ', Jongseong::Ieung.jamo());
-    assert_eq!('앙', Choseong::Ieung.compose(Jungseong::A, Some(Jongseong::Ieung)));
+    assert_eq!(
+        '앙',
+        Choseong::Ieung.compose(Jungseong::A, Some(Jongseong::Ieung))
+    );
     assert_eq!('아', Choseong::Ieung.compose(Jungseong::A, None));
 }
-

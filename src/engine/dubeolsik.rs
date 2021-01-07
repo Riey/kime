@@ -11,12 +11,17 @@ mod tests {
 
     use pretty_assertions::assert_eq;
 
+    #[track_caller]
     fn test_input(inputs: &[(KeyCode, InputResult)]) {
         let layout = Layout::dubeolsik();
+        let mut enable_hangul = true;
         let mut state = CharacterState::default();
 
         for (code, expect_result) in inputs.iter().copied() {
-            assert_eq!(expect_result, layout.map_key(&mut state, code, false));
+            assert_eq!(
+                expect_result,
+                layout.map_key(&mut state, &mut enable_hangul, code, false)
+            );
         }
     }
 

@@ -1,6 +1,7 @@
 use super::characters::{Choseong, JongToCho, Jongseong, Jungseong};
 use super::InputResult;
 
+/// 한글 입력 오토마타
 #[derive(Debug, Default, Clone, Copy)]
 pub struct CharacterState {
     cho: Option<Choseong>,
@@ -25,6 +26,35 @@ impl CharacterState {
     fn replace(&mut self, new: Self) -> char {
         let prev = std::mem::replace(self, new);
         prev.to_char()
+    }
+
+    pub fn backspace(&mut self) -> InputResult {
+        if let Some(jong) = self.jong.as_mut() {
+            if let Some(new_jong) = jong.backspace() {
+                *jong = new_jong;
+            } else {
+                self.jong = None;
+            }
+        } else if let Some(jung) = self.jung.as_mut() {
+            if let Some(new_jung) = jung.backspace() {
+                *jung = new_jung;
+            } else {
+                self.jung = None;
+            }
+        } else if let Some(cho) = self.cho.as_mut() {
+            if let Some(new_cho) = cho.backspace() {
+                *cho = new_cho;
+            } else {
+                self.cho = None;
+                // now empty
+                return InputResult::ClearPreedit;
+            }
+        } else {
+            // it's empty bypass it
+            return InputResult::Bypass;
+        }
+
+        InputResult::Preedit(self.to_char())
     }
 
     // 두벌식용

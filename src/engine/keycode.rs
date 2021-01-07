@@ -2,6 +2,20 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum KeyCode {
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Zero,
+    Minus,
+    Equal,
+    Backslash,
+
     Q,
     W,
     E,
@@ -39,6 +53,20 @@ pub enum KeyCode {
 impl KeyCode {
     pub fn from_x11_code(code: u8) -> Option<Self> {
         match code {
+            10 => Some(Self::One),
+            11 => Some(Self::Two),
+            12 => Some(Self::Three),
+            13 => Some(Self::Four),
+            14 => Some(Self::Five),
+            15 => Some(Self::Six),
+            16 => Some(Self::Seven),
+            17 => Some(Self::Eight),
+            18 => Some(Self::Nine),
+            19 => Some(Self::Zero),
+            20 => Some(Self::Minus),
+            21 => Some(Self::Equal),
+            51 => Some(Self::Backslash),
+
             24 => Some(Self::Q),
             25 => Some(Self::W),
             26 => Some(Self::E),

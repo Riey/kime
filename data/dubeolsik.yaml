@@ -48,6 +48,28 @@
 - code: Y
   jung: ᅭ
 
+- code: U
+  jung: ᅧ
+
+- code: I
+  jung: ᅣ
+
+- code: O
+  shift: false
+  jung: ᅢ
+
+- code: O
+  shift: true
+  jung: ᅤ
+
+- code: P
+  shift: false
+  jung: ᅦ
+
+- code: P
+  shift: true
+  jung: ᅨ
+
 - code: A
   cho: ᄆ
   jong: ᆷ

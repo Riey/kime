@@ -151,17 +151,25 @@ impl InputEngine {
         }
     }
 
+    fn bypass(&mut self) -> InputResult {
+        if let Some(ch) = self.state.reset() {
+            InputResult::CommitBypass(ch)
+        } else {
+            InputResult::Bypass
+        }
+    }
+
     pub fn key_press(&mut self, keycode: u8, shift: bool, ctrl: bool) -> InputResult {
         // skip ctrl
         if ctrl {
-            return InputResult::Bypass;
+            return self.bypass();
         }
 
         if let Some(keycode) = KeyCode::from_x11_code(keycode) {
             self.layout
                 .map_key(&mut self.state, &mut self.enable_hangul, keycode, shift)
         } else {
-            InputResult::Bypass
+            self.bypass()
         }
     }
 

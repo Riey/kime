@@ -1,0 +1,17 @@
+[package]
+name = "kime-xim"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+ahash = "0.6.2"
+cairo-rs = { version = "0.9.1", features = ["xcb"] }
+log = "0.4.11"
+pretty_env_logger = "0.4.0"
+x11rb = { version = "0.7.0", features = ["render"] }
+
+xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
+
+kime-engine = { path = "../engine" }

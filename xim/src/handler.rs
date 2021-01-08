@@ -1,9 +1,7 @@
-mod pe_window;
-
 use std::num::NonZeroU32;
 
 use ahash::AHashMap;
-use pe_window::PeWindow;
+use crate::pe_window::PeWindow;
 use x11rb::{
     protocol::xproto::{ConfigureNotifyEvent, EventMask, KeyPressEvent, KEY_PRESS_EVENT},
     xcb_ffi::XCBConnection,
@@ -13,7 +11,7 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use crate::engine::{InputEngine, InputResult, Layout};
+use kime_engine::{InputEngine, InputResult, Layout};
 
 pub struct KimeData {
     engine: InputEngine,
@@ -189,7 +187,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         _server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<String, xim::ServerError> {
-        Ok(input_context.user_data.engine.reset())
+        Ok(input_context.user_data.engine.reset().unwrap_or_default())
     }
 
     fn handle_forward_event(
@@ -267,6 +265,22 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         _server: &mut X11rbServer<XCBConnection>,
         _input_context: &mut xim::InputContext<Self::InputContextData>,
         _position: i32,
+    ) -> Result<(), xim::ServerError> {
+        Ok(())
+    }
+
+    fn handle_set_focus(
+        &mut self,
+        _server: &mut X11rbServer<XCBConnection>,
+        _input_context: &mut xim::InputContext<Self::InputContextData>,
+    ) -> Result<(), xim::ServerError> {
+        Ok(())
+    }
+
+    fn handle_unset_focus(
+        &mut self,
+        _server: &mut X11rbServer<XCBConnection>,
+        _input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         Ok(())
     }

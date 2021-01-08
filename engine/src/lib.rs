@@ -173,7 +173,7 @@ impl InputEngine {
         }
     }
 
-    pub fn reset(&mut self) -> String {
-        self.state.reset().map_or(String::new(), Into::into)
+    pub fn reset(&mut self) -> Option<String> {
+        self.state.reset().map(Into::into)
     }
 }

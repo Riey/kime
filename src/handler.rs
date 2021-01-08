@@ -77,7 +77,12 @@ impl KimeHandler {
             self.preedit_windows.get_mut(pe).unwrap().set_preedit(ch);
         } else {
             // off-the-spot draw in server
-            let mut pe = PeWindow::new(server.conn(), ic.app_win(), self.screen_num)?;
+            let mut pe = PeWindow::new(
+                server.conn(),
+                ic.app_win(),
+                ic.preedit_spot(),
+                self.screen_num,
+            )?;
             pe.set_preedit(ch);
 
             ic.user_data.pe = Some(pe.window());

@@ -1,8 +1,5 @@
+use super::characters::{Choseong, JongToCho, Jongseong, Jungseong};
 use super::InputResult;
-use super::{
-    characters::{Choseong, JongToCho, Jongseong, Jungseong},
-    InputEngine,
-};
 
 /// 한글 입력 오토마타
 #[derive(Debug, Default, Clone, Copy)]

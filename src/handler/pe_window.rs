@@ -19,6 +19,7 @@ pub struct PeWindow {
     preedit_window: NonZeroU32,
     preedit: String,
     surface: cairo::XCBSurface,
+    cr: cairo::Context,
     size: (u16, u16),
 }
 
@@ -104,8 +105,18 @@ impl PeWindow {
 
         conn.flush()?;
 
+        let cr = cairo::Context::new(&surface);
+
+        cr.select_font_face(
+            "D2Coding",
+            cairo::FontSlant::Normal,
+            cairo::FontWeight::Normal,
+        );
+        cr.set_font_size(15.0);
+
         Ok(Self {
             surface,
+            cr,
             preedit_window: NonZeroU32::new(preedit_window).unwrap(),
             preedit: String::with_capacity(10),
             size,
@@ -126,20 +137,13 @@ impl PeWindow {
 
     fn redraw(&mut self) {
         log::trace!("Redraw: {}", self.preedit);
-        let cr = cairo::Context::new(&self.surface);
-        cr.set_source_rgb(1.0, 1.0, 1.0);
-        cr.paint();
+        self.cr.set_source_rgb(1.0, 1.0, 1.0);
+        self.cr.paint();
 
         if !self.preedit.is_empty() {
-            cr.set_source_rgb(0.0, 0.0, 0.0);
-            cr.move_to(6.0, 17.5);
-            cr.select_font_face(
-                "D2Coding",
-                cairo::FontSlant::Normal,
-                cairo::FontWeight::Normal,
-            );
-            cr.set_font_size(15.0);
-            cr.show_text(&self.preedit);
+            self.cr.set_source_rgb(0.0, 0.0, 0.0);
+            self.cr.move_to(6.0, 17.5);
+            self.cr.show_text(&self.preedit);
         }
 
         self.surface.flush();

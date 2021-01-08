@@ -26,15 +26,16 @@ impl PeWindow {
     pub fn new(
         conn: &XCBConnection,
         app_win: Option<NonZeroU32>,
+        spot_location: xim::Point,
         screen_num: usize,
     ) -> Result<Self, xim::ServerError> {
-        let size = (200, 30);
+        let size = (30, 30);
         let preedit_window = conn.generate_id()?;
         let colormap = conn.generate_id()?;
         let (depth, visual_id) = choose_visual(conn, screen_num)?;
 
         let screen = &conn.setup().roots[screen_num];
-        let pos = find_position(conn, screen.root, app_win)?;
+        let pos = find_position(conn, screen.root, app_win, spot_location)?;
 
         conn.create_colormap(ColormapAlloc::None, colormap, screen.root, visual_id)?
             .check()?;
@@ -131,7 +132,7 @@ impl PeWindow {
 
         if !self.preedit.is_empty() {
             cr.set_source_rgb(0.0, 0.0, 0.0);
-            cr.move_to(10.0, 15.0);
+            cr.move_to(6.0, 17.5);
             cr.select_font_face(
                 "D2Coding",
                 cairo::FontSlant::Normal,
@@ -248,12 +249,12 @@ fn find_position(
     conn: &impl Connection,
     root: u32,
     app_win: Option<NonZeroU32>,
+    spot_location: xim::Point,
 ) -> Result<(i16, i16), xim::ServerError> {
     match app_win {
         Some(app_win) => {
-            let geom = conn.get_geometry(app_win.get())?.reply()?;
             let offset = conn
-                .translate_coordinates(app_win.get(), root, geom.x, geom.y)?
+                .translate_coordinates(app_win.get(), root, spot_location.x, spot_location.y)?
                 .reply()?;
 
             Ok((offset.dst_x, offset.dst_y))

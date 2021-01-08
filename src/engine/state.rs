@@ -1,5 +1,8 @@
-use super::characters::{Choseong, JongToCho, Jongseong, Jungseong};
 use super::InputResult;
+use super::{
+    characters::{Choseong, JongToCho, Jongseong, Jungseong},
+    InputEngine,
+};
 
 /// 한글 입력 오토마타
 #[derive(Debug, Default, Clone, Copy)]
@@ -64,15 +67,19 @@ impl CharacterState {
                 *cho = new_cho;
             } else {
                 self.cho = None;
-                // now empty
-                return InputResult::ClearPreedit;
             }
         } else {
-            // it's empty bypass it
+            // empty
             return InputResult::Bypass;
         }
 
-        InputResult::Preedit(self.to_char())
+        let ch = self.to_char();
+
+        if ch == '\0' {
+            InputResult::ClearPreedit
+        } else {
+            InputResult::Preedit(ch)
+        }
     }
 
     // 두벌식용

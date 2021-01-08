@@ -430,9 +430,12 @@ dependencies = [
 name = "kime-gtk3"
 version = "0.1.0"
 dependencies = [
+ "glib-sys",
  "gobject-sys",
  "gtk-sys",
  "kime-engine",
+ "libc",
+ "once_cell",
 ]
 
 [[package]]

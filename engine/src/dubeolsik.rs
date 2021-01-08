@@ -1,4 +1,4 @@
-pub const DUBEOLSIK_LAYOUT: &str = include_str!("../../data/dubeolsik.yaml");
+pub const DUBEOLSIK_LAYOUT: &str = include_str!("../data/dubeolsik.yaml");
 
 #[cfg(test)]
 mod tests {

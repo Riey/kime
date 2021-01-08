@@ -4,8 +4,8 @@ use x11rb::{
 };
 use xim::{x11rb::HasConnection, ServerError, XimConnections};
 
-mod engine;
 mod handler;
+mod pe_window;
 
 fn main() -> Result<(), ServerError> {
     pretty_env_logger::init();

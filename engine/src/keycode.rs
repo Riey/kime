@@ -51,7 +51,7 @@ pub enum KeyCode {
 }
 
 impl KeyCode {
-    pub fn from_x11_code(code: u8) -> Option<Self> {
+    pub fn from_hardware_code(code: u8) -> Option<Self> {
         match code {
             10 => Some(Self::One),
             11 => Some(Self::Two),

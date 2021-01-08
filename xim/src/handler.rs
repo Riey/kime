@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
-use ahash::AHashMap;
 use crate::pe_window::PeWindow;
+use ahash::AHashMap;
 use x11rb::{
     protocol::xproto::{ConfigureNotifyEvent, EventMask, KeyPressEvent, KEY_PRESS_EVENT},
     xcb_ffi::XCBConnection,
@@ -187,7 +187,12 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         _server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<String, xim::ServerError> {
-        Ok(input_context.user_data.engine.reset().unwrap_or_default())
+        Ok(input_context
+            .user_data
+            .engine
+            .reset()
+            .map(Into::into)
+            .unwrap_or_default())
     }
 
     fn handle_forward_event(

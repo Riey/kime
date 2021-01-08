@@ -165,7 +165,7 @@ impl InputEngine {
             return self.bypass();
         }
 
-        if let Some(keycode) = KeyCode::from_x11_code(keycode) {
+        if let Some(keycode) = KeyCode::from_hardware_code(keycode) {
             self.layout
                 .map_key(&mut self.state, &mut self.enable_hangul, keycode, shift)
         } else {
@@ -173,7 +173,8 @@ impl InputEngine {
         }
     }
 
-    pub fn reset(&mut self) -> Option<String> {
-        self.state.reset().map(Into::into)
+    #[inline]
+    pub fn reset(&mut self) -> Option<char> {
+        self.state.reset()
     }
 }

@@ -1,0 +1,13 @@
+[package]
+name = "kime-gtk3"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+gobject-sys = "0.10.0"
+gtk-sys = "0.10.0"
+kime-engine = { path = "../engine" }

@@ -174,7 +174,7 @@ impl CharacterState {
                 None => {
                     let new;
 
-                    match prev_jong.to_cho() {
+                    match jong.to_cho() {
                         JongToCho::Direct(cho) => {
                             new = Self {
                                 cho: Some(cho),

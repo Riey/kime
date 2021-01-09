@@ -65,6 +65,7 @@ struct KimeIMContext {
     parent: GtkIMContext,
     client_window: Option<NonNull<GdkWindow>>,
     engine: InputEngine,
+    preedit_str: String,
 }
 
 impl KimeIMContext {
@@ -79,13 +80,16 @@ impl KimeIMContext {
         }
 
         if let Ok(code) = u8::try_from(key.hardware_keycode) {
-            match self
+            let ret = self
                 .engine
-                .key_press(code, key.state & 0x1 != 0, key.state & 0x4 != 0)
-            {
+                .key_press(code, key.state & 0x1 != 0, key.state & 0x4 != 0);
+
+            log(&format!("{:?}", ret));
+
+            match ret {
                 InputResult::CommitBypass(c) => {
                     self.commit(c);
-                    false
+                    true
                 }
                 InputResult::CommitPreedit(c, p) => {
                     self.commit(c);
@@ -120,26 +124,31 @@ impl KimeIMContext {
     }
 
     pub fn preedit(&mut self, c: char) {
-        let mut buf = [0; 8];
-        c.encode_utf8(&mut buf);
+        self.preedit_str.clear();
+        self.preedit_str.push(c);
         unsafe {
             g_signal_emit(
                 self.as_obj(),
                 SIGNALS.get().unwrap().preedit_changed,
                 0,
-                buf.as_ptr(),
+                self.preedit_str.as_ptr(),
             );
         }
     }
 
     pub fn clear_preedit(&mut self) {
         log("clear preedit");
-        unsafe {
-            g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+        if !self.preedit_str.is_empty() {
+            self.preedit_str.clear();
+            unsafe {
+                g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+            }
         }
     }
 
     pub fn commit(&mut self, c: char) {
+        self.clear_preedit();
+
         let mut buf = [0; 8];
         c.encode_utf8(&mut buf);
         unsafe {
@@ -274,11 +283,12 @@ unsafe fn register_module(module: *mut GTypeModule) {
     unsafe extern "C" fn im_context_instance_init(ctx: *mut GTypeInstance, _class: gpointer) {
         log("instance init");
 
-        // Context is uninitalized!
+        // Context is uninitalized so all fields must be initialize in this code except parent
         let ctx = ctx.cast::<KimeIMContext>();
 
         (*ctx).client_window = None;
         (*ctx).engine = InputEngine::new(Layout::dubeolsik());
+        (*ctx).preedit_str = String::with_capacity(12);
     }
 
     unsafe extern "C" fn im_context_instance_finalize(ctx: *mut GObject) {

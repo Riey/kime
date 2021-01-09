@@ -235,10 +235,24 @@ impl Jungseong {
 
     pub const fn try_add(self, other: Self) -> Option<Self> {
         match (self, other) {
-            (Self::A, Self::I) => Some(Self::AE),
+            // ㅑ ㅣ = ㅒ
             (Self::YA, Self::I) => Some(Self::YAE),
+            // ㅕ ㅣ = ㅖ
+            (Self::YEO, Self::I) => Some(Self::YE),
+            // ㅗ ㅏ = ㅘ
             (Self::O, Self::A) => Some(Self::WA),
+            // ㅗ ㅣ = ㅚ
             (Self::O, Self::I) => Some(Self::OE),
+            // ㅗ ㅐ = ㅙ
+            (Self::O, Self::AE) => Some(Self::WAE),
+            // ㅜ ㅓ = ㅝ
+            (Self::U, Self::EO) => Some(Self::WEO),
+            // ㅜ ㅔ = ㅞ
+            (Self::U, Self::E) => Some(Self::WE),
+            // ㅜ ㅣ = ㅟ
+            (Self::U, Self::I) => Some(Self::WI),
+            // ㅡ ㅣ = ㅢ
+            (Self::EU, Self::I) => Some(Self::YI),
             _ => None,
         }
     }

@@ -49,9 +49,13 @@ impl CharacterState {
     }
 
     /// Replace self with new then return previous status char
-    fn replace(&mut self, new: Self) -> char {
+    fn replace(&mut self, new: Self) -> InputResult {
         let prev = std::mem::replace(self, new);
-        prev.to_char()
+
+        match prev.preedit_char() {
+            Some(prev) => InputResult::CommitPreedit(prev, self.to_char()),
+            None => InputResult::Preedit(self.to_char()),
+        }
     }
 
     pub fn backspace(&mut self) -> InputResult {
@@ -103,13 +107,10 @@ impl CharacterState {
                     self.cho = Some(new);
                     InputResult::Preedit(self.to_char())
                 }
-                None => {
-                    let commit = self.replace(Self {
-                        cho: Some(cho),
-                        ..Default::default()
-                    });
-                    InputResult::CommitPreedit(commit, self.to_char())
-                }
+                None => self.replace(Self {
+                    cho: Some(cho),
+                    ..Default::default()
+                }),
             }
         } else {
             self.cho = Some(cho);
@@ -118,7 +119,31 @@ impl CharacterState {
     }
 
     pub fn jung(&mut self, jung: Jungseong) -> InputResult {
-        // TODO: try decompose jongseong
+        if let Some(jong) = self.jong {
+            let new;
+
+            match jong.to_cho() {
+                JongToCho::Direct(cho) => {
+                    self.jong = None;
+                    new = Self {
+                        cho: Some(cho),
+                        jung: Some(jung),
+                        jong: None,
+                    };
+                }
+                JongToCho::Compose(jong, cho) => {
+                    self.jong = Some(jong);
+                    new = Self {
+                        cho: Some(cho),
+                        jung: Some(jung),
+                        jong: None,
+                    };
+                }
+            }
+
+            return self.replace(new);
+        }
+
         if let Some(prev_jung) = self.jung {
             match prev_jung.try_add(jung) {
                 Some(new) => {
@@ -154,8 +179,7 @@ impl CharacterState {
                         };
                     }
 
-                    let commit = self.replace(new);
-                    InputResult::CommitPreedit(commit, self.to_char())
+                    self.replace(new)
                 }
             }
         } else {
@@ -189,8 +213,7 @@ impl CharacterState {
                         }
                     }
 
-                    let commit = self.replace(new);
-                    InputResult::CommitPreedit(commit, self.to_char())
+                    self.replace(new)
                 }
             }
         } else {

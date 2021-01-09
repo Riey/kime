@@ -19,6 +19,16 @@ mod tests {
     }
 
     #[test]
+    fn next_jaum() {
+        test_input(&[
+            (KEY_d, InputResult::Preedit('ㅇ')),
+            (KEY_k, InputResult::Preedit('아')),
+            (KEY_d, InputResult::Preedit('앙')),
+            (KEY_e, InputResult::CommitPreedit('앙', 'ㄷ')),
+        ])
+    }
+
+    #[test]
     fn com_moum() {
         test_input(&[
             (KEY_d, InputResult::Preedit('ㅇ')),

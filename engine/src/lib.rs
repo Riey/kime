@@ -1,29 +1,16 @@
 mod characters;
 mod dubeolsik;
-mod keycode;
 mod state;
 
-use self::{
-    characters::{Choseong, Jongseong, Jungseong, KeyValue},
-    keycode::{Key, KeyCode},
-};
+use self::characters::{Choseong, Jongseong, Jungseong, KeyValue};
 use ahash::AHashMap;
 use serde::{Deserialize, Serialize};
+use xkbcommon::xkb;
 
 pub use self::state::CharacterState;
 
 pub struct Layout {
-    keymap: AHashMap<Key, KeyValue>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct KeyItem {
-    code: KeyCode,
-    // None = both
-    #[serde(default)]
-    shift: Option<bool>,
-    #[serde(flatten)]
-    value: ValueItem,
+    keymap: AHashMap<xkb::Keysym, KeyValue>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -34,6 +21,8 @@ struct ValueItem {
     jung: Option<Jungseong>,
     #[serde(default)]
     jong: Option<Jongseong>,
+    #[serde(default)]
+    pass: Option<char>,
 }
 
 impl Layout {
@@ -44,10 +33,15 @@ impl Layout {
     pub fn load_from(content: &str) -> Self {
         let mut keymap = AHashMap::new();
 
-        let items: Vec<KeyItem> = serde_yaml::from_str(content).unwrap();
+        let items: AHashMap<String, ValueItem> = serde_yaml::from_str(content).unwrap();
 
-        for item in items {
-            let value = match item.value {
+        for (key, value) in items {
+            let key = xkb::keysym_from_name(&key, xkb::KEYSYM_NO_FLAGS);
+
+            let value = match value {
+                ValueItem {
+                    pass: Some(pass), ..
+                } => KeyValue::Pass(pass),
                 ValueItem {
                     cho: Some(cho),
                     jong: Some(jong),
@@ -63,55 +57,26 @@ impl Layout {
                 _ => continue,
             };
 
-            if let Some(shift) = item.shift {
-                keymap.insert(
-                    Key {
-                        code: item.code,
-                        shift,
-                    },
-                    value,
-                );
-            } else {
-                keymap.insert(
-                    Key {
-                        code: item.code,
-                        shift: true,
-                    },
-                    value,
-                );
-                keymap.insert(
-                    Key {
-                        code: item.code,
-                        shift: false,
-                    },
-                    value,
-                );
-            }
+            keymap.insert(key, value);
         }
 
         Self { keymap }
     }
 
-    pub fn map_key(
-        &self,
-        state: &mut CharacterState,
-        enable_hangul: &mut bool,
-        keycode: KeyCode,
-        shift: bool,
-    ) -> InputResult {
-        if keycode == KeyCode::Bs {
+    pub fn map_key(&self, state: &mut CharacterState, sym: xkb::Keysym) -> InputResult {
+        if sym == xkb::KEY_BackSpace {
             state.backspace()
-        } else if matches!(keycode, KeyCode::Henkan | KeyCode::Ralt) {
-            *enable_hangul = !*enable_hangul;
-            InputResult::Consume
         } else {
-            if !*enable_hangul {
-                InputResult::Bypass
-            } else if let Some(v) = self.keymap.get(&Key {
-                code: keycode,
-                shift,
-            }) {
+            if let Some(v) = self.keymap.get(&sym) {
                 match *v {
+                    KeyValue::Pass(pass) => {
+                        if let Some(preedit) = state.preedit_char() {
+                            state.reset();
+                            InputResult::CommitCommit(preedit, pass)
+                        } else {
+                            InputResult::Commit(pass)
+                        }
+                    }
                     KeyValue::ChoJong(cho, jong) => state.cho_jong(cho, jong),
                     KeyValue::Jungseong(jung) => state.jung(jung),
                     KeyValue::Choseong(cho) => state.cho(cho),
@@ -128,17 +93,39 @@ impl Layout {
 pub enum InputResult {
     ClearPreedit,
     Preedit(char),
-    // Commit(char),
     Consume,
     Bypass,
+    Commit(char),
     CommitBypass(char),
     /// (commit, preedit)
     CommitPreedit(char, char),
+    CommitCommit(char, char),
+}
+
+pub struct XkbContext {
+    _ctx: xkb::Context,
+    _keymap: xkb::Keymap,
+    state: xkb::State,
+}
+
+impl XkbContext {
+    pub fn new() -> Self {
+        let ctx = xkb::Context::new(0);
+        let keymap = xkb::Keymap::new_from_names(&ctx, "", "", "", "", None, 0).unwrap();
+        let state = xkb::State::new(&keymap);
+
+        Self {
+            _ctx: ctx,
+            _keymap: keymap,
+            state,
+        }
+    }
 }
 
 pub struct InputEngine {
     state: CharacterState,
     layout: Layout,
+    xkb_ctx: XkbContext,
     enable_hangul: bool,
 }
 
@@ -147,33 +134,77 @@ impl InputEngine {
         Self {
             state: CharacterState::default(),
             layout,
+            xkb_ctx: XkbContext::new(),
             enable_hangul: false,
         }
     }
 
-    fn bypass(&mut self) -> InputResult {
-        if let Some(ch) = self.state.reset() {
-            InputResult::CommitBypass(ch)
-        } else {
-            InputResult::Bypass
+    fn bypass(&mut self, commit: Option<char>) -> InputResult {
+        match (self.state.reset(), commit) {
+            (Some(preedit), Some(commit)) => InputResult::CommitCommit(preedit, commit),
+            (Some(preedit), None) => InputResult::CommitBypass(preedit),
+            (None, Some(commit)) => InputResult::Commit(commit),
+            (None, None) => InputResult::Bypass,
         }
     }
 
-    pub fn key_press(&mut self, keycode: u8, shift: bool, ctrl: bool) -> InputResult {
-        // skip ctrl
-        if ctrl {
-            return self.bypass();
-        }
+    /// Use pre-computed keysym
+    pub fn press_key_sym(&mut self, sym: xkb::Keysym) -> InputResult {
+        match sym {
+            xkb::KEY_Hangul | xkb::KEY_Henkan | xkb::KEY_Alt_R => {
+                self.enable_hangul = !self.enable_hangul;
+                InputResult::Consume
+            }
+            sym if self.enable_hangul => self.layout.map_key(&mut self.state, sym),
+            sym => {
+                let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };
 
-        if let Some(keycode) = KeyCode::from_x11_code(keycode) {
-            self.layout
-                .map_key(&mut self.state, &mut self.enable_hangul, keycode, shift)
-        } else {
-            self.bypass()
+                self.bypass(if !commit.is_ascii_control() {
+                    Some(commit)
+                } else {
+                    None
+                })
+            }
         }
     }
 
-    pub fn reset(&mut self) -> Option<String> {
-        self.state.reset().map(Into::into)
+    /// Use hardward keycode
+    pub fn key_event(&mut self, keycode: xkb::Keycode, press: bool) -> InputResult {
+        self.xkb_ctx.state.update_key(
+            keycode,
+            if press {
+                xkb::KeyDirection::Down
+            } else {
+                xkb::KeyDirection::Up
+            },
+        );
+
+        // Skip when release event
+        if !press {
+            return InputResult::Bypass;
+        }
+
+        // Skip when ctrl pressed
+        if self
+            .xkb_ctx
+            .state
+            .mod_name_is_active(xkb::MOD_NAME_CTRL, xkb::STATE_MODS_DEPRESSED)
+        {
+            return self.bypass(None);
+        }
+
+        let sym = self.xkb_ctx.state.key_get_one_sym(keycode);
+
+        self.press_key_sym(sym)
+    }
+
+    #[inline]
+    pub fn preedit_char(&self) -> Option<char> {
+        self.state.preedit_char()
+    }
+
+    #[inline]
+    pub fn reset(&mut self) -> Option<char> {
+        self.state.reset()
     }
 }

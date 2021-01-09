@@ -29,6 +29,16 @@ mod tests {
     }
 
     #[test]
+    fn not_com_moum_when_continue() {
+        test_input(&[
+            (KEY_d, InputResult::Preedit('ㅇ')),
+            (KEY_h, InputResult::Preedit('오')),
+            (KEY_d, InputResult::Preedit('옹')),
+            (KEY_k, InputResult::CommitPreedit('오', '아')),
+        ]);
+    }
+
+    #[test]
     fn com_moum() {
         test_input(&[
             (KEY_d, InputResult::Preedit('ㅇ')),

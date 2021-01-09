@@ -1,136 +1,186 @@
-- code: Q
-  shift: false
+q:
   cho: ᄇ
   jong: ᆸ
 
-- code: Q
-  shift: true
+Q:
   cho: ᄈ
 
-- code: W
-  shift: false
+w:
   cho: ᄌ
   jong: ᆽ
 
-- code: W
-  shift: true
+W:
   cho: ᄍ
 
-- code: E
-  shift: false
+e:
   cho: ᄃ
   jong: ᆮ
 
-- code: E
-  shift: true
+E:
   cho: ᄄ
 
-- code: R
-  shift: false
+r:
   cho: ᄀ
   jong: ᆨ
 
-- code: R
-  shift: true
+R:
   cho: ᄁ
   jong: ᆩ
 
-- code: T
-  shift: false
+t:
   cho: ᄉ
   jong: ᆺ
 
-- code: T
-  shift: true
+T:
   cho: ᄊ
   jong: ᆻ
 
-- code: Y
+y:
   jung: ᅭ
 
-- code: U
+Y:
+  jung: ᅭ
+
+u:
   jung: ᅧ
 
-- code: I
+U:
+  jung: ᅧ
+
+i:
   jung: ᅣ
 
-- code: O
-  shift: false
+I:
+  jung: ᅣ
+
+o:
   jung: ᅢ
 
-- code: O
-  shift: true
+O:
   jung: ᅤ
 
-- code: P
-  shift: false
+p:
   jung: ᅦ
 
-- code: P
-  shift: true
+P:
   jung: ᅨ
 
-- code: A
+a:
   cho: ᄆ
   jong: ᆷ
 
-- code: S
+A:
+  cho: ᄆ
+  jong: ᆷ
+
+s:
   cho: ᄂ
   jong: ᆫ
 
-- code: D
+S:
+  cho: ᄂ
+  jong: ᆫ
+
+d:
   cho: ᄋ
   jong: ᆼ
 
-- code: F
+D:
+  cho: ᄋ
+  jong: ᆼ
+
+f:
   cho: ᄅ
   jong: ᆯ
 
-- code: G
+F:
+  cho: ᄅ
+  jong: ᆯ
+
+g:
   cho: ᄒ
   jong: ᇂ
 
-- code: H
+G:
+  cho: ᄒ
+  jong: ᇂ
+
+h:
   jung: ᅩ
 
-- code: J
+H:
+  jung: ᅩ
+
+j:
   jung: ᅥ
 
-- code: K
+J:
+  jung: ᅥ
+
+k:
   jung: ᅡ
 
-- code: L
+K:
+  jung: ᅡ
+
+l:
   jung: ᅵ
 
-- code: Z
+L:
+  jung: ᅵ
+
+z:
   cho: ᄏ
   jong: ᆿ
 
-- code: X
+Z:
+  cho: ᄏ
+  jong: ᆿ
+
+x:
   cho: ᄐ
   jong: ᇀ
 
-- code: C
+X:
+  cho: ᄐ
+  jong: ᇀ
+
+c:
   cho: ᄎ
   jong: ᆾ
 
-- code: V
+C:
+  cho: ᄎ
+  jong: ᆾ
+
+v:
   cho: ᄑ
   jong: ᇁ
 
-- code: B
+V:
+  cho: ᄑ
+  jong: ᇁ
+
+b:
   jung: ᅲ
 
-- code: N
+B:
+  jung: ᅲ
+
+n:
   jung: ᅮ
 
-- code: M
+N:
+  jung: ᅮ
+
+m:
   jung: ᅳ
 
-- code: One
-  shift: false
+M:
+  jung: ᅳ
+
+'1':
   pass: '1'
 
-- code: One
-  shift: true
+exclam:
   pass: '!'

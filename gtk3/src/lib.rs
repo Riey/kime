@@ -73,9 +73,11 @@ impl KimeIMContext {
     }
 
     pub fn filter_keypress(&mut self, key: &GdkEventKey) -> bool {
-        let ret = self
-            .engine
-            .key_event(key.hardware_keycode as _, key.type_ == GDK_KEY_PRESS);
+        if key.type_ != GDK_KEY_PRESS {
+            return false;
+        }
+
+        let ret = self.engine.press_key_sym(key.keyval);
 
         log(&format!("{:?}", key));
         log(&format!("{:?}", ret));
@@ -129,11 +131,7 @@ impl KimeIMContext {
         self.preedit_str.clear();
         self.preedit_str.push(c);
         unsafe {
-            g_signal_emit(
-                self.as_obj(),
-                SIGNALS.get().unwrap().preedit_changed,
-                0,
-            );
+            g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
         }
     }
 

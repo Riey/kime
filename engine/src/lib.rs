@@ -158,6 +158,11 @@ impl InputEngine {
             },
         );
 
+        // Skip when release event
+        if !press {
+            return InputResult::Bypass;
+        }
+
         // Skip when ctrl pressed
         if self
             .xkb_ctx
@@ -165,11 +170,6 @@ impl InputEngine {
             .mod_name_is_active(xkb::MOD_NAME_CTRL, xkb::STATE_MODS_DEPRESSED)
         {
             return self.bypass(None);
-        }
-
-        // Skip when release event
-        if !press {
-            return InputResult::Bypass;
         }
 
         let sym = self.xkb_ctx.state.key_get_one_sym(keycode);

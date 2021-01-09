@@ -439,7 +439,6 @@ dependencies = [
  "kime-engine",
  "once_cell",
  "pango-sys",
- "xkbcommon",
 ]
 
 [[package]]

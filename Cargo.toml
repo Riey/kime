@@ -4,3 +4,7 @@ members = [
     "gtk3",
     "xim",
 ]
+
+[profile.release]
+lto = true
+

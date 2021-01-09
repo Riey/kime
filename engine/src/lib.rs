@@ -155,6 +155,17 @@ impl InputEngine {
                 self.enable_hangul = !self.enable_hangul;
                 InputResult::Consume
             }
+            xkb::KEY_Escape => {
+                if self.enable_hangul {
+                    self.enable_hangul = false;
+                    match self.state.reset() {
+                        Some(c) => InputResult::CommitBypass(c),
+                        _ => InputResult::Bypass,
+                    }
+                } else {
+                    InputResult::Bypass
+                }
+            }
             sym if self.enable_hangul => self.layout.map_key(&mut self.state, sym),
             sym => {
                 let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };

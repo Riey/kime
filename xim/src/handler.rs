@@ -247,6 +247,8 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         input_context: xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
+        log::info!("destroy_ic");
+
         if let Some(pe) = input_context.user_data.pe {
             self.preedit_windows.remove(&pe).unwrap().clean(&*server)?;
         }
@@ -259,8 +261,6 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         _server: &mut X11rbServer<XCBConnection>,
         _input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        log::info!("preedit started");
-
         Ok(())
     }
 

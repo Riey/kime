@@ -111,7 +111,7 @@ pub struct XkbContext {
 impl XkbContext {
     pub fn new() -> Self {
         let ctx = xkb::Context::new(0);
-        let keymap = xkb::Keymap::new_from_names(&ctx, "", "", "", "", None, 0).unwrap();
+        let keymap = xkb::Keymap::new_from_names(&ctx, "", "", "", "qwerty", None, 0).unwrap();
         let state = xkb::State::new(&keymap);
 
         Self {

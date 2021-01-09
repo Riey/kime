@@ -41,6 +41,33 @@ mod tests {
     }
 
     #[test]
+    fn number() {
+        test_input(&[
+            (D, InputResult::Preedit('ㅇ')),
+            (H, InputResult::Preedit('오')),
+            (L, InputResult::Preedit('외')),
+            (D, InputResult::Preedit('욍')),
+            (D, InputResult::CommitPreedit('욍', 'ㅇ')),
+            (K, InputResult::Preedit('아')),
+            (S, InputResult::Preedit('안')),
+            (G, InputResult::Preedit('않')),
+            (E, InputResult::CommitPreedit('않', 'ㄷ')),
+            (One, InputResult::CommitCommit('ㄷ', '1')),
+        ]);
+    }
+
+    #[test]
+    fn exclamation_mark() {
+        let mut state = CharacterState::default();
+        let layout = Layout::dubeolsik();
+
+        assert_eq!(
+            layout.map_key(&mut state, &mut true, One, true),
+            InputResult::Commit('!')
+        );
+    }
+
+    #[test]
     fn backspace() {
         test_input(&[
             (R, InputResult::Preedit('ㄱ')),

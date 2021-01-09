@@ -77,24 +77,25 @@ impl KimeIMContext {
             .engine
             .key_event(key.hardware_keycode as _, key.type_ == GDK_KEY_PRESS);
 
+        log(&format!("{:?}", key));
         log(&format!("{:?}", ret));
 
         match ret {
             InputResult::Commit(c) => {
                 self.commit(c);
                 self.clear_preedit();
-                false
+                true
             }
             InputResult::CommitCommit(f, s) => {
                 self.commit(f);
                 self.commit(s);
                 self.clear_preedit();
-                false
+                true
             }
             InputResult::CommitBypass(c) => {
                 self.commit(c);
                 self.clear_preedit();
-                true
+                false
             }
             InputResult::CommitPreedit(c, p) => {
                 self.commit(c);
@@ -132,7 +133,6 @@ impl KimeIMContext {
                 self.as_obj(),
                 SIGNALS.get().unwrap().preedit_changed,
                 0,
-                self.preedit_str.as_ptr(),
             );
         }
     }

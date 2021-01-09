@@ -1,8 +1,9 @@
 [package]
 name = "kime-gtk3"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
+license = "GPL-3.0"
 
 [lib]
 crate-type = ["cdylib"]

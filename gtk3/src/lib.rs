@@ -79,9 +79,6 @@ impl KimeIMContext {
 
         let ret = self.engine.press_key_sym(key.keyval);
 
-        log(&format!("{:?}", key));
-        log(&format!("{:?}", ret));
-
         match ret {
             InputResult::Commit(c) => {
                 self.commit(c);
@@ -136,7 +133,6 @@ impl KimeIMContext {
     }
 
     pub fn clear_preedit(&mut self) {
-        log("clear preedit");
         if !self.preedit_str.is_empty() {
             self.preedit_str.clear();
             unsafe {
@@ -167,8 +163,6 @@ unsafe fn type_of_class(class: *mut GTypeClass) -> GType {
 
 unsafe fn register_module(module: *mut GTypeModule) {
     unsafe extern "C" fn im_context_class_init(class: gpointer, _data: gpointer) {
-        log("class init");
-
         let class = class.cast::<KimeIMContextClass>();
 
         let im_context_class = g_type_check_class_cast(class.cast(), gtk_im_context_get_type())
@@ -194,7 +188,6 @@ unsafe fn register_module(module: *mut GTypeModule) {
     }
 
     unsafe extern "C" fn reset_im(ctx: *mut GtkIMContext) {
-        log("reset IME");
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
         ctx.reset();
     }
@@ -219,15 +212,12 @@ unsafe fn register_module(module: *mut GTypeModule) {
         attrs: *mut *mut PangoAttrList,
         cursor_pos: *mut c_int,
     ) {
-        log("get preedit string");
-
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
         let mut str_len = 0;
 
         if !out.is_null() {
             match ctx.engine.preedit_char() {
                 Some(ch) => {
-                    log(&format!("preedit {}", ch));
                     str_len = ch.len_utf8();
                     let s = g_malloc0(str_len + 1).cast::<c_char>();
                     ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), str_len));
@@ -257,8 +247,6 @@ unsafe fn register_module(module: *mut GTypeModule) {
     }
 
     unsafe extern "C" fn set_client_window(ctx: *mut GtkIMContext, window: *mut GdkWindow) {
-        log(&format!("Set client window: {:p}", window));
-
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
         let window = NonNull::new(window);
 
@@ -278,14 +266,14 @@ unsafe fn register_module(module: *mut GTypeModule) {
     }
 
     unsafe extern "C" fn im_context_instance_init(ctx: *mut GTypeInstance, _class: gpointer) {
-        log("instance init");
+        let parent = ctx.cast::<GtkIMContext>();
 
-        // Context is uninitalized so all fields must be initialize in this code except parent
-        let ctx = ctx.cast::<KimeIMContext>();
-
-        (*ctx).client_window = None;
-        (*ctx).engine = InputEngine::new(Layout::dubeolsik());
-        (*ctx).preedit_str = String::with_capacity(12);
+        ctx.cast::<KimeIMContext>().write(KimeIMContext {
+            parent: parent.read(),
+            client_window: None,
+            engine: InputEngine::new(Layout::dubeolsik()),
+            preedit_str: String::with_capacity(12),
+        });
     }
 
     unsafe extern "C" fn im_context_instance_finalize(ctx: *mut GObject) {
@@ -321,31 +309,20 @@ unsafe fn register_module(module: *mut GTypeModule) {
     });
 }
 
-fn log(t: &str) {
-    let s = std::ffi::CString::new(t).unwrap();
-    unsafe {
-        glib_sys::g_log(cs!("kime"), glib_sys::G_LOG_LEVEL_WARNING, s.as_ptr());
-    }
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn im_module_init(module: *mut GTypeModule) {
-    log("module init");
     g_type_module_use(module);
     register_module(module);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn im_module_exit() {
-    log("module exit");
-}
+pub unsafe extern "C" fn im_module_exit() {}
 
 #[no_mangle]
 pub unsafe extern "C" fn im_module_list(
     contexts: *mut *const *const GtkIMContextInfo,
     n_contexts: *mut c_int,
 ) {
-    log("module list");
     static INFO: ContextInfoWrapper = ContextInfoWrapper(GtkIMContextInfo {
         context_id: cs!("kime"),
         context_name: cs!("Kime (Korean IME)"),
@@ -366,7 +343,6 @@ pub unsafe extern "C" fn im_module_list(
 pub unsafe extern "C" fn im_module_create(
     context_id: *const c_char,
 ) -> Option<ptr::NonNull<GtkIMContext>> {
-    log("module create");
     if !context_id.is_null() && g_strcmp0(context_id, cs!("kime")) == 0 {
         let ty = *KIME_TYPE_IM_CONTEXT.get()?;
         let obj = g_object_new(ty, ptr::null());

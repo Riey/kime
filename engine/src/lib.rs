@@ -173,6 +173,13 @@ impl InputEngine {
         }
     }
 
+    pub fn preedit_char(&self) -> Option<char> {
+        match self.state.to_char() {
+            '\0' => None,
+            c => Some(c),
+        }
+    }
+
     #[inline]
     pub fn reset(&mut self) -> Option<char> {
         self.state.reset()

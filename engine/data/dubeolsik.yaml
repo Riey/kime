@@ -126,3 +126,11 @@
 
 - code: M
   jung: ᅳ
+
+- code: One
+  shift: false
+  pass: '1'
+
+- code: One
+  shift: true
+  pass: '!'

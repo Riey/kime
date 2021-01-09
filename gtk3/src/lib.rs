@@ -87,8 +87,20 @@ impl KimeIMContext {
             log(&format!("{:?}", ret));
 
             match ret {
+                InputResult::Commit(c) => {
+                    self.commit(c);
+                    self.clear_preedit();
+                    false
+                }
+                InputResult::CommitCommit(f, s) => {
+                    self.commit(f);
+                    self.commit(s);
+                    self.clear_preedit();
+                    false
+                }
                 InputResult::CommitBypass(c) => {
                     self.commit(c);
+                    self.clear_preedit();
                     true
                 }
                 InputResult::CommitPreedit(c, p) => {
@@ -100,7 +112,6 @@ impl KimeIMContext {
                     self.preedit(p);
                     true
                 }
-                // TODO: send end preedit
                 InputResult::ClearPreedit => {
                     self.clear_preedit();
                     true
@@ -147,8 +158,6 @@ impl KimeIMContext {
     }
 
     pub fn commit(&mut self, c: char) {
-        self.clear_preedit();
-
         let mut buf = [0; 8];
         c.encode_utf8(&mut buf);
         unsafe {

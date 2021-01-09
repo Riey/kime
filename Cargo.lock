@@ -437,6 +437,7 @@ dependencies = [
  "kime-engine",
  "once_cell",
  "pango-sys",
+ "xkbcommon",
 ]
 
 [[package]]
@@ -913,6 +914,15 @@ dependencies = [
  "bitflags",
  "bstr",
  "thiserror",
+]
+
+[[package]]
+name = "xkbcommon"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fda0ea5f7ddabd51deeeda7799bee06274112f577da7dd3d954b8eda731b2fce"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

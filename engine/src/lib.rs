@@ -34,6 +34,9 @@ struct ValueItem {
     jung: Option<Jungseong>,
     #[serde(default)]
     jong: Option<Jongseong>,
+
+    #[serde(default)]
+    pass: Option<char>
 }
 
 impl Layout {
@@ -48,6 +51,7 @@ impl Layout {
 
         for item in items {
             let value = match item.value {
+                ValueItem { pass: Some(pass), .. } => KeyValue::Pass(pass),
                 ValueItem {
                     cho: Some(cho),
                     jong: Some(jong),
@@ -112,6 +116,14 @@ impl Layout {
                 shift,
             }) {
                 match *v {
+                    KeyValue::Pass(pass) => {
+                        if let Some(preedit) = state.preedit_char() {
+                            state.reset();
+                            InputResult::CommitCommit(preedit, pass)
+                        } else {
+                            InputResult::Commit(pass)
+                        }
+                    }
                     KeyValue::ChoJong(cho, jong) => state.cho_jong(cho, jong),
                     KeyValue::Jungseong(jung) => state.jung(jung),
                     KeyValue::Choseong(cho) => state.cho(cho),
@@ -131,9 +143,11 @@ pub enum InputResult {
     // Commit(char),
     Consume,
     Bypass,
+    Commit(char),
     CommitBypass(char),
     /// (commit, preedit)
     CommitPreedit(char, char),
+    CommitCommit(char, char),
 }
 
 pub struct InputEngine {
@@ -152,7 +166,8 @@ impl InputEngine {
     }
 
     fn bypass(&mut self) -> InputResult {
-        if let Some(ch) = self.state.reset() {
+        if let Some(ch) = self.state.preedit_char() {
+            self.state.reset();
             InputResult::CommitBypass(ch)
         } else {
             InputResult::Bypass
@@ -173,11 +188,9 @@ impl InputEngine {
         }
     }
 
+    #[inline]
     pub fn preedit_char(&self) -> Option<char> {
-        match self.state.to_char() {
-            '\0' => None,
-            c => Some(c),
-        }
+        self.state.preedit_char()
     }
 
     #[inline]

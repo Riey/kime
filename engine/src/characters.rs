@@ -367,6 +367,9 @@ pub enum KeyValue {
     Jongseong(Jongseong),
     // 두벌식용
     ChoJong(Choseong, Jongseong),
+
+    // 한글이 아닌 문자
+    Pass(char),
 }
 
 #[test]

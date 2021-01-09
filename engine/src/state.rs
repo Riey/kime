@@ -26,7 +26,15 @@ impl CharacterState {
     }
 
     pub fn reset(&mut self) -> Option<char> {
-        match (self.cho.take(), self.jung.take(), self.jong.take()) {
+        let pe = self.preedit_char();
+        self.cho = None;
+        self.jung = None;
+        self.jong = None;
+        pe
+    }
+
+    pub fn preedit_char(&self) -> Option<char> {
+        match (self.cho, self.jung, self.jong) {
             (None, None, None) => None,
             (Some(cho), Some(jung), jong) => Some(cho.compose(jung, jong)),
 
@@ -166,7 +174,7 @@ impl CharacterState {
                 None => {
                     let new;
 
-                    match prev_jong.to_cho() {
+                    match jong.to_cho() {
                         JongToCho::Direct(cho) => {
                             new = Self {
                                 cho: Some(cho),

@@ -148,7 +148,28 @@ impl InputEngine {
         }
     }
 
-    pub fn key_event(&mut self, keycode: u32, press: bool) -> InputResult {
+    /// Use pre-computed keysym
+    pub fn press_key_sym(&mut self, sym: xkb::Keysym) -> InputResult {
+        match sym {
+            xkb::KEY_Hangul | xkb::KEY_Henkan | xkb::KEY_Alt_R => {
+                self.enable_hangul = !self.enable_hangul;
+                InputResult::Consume
+            }
+            sym if self.enable_hangul => self.layout.map_key(&mut self.state, sym),
+            sym => {
+                let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };
+
+                self.bypass(if commit.is_ascii_alphanumeric() {
+                    Some(commit)
+                } else {
+                    None
+                })
+            }
+        }
+    }
+
+    /// Use hardward keycode
+    pub fn key_event(&mut self, keycode: xkb::Keycode, press: bool) -> InputResult {
         self.xkb_ctx.state.update_key(
             keycode,
             if press {
@@ -174,22 +195,7 @@ impl InputEngine {
 
         let sym = self.xkb_ctx.state.key_get_one_sym(keycode);
 
-        match sym {
-            xkb::KEY_Hangul | xkb::KEY_Henkan | xkb::KEY_Alt_R => {
-                self.enable_hangul = !self.enable_hangul;
-                InputResult::Consume
-            }
-            sym if self.enable_hangul => self.layout.map_key(&mut self.state, sym),
-            sym => {
-                let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };
-
-                self.bypass(if commit.is_ascii_alphanumeric() {
-                    Some(commit)
-                } else {
-                    None
-                })
-            }
-        }
+        self.press_key_sym(sym)
     }
 
     #[inline]

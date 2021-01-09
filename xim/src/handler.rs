@@ -201,51 +201,44 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         input_context: &mut xim::InputContext<Self::InputContextData>,
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
-        if xev.response_type == KEY_PRESS_EVENT {
-            let shift = (xev.state & 0x1) != 0;
-            let ctrl = (xev.state & 0x4) != 0;
+        let ret = input_context
+            .user_data
+            .engine
+            .key_event(xev.detail as _, xev.response_type == KEY_PRESS_EVENT);
+        log::trace!("ret: {:?}", ret);
 
-            let ret = input_context
-                .user_data
-                .engine
-                .key_press(xev.detail, shift, ctrl);
-            log::trace!("ret: {:?}", ret);
-
-            match ret {
-                InputResult::Bypass => Ok(false),
-                InputResult::Consume => Ok(true),
-                InputResult::ClearPreedit => {
-                    self.clear_preedit(server.conn(), input_context)?;
-                    Ok(true)
-                }
-                InputResult::CommitBypass(ch) => {
-                    self.commit(server, input_context, ch)?;
-                    self.clear_preedit(server.conn(), input_context)?;
-                    Ok(false)
-                }
-                InputResult::Commit(ch) => {
-                    self.commit(server, input_context, ch)?;
-                    self.clear_preedit(server.conn(), input_context)?;
-                    Ok(true)
-                }
-                InputResult::CommitCommit(first, second) => {
-                    self.commit(server, input_context, first)?;
-                    self.commit(server, input_context, second)?;
-                    self.clear_preedit(server.conn(), input_context)?;
-                    Ok(true)
-                }
-                InputResult::CommitPreedit(commit, preedit) => {
-                    self.commit(server, input_context, commit)?;
-                    self.preedit(server, input_context, preedit)?;
-                    Ok(true)
-                }
-                InputResult::Preedit(preedit) => {
-                    self.preedit(server, input_context, preedit)?;
-                    Ok(true)
-                }
+        match ret {
+            InputResult::Bypass => Ok(false),
+            InputResult::Consume => Ok(true),
+            InputResult::ClearPreedit => {
+                self.clear_preedit(server.conn(), input_context)?;
+                Ok(true)
             }
-        } else {
-            Ok(false)
+            InputResult::CommitBypass(ch) => {
+                self.commit(server, input_context, ch)?;
+                self.clear_preedit(server.conn(), input_context)?;
+                Ok(false)
+            }
+            InputResult::Commit(ch) => {
+                self.commit(server, input_context, ch)?;
+                self.clear_preedit(server.conn(), input_context)?;
+                Ok(true)
+            }
+            InputResult::CommitCommit(first, second) => {
+                self.commit(server, input_context, first)?;
+                self.commit(server, input_context, second)?;
+                self.clear_preedit(server.conn(), input_context)?;
+                Ok(true)
+            }
+            InputResult::CommitPreedit(commit, preedit) => {
+                self.commit(server, input_context, commit)?;
+                self.preedit(server, input_context, preedit)?;
+                Ok(true)
+            }
+            InputResult::Preedit(preedit) => {
+                self.preedit(server, input_context, preedit)?;
+                Ok(true)
+            }
         }
     }
 

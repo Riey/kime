@@ -1,4 +1,4 @@
-use gdk_sys::{GdkEventKey, GdkWindow, GDK_KEY_RELEASE};
+use gdk_sys::{GdkEventKey, GdkWindow, GDK_KEY_PRESS};
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
     g_object_new, g_object_ref, g_object_unref, g_signal_emit, g_signal_lookup,
@@ -10,9 +10,8 @@ use gtk_sys::{gtk_im_context_get_type, GtkIMContext, GtkIMContextClass, GtkIMCon
 use once_cell::sync::OnceCell;
 use pango_sys::PangoAttrList;
 use std::mem::size_of;
-use std::os::raw::{c_char, c_int};
+use std::os::raw::{c_char, c_int, c_uint};
 use std::ptr::{self, NonNull};
-use std::{convert::TryFrom, os::raw::c_uint};
 
 use kime_engine::{InputEngine, InputResult, Layout};
 
@@ -74,53 +73,44 @@ impl KimeIMContext {
     }
 
     pub fn filter_keypress(&mut self, key: &GdkEventKey) -> bool {
-        // Release key
-        if key.type_ == GDK_KEY_RELEASE {
-            return false;
-        }
+        let ret = self
+            .engine
+            .key_event(key.hardware_keycode as _, key.type_ == GDK_KEY_PRESS);
 
-        if let Ok(code) = u8::try_from(key.hardware_keycode) {
-            let ret = self
-                .engine
-                .key_press(code, key.state & 0x1 != 0, key.state & 0x4 != 0);
+        log(&format!("{:?}", ret));
 
-            log(&format!("{:?}", ret));
-
-            match ret {
-                InputResult::Commit(c) => {
-                    self.commit(c);
-                    self.clear_preedit();
-                    false
-                }
-                InputResult::CommitCommit(f, s) => {
-                    self.commit(f);
-                    self.commit(s);
-                    self.clear_preedit();
-                    false
-                }
-                InputResult::CommitBypass(c) => {
-                    self.commit(c);
-                    self.clear_preedit();
-                    true
-                }
-                InputResult::CommitPreedit(c, p) => {
-                    self.commit(c);
-                    self.preedit(p);
-                    true
-                }
-                InputResult::Preedit(p) => {
-                    self.preedit(p);
-                    true
-                }
-                InputResult::ClearPreedit => {
-                    self.clear_preedit();
-                    true
-                }
-                InputResult::Bypass => false,
-                InputResult::Consume => true,
+        match ret {
+            InputResult::Commit(c) => {
+                self.commit(c);
+                self.clear_preedit();
+                false
             }
-        } else {
-            false
+            InputResult::CommitCommit(f, s) => {
+                self.commit(f);
+                self.commit(s);
+                self.clear_preedit();
+                false
+            }
+            InputResult::CommitBypass(c) => {
+                self.commit(c);
+                self.clear_preedit();
+                true
+            }
+            InputResult::CommitPreedit(c, p) => {
+                self.commit(c);
+                self.preedit(p);
+                true
+            }
+            InputResult::Preedit(p) => {
+                self.preedit(p);
+                true
+            }
+            InputResult::ClearPreedit => {
+                self.clear_preedit();
+                true
+            }
+            InputResult::Bypass => false,
+            InputResult::Consume => true,
         }
     }
 

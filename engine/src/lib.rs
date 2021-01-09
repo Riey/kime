@@ -139,6 +139,15 @@ impl InputEngine {
         }
     }
 
+    fn bypass(&mut self, commit: Option<char>) -> InputResult {
+        match (self.state.reset(), commit) {
+            (Some(preedit), Some(commit)) => InputResult::CommitCommit(preedit, commit),
+            (Some(preedit), None) => InputResult::CommitBypass(preedit),
+            (None, Some(commit)) => InputResult::Commit(commit),
+            (None, None) => InputResult::Bypass,
+        }
+    }
+
     pub fn key_event(&mut self, keycode: u32, press: bool) -> InputResult {
         self.xkb_ctx.state.update_key(
             keycode,
@@ -148,6 +157,20 @@ impl InputEngine {
                 xkb::KeyDirection::Up
             },
         );
+
+        // Skip when ctrl pressed
+        if self
+            .xkb_ctx
+            .state
+            .mod_name_is_active(xkb::MOD_NAME_CTRL, xkb::STATE_MODS_DEPRESSED)
+        {
+            return self.bypass(None);
+        }
+
+        // Skip when release event
+        if !press {
+            return InputResult::Bypass;
+        }
 
         let sym = self.xkb_ctx.state.key_get_one_sym(keycode);
 
@@ -160,12 +183,11 @@ impl InputEngine {
             sym => {
                 let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };
 
-                match (self.state.reset(), commit.is_ascii_alphanumeric()) {
-                    (Some(preedit), true) => InputResult::CommitCommit(preedit, commit),
-                    (Some(preedit), false) => InputResult::CommitBypass(preedit),
-                    (None, true) => InputResult::Commit(commit),
-                    (None, false) => InputResult::Bypass,
-                }
+                self.bypass(if commit.is_ascii_alphanumeric() {
+                    Some(commit)
+                } else {
+                    None
+                })
             }
         }
     }

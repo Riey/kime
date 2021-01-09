@@ -159,7 +159,7 @@ impl InputEngine {
             sym => {
                 let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };
 
-                self.bypass(if commit.is_ascii_alphanumeric() {
+                self.bypass(if !commit.is_ascii_control() {
                     Some(commit)
                 } else {
                     None

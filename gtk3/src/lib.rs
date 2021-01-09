@@ -1,18 +1,18 @@
-use gdk_sys::{GdkEventKey, GdkWindow};
-use glib_sys::{g_strcmp0, g_strdup, gboolean, gpointer, GType};
+use gdk_sys::{GdkEventKey, GdkWindow, GDK_KEY_RELEASE};
+use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
-    g_object_new, g_object_ref, g_object_unref, g_type_check_class_cast,
-    g_type_check_instance_cast, g_type_module_register_type, g_type_module_use,
-    g_type_register_static, GObject, GObjectClass, GTypeInfo, GTypeInstance, GTypeModule,
-    G_TYPE_OBJECT,
+    g_object_new, g_object_ref, g_object_unref, g_signal_emit, g_signal_lookup,
+    g_type_check_class_cast, g_type_check_instance_cast, g_type_module_register_type,
+    g_type_module_use, g_type_register_static, GObject, GObjectClass, GTypeClass, GTypeInfo,
+    GTypeInstance, GTypeModule, G_TYPE_OBJECT,
 };
 use gtk_sys::{gtk_im_context_get_type, GtkIMContext, GtkIMContextClass, GtkIMContextInfo};
 use once_cell::sync::OnceCell;
 use pango_sys::PangoAttrList;
-use std::convert::TryFrom;
 use std::mem::size_of;
 use std::os::raw::{c_char, c_int};
 use std::ptr::{self, NonNull};
+use std::{convert::TryFrom, os::raw::c_uint};
 
 use kime_engine::{InputEngine, InputResult, Layout};
 
@@ -28,14 +28,36 @@ struct ContextInfoWrapper(GtkIMContextInfo);
 unsafe impl Send for ContextInfoWrapper {}
 unsafe impl Sync for ContextInfoWrapper {}
 
-struct KimeIMContextClass {
-    _parent: GtkIMContextClass,
-}
-
 macro_rules! cs {
     ($text:expr) => {
         concat!($text, "\0").as_ptr().cast::<c_char>()
     };
+}
+
+struct KimeIMSignals {
+    commit: c_uint,
+    preedit_changed: c_uint,
+}
+
+impl KimeIMSignals {
+    pub unsafe fn new(class: *mut KimeIMContextClass) -> Self {
+        let ty = type_of_class(class.cast());
+
+        macro_rules! sig {
+            ($($name:ident),+) => {
+                Self { $($name: g_signal_lookup(cs!(stringify!($name)), ty),)+ }
+            }
+        }
+
+        sig!(commit, preedit_changed)
+    }
+}
+
+static SIGNALS: OnceCell<KimeIMSignals> = OnceCell::new();
+
+#[repr(C)]
+struct KimeIMContextClass {
+    _parent: GtkIMContextClass,
 }
 
 #[repr(C)]
@@ -45,7 +67,97 @@ struct KimeIMContext {
     engine: InputEngine,
 }
 
+impl KimeIMContext {
+    pub fn as_obj(&mut self) -> *mut GObject {
+        &mut self.parent.parent_instance
+    }
+
+    pub fn filter_keypress(&mut self, key: &GdkEventKey) -> bool {
+        // Release key
+        if key.type_ == GDK_KEY_RELEASE {
+            return false;
+        }
+
+        if let Ok(code) = u8::try_from(key.hardware_keycode) {
+            match self
+                .engine
+                .key_press(code, key.state & 0x1 != 0, key.state & 0x4 != 0)
+            {
+                InputResult::CommitBypass(c) => {
+                    self.commit(c);
+                    false
+                }
+                InputResult::CommitPreedit(c, p) => {
+                    self.commit(c);
+                    self.preedit(p);
+                    true
+                }
+                InputResult::Preedit(p) => {
+                    self.preedit(p);
+                    true
+                }
+                // TODO: send end preedit
+                InputResult::ClearPreedit => {
+                    self.clear_preedit();
+                    true
+                }
+                InputResult::Bypass => false,
+                InputResult::Consume => true,
+            }
+        } else {
+            false
+        }
+    }
+
+    pub fn reset(&mut self) {
+        match self.engine.reset() {
+            Some(c) => {
+                self.clear_preedit();
+                self.commit(c);
+            }
+            _ => {}
+        }
+    }
+
+    pub fn preedit(&mut self, c: char) {
+        let mut buf = [0; 8];
+        c.encode_utf8(&mut buf);
+        unsafe {
+            g_signal_emit(
+                self.as_obj(),
+                SIGNALS.get().unwrap().preedit_changed,
+                0,
+                buf.as_ptr(),
+            );
+        }
+    }
+
+    pub fn clear_preedit(&mut self) {
+        log("clear preedit");
+        unsafe {
+            g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+        }
+    }
+
+    pub fn commit(&mut self, c: char) {
+        let mut buf = [0; 8];
+        c.encode_utf8(&mut buf);
+        unsafe {
+            g_signal_emit(
+                self.as_obj(),
+                SIGNALS.get().unwrap().commit,
+                0,
+                buf.as_ptr(),
+            );
+        }
+    }
+}
+
 static KIME_TYPE_IM_CONTEXT: OnceCell<GType> = OnceCell::new();
+
+unsafe fn type_of_class(class: *mut GTypeClass) -> GType {
+    (*class).g_type
+}
 
 unsafe fn register_module(module: *mut GTypeModule) {
     unsafe extern "C" fn im_context_class_init(class: gpointer, _data: gpointer) {
@@ -54,21 +166,31 @@ unsafe fn register_module(module: *mut GTypeModule) {
         let class = class.cast::<KimeIMContextClass>();
 
         let im_context_class = g_type_check_class_cast(class.cast(), gtk_im_context_get_type())
-            .cast::<GtkIMContextClass>();
+            .cast::<GtkIMContextClass>()
+            .as_mut()
+            .unwrap();
         let gobject_class =
             g_type_check_class_cast(class.cast(), G_TYPE_OBJECT).cast::<GObjectClass>();
 
-        (*im_context_class).set_client_window = Some(set_client_window);
-        (*im_context_class).filter_keypress = Some(filter_keypress);
-        (*im_context_class).reset = None;
-        (*im_context_class).get_preedit_string = Some(get_preedit_string);
-        (*im_context_class).focus_in = None;
-        (*im_context_class).focus_out = None;
-        (*im_context_class).set_cursor_location = None;
-        (*im_context_class).set_use_preedit = None;
-        (*im_context_class).set_surrounding = None;
+        im_context_class.set_client_window = Some(set_client_window);
+        im_context_class.filter_keypress = Some(filter_keypress);
+        im_context_class.reset = Some(reset_im);
+        im_context_class.get_preedit_string = Some(get_preedit_string);
+        im_context_class.focus_in = None;
+        im_context_class.focus_out = None;
+        im_context_class.set_cursor_location = None;
+        im_context_class.set_use_preedit = None;
+        im_context_class.set_surrounding = None;
+
+        SIGNALS.get_or_init(|| KimeIMSignals::new(class));
 
         (*gobject_class).finalize = Some(im_context_instance_finalize);
+    }
+
+    unsafe extern "C" fn reset_im(ctx: *mut GtkIMContext) {
+        log("reset IME");
+        let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
+        ctx.reset();
     }
 
     unsafe extern "C" fn filter_keypress(
@@ -76,52 +198,55 @@ unsafe fn register_module(module: *mut GTypeModule) {
         key: *mut GdkEventKey,
     ) -> gboolean {
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
-        let key = key.as_ref().unwrap();
+        let key = key.as_mut().unwrap();
 
-        // Release key
-        if key.type_ == 9 {
-            return glib_sys::GFALSE;
-        }
-
-        log(&format!("filter: {:?}", key));
-
-        if let Ok(code) = u8::try_from(key.hardware_keycode) {
-            match ctx
-                .engine
-                .key_press(code, key.state & 0x1 != 0, key.state & 0x4 != 0)
-            {
-                InputResult::Bypass => glib_sys::GFALSE,
-                ret => {
-                    log(&format!("ret: {:?}", ret));
-                    glib_sys::GTRUE
-                }
-            }
+        if ctx.filter_keypress(key) {
+            GTRUE
         } else {
-            glib_sys::GFALSE
+            GFALSE
         }
     }
 
     unsafe extern "C" fn get_preedit_string(
         ctx: *mut GtkIMContext,
         out: *mut *mut c_char,
-        _attrs: *mut *mut PangoAttrList,
-        _cursor_pos: *mut c_int,
+        attrs: *mut *mut PangoAttrList,
+        cursor_pos: *mut c_int,
     ) {
         log("get preedit string");
 
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
+        let mut str_len = 0;
 
-        match ctx.engine.reset() {
-            Some(ch) => {
-                let len = ch.len_utf8();
-                let s = glib_sys::g_malloc0(len + 1).cast::<c_char>();
-                ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), len));
-                s.add(len).write(0);
-                out.write(s)
+        if !out.is_null() {
+            match ctx.engine.preedit_char() {
+                Some(ch) => {
+                    log(&format!("preedit {}", ch));
+                    str_len = ch.len_utf8();
+                    let s = g_malloc0(str_len + 1).cast::<c_char>();
+                    ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), str_len));
+                    s.add(str_len).write(0);
+                    out.write(s);
+                }
+                None => {
+                    out.write(g_strdup(cs!("")));
+                }
             }
-            None => {
-                out.write(g_strdup(cs!("")));
+        }
+
+        if !attrs.is_null() {
+            attrs.write(pango_sys::pango_attr_list_new());
+
+            if !out.is_null() {
+                let attr = pango_sys::pango_attr_underline_new(pango_sys::PANGO_UNDERLINE_SINGLE);
+                (*attr).start_index = 0;
+                (*attr).end_index = str_len as _;
+                pango_sys::pango_attr_list_insert(attrs.read(), attr);
             }
+        }
+
+        if !cursor_pos.is_null() {
+            cursor_pos.write(1);
         }
     }
 
@@ -149,10 +274,11 @@ unsafe fn register_module(module: *mut GTypeModule) {
     unsafe extern "C" fn im_context_instance_init(ctx: *mut GTypeInstance, _class: gpointer) {
         log("instance init");
 
-        let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
+        // Context is uninitalized!
+        let ctx = ctx.cast::<KimeIMContext>();
 
-        ctx.client_window = None;
-        ctx.engine = InputEngine::new(Layout::dubeolsik());
+        (*ctx).client_window = None;
+        (*ctx).engine = InputEngine::new(Layout::dubeolsik());
     }
 
     unsafe extern "C" fn im_context_instance_finalize(ctx: *mut GObject) {

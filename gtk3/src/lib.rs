@@ -58,9 +58,7 @@ unsafe fn lookup_color(
     name: *const c_char,
 ) -> Option<GdkColor> {
     let mut rgba = MaybeUninit::uninit();
-    if gtk_style_context_lookup_color(context, name, rgba.as_mut_ptr())
-        == GTRUE
-    {
+    if gtk_style_context_lookup_color(context, name, rgba.as_mut_ptr()) == GTRUE {
         let rgba = rgba.assume_init();
 
         fn convert_color(c: c_double) -> u16 {

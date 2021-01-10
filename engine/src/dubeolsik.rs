@@ -29,6 +29,14 @@ mod tests {
     }
 
     #[test]
+    fn issue_28() {
+        test_input(&[
+            (xkb::KEY_k, InputResult::Preedit('ㅏ')),
+            (xkb::KEY_r, InputResult::Preedit('가')),
+        ])
+    }
+
+    #[test]
     fn next_jaum() {
         test_input(&[
             (xkb::KEY_d, InputResult::Preedit('ㅇ')),

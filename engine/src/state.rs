@@ -93,7 +93,7 @@ impl CharacterState {
 
     // 두벌식용
     pub fn cho_jong(&mut self, cho: Choseong, jong: Jongseong) -> InputResult {
-        if self.jung.is_none() {
+        if self.cho.is_none() || self.jung.is_none() {
             self.cho(cho)
         } else {
             self.jong(jong)

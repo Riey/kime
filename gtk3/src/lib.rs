@@ -254,17 +254,17 @@ unsafe fn register_module(module: *mut GTypeModule) {
         let mut str_len = 0;
 
         if !out.is_null() {
-            match ctx.engine.preedit_char() {
-                Some(ch) => {
-                    str_len = ch.len_utf8();
-                    let s = g_malloc0(str_len + 1).cast::<c_char>();
-                    ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), str_len));
-                    s.add(str_len).write(0);
-                    out.write(s);
-                }
-                None => {
-                    out.write(g_strdup(cs!("")));
-                }
+            let ch = ctx.engine.preedit_char();
+
+            // Noting to display
+            if ch == '\0' {
+                out.write(g_strdup(cs!("")));
+            } else {
+                str_len = ch.len_utf8();
+                let s = g_malloc0(str_len + 1).cast::<c_char>();
+                ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), str_len));
+                s.add(str_len).write(0);
+                out.write(s);
             }
         }
 

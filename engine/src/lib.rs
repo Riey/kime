@@ -70,9 +70,8 @@ impl Layout {
             if let Some(v) = self.keymap.get(&sym) {
                 match *v {
                     KeyValue::Pass(pass) => {
-                        if let Some(preedit) = state.preedit_char() {
-                            state.reset();
-                            InputResult::CommitCommit(preedit, pass)
+                        if let Some(commit) = state.reset() {
+                            InputResult::CommitCommit(commit, pass)
                         } else {
                             InputResult::Commit(pass)
                         }
@@ -156,10 +155,7 @@ impl InputEngine {
             xkb::KEY_Escape if config.esc_turn_off => {
                 if self.enable_hangul {
                     self.enable_hangul = false;
-                    match self.state.reset() {
-                        Some(c) => InputResult::CommitBypass(c),
-                        _ => InputResult::Bypass,
-                    }
+                    self.bypass(None)
                 } else {
                     InputResult::Bypass
                 }
@@ -217,8 +213,8 @@ impl InputEngine {
     }
 
     #[inline]
-    pub fn preedit_char(&self) -> Option<char> {
-        self.state.preedit_char()
+    pub fn preedit_char(&self) -> char {
+        self.state.to_char()
     }
 
     #[inline]

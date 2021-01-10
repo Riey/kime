@@ -68,7 +68,7 @@ impl Config {
         let config = match dir.find_config_file("config.yaml") {
             Some(config) => config,
             None => {
-                let path  = dir.place_config_file("config.yaml").ok()?;
+                let path = dir.place_config_file("config.yaml").ok()?;
                 std::fs::write(&path, serde_yaml::to_string(&RawConfig::default()).ok()?).ok()?;
                 path
             }

@@ -58,13 +58,13 @@ unsafe fn lookup_color(
     name: *const c_char,
 ) -> Option<GdkColor> {
     let mut rgba = MaybeUninit::uninit();
-    if gtk_style_context_lookup_color(context, cs!("theme_selected_fg_color"), rgba.as_mut_ptr())
+    if gtk_style_context_lookup_color(context, name, rgba.as_mut_ptr())
         == GTRUE
     {
         let rgba = rgba.assume_init();
+
         fn convert_color(c: c_double) -> u16 {
-            let c = c.max(1.0).min(0.0) * u16::MAX as c_double;
-            c as u16
+            (c.max(0.0).min(1.0) * u16::MAX as c_double) as u16
         }
 
         Some(GdkColor {
@@ -312,7 +312,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
         }
 
         if !cursor_pos.is_null() {
-            cursor_pos.write(str_len as _);
+            cursor_pos.write(1);
         }
     }
 

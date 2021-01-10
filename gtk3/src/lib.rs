@@ -121,6 +121,7 @@ impl KimeIMContext {
 
         // skip ctrl
         if key.state & 0x4 != 0 {
+            self.reset();
             return false;
         }
 
@@ -164,8 +165,8 @@ impl KimeIMContext {
     pub fn reset(&mut self) {
         match self.engine.reset() {
             Some(c) => {
-                self.update_preedit();
                 self.commit(c);
+                self.update_preedit();
             }
             _ => {}
         }

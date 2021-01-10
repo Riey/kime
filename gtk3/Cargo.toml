@@ -1,6 +1,6 @@
 [package]
 name = "kime-gtk3"
-version = "0.1.1"
+version = "0.2.0-alpha1"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"

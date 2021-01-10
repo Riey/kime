@@ -376,11 +376,14 @@ pub enum JongToCho {
 
 #[derive(Clone, Copy, Debug)]
 pub enum KeyValue {
+    // 세벌식용
     Choseong(Choseong),
-    Jungseong(Jungseong),
     Jongseong(Jongseong),
+
     // 두벌식용
     ChoJong(Choseong, Jongseong),
+
+    Jungseong(Jungseong),
 
     // 한글이 아닌 문자
     Pass(char),

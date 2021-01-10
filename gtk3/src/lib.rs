@@ -77,6 +77,11 @@ impl KimeIMContext {
             return false;
         }
 
+        // skip ctrl
+        if key.state & 0x4 != 0 {
+            return false;
+        }
+
         let ret = self.engine.press_key_sym(key.keyval);
 
         match ret {

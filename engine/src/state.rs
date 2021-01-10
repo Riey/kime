@@ -26,14 +26,14 @@ impl CharacterState {
     }
 
     pub fn reset(&mut self) -> Option<char> {
-        let pe = self.preedit_char();
+        let cc = self.commit_char();
         self.cho = None;
         self.jung = None;
         self.jong = None;
-        pe
+        cc
     }
 
-    pub fn preedit_char(&self) -> Option<char> {
+    pub fn commit_char(&self) -> Option<char> {
         match (self.cho, self.jung, self.jong) {
             (None, None, None) => None,
             (Some(cho), Some(jung), jong) => Some(cho.compose(jung, jong)),
@@ -52,7 +52,7 @@ impl CharacterState {
     fn replace(&mut self, new: Self) -> InputResult {
         let prev = std::mem::replace(self, new);
 
-        match prev.preedit_char() {
+        match prev.commit_char() {
             Some(prev) => InputResult::CommitPreedit(prev, self.to_char()),
             None => InputResult::Preedit(self.to_char()),
         }

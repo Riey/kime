@@ -18,6 +18,6 @@ Korean IME
 
 ### XIM
 
-* xcb
+* libxcb
 * cairo
 * libxkbcommon

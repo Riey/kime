@@ -1,5 +1,5 @@
 mod characters;
-mod dubeolsik;
+mod config;
 mod state;
 
 use self::characters::{Choseong, Jongseong, Jungseong, KeyValue};
@@ -7,8 +7,10 @@ use ahash::AHashMap;
 use serde::{Deserialize, Serialize};
 use xkbcommon::xkb;
 
+pub use self::config::Config;
 pub use self::state::CharacterState;
 
+#[derive(Clone, Default)]
 pub struct Layout {
     keymap: AHashMap<xkb::Keysym, KeyValue>,
 }
@@ -26,14 +28,8 @@ struct ValueItem {
 }
 
 impl Layout {
-    pub fn dubeolsik() -> Self {
-        Self::load_from(self::dubeolsik::DUBEOLSIK_LAYOUT)
-    }
-
-    pub fn load_from(content: &str) -> Self {
+    fn from_items(items: AHashMap<String, ValueItem>) -> Self {
         let mut keymap = AHashMap::new();
-
-        let items: AHashMap<String, ValueItem> = serde_yaml::from_str(content).unwrap();
 
         for (key, value) in items {
             let key = xkb::keysym_from_name(&key, xkb::KEYSYM_NO_FLAGS);
@@ -61,6 +57,10 @@ impl Layout {
         }
 
         Self { keymap }
+    }
+
+    pub fn load_from(content: &str) -> Option<Self> {
+        Some(Self::from_items(serde_yaml::from_str(content).ok()?))
     }
 
     pub fn map_key(&self, state: &mut CharacterState, sym: xkb::Keysym) -> InputResult {
@@ -124,19 +124,21 @@ impl XkbContext {
 
 pub struct InputEngine {
     state: CharacterState,
-    layout: Layout,
     xkb_ctx: XkbContext,
     enable_hangul: bool,
 }
 
 impl InputEngine {
-    pub fn new(layout: Layout) -> Self {
+    pub fn new() -> Self {
         Self {
             state: CharacterState::default(),
-            layout,
             xkb_ctx: XkbContext::new(),
             enable_hangul: false,
         }
+    }
+
+    pub fn set_enable_hangul(&mut self, enable: bool) {
+        self.enable_hangul = enable;
     }
 
     fn bypass(&mut self, commit: Option<char>) -> InputResult {
@@ -149,13 +151,9 @@ impl InputEngine {
     }
 
     /// Use pre-computed keysym
-    pub fn press_key_sym(&mut self, sym: xkb::Keysym) -> InputResult {
+    pub fn press_key_sym(&mut self, sym: xkb::Keysym, config: &Config) -> InputResult {
         match sym {
-            xkb::KEY_Hangul | xkb::KEY_Henkan | xkb::KEY_Alt_R => {
-                self.enable_hangul = !self.enable_hangul;
-                InputResult::Consume
-            }
-            xkb::KEY_Escape => {
+            xkb::KEY_Escape if config.esc_turn_off => {
                 if self.enable_hangul {
                     self.enable_hangul = false;
                     match self.state.reset() {
@@ -166,7 +164,11 @@ impl InputEngine {
                     InputResult::Bypass
                 }
             }
-            sym if self.enable_hangul => self.layout.map_key(&mut self.state, sym),
+            sym if config.hangul_symbols.contains(&sym) => {
+                self.enable_hangul = !self.enable_hangul;
+                InputResult::Consume
+            }
+            sym if self.enable_hangul => config.layout.map_key(&mut self.state, sym),
             sym => {
                 let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };
 
@@ -180,7 +182,12 @@ impl InputEngine {
     }
 
     /// Use hardward keycode
-    pub fn key_event(&mut self, keycode: xkb::Keycode, press: bool) -> InputResult {
+    pub fn key_event(
+        &mut self,
+        keycode: xkb::Keycode,
+        press: bool,
+        config: &Config,
+    ) -> InputResult {
         self.xkb_ctx.state.update_key(
             keycode,
             if press {
@@ -206,7 +213,7 @@ impl InputEngine {
 
         let sym = self.xkb_ctx.state.key_get_one_sym(keycode);
 
-        self.press_key_sym(sym)
+        self.press_key_sym(sym, config)
     }
 
     #[inline]

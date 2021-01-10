@@ -108,7 +108,7 @@ impl PeWindow {
         let cr = cairo::Context::new(&surface);
 
         cr.select_font_face(
-            "D2Coding",
+            &crate::CONFIG.xim_preedit_font,
             cairo::FontSlant::Normal,
             cairo::FontWeight::Normal,
         );

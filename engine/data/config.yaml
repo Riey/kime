@@ -1,0 +1,8 @@
+---
+layout: dubeolsik
+esc_turn_off: true
+hangul_symbols:
+  - Hangul
+  - Henkan
+  - Alt_R
+xim_preedit_font: D2Coding

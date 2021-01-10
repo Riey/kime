@@ -11,7 +11,7 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use kime_engine::{InputEngine, InputResult, Layout};
+use kime_engine::{InputEngine, InputResult};
 
 pub struct KimeData {
     engine: InputEngine,
@@ -21,7 +21,7 @@ pub struct KimeData {
 impl KimeData {
     pub fn new() -> Self {
         Self {
-            engine: InputEngine::new(Layout::dubeolsik()),
+            engine: InputEngine::new(),
             pe: None,
         }
     }
@@ -201,10 +201,11 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         input_context: &mut xim::InputContext<Self::InputContextData>,
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
-        let ret = input_context
-            .user_data
-            .engine
-            .key_event(xev.detail as _, xev.response_type == KEY_PRESS_EVENT);
+        let ret = input_context.user_data.engine.key_event(
+            xev.detail as _,
+            xev.response_type == KEY_PRESS_EVENT,
+            &crate::CONFIG,
+        );
         log::trace!("ret: {:?}", ret);
 
         match ret {

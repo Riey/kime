@@ -10,7 +10,7 @@ use gtk_sys::{
     gtk_im_context_get_type, gtk_style_context_lookup_color, gtk_widget_get_style_context,
     gtk_widget_get_type, gtk_window_get_type, GtkIMContext, GtkIMContextClass, GtkIMContextInfo,
 };
-use once_cell::sync::OnceCell;
+use once_cell::sync::{Lazy, OnceCell};
 use pango_sys::PangoAttrList;
 use std::os::raw::{c_char, c_int, c_uint};
 use std::ptr::{self, NonNull};
@@ -19,7 +19,7 @@ use std::{
     os::raw::c_double,
 };
 
-use kime_engine::{InputEngine, InputResult, Layout};
+use kime_engine::{Config, InputEngine, InputResult};
 
 #[repr(transparent)]
 struct TypeInfoWrapper(GTypeInfo);
@@ -96,6 +96,7 @@ impl KimeIMSignals {
 }
 
 static SIGNALS: OnceCell<KimeIMSignals> = OnceCell::new();
+static CONFIG: Lazy<Config> = Lazy::new(|| Config::load_from_config_dir().unwrap_or_default());
 
 #[repr(C)]
 struct KimeIMContextClass {
@@ -125,7 +126,7 @@ impl KimeIMContext {
             return false;
         }
 
-        let ret = self.engine.press_key_sym(key.keyval);
+        let ret = self.engine.press_key_sym(key.keyval, &CONFIG);
 
         match ret {
             InputResult::Commit(c) => {
@@ -340,7 +341,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
         ctx.cast::<KimeIMContext>().write(KimeIMContext {
             parent: parent.read(),
             client_window: None,
-            engine: InputEngine::new(Layout::dubeolsik()),
+            engine: InputEngine::new(),
         });
     }
 

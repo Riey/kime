@@ -1,8 +1,12 @@
+use kime_engine::Config;
+use once_cell::sync::Lazy;
 use x11rb::{
     connection::Connection,
     protocol::{ErrorKind, Event},
 };
 use xim::{x11rb::HasConnection, ServerError, XimConnections};
+
+static CONFIG: Lazy<Config> = Lazy::new(|| Config::load_from_config_dir().unwrap_or_default());
 
 mod handler;
 mod pe_window;

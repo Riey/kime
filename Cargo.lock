@@ -425,6 +425,7 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "serde_yaml",
+ "xdg",
  "xkbcommon",
 ]
 
@@ -449,6 +450,7 @@ dependencies = [
  "cairo-rs",
  "kime-engine",
  "log",
+ "once_cell",
  "pretty_env_logger",
  "x11rb",
  "xim",
@@ -893,6 +895,12 @@ dependencies = [
  "winapi",
  "winapi-wsapoll",
 ]
+
+[[package]]
+name = "xdg"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d089681aa106a86fade1b0128fb5daf07d5867a509ab036d99988dec80429a57"
 
 [[package]]
 name = "xim"

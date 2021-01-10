@@ -1,17 +1,23 @@
-use gdk_sys::{GdkEventKey, GdkWindow, GDK_KEY_PRESS};
+use gdk_sys::{gdk_window_get_user_data, GdkColor, GdkEventKey, GdkWindow, GDK_KEY_PRESS};
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
     g_object_new, g_object_ref, g_object_unref, g_signal_emit, g_signal_lookup,
-    g_type_check_class_cast, g_type_check_instance_cast, g_type_module_register_type,
-    g_type_module_use, g_type_register_static, GObject, GObjectClass, GTypeClass, GTypeInfo,
-    GTypeInstance, GTypeModule, G_TYPE_OBJECT,
+    g_type_check_class_cast, g_type_check_instance_cast, g_type_check_instance_is_a,
+    g_type_module_register_type, g_type_module_use, g_type_register_static, GObject, GObjectClass,
+    GTypeClass, GTypeInfo, GTypeInstance, GTypeModule, G_TYPE_OBJECT,
 };
-use gtk_sys::{gtk_im_context_get_type, GtkIMContext, GtkIMContextClass, GtkIMContextInfo};
+use gtk_sys::{
+    gtk_im_context_get_type, gtk_style_context_lookup_color, gtk_widget_get_style_context,
+    gtk_widget_get_type, gtk_window_get_type, GtkIMContext, GtkIMContextClass, GtkIMContextInfo,
+};
 use once_cell::sync::OnceCell;
 use pango_sys::PangoAttrList;
-use std::mem::size_of;
 use std::os::raw::{c_char, c_int, c_uint};
 use std::ptr::{self, NonNull};
+use std::{
+    mem::{size_of, MaybeUninit},
+    os::raw::c_double,
+};
 
 use kime_engine::{InputEngine, InputResult, Layout};
 
@@ -31,6 +37,45 @@ macro_rules! cs {
     ($text:expr) => {
         concat!($text, "\0").as_ptr().cast::<c_char>()
     };
+}
+
+const DEFAULT_HL_FG: GdkColor = GdkColor {
+    pixel: 0,
+    red: 0xffff,
+    green: 0xffff,
+    blue: 0xffff,
+};
+
+const DEFAULT_HL_BG: GdkColor = GdkColor {
+    pixel: 0,
+    red: 0x43ff,
+    green: 0xacff,
+    blue: 0xe8ff,
+};
+
+unsafe fn lookup_color(
+    context: *mut gtk_sys::GtkStyleContext,
+    name: *const c_char,
+) -> Option<GdkColor> {
+    let mut rgba = MaybeUninit::uninit();
+    if gtk_style_context_lookup_color(context, cs!("theme_selected_fg_color"), rgba.as_mut_ptr())
+        == GTRUE
+    {
+        let rgba = rgba.assume_init();
+        fn convert_color(c: c_double) -> u16 {
+            let c = c.max(1.0).min(0.0) * u16::MAX as c_double;
+            c as u16
+        }
+
+        Some(GdkColor {
+            pixel: 0,
+            red: convert_color(rgba.red),
+            blue: convert_color(rgba.blue),
+            green: convert_color(rgba.green),
+        })
+    } else {
+        None
+    }
 }
 
 struct KimeIMSignals {
@@ -231,11 +276,43 @@ unsafe fn register_module(module: *mut GTypeModule) {
                 (*attr).start_index = 0;
                 (*attr).end_index = str_len as _;
                 pango_sys::pango_attr_list_insert(attrs.read(), attr);
+
+                if let Some(window) = ctx.client_window {
+                    let mut widget = MaybeUninit::uninit();
+                    gdk_window_get_user_data(window.as_ptr(), widget.as_mut_ptr());
+                    let widget = widget.assume_init();
+
+                    if g_type_check_instance_is_a(widget.cast(), gtk_widget_get_type()) == GTRUE
+                        && g_type_check_instance_is_a(widget.cast(), gtk_window_get_type())
+                            == GFALSE
+                    {
+                        let widget = widget.cast();
+                        let style_ctx = gtk_widget_get_style_context(widget);
+
+                        let fg = lookup_color(style_ctx, cs!("theme_selected_fg_color"))
+                            .unwrap_or(DEFAULT_HL_FG);
+                        let bg = lookup_color(style_ctx, cs!("theme_selected_bg_color"))
+                            .unwrap_or(DEFAULT_HL_BG);
+
+                        let fg_attr =
+                            pango_sys::pango_attr_foreground_new(fg.red, fg.green, fg.blue);
+                        (*fg_attr).start_index = 0;
+                        (*fg_attr).end_index = str_len as _;
+
+                        let bg_attr =
+                            pango_sys::pango_attr_background_new(bg.red, bg.green, bg.blue);
+                        (*bg_attr).start_index = 0;
+                        (*bg_attr).end_index = str_len as _;
+
+                        pango_sys::pango_attr_list_insert(attrs.read(), fg_attr);
+                        pango_sys::pango_attr_list_insert(attrs.read(), bg_attr);
+                    }
+                }
             }
         }
 
         if !cursor_pos.is_null() {
-            cursor_pos.write(1);
+            cursor_pos.write(str_len as _);
         }
     }
 

@@ -64,7 +64,6 @@ struct KimeIMContext {
     parent: GtkIMContext,
     client_window: Option<NonNull<GdkWindow>>,
     engine: InputEngine,
-    preedit_str: String,
 }
 
 impl KimeIMContext {
@@ -87,31 +86,31 @@ impl KimeIMContext {
         match ret {
             InputResult::Commit(c) => {
                 self.commit(c);
-                self.clear_preedit();
+                self.update_preedit();
                 true
             }
             InputResult::CommitCommit(f, s) => {
                 self.commit(f);
                 self.commit(s);
-                self.clear_preedit();
+                self.update_preedit();
                 true
             }
             InputResult::CommitBypass(c) => {
                 self.commit(c);
-                self.clear_preedit();
+                self.update_preedit();
                 false
             }
-            InputResult::CommitPreedit(c, p) => {
+            InputResult::CommitPreedit(c, _p) => {
                 self.commit(c);
-                self.preedit(p);
+                self.update_preedit();
                 true
             }
-            InputResult::Preedit(p) => {
-                self.preedit(p);
+            InputResult::Preedit(_p) => {
+                self.update_preedit();
                 true
             }
             InputResult::ClearPreedit => {
-                self.clear_preedit();
+                self.update_preedit();
                 true
             }
             InputResult::Bypass => false,
@@ -122,27 +121,16 @@ impl KimeIMContext {
     pub fn reset(&mut self) {
         match self.engine.reset() {
             Some(c) => {
-                self.clear_preedit();
+                self.update_preedit();
                 self.commit(c);
             }
             _ => {}
         }
     }
 
-    pub fn preedit(&mut self, c: char) {
-        self.preedit_str.clear();
-        self.preedit_str.push(c);
+    pub fn update_preedit(&mut self) {
         unsafe {
             g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
-        }
-    }
-
-    pub fn clear_preedit(&mut self) {
-        if !self.preedit_str.is_empty() {
-            self.preedit_str.clear();
-            unsafe {
-                g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
-            }
         }
     }
 
@@ -277,7 +265,6 @@ unsafe fn register_module(module: *mut GTypeModule) {
             parent: parent.read(),
             client_window: None,
             engine: InputEngine::new(Layout::dubeolsik()),
-            preedit_str: String::with_capacity(12),
         });
     }
 

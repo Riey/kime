@@ -82,7 +82,7 @@ impl Layout {
                     KeyValue::Jongseong(jong) => state.jong(jong),
                 }
             } else {
-                InputResult::Bypass
+                bypass(state, None)
             }
         }
     }
@@ -140,25 +140,12 @@ impl InputEngine {
         self.enable_hangul = enable;
     }
 
-    fn bypass(&mut self, commit: Option<char>) -> InputResult {
-        match (self.state.reset(), commit) {
-            (Some(preedit), Some(commit)) => InputResult::CommitCommit(preedit, commit),
-            (Some(preedit), None) => InputResult::CommitBypass(preedit),
-            (None, Some(commit)) => InputResult::Commit(commit),
-            (None, None) => InputResult::Bypass,
-        }
-    }
-
     /// Use pre-computed keysym
     pub fn press_key_sym(&mut self, sym: xkb::Keysym, config: &Config) -> InputResult {
         match sym {
             xkb::KEY_Escape if config.esc_turn_off => {
-                if self.enable_hangul {
-                    self.enable_hangul = false;
-                    self.bypass(None)
-                } else {
-                    InputResult::Bypass
-                }
+                self.enable_hangul = false;
+                bypass(&mut self.state, None)
             }
             sym if config.hangul_symbols.contains(&sym) => {
                 self.enable_hangul = !self.enable_hangul;
@@ -168,11 +155,14 @@ impl InputEngine {
             sym => {
                 let commit = unsafe { std::char::from_u32_unchecked(xkb::keysym_to_utf32(sym)) };
 
-                self.bypass(if !commit.is_ascii_control() {
-                    Some(commit)
-                } else {
-                    None
-                })
+                bypass(
+                    &mut self.state,
+                    if !commit.is_ascii_control() {
+                        Some(commit)
+                    } else {
+                        None
+                    },
+                )
             }
         }
     }
@@ -204,7 +194,7 @@ impl InputEngine {
             .state
             .mod_name_is_active(xkb::MOD_NAME_CTRL, xkb::STATE_MODS_DEPRESSED)
         {
-            return self.bypass(None);
+            return bypass(&mut self.state, None);
         }
 
         let sym = self.xkb_ctx.state.key_get_one_sym(keycode);
@@ -220,5 +210,14 @@ impl InputEngine {
     #[inline]
     pub fn reset(&mut self) -> Option<char> {
         self.state.reset()
+    }
+}
+
+fn bypass(state: &mut CharacterState, commit: Option<char>) -> InputResult {
+    match (state.reset(), commit) {
+        (Some(preedit), Some(commit)) => InputResult::CommitCommit(preedit, commit),
+        (Some(preedit), None) => InputResult::CommitBypass(preedit),
+        (None, Some(commit)) => InputResult::Commit(commit),
+        (None, None) => InputResult::Bypass,
     }
 }

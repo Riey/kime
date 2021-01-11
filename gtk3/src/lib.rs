@@ -78,7 +78,9 @@ unsafe fn lookup_color(
 
 struct KimeIMSignals {
     commit: c_uint,
+    preedit_start: c_uint,
     preedit_changed: c_uint,
+    preedit_end: c_uint,
 }
 
 impl KimeIMSignals {
@@ -91,7 +93,7 @@ impl KimeIMSignals {
             }
         }
 
-        sig!(commit, preedit_changed)
+        sig!(commit, preedit_start, preedit_changed, preedit_end)
     }
 }
 
@@ -108,6 +110,7 @@ struct KimeIMContext {
     parent: GtkIMContext,
     client_window: Option<NonNull<GdkWindow>>,
     engine: InputEngine,
+    preedit_visible: bool,
 }
 
 impl KimeIMContext {
@@ -131,31 +134,31 @@ impl KimeIMContext {
         match ret {
             InputResult::Commit(c) => {
                 self.commit(c);
-                self.update_preedit();
+                self.update_preedit(false);
                 true
             }
             InputResult::CommitCommit(f, s) => {
                 self.commit(f);
                 self.commit(s);
-                self.update_preedit();
+                self.update_preedit(false);
                 true
             }
             InputResult::CommitBypass(c) => {
                 self.commit(c);
-                self.update_preedit();
+                self.update_preedit(false);
                 false
             }
             InputResult::CommitPreedit(c, _p) => {
                 self.commit(c);
-                self.update_preedit();
+                self.update_preedit(true);
                 true
             }
             InputResult::Preedit(_p) => {
-                self.update_preedit();
+                self.update_preedit(true);
                 true
             }
             InputResult::ClearPreedit => {
-                self.update_preedit();
+                self.update_preedit(false);
                 true
             }
             InputResult::Bypass => false,
@@ -167,15 +170,38 @@ impl KimeIMContext {
         match self.engine.reset() {
             Some(c) => {
                 self.commit(c);
-                self.update_preedit();
+                self.update_preedit(false);
             }
             _ => {}
         }
     }
 
-    pub fn update_preedit(&mut self) {
-        unsafe {
-            g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+    pub fn update_preedit(&mut self, visible: bool) {
+        if self.preedit_visible != visible {
+            if visible {
+                unsafe {
+                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_start, 0);
+                }
+            } else {
+                unsafe {
+                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_end, 0);
+                }
+            }
+
+            unsafe {
+                g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+            }
+
+            self.preedit_visible = visible;
+        } else {
+            // visible update
+            if visible {
+                unsafe {
+                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+                }
+            // invisible noop
+            } else {
+            }
         }
     }
 
@@ -344,6 +370,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
             parent: parent.read(),
             client_window: None,
             engine: InputEngine::new(),
+            preedit_visible: false,
         });
     }
 

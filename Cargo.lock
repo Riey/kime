@@ -450,7 +450,6 @@ dependencies = [
  "cairo-rs",
  "kime-engine",
  "log",
- "once_cell",
  "pretty_env_logger",
  "x11rb",
  "xim",

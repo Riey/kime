@@ -258,8 +258,14 @@ unsafe fn register_module(module: *mut GTypeModule) {
 
             // Noting to display
             if ch == '\0' {
+                if !cursor_pos.is_null() {
+                    cursor_pos.write(0);
+                }
                 out.write(g_strdup(cs!("")));
             } else {
+                if !cursor_pos.is_null() {
+                    cursor_pos.write(1);
+                }
                 str_len = ch.len_utf8();
                 let s = g_malloc0(str_len + 1).cast::<c_char>();
                 ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), str_len));
@@ -309,10 +315,6 @@ unsafe fn register_module(module: *mut GTypeModule) {
                     }
                 }
             }
-        }
-
-        if !cursor_pos.is_null() {
-            cursor_pos.write(1);
         }
     }
 

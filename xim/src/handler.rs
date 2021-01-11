@@ -29,13 +29,15 @@ impl KimeData {
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
+    config: kime_engine::Config,
     screen_num: usize,
 }
 
 impl KimeHandler {
-    pub fn new(screen_num: usize) -> Self {
+    pub fn new(screen_num: usize, config: kime_engine::Config) -> Self {
         Self {
             preedit_windows: AHashMap::new(),
+            config,
             screen_num,
         }
     }
@@ -77,6 +79,7 @@ impl KimeHandler {
             // off-the-spot draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
+                &self.config.xim_preedit_font,
                 ic.app_win(),
                 ic.preedit_spot(),
                 self.screen_num,
@@ -204,7 +207,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         let ret = input_context.user_data.engine.key_event(
             xev.detail as _,
             xev.response_type == KEY_PRESS_EVENT,
-            &crate::CONFIG,
+            &self.config,
         );
         log::trace!("ret: {:?}", ret);
 

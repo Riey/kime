@@ -1,22 +1,22 @@
 use kime_engine::Config;
-use once_cell::sync::Lazy;
 use x11rb::{
     connection::Connection,
     protocol::{ErrorKind, Event},
 };
 use xim::{x11rb::HasConnection, ServerError, XimConnections};
 
-static CONFIG: Lazy<Config> = Lazy::new(|| Config::load_from_config_dir().unwrap_or_default());
-
 mod handler;
 mod pe_window;
 
 fn main() -> Result<(), ServerError> {
     pretty_env_logger::init();
+
+    let config = Config::load_from_config_dir().unwrap_or_default();
+
     let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;
     let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime")?;
     let mut connections = XimConnections::new();
-    let mut handler = self::handler::KimeHandler::new(screen_num);
+    let mut handler = self::handler::KimeHandler::new(screen_num, config);
 
     loop {
         let e = server.conn().wait_for_event()?;

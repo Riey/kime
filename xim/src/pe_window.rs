@@ -26,6 +26,7 @@ pub struct PeWindow {
 impl PeWindow {
     pub fn new(
         conn: &XCBConnection,
+        font: &str,
         app_win: Option<NonZeroU32>,
         spot_location: xim::Point,
         screen_num: usize,
@@ -107,11 +108,7 @@ impl PeWindow {
 
         let cr = cairo::Context::new(&surface);
 
-        cr.select_font_face(
-            &crate::CONFIG.xim_preedit_font,
-            cairo::FontSlant::Normal,
-            cairo::FontWeight::Normal,
-        );
+        cr.select_font_face(&font, cairo::FontSlant::Normal, cairo::FontWeight::Normal);
         cr.set_font_size(15.0);
 
         Ok(Self {

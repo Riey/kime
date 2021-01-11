@@ -34,6 +34,16 @@ fn esc() {
 }
 
 #[test]
+fn arrow() {
+    test_input(&[
+        (xkb::KEY_r, InputResult::Preedit('ㄱ')),
+        (xkb::KEY_leftarrow, InputResult::CommitBypass('ㄱ')),
+        (xkb::KEY_a, InputResult::Preedit('ㅁ')),
+        (xkb::KEY_rightarrow, InputResult::CommitBypass('ㅁ')),
+    ]);
+}
+
+#[test]
 fn issue_28() {
     test_input(&[
         (xkb::KEY_k, InputResult::Preedit('ㅏ')),

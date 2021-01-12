@@ -1,10 +1,6 @@
 const DUBEOLSIK_LAYOUT: &str = include_str!("../data/dubeolsik.yaml");
 
-use kime_engine::{
-    Config, InputEngine, InputResult, Key,
-    KeyCode::*,
-    Layout,
-};
+use kime_engine::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
 
 use pretty_assertions::assert_eq;
 

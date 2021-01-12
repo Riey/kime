@@ -6,6 +6,7 @@ use serde::{
 };
 use strum_macros::EnumString;
 
+// TODO: complete
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumString)]
 pub enum KeyCode {
     #[strum(to_string = "1")]
@@ -32,7 +33,12 @@ pub enum KeyCode {
     Minus,
     Equal,
     Backslash,
+    Grave,
     Space,
+
+    SemiColon,
+    Quote,
+    Slash,
 
     Q,
     W,
@@ -91,6 +97,10 @@ impl KeyCode {
             20 => Some(Self::Minus),
             21 => Some(Self::Equal),
             51 => Some(Self::Backslash),
+            61 => Some(Self::Slash),
+            47 => Some(Self::SemiColon),
+            48 => Some(Self::Quote),
+            49 => Some(Self::Grave),
 
             24 => Some(Self::Q),
             25 => Some(Self::W),

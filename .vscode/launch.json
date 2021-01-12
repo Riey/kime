@@ -29,6 +29,16 @@
             },
             "program": "${cargo:program}",
             "args": []
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug with gedit",
+            "env": {
+                "GTK_IM_MODULE": "kime"
+            },
+            "program": "gedit",
+            "args": []
         }
     ]
 }

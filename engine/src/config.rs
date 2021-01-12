@@ -11,6 +11,7 @@ struct RawConfig {
     esc_turn_off: bool,
     hangul_keys: Vec<String>,
     xim_preedit_font: String,
+    gtk_commit_english: bool,
 }
 
 impl Default for RawConfig {
@@ -22,11 +23,9 @@ impl Default for RawConfig {
                 "Hangul".to_string(),
                 "Henkan".to_string(),
                 "Alt_R".to_string(),
-                "S-Hangul".to_string(),
-                "S-Henkan".to_string(),
-                "S-Alt_R".to_string(),
             ],
             xim_preedit_font: "D2Coding".to_string(),
+            gtk_commit_english: false,
         }
     }
 }
@@ -36,13 +35,13 @@ pub struct Config {
     pub(crate) esc_turn_off: bool,
     pub(crate) hangul_keys: AHashSet<Key>,
     pub xim_preedit_font: String,
+    pub gtk_commit_english: bool,
 }
 
 impl Default for Config {
     fn default() -> Self {
         let mut hangul_keys = AHashSet::new();
         for key in [KeyCode::Hangul, KeyCode::Henkan, KeyCode::AltR].iter() {
-            hangul_keys.insert(Key::new(*key, true));
             hangul_keys.insert(Key::new(*key, false));
         }
 
@@ -51,6 +50,7 @@ impl Default for Config {
             esc_turn_off: true,
             hangul_keys,
             xim_preedit_font: "D2Coding".to_string(),
+            gtk_commit_english: false,
         }
     }
 }
@@ -61,12 +61,14 @@ impl Config {
         esc_turn_off: bool,
         hangul_keys: AHashSet<Key>,
         xim_preedit_font: String,
+        gtk_commit_english: bool,
     ) -> Self {
         Self {
             layout,
             esc_turn_off,
             hangul_keys,
             xim_preedit_font,
+            gtk_commit_english,
         }
     }
 
@@ -108,6 +110,7 @@ impl Config {
                 .collect(),
             xim_preedit_font: config.xim_preedit_font,
             esc_turn_off: config.esc_turn_off,
+            gtk_commit_english: config.gtk_commit_english,
         })
     }
 }

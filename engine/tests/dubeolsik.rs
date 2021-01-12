@@ -11,6 +11,7 @@ fn test_input(inputs: &[(Key, InputResult)]) {
         true,
         Default::default(),
         Default::default(),
+        false,
     );
 
     let mut engine = InputEngine::new();

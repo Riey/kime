@@ -3,9 +3,8 @@ mod config;
 mod keycode;
 mod state;
 
-use self::characters::{Choseong, Jongseong, Jungseong, KeyValue};
+use self::characters::KeyValue;
 use ahash::AHashMap;
-use serde::{Deserialize, Serialize};
 
 pub use self::config::Config;
 pub use self::keycode::{Key, KeyCode};
@@ -16,40 +15,14 @@ pub struct Layout {
     keymap: AHashMap<Key, KeyValue>,
 }
 
-#[derive(Serialize, Deserialize)]
-struct ValueItem {
-    #[serde(default)]
-    cho: Option<Choseong>,
-    #[serde(default)]
-    jung: Option<Jungseong>,
-    #[serde(default)]
-    jong: Option<Jongseong>,
-    #[serde(default)]
-    pass: Option<char>,
-}
-
 impl Layout {
-    fn from_items(items: AHashMap<Key, ValueItem>) -> Self {
+    fn from_items(items: AHashMap<Key, String>) -> Self {
         let mut keymap = AHashMap::new();
 
         for (key, value) in items {
-            let value = match value {
-                ValueItem {
-                    pass: Some(pass), ..
-                } => KeyValue::Pass(pass),
-                ValueItem {
-                    cho: Some(cho),
-                    jong: Some(jong),
-                    ..
-                } => KeyValue::ChoJong(cho, jong),
-                ValueItem { cho: Some(cho), .. } => KeyValue::Choseong(cho),
-                ValueItem {
-                    jong: Some(jong), ..
-                } => KeyValue::Jongseong(jong),
-                ValueItem {
-                    jung: Some(jung), ..
-                } => KeyValue::Jungseong(jung),
-                _ => continue,
+            let value = match value.parse::<KeyValue>() {
+                Ok(value) => value,
+                Err(_) => continue,
             };
 
             keymap.insert(key, value);

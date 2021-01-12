@@ -7,4 +7,3 @@ members = [
 
 [profile.release]
 lto = true
-

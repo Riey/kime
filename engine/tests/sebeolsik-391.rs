@@ -32,3 +32,10 @@ fn hello() {
         (Key::normal(A), InputResult::Preedit('녕')),
     ])
 }
+
+#[test]
+fn colon() {
+    test_input(&[
+        (Key::normal(Backslash), InputResult::Commit(':')),
+    ])
+}

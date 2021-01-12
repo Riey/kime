@@ -6,6 +6,7 @@ use ahash::AHashSet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+#[serde(default)]
 struct RawConfig {
     layout: String,
     esc_turn_off: bool,

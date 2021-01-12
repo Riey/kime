@@ -1,6 +1,7 @@
 use gdk_sys::{
-    gdk_window_get_user_data, GdkColor, GdkEventKey, GdkWindow, GDK_CONTROL_MASK, GDK_KEY_PRESS,
-    GDK_MOD1_MASK, GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK,
+    gdk_keyval_to_unicode, gdk_window_get_user_data, GdkColor, GdkEventKey, GdkWindow,
+    GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK, GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK,
+    GDK_MOD5_MASK, GDK_SHIFT_MASK,
 };
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
@@ -122,23 +123,6 @@ impl KimeIMContext {
     }
 
     pub fn filter_keypress(&mut self, key: &GdkEventKey) -> bool {
-        if key.type_ != GDK_KEY_PRESS {
-            return false;
-        }
-
-        let skip_mask = GDK_CONTROL_MASK
-            | GDK_MOD1_MASK
-            | GDK_MOD2_MASK
-            | GDK_MOD3_MASK
-            | GDK_MOD4_MASK
-            | GDK_MOD5_MASK;
-
-        // skip modifiers
-        if key.state & skip_mask != 0 {
-            self.reset();
-            return false;
-        }
-
         let code = match kime_engine::KeyCode::from_hardward_code(key.hardware_keycode) {
             Some(code) => code,
             None => {
@@ -284,9 +268,31 @@ unsafe fn register_module(module: *mut GTypeModule) {
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
         let key = key.as_mut().unwrap();
 
-        if ctx.filter_keypress(key) {
+        let skip_mask = GDK_CONTROL_MASK
+            | GDK_MOD1_MASK
+            | GDK_MOD2_MASK
+            | GDK_MOD3_MASK
+            | GDK_MOD4_MASK
+            | GDK_MOD5_MASK;
+
+        if key.type_ != GDK_KEY_PRESS {
+            GFALSE
+        // skip modifiers
+        } else if key.state & skip_mask != 0 {
+            ctx.reset();
+            GFALSE
+        } else if ctx.filter_keypress(key) {
             GTRUE
         } else {
+            if CONFIG.gtk_commit_english {
+                let c = std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval));
+
+                if !c.is_control() {
+                    ctx.commit(c);
+                    return GTRUE;
+                }
+            }
+
             GFALSE
         }
     }

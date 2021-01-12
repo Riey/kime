@@ -1,266 +1,180 @@
-q:
+Q:
   cho: ᄇ
   jong: ᆸ
 
-Q:
+S-Q:
   cho: ᄈ
 
-w:
+W:
   cho: ᄌ
   jong: ᆽ
 
-W:
+S-W:
   cho: ᄍ
 
-e:
+E:
   cho: ᄃ
   jong: ᆮ
 
-E:
+S-E:
   cho: ᄄ
 
-r:
+R:
   cho: ᄀ
   jong: ᆨ
 
-R:
+S-R:
   cho: ᄁ
   jong: ᆩ
 
-t:
+T:
   cho: ᄉ
   jong: ᆺ
 
-T:
+S-T:
   cho: ᄊ
   jong: ᆻ
-
-y:
-  jung: ᅭ
 
 Y:
   jung: ᅭ
 
-u:
-  jung: ᅧ
+S-Y:
+  jung: ᅭ
 
 U:
   jung: ᅧ
 
-i:
-  jung: ᅣ
+S-U:
+  jung: ᅧ
 
 I:
   jung: ᅣ
 
-o:
-  jung: ᅢ
+S-I:
+  jung: ᅣ
 
 O:
+  jung: ᅢ
+
+S-O:
   jung: ᅤ
 
-p:
+P:
   jung: ᅦ
 
-P:
+S-P:
   jung: ᅨ
-
-a:
-  cho: ᄆ
-  jong: ᆷ
 
 A:
   cho: ᄆ
   jong: ᆷ
 
-s:
-  cho: ᄂ
-  jong: ᆫ
+S-A:
+  cho: ᄆ
+  jong: ᆷ
 
 S:
   cho: ᄂ
   jong: ᆫ
 
-d:
-  cho: ᄋ
-  jong: ᆼ
+S-S:
+  cho: ᄂ
+  jong: ᆫ
 
 D:
   cho: ᄋ
   jong: ᆼ
 
-f:
-  cho: ᄅ
-  jong: ᆯ
+S-D:
+  cho: ᄋ
+  jong: ᆼ
 
 F:
   cho: ᄅ
   jong: ᆯ
 
-g:
-  cho: ᄒ
-  jong: ᇂ
+S-F:
+  cho: ᄅ
+  jong: ᆯ
 
 G:
   cho: ᄒ
   jong: ᇂ
 
-h:
-  jung: ᅩ
+S-G:
+  cho: ᄒ
+  jong: ᇂ
 
 H:
   jung: ᅩ
 
-j:
-  jung: ᅥ
+S-H:
+  jung: ᅩ
 
 J:
   jung: ᅥ
 
-k:
-  jung: ᅡ
+S-J:
+  jung: ᅥ
 
 K:
   jung: ᅡ
 
-l:
-  jung: ᅵ
+S-K:
+  jung: ᅡ
 
 L:
   jung: ᅵ
 
-z:
-  cho: ᄏ
-  jong: ᆿ
+S-L:
+  jung: ᅵ
 
 Z:
   cho: ᄏ
   jong: ᆿ
 
-x:
-  cho: ᄐ
-  jong: ᇀ
+S-Z:
+  cho: ᄏ
+  jong: ᆿ
 
 X:
   cho: ᄐ
   jong: ᇀ
 
-c:
-  cho: ᄎ
-  jong: ᆾ
+S-X:
+  cho: ᄐ
+  jong: ᇀ
 
 C:
   cho: ᄎ
   jong: ᆾ
 
-v:
-  cho: ᄑ
-  jong: ᇁ
+S-C:
+  cho: ᄎ
+  jong: ᆾ
 
 V:
   cho: ᄑ
   jong: ᇁ
 
-b:
-  jung: ᅲ
+S-V:
+  cho: ᄑ
+  jong: ᇁ
 
 B:
   jung: ᅲ
 
-n:
-  jung: ᅮ
+S-B:
+  jung: ᅲ
 
 N:
   jung: ᅮ
 
-m:
-  jung: ᅳ
+S-N:
+  jung: ᅮ
 
 M:
   jung: ᅳ
 
-'1':
-  pass: '1'
-'2':
-  pass: '2'
-'3':
-  pass: '3'
-'4':
-  pass: '4'
-'5':
-  pass: '5'
-'6':
-  pass: '6'
-'7':
-  pass: '7'
-'8':
-  pass: '8'
-'9':
-  pass: '9'
-'0':
-  pass: '0'
-
-space:
-  pass: ' '
-exclam:
-  pass: '!'
-quotedbl:
-  pass: '"'
-numbersign:
-  pass: '#'
-dollar:
-  pass: '$'
-percent:
-  pass: '%'
-ampersand:
-  pass: '&'
-quoteright:
-  pass: "'"
-parenleft:
-  pass: '('
-parenright:
-  pass: ')'
-asterisk:
-  pass: '*'
-plus:
-  pass: '+'
-comma:
-  pass: ','
-minus:
-  pass: '-'
-period:
-  pass: '.'
-slash:
-  pass: '/'
-colon:
-  pass: ':'
-semicolon:
-  pass: ';'
-less:
-  pass: '<'
-greater:
-  pass: '>'
-question:
-  pass: '?'
-at:
-  pass: '@'
-bracketleft:
-  pass: '['
-bracketright:
-  pass: ']'
-backslash:
-  pass: '\'
-asciicircum:
-  pass: '^'
-underscore:
-  pass: '_'
-grave:
-  pass: '`'
-braceleft:
-  pass: '{'
-braceright:
-  pass: '}'
-bar:
-  pass: '|'
-asciitilde:
-  pass: '~'
+S-M:
+  jung: ᅳ

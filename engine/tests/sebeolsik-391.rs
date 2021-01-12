@@ -30,12 +30,19 @@ fn hello() {
         (Key::normal(H), InputResult::CommitPreedit('안', 'ㄴ')),
         (Key::normal(E), InputResult::Preedit('녀')),
         (Key::normal(A), InputResult::Preedit('녕')),
-    ])
+    ]);
+}
+
+#[test]
+fn switch_next() {
+    test_input(&[
+        (Key::normal(S), InputResult::Preedit('ㄴ')),
+        (Key::normal(F), InputResult::CommitPreedit('ㄴ', 'ㅏ')),
+        (Key::normal(J), InputResult::Preedit('아')),
+    ]);
 }
 
 #[test]
 fn colon() {
-    test_input(&[
-        (Key::normal(Backslash), InputResult::Commit(':')),
-    ])
+    test_input(&[(Key::normal(Backslash), InputResult::Commit(':'))]);
 }

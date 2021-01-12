@@ -1,13 +1,15 @@
-use crate::Layout;
+use crate::{
+    keycode::{Key, KeyCode},
+    Layout,
+};
 use ahash::AHashSet;
 use serde::{Deserialize, Serialize};
-use xkbcommon::xkb;
 
 #[derive(Serialize, Deserialize)]
 struct RawConfig {
     layout: String,
     esc_turn_off: bool,
-    hangul_symbols: Vec<String>,
+    hangul_keys: Vec<String>,
     xim_preedit_font: String,
 }
 
@@ -16,10 +18,13 @@ impl Default for RawConfig {
         Self {
             layout: "dubeolsik".to_string(),
             esc_turn_off: true,
-            hangul_symbols: vec![
+            hangul_keys: vec![
                 "Hangul".to_string(),
                 "Henkan".to_string(),
                 "Alt_R".to_string(),
+                "S-Hangul".to_string(),
+                "S-Henkan".to_string(),
+                "S-Alt_R".to_string(),
             ],
             xim_preedit_font: "D2Coding".to_string(),
         }
@@ -29,19 +34,22 @@ impl Default for RawConfig {
 pub struct Config {
     pub(crate) layout: Layout,
     pub(crate) esc_turn_off: bool,
-    pub(crate) hangul_symbols: AHashSet<xkb::Keysym>,
+    pub(crate) hangul_keys: AHashSet<Key>,
     pub xim_preedit_font: String,
 }
 
 impl Default for Config {
     fn default() -> Self {
+        let mut hangul_keys = AHashSet::new();
+        for key in [KeyCode::Hangul, KeyCode::Henkan, KeyCode::AltR].iter() {
+            hangul_keys.insert(Key::new(*key, true));
+            hangul_keys.insert(Key::new(*key, false));
+        }
+
         Self {
             layout: Layout::default(),
             esc_turn_off: true,
-            hangul_symbols: [xkb::KEY_Hangul, xkb::KEY_Henkan, xkb::KEY_Alt_R]
-                .iter()
-                .copied()
-                .collect(),
+            hangul_keys,
             xim_preedit_font: "D2Coding".to_string(),
         }
     }
@@ -51,13 +59,13 @@ impl Config {
     pub fn new(
         layout: Layout,
         esc_turn_off: bool,
-        hangul_symbols: AHashSet<xkb::Keysym>,
+        hangul_keys: AHashSet<Key>,
         xim_preedit_font: String,
     ) -> Self {
         Self {
             layout,
             esc_turn_off,
-            hangul_symbols,
+            hangul_keys,
             xim_preedit_font,
         }
     }
@@ -93,13 +101,10 @@ impl Config {
 
         Some(Self {
             layout,
-            hangul_symbols: config
-                .hangul_symbols
+            hangul_keys: config
+                .hangul_keys
                 .iter()
-                .filter_map(|s| match xkb::keysym_from_name(s, 0) {
-                    xkb::KEY_NoSymbol => None,
-                    s => Some(s),
-                })
+                .filter_map(|s| s.parse().ok())
                 .collect(),
             xim_preedit_font: config.xim_preedit_font,
             esc_turn_off: config.esc_turn_off,

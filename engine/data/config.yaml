@@ -4,5 +4,5 @@ esc_turn_off: true
 hangul_symbols:
   - Hangul
   - Henkan
-  - Alt_R
+  - AltR
 xim_preedit_font: D2Coding

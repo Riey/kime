@@ -1,4 +1,7 @@
-use gdk_sys::{GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK, GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK, GdkColor, GdkEventKey, GdkWindow, gdk_window_get_user_data};
+use gdk_sys::{
+    gdk_window_get_user_data, GdkColor, GdkEventKey, GdkWindow, GDK_CONTROL_MASK, GDK_KEY_PRESS,
+    GDK_MOD1_MASK, GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK,
+};
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
     g_object_new, g_object_ref, g_object_unref, g_signal_emit, g_signal_lookup,
@@ -123,7 +126,12 @@ impl KimeIMContext {
             return false;
         }
 
-        let skip_mask = GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD4_MASK | GDK_MOD5_MASK;
+        let skip_mask = GDK_CONTROL_MASK
+            | GDK_MOD1_MASK
+            | GDK_MOD2_MASK
+            | GDK_MOD3_MASK
+            | GDK_MOD4_MASK
+            | GDK_MOD5_MASK;
 
         // skip modifiers
         if key.state & skip_mask != 0 {
@@ -131,7 +139,18 @@ impl KimeIMContext {
             return false;
         }
 
-        let ret = self.engine.press_key_sym(key.keyval, &CONFIG);
+        let code = match kime_engine::KeyCode::from_hardward_code(key.hardware_keycode) {
+            Some(code) => code,
+            None => {
+                self.reset();
+                return false;
+            }
+        };
+
+        let ret = self.engine.press_key(
+            kime_engine::Key::new(code, key.state & GDK_SHIFT_MASK != 0),
+            &CONFIG,
+        );
 
         match ret {
             InputResult::Commit(c) => {

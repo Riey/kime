@@ -76,7 +76,7 @@ pub enum KeyCode {
 }
 
 impl KeyCode {
-    pub const fn from_hardward_code(code: u8) -> Option<Self> {
+    pub const fn from_hardward_code(code: u16) -> Option<Self> {
         match code {
             10 => Some(Self::One),
             11 => Some(Self::Two),

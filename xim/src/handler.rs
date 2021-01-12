@@ -11,7 +11,7 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use kime_engine::{InputEngine, InputResult};
+use kime_engine::{InputEngine, InputResult, Key, KeyCode};
 
 pub struct KimeData {
     engine: InputEngine,
@@ -89,6 +89,19 @@ impl KimeHandler {
             ic.user_data.pe = Some(pe.window());
 
             self.preedit_windows.insert(pe.window(), pe);
+        }
+
+        Ok(())
+    }
+
+    fn reset(
+        &mut self,
+        server: &mut X11rbServer<XCBConnection>,
+        ic: &mut xim::InputContext<KimeData>,
+    ) -> Result<(), xim::ServerError> {
+        if let Some(commit) = ic.user_data.engine.reset() {
+            self.clear_preedit(server.conn(), ic)?;
+            self.commit(server, ic, commit)?;
         }
 
         Ok(())
@@ -204,12 +217,29 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         input_context: &mut xim::InputContext<Self::InputContextData>,
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
-        let ret = input_context.user_data.engine.key_event(
-            xev.detail as _,
-            xev.response_type == KEY_PRESS_EVENT,
-            &self.config,
-        );
-        log::trace!("ret: {:?}", ret);
+        // skip release
+        if xev.response_type != KEY_PRESS_EVENT {
+            return Ok(false);
+        }
+
+        // other modifiers then shift
+        if xev.state & (!0x1) != 0 {
+            self.reset(server, input_context)?;
+            return Ok(false);
+        }
+
+        let code = match KeyCode::from_hardward_code(xev.detail as _) {
+            Some(code) => code,
+            _ => {
+                self.reset(server, input_context)?;
+                return Ok(false);
+            }
+        };
+
+        let ret = input_context
+            .user_data
+            .engine
+            .press_key(Key::new(code, xev.state & 0x1 != 0), &self.config);
 
         match ret {
             InputResult::Bypass => Ok(false),

@@ -113,9 +113,9 @@ SemiColon: ;
 S-SemiColon: ':'
 Quote: "'"
 S-Quote: '"'
-Comma: '<'
+Comma: ','
 S-Comma: '<'
 Period: '.'
-S-Period: '<'
+S-Period: '>'
 Slash: /
 S-Slash: '?'

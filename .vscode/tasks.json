@@ -1,0 +1,25 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "install-immodule",
+            "command": "sudo",
+            "args": [
+                "install",
+                "-Dm755",
+                "target/debug/libkime_gtk3.so",
+                "-T",
+                "/usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"
+            ]
+        },
+        {
+            "type": "cargo",
+            "command": "build",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "group": "build",
+            "label": "rust: cargo build"
+        }
+    ]
+}

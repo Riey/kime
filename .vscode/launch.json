@@ -33,7 +33,29 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug with firefox",
+            "cargo": {
+                "args": [
+                    "build"
+                ]
+            },
+            "preLaunchTask": "install-immodule",
+            "env": {
+                "GTK_IM_MODULE": "kime"
+            },
+            "program": "/usr/lib/firefox/firefox",
+            "args": ["-g"]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug with gedit",
+            "cargo": {
+                "args": [
+                    "build"
+                ]
+            },
+            "preLaunchTask": "install-immodule",
             "env": {
                 "GTK_IM_MODULE": "kime"
             },

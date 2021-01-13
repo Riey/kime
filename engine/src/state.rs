@@ -120,28 +120,38 @@ impl CharacterState {
 
     pub fn jung(&mut self, jung: Jungseong) -> InputResult {
         if let Some(jong) = self.jong {
-            let new;
+            if self.cho.is_some() {
+                // has choseong move jongseong to next choseong
+                let new;
 
-            match jong.to_cho() {
-                JongToCho::Direct(cho) => {
-                    self.jong = None;
-                    new = Self {
-                        cho: Some(cho),
-                        jung: Some(jung),
-                        jong: None,
-                    };
+                match jong.to_cho() {
+                    JongToCho::Direct(cho) => {
+                        self.jong = None;
+                        new = Self {
+                            cho: Some(cho),
+                            jung: Some(jung),
+                            jong: None,
+                        };
+                    }
+                    JongToCho::Compose(jong, cho) => {
+                        self.jong = Some(jong);
+                        new = Self {
+                            cho: Some(cho),
+                            jung: Some(jung),
+                            jong: None,
+                        };
+                    }
                 }
-                JongToCho::Compose(jong, cho) => {
-                    self.jong = Some(jong);
-                    new = Self {
-                        cho: Some(cho),
-                        jung: Some(jung),
-                        jong: None,
-                    };
-                }
+
+                return self.replace(new);
+            } else {
+                // only jongseong commit replace with jungseong
+                return self.replace(Self {
+                    cho: None,
+                    jung: Some(jung),
+                    jong: None,
+                });
             }
-
-            return self.replace(new);
         }
 
         if let Some(prev_jung) = self.jung {

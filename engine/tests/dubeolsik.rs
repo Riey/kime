@@ -97,7 +97,7 @@ fn number() {
         (Key::normal(S), InputResult::Preedit('안')),
         (Key::normal(G), InputResult::Preedit('않')),
         (Key::normal(E), InputResult::CommitPreedit('않', 'ㄷ')),
-        (Key::normal(One), InputResult::CommitBypass('ㄷ')),
+        (Key::normal(One), InputResult::CommitCommit('ㄷ', '1')),
     ]);
 }
 
@@ -105,7 +105,7 @@ fn number() {
 fn exclamation_mark() {
     test_input(&[
         (Key::shift(R), InputResult::Preedit('ㄲ')),
-        (Key::shift(One), InputResult::CommitBypass('ㄲ')),
+        (Key::shift(One), InputResult::CommitCommit('ㄲ', '!')),
     ]);
 }
 

@@ -1,180 +1,121 @@
-Q:
-  cho: ᄇ
-  jong: ᆸ
+Q: ㅂㅂ
+S-Q: ㅃ
 
-S-Q:
-  cho: ᄈ
+W: ㅈㅈ
+S-W: ㅉ
 
-W:
-  cho: ᄌ
-  jong: ᆽ
+E: ㄷㄷ
+S-E: ㄸ
 
-S-W:
-  cho: ᄍ
+R: ㄱㄱ
+S-R: ㄲㄲ
 
-E:
-  cho: ᄃ
-  jong: ᆮ
+T: ㅅㅅ
+S-T: ㅆㅆ
 
-S-E:
-  cho: ᄄ
+Y: ㅛㅛ
+S-Y: ㅛㅛ
 
-R:
-  cho: ᄀ
-  jong: ᆨ
+U: ㅕ
+S-U: ㅕ
 
-S-R:
-  cho: ᄁ
-  jong: ᆩ
+I: ㅑ
+S-I: ㅑ
 
-T:
-  cho: ᄉ
-  jong: ᆺ
+O: ㅐ
+S-O: ㅒ
 
-S-T:
-  cho: ᄊ
-  jong: ᆻ
+P: ㅔ
+S-P: ㅖ
 
-Y:
-  jung: ᅭ
+A: ㅁㅁ
+S-A: ㅁㅁ
 
-S-Y:
-  jung: ᅭ
+S: ㄴㄴ
+S-S: ㄴㄴ
 
-U:
-  jung: ᅧ
+D: ㅇㅇ
+S-D: ㅇㅇ
 
-S-U:
-  jung: ᅧ
+F: ㄹㄹ
+S-F: ㄹㄹ
 
-I:
-  jung: ᅣ
+G: ㅎㅎ
+S-G: ㅎㅎ
 
-S-I:
-  jung: ᅣ
+H: ㅗ
+S-H: ㅗ
 
-O:
-  jung: ᅢ
+J: ㅓ
+S-J: ㅓ
 
-S-O:
-  jung: ᅤ
+K: ㅏ
+S-K: ㅏ
 
-P:
-  jung: ᅦ
+L: ㅣ
+S-L: ㅣ
 
-S-P:
-  jung: ᅨ
+Z: ㅋㅋ
+S-Z: ㅋㅋ
 
-A:
-  cho: ᄆ
-  jong: ᆷ
+X: ㅌㅌ
+S-X: ㅌㅌ
 
-S-A:
-  cho: ᄆ
-  jong: ᆷ
+C: ㅊㅊ
+S-C: ㅊㅊ
 
-S:
-  cho: ᄂ
-  jong: ᆫ
+V: ㅍㅍ
+S-V: ㅍㅍ
 
-S-S:
-  cho: ᄂ
-  jong: ᆫ
+B: ㅠ
+S-B: ㅠ
 
-D:
-  cho: ᄋ
-  jong: ᆼ
+N: ㅜ
+S-N: ㅜ
 
-S-D:
-  cho: ᄋ
-  jong: ᆼ
+M: ㅡ
+S-M: ㅡ
 
-F:
-  cho: ᄅ
-  jong: ᆯ
+Grave: '`'
+S-Grave: '~'
+1: 1
+2: 2
+3: 3
+4: 4
+5: 5
+6: 6
+7: 7
+8: 8
+9: 9
+0: 0
 
-S-F:
-  cho: ᄅ
-  jong: ᆯ
-
-G:
-  cho: ᄒ
-  jong: ᇂ
-
-S-G:
-  cho: ᄒ
-  jong: ᇂ
-
-H:
-  jung: ᅩ
-
-S-H:
-  jung: ᅩ
-
-J:
-  jung: ᅥ
-
-S-J:
-  jung: ᅥ
-
-K:
-  jung: ᅡ
-
-S-K:
-  jung: ᅡ
-
-L:
-  jung: ᅵ
-
-S-L:
-  jung: ᅵ
-
-Z:
-  cho: ᄏ
-  jong: ᆿ
-
-S-Z:
-  cho: ᄏ
-  jong: ᆿ
-
-X:
-  cho: ᄐ
-  jong: ᇀ
-
-S-X:
-  cho: ᄐ
-  jong: ᇀ
-
-C:
-  cho: ᄎ
-  jong: ᆾ
-
-S-C:
-  cho: ᄎ
-  jong: ᆾ
-
-V:
-  cho: ᄑ
-  jong: ᇁ
-
-S-V:
-  cho: ᄑ
-  jong: ᇁ
-
-B:
-  jung: ᅲ
-
-S-B:
-  jung: ᅲ
-
-N:
-  jung: ᅮ
-
-S-N:
-  jung: ᅮ
-
-M:
-  jung: ᅳ
-
-S-M:
-  jung: ᅳ
+S-1: '!'
+S-2: '@'
+S-3: '#'
+S-4: '$'
+S-5: '%'
+S-6: '^'
+S-7: '&'
+S-8: '*'
+S-9: '('
+S-0: ')'
+Minus: '-'
+S-Minus: _
+Equal: '='
+S-Equal: +
+Backslash: \
+S-Backslash: '|'
+OpenBracket: '['
+S-OpenBracket: '{'
+CloseBracket: ']'
+S-CloseBracket: '}'
+SemiColon: ;
+S-SemiColon: ':'
+Quote: "'"
+S-Quote: '"'
+Comma: '<'
+S-Comma: '<'
+Period: '.'
+S-Period: '<'
+Slash: /
+S-Slash: '?'

@@ -1,9 +1,10 @@
 ---
 layout: dubeolsik
 esc_turn_off: true
-hangul_symbols:
+hangul_keys:
   - Hangul
   - Henkan
   - AltR
 xim_preedit_font: D2Coding
 gtk_commit_english: true
+compose_ssangjaum: true

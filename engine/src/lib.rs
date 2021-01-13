@@ -6,7 +6,7 @@ mod state;
 use self::characters::KeyValue;
 use ahash::AHashMap;
 
-pub use self::config::Config;
+pub use self::config::{Config, RawConfig};
 pub use self::keycode::{Key, KeyCode};
 pub use self::state::CharacterState;
 
@@ -35,9 +35,9 @@ impl Layout {
         Ok(Self::from_items(serde_yaml::from_str(content)?))
     }
 
-    pub fn map_key(&self, state: &mut CharacterState, key: Key) -> InputResult {
+    pub fn map_key(&self, state: &mut CharacterState, config: &Config, key: Key) -> InputResult {
         if key.code == KeyCode::Backspace {
-            state.backspace()
+            state.backspace(config)
         } else {
             if let Some(v) = self.keymap.get(&key) {
                 match *v {
@@ -48,10 +48,10 @@ impl Layout {
                             InputResult::Commit(pass)
                         }
                     }
-                    KeyValue::ChoJong(cho, jong) => state.cho_jong(cho, jong),
+                    KeyValue::ChoJong(cho, jong) => state.cho_jong(cho, jong, config),
                     KeyValue::Jungseong(jung) => state.jung(jung),
-                    KeyValue::Choseong(cho) => state.cho(cho),
-                    KeyValue::Jongseong(jong) => state.jong(jong),
+                    KeyValue::Choseong(cho) => state.cho(cho, config),
+                    KeyValue::Jongseong(jong) => state.jong(jong, config),
                 }
             } else {
                 bypass(state)
@@ -100,7 +100,7 @@ impl InputEngine {
             self.enable_hangul = false;
             bypass(&mut self.state)
         } else if self.enable_hangul {
-            config.layout.map_key(&mut self.state, key)
+            config.layout.map_key(&mut self.state, config, key)
         } else {
             bypass(&mut self.state)
         }

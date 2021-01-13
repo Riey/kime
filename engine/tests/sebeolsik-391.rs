@@ -1,15 +1,12 @@
 const SEBEOLSIK_391_LAYOUT: &str = include_str!("../data/sebeolsik-391.yaml");
 
-use kime_engine::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
+use kime_engine::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout, RawConfig};
 
 #[track_caller]
 fn test_input(inputs: &[(Key, InputResult)]) {
     let config = Config::new(
         Layout::load_from(SEBEOLSIK_391_LAYOUT).expect("Load layout"),
-        true,
-        Default::default(),
-        Default::default(),
-        false,
+        RawConfig::default(),
     );
 
     let mut engine = InputEngine::new();

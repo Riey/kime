@@ -1,5 +1,6 @@
 use super::characters::{Choseong, JongToCho, Jongseong, Jungseong};
 use super::InputResult;
+use crate::Config;
 
 /// 한글 입력 오토마타
 #[derive(Debug, Default, Clone, Copy)]
@@ -58,9 +59,9 @@ impl CharacterState {
         }
     }
 
-    pub fn backspace(&mut self) -> InputResult {
+    pub fn backspace(&mut self, config: &Config) -> InputResult {
         if let Some(jong) = self.jong.as_mut() {
-            if let Some(new_jong) = jong.backspace() {
+            if let Some(new_jong) = jong.backspace(config.compose_ssangjaum) {
                 *jong = new_jong;
             } else {
                 self.jong = None;
@@ -72,7 +73,7 @@ impl CharacterState {
                 self.jung = None;
             }
         } else if let Some(cho) = self.cho.as_mut() {
-            if let Some(new_cho) = cho.backspace() {
+            if let Some(new_cho) = cho.backspace(config.compose_ssangjaum) {
                 *cho = new_cho;
             } else {
                 self.cho = None;
@@ -92,17 +93,17 @@ impl CharacterState {
     }
 
     // 두벌식용
-    pub fn cho_jong(&mut self, cho: Choseong, jong: Jongseong) -> InputResult {
+    pub fn cho_jong(&mut self, cho: Choseong, jong: Jongseong, config: &Config) -> InputResult {
         if self.cho.is_none() || self.jung.is_none() {
-            self.cho(cho)
+            self.cho(cho, config)
         } else {
-            self.jong(jong)
+            self.jong(jong, config)
         }
     }
 
-    pub fn cho(&mut self, cho: Choseong) -> InputResult {
+    pub fn cho(&mut self, cho: Choseong, config: &Config) -> InputResult {
         if let Some(prev_cho) = self.cho {
-            match prev_cho.try_add(cho) {
+            match prev_cho.try_add(cho, config.compose_ssangjaum) {
                 Some(new) => {
                     self.cho = Some(new);
                     InputResult::Preedit(self.to_char())
@@ -198,9 +199,9 @@ impl CharacterState {
         }
     }
 
-    pub fn jong(&mut self, jong: Jongseong) -> InputResult {
+    pub fn jong(&mut self, jong: Jongseong, config: &Config) -> InputResult {
         if let Some(prev_jong) = self.jong {
-            match prev_jong.try_add(jong) {
+            match prev_jong.try_add(jong, config.compose_ssangjaum) {
                 Some(new) => {
                     self.jong = Some(new);
                     InputResult::Preedit(self.to_char())
@@ -240,15 +241,16 @@ mod tests {
     #[test]
     fn jong() {
         let mut state = CharacterState::default();
+        let config = Config::default();
 
         assert_eq!(
             InputResult::Preedit('ㅇ'),
-            state.cho_jong(Choseong::Ieung, Jongseong::Ieung)
+            state.cho_jong(Choseong::Ieung, Jongseong::Ieung, &config)
         );
         assert_eq!(InputResult::Preedit('아'), state.jung(Jungseong::A));
         assert_eq!(
             InputResult::Preedit('앙'),
-            state.cho_jong(Choseong::Ieung, Jongseong::Ieung)
+            state.cho_jong(Choseong::Ieung, Jongseong::Ieung, &config)
         );
         assert_eq!(
             InputResult::CommitPreedit('아', '아'),

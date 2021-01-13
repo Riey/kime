@@ -79,6 +79,7 @@ pub enum KeyCode {
     DownArrow,
 
     Esc,
+    Shift,
     Backspace,
     Henkan,
     AltR,
@@ -102,6 +103,8 @@ impl KeyCode {
             21 => Some(Self::Equal),
             34 => Some(Self::OpenBracket),
             35 => Some(Self::CloseBracket),
+            // Shift_L, Shift_R
+            50 | 62 => Some(Self::Shift),
             51 => Some(Self::Backslash),
             61 => Some(Self::Slash),
             47 => Some(Self::SemiColon),

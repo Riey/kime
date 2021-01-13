@@ -94,6 +94,8 @@ impl InputEngine {
         if config.hangul_keys.contains(&key) {
             self.enable_hangul = !self.enable_hangul;
             InputResult::Consume
+        } else if key.code == KeyCode::Shift {
+            InputResult::Bypass
         } else if key.code == KeyCode::Esc && config.esc_turn_off {
             self.enable_hangul = false;
             bypass(&mut self.state)

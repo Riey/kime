@@ -267,11 +267,11 @@ impl Choseong {
 
     pub const fn try_add(self, other: Self) -> Option<Self> {
         match (self, other) {
-            (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
-            (Self::Bieup, Self::Bieup) => Some(Self::SsangBieup),
-            (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
-            (Self::Jieut, Self::Jieut) => Some(Self::SsangJieut),
-            (Self::Digeut, Self::Digeut) => Some(Self::SsangDigeut),
+            // (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
+            // (Self::Bieup, Self::Bieup) => Some(Self::SsangBieup),
+            // (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
+            // (Self::Jieut, Self::Jieut) => Some(Self::SsangJieut),
+            // (Self::Digeut, Self::Digeut) => Some(Self::SsangDigeut),
             _ => None,
         }
     }
@@ -326,7 +326,7 @@ impl Jungseong {
 impl Jongseong {
     pub const fn try_add(self, other: Self) -> Option<Self> {
         match (self, other) {
-            (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
+            // (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
             (Self::Giyeok, Self::Siot) => Some(Self::GiyeokSiot),
             (Self::Nieun, Self::Hieuh) => Some(Self::NieunHieuh),
             (Self::Nieun, Self::Jieut) => Some(Self::NieunJieut),
@@ -338,7 +338,7 @@ impl Jongseong {
             (Self::Rieul, Self::Pieup) => Some(Self::RieulPieup),
             (Self::Rieul, Self::Hieuh) => Some(Self::RieulHieuh),
             (Self::Bieup, Self::Siot) => Some(Self::BieupSiot),
-            (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
+            // (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
             _ => None,
         }
     }

@@ -198,3 +198,8 @@ impl<'de> Deserialize<'de> for Key {
         Self::from_str(&s).map_err(|_e| D::Error::invalid_value(Unexpected::Str(&s), &"Key"))
     }
 }
+
+#[test]
+fn key_parse() {
+    assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
+}

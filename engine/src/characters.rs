@@ -421,10 +421,17 @@ impl FromStr for KeyValue {
 
         let first = chars.next().ok_or(())?;
 
-        // jongseong escape
         if first == '$' {
-            let second = chars.next().ok_or(())?;
-            return Ok(Self::Jongseong(Jongseong::from_jamo(second).ok_or(())?));
+            match chars.next() {
+                Some(second) => {
+                    // jongseong escape
+                    return Ok(Self::Jongseong(Jongseong::from_jamo(second).ok_or(())?));
+                }
+                None => {
+                    // just $
+                    return Ok(Self::Pass('$'));
+                }
+            }
         }
 
         if let Some(cho) = Choseong::from_jamo(first) {

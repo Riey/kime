@@ -7,6 +7,9 @@ cp target/release/kime-xim build/kime-xim
 cp target/release/libkime_gtk3.so build/im-kime.so
 
 cp engine/data/dubeolsik.yaml build/layout
+cp engine/data/sebeolsik-390.yaml build/layout
+cp engine/data/sebeolsik-391.yaml build/layout
+
 cp engine/data/config.yaml build/
 
 strip -s build/kime-xim

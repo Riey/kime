@@ -204,7 +204,7 @@ fn choose_visual(conn: &impl Connection, screen_num: usize) -> Result<(u8, Visua
 }
 
 /// A rust version of XCB's `xcb_visualtype_t` struct. This is used in a FFI-way.
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 #[repr(C)]
 struct xcb_visualtype_t {
     pub visual_id: u32,

@@ -6,3 +6,4 @@ hangul_symbols:
   - Henkan
   - AltR
 xim_preedit_font: D2Coding
+gtk_commit_english: true

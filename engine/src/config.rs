@@ -26,7 +26,7 @@ impl Default for RawConfig {
                 "Alt_R".to_string(),
             ],
             xim_preedit_font: "D2Coding".to_string(),
-            gtk_commit_english: false,
+            gtk_commit_english: true,
         }
     }
 }
@@ -51,7 +51,7 @@ impl Default for Config {
             esc_turn_off: true,
             hangul_keys,
             xim_preedit_font: "D2Coding".to_string(),
-            gtk_commit_english: false,
+            gtk_commit_english: true,
         }
     }
 }

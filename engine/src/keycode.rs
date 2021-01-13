@@ -6,6 +6,7 @@ use serde::{
 };
 use strum_macros::EnumString;
 
+// TODO: complete
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumString)]
 pub enum KeyCode {
     #[strum(to_string = "1")]
@@ -32,7 +33,16 @@ pub enum KeyCode {
     Minus,
     Equal,
     Backslash,
+    Grave,
+    OpenBracket,
+    CloseBracket,
     Space,
+
+    Comma,
+    Period,
+    SemiColon,
+    Quote,
+    Slash,
 
     Q,
     W,
@@ -90,7 +100,15 @@ impl KeyCode {
             19 => Some(Self::Zero),
             20 => Some(Self::Minus),
             21 => Some(Self::Equal),
+            34 => Some(Self::OpenBracket),
+            35 => Some(Self::CloseBracket),
             51 => Some(Self::Backslash),
+            61 => Some(Self::Slash),
+            47 => Some(Self::SemiColon),
+            48 => Some(Self::Quote),
+            49 => Some(Self::Grave),
+            59 => Some(Self::Comma),
+            60 => Some(Self::Period),
 
             24 => Some(Self::Q),
             25 => Some(Self::W),
@@ -179,4 +197,9 @@ impl<'de> Deserialize<'de> for Key {
 
         Self::from_str(&s).map_err(|_e| D::Error::invalid_value(Unexpected::Str(&s), &"Key"))
     }
+}
+
+#[test]
+fn key_parse() {
+    assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
 }

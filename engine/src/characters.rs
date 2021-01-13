@@ -1,7 +1,30 @@
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
+use std::{convert::TryFrom, str::FromStr};
+
+macro_rules! impl_jamo {
+    ($ty:ty, [$(($item:ident, $ch:expr),)+]) => {
+        impl $ty {
+            pub const fn jamo(self) -> char {
+                match self {
+                    $(
+                        Self::$item => $ch,
+                    )+
+                }
+            }
+
+            pub const fn from_jamo(c: char) -> Option<Self> {
+                match c {
+                    $(
+                        $ch => Some(Self::$item),
+                    )+
+                    _ => None,
+                }
+            }
+        }
+    };
+}
 
 macro_rules! impl_traits {
     ($ty:ty, $first_ch:expr) => {
@@ -150,6 +173,89 @@ impl_traits!(Choseong, 'ᄀ');
 impl_traits!(Jungseong, 'ᅡ');
 impl_traits!(Jongseong, 'ᆨ');
 
+impl_jamo!(
+    Choseong,
+    [
+        (Giyeok, 'ㄱ'),
+        (SsangGiyeok, 'ㄲ'),
+        (Nieun, 'ㄴ'),
+        (Digeut, 'ㄷ'),
+        (SsangDigeut, 'ㄸ'),
+        (Rieul, 'ㄹ'),
+        (Mieum, 'ㅁ'),
+        (Bieup, 'ㅂ'),
+        (SsangBieup, 'ㅃ'),
+        (Siot, 'ㅅ'),
+        (SsangSiot, 'ㅆ'),
+        (Ieung, 'ㅇ'),
+        (Jieut, 'ㅈ'),
+        (SsangJieut, 'ㅉ'),
+        (Chieut, 'ㅊ'),
+        (Kiyeok, 'ㅋ'),
+        (Tieut, 'ㅌ'),
+        (Pieup, 'ㅍ'),
+        (Hieuh, 'ㅎ'),
+    ]
+);
+impl_jamo!(
+    Jungseong,
+    [
+        (A, 'ㅏ'),
+        (AE, 'ㅐ'),
+        (YA, 'ㅑ'),
+        (YAE, 'ㅒ'),
+        (EO, 'ㅓ'),
+        (E, 'ㅔ'),
+        (YEO, 'ㅕ'),
+        (YE, 'ㅖ'),
+        (O, 'ㅗ'),
+        (WA, 'ㅘ'),
+        (WAE, 'ㅙ'),
+        (OE, 'ㅚ'),
+        (YO, 'ㅛ'),
+        (U, 'ㅜ'),
+        (WEO, 'ㅝ'),
+        (WE, 'ㅞ'),
+        (WI, 'ㅟ'),
+        (YU, 'ㅠ'),
+        (EU, 'ㅡ'),
+        (YI, 'ㅢ'),
+        (I, 'ㅣ'),
+    ]
+);
+impl_jamo!(
+    Jongseong,
+    [
+        (Giyeok, 'ㄱ'),
+        (GiyeokSiot, 'ㄳ'),
+        (SsangGiyeok, 'ㄲ'),
+        (Nieun, 'ㄴ'),
+        (NieunJieut, 'ㄵ'),
+        (NieunHieuh, 'ㄶ'),
+        (Digeut, 'ㄷ'),
+        (Rieul, 'ㄹ'),
+        (RieulGiyeok, 'ㄺ'),
+        (RieulMieum, 'ㄻ'),
+        (RieulBieup, 'ㄼ'),
+        (RieulSiot, 'ㄽ'),
+        (RieulTieut, 'ㄾ'),
+        (RieulPieup, 'ㄿ'),
+        (RieulHieuh, 'ㅀ'),
+        (Mieum, 'ㅁ'),
+        (Bieup, 'ㅂ'),
+        (BieupSiot, 'ㅄ'),
+        (Siot, 'ㅅ'),
+        (SsangSiot, 'ㅆ'),
+        (Ieung, 'ㅇ'),
+        (Jieut, 'ㅈ'),
+        (Chieut, 'ㅊ'),
+        (Kieuk, 'ㅋ'),
+        (Tieut, 'ㅌ'),
+        (Pieup, 'ㅍ'),
+        (Hieuh, 'ㅎ'),
+    ]
+);
+
 impl Choseong {
     pub fn compose(self, jung: Jungseong, jong: Option<Jongseong>) -> char {
         unsafe {
@@ -180,59 +286,9 @@ impl Choseong {
             _ => None,
         }
     }
-
-    pub const fn jamo(self) -> char {
-        match self {
-            Self::Giyeok => 'ㄱ',
-            Self::SsangGiyeok => 'ㄲ',
-            Self::Nieun => 'ㄴ',
-            Self::Digeut => 'ㄷ',
-            Self::SsangDigeut => 'ㄸ',
-            Self::Rieul => 'ㄹ',
-            Self::Mieum => 'ㅁ',
-            Self::Bieup => 'ㅂ',
-            Self::SsangBieup => 'ㅃ',
-            Self::Siot => 'ㅅ',
-            Self::SsangSiot => 'ㅆ',
-            Self::Ieung => 'ㅇ',
-            Self::Jieut => 'ㅈ',
-            Self::SsangJieut => 'ㅉ',
-            Self::Chieut => 'ㅊ',
-            Self::Kiyeok => 'ㅋ',
-            Self::Tieut => 'ㅌ',
-            Self::Pieup => 'ㅍ',
-            Self::Hieuh => 'ㅎ',
-        }
-    }
 }
 
 impl Jungseong {
-    pub const fn jamo(self) -> char {
-        match self {
-            Self::A => 'ㅏ',
-            Self::AE => 'ㅐ',
-            Self::YA => 'ㅑ',
-            Self::YAE => 'ㅒ',
-            Self::EO => 'ㅓ',
-            Self::E => 'ㅔ',
-            Self::YEO => 'ㅕ',
-            Self::YE => 'ㅖ',
-            Self::O => 'ㅗ',
-            Self::WA => 'ㅘ',
-            Self::WAE => 'ㅙ',
-            Self::OE => 'ㅚ',
-            Self::YO => 'ㅛ',
-            Self::U => 'ㅜ',
-            Self::WEO => 'ㅝ',
-            Self::WE => 'ㅞ',
-            Self::WI => 'ㅟ',
-            Self::YU => 'ㅠ',
-            Self::EU => 'ㅡ',
-            Self::YI => 'ㅢ',
-            Self::I => 'ㅣ',
-        }
-    }
-
     pub const fn try_add(self, other: Self) -> Option<Self> {
         match (self, other) {
             // ㅑ ㅣ = ㅒ
@@ -268,38 +324,6 @@ impl Jungseong {
 }
 
 impl Jongseong {
-    pub const fn jamo(self) -> char {
-        match self {
-            Self::Giyeok => 'ㄱ',
-            Self::GiyeokSiot => 'ㄳ',
-            Self::SsangGiyeok => 'ㄲ',
-            Self::Nieun => 'ㄴ',
-            Self::NieunJieut => 'ㄵ',
-            Self::NieunHieuh => 'ㄶ',
-            Self::Digeut => 'ㄷ',
-            Self::Rieul => 'ㄹ',
-            Self::RieulGiyeok => 'ㄺ',
-            Self::RieulMieum => 'ㄻ',
-            Self::RieulBieup => 'ㄼ',
-            Self::RieulSiot => 'ㄽ',
-            Self::RieulTieut => 'ㄾ',
-            Self::RieulPieup => 'ㄿ',
-            Self::RieulHieuh => 'ㅀ',
-            Self::Mieum => 'ㅁ',
-            Self::Bieup => 'ㅂ',
-            Self::BieupSiot => 'ㅄ',
-            Self::Siot => 'ㅅ',
-            Self::SsangSiot => 'ㅆ',
-            Self::Ieung => 'ㅇ',
-            Self::Jieut => 'ㅈ',
-            Self::Chieut => 'ㅊ',
-            Self::Kieuk => 'ㅋ',
-            Self::Tieut => 'ㅌ',
-            Self::Pieup => 'ㅍ',
-            Self::Hieuh => 'ㅎ',
-        }
-    }
-
     pub const fn try_add(self, other: Self) -> Option<Self> {
         match (self, other) {
             (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
@@ -374,7 +398,7 @@ pub enum JongToCho {
     Compose(Jongseong, Choseong),
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyValue {
     // 세벌식용
     Choseong(Choseong),
@@ -389,6 +413,43 @@ pub enum KeyValue {
     Pass(char),
 }
 
+impl FromStr for KeyValue {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut chars = s.chars();
+
+        let first = chars.next().ok_or(())?;
+
+        if first == '$' {
+            match chars.next() {
+                Some(second) => {
+                    // jongseong escape
+                    return Ok(Self::Jongseong(Jongseong::from_jamo(second).ok_or(())?));
+                }
+                None => {
+                    // just $
+                    return Ok(Self::Pass('$'));
+                }
+            }
+        }
+
+        if let Some(cho) = Choseong::from_jamo(first) {
+            if let Some(jong) = chars.next().and_then(Jongseong::from_jamo) {
+                Ok(Self::ChoJong(cho, jong))
+            } else {
+                Ok(Self::Choseong(cho))
+            }
+        } else if let Some(jung) = Jungseong::from_jamo(first) {
+            Ok(Self::Jungseong(jung))
+        } else if let Some(jong) = Jongseong::from_jamo(first) {
+            Ok(Self::Jongseong(jong))
+        } else {
+            Ok(Self::Pass(first))
+        }
+    }
+}
+
 #[test]
 fn compose() {
     assert_eq!('ㅇ', Jongseong::Ieung.jamo());
@@ -397,4 +458,20 @@ fn compose() {
         Choseong::Ieung.compose(Jungseong::A, Some(Jongseong::Ieung))
     );
     assert_eq!('아', Choseong::Ieung.compose(Jungseong::A, None));
+}
+
+#[test]
+fn parse_keyvalue() {
+    assert_eq!(
+        "ㅇ".parse::<KeyValue>().unwrap(),
+        KeyValue::Choseong(Choseong::Ieung)
+    );
+    assert_eq!(
+        "ㅇㅇ".parse::<KeyValue>().unwrap(),
+        KeyValue::ChoJong(Choseong::Ieung, Jongseong::Ieung)
+    );
+    assert_eq!(
+        "ㅏ".parse::<KeyValue>().unwrap(),
+        KeyValue::Jungseong(Jungseong::A)
+    );
 }

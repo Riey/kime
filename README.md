@@ -13,11 +13,8 @@ Korean IME
 ### GTK3
 
 * gtk3
-* pango
-* libxkbcommon
 
 ### XIM
 
 * libxcb
 * cairo
-* libxkbcommon

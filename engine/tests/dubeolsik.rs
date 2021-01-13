@@ -1,6 +1,6 @@
 const DUBEOLSIK_LAYOUT: &str = include_str!("../data/dubeolsik.yaml");
 
-use kime_engine::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
+use kime_engine::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout, RawConfig};
 
 use pretty_assertions::assert_eq;
 
@@ -8,10 +8,7 @@ use pretty_assertions::assert_eq;
 fn test_input(inputs: &[(Key, InputResult)]) {
     let config = Config::new(
         Layout::load_from(DUBEOLSIK_LAYOUT).expect("Load layout"),
-        true,
-        Default::default(),
-        Default::default(),
-        false,
+        RawConfig::default(),
     );
 
     let mut engine = InputEngine::new();

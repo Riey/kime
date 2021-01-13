@@ -245,8 +245,8 @@ unsafe fn register_module(module: *mut GTypeModule) {
         im_context_class.filter_keypress = Some(filter_keypress);
         im_context_class.reset = Some(reset_im);
         im_context_class.get_preedit_string = Some(get_preedit_string);
-        im_context_class.focus_in = None;
-        im_context_class.focus_out = None;
+        im_context_class.focus_in = Some(focus_in);
+        im_context_class.focus_out = Some(focus_out);
         im_context_class.set_cursor_location = None;
         im_context_class.set_use_preedit = None;
         im_context_class.set_surrounding = None;
@@ -254,6 +254,13 @@ unsafe fn register_module(module: *mut GTypeModule) {
         SIGNALS.get_or_init(|| KimeIMSignals::new(class));
 
         (*gobject_class).finalize = Some(im_context_instance_finalize);
+    }
+
+    unsafe extern "C" fn focus_in(_ctx: *mut GtkIMContext) {
+    }
+
+    unsafe extern "C" fn focus_out(ctx: *mut GtkIMContext) {
+        reset_im(ctx);
     }
 
     unsafe extern "C" fn reset_im(ctx: *mut GtkIMContext) {

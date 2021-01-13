@@ -153,7 +153,7 @@ impl KeyCode {
             9 => Some(Self::Esc),
             100 => Some(Self::Henkan),
             108 => Some(Self::AltR),
-            // 65329 => Some(Self::Hangul),
+            122 => Some(Self::Hangul),
             _ => None,
         }
     }

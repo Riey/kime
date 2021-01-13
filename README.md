@@ -7,6 +7,7 @@ Korean IME
 * Well tested input engine
 * Low memory footprint
 * Write in Rust no segfaults
+* Allow custom layouts
 
 ## Dependencies
 

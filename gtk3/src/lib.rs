@@ -136,6 +136,8 @@ impl KimeIMContext {
             &CONFIG,
         );
 
+        // dbg!(ret);
+
         match ret {
             InputResult::Commit(c) => {
                 self.commit(c);
@@ -183,21 +185,23 @@ impl KimeIMContext {
 
     pub fn update_preedit(&mut self, visible: bool) {
         if self.preedit_visible != visible {
+            self.preedit_visible = visible;
+
             if visible {
                 unsafe {
                     g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_start, 0);
                 }
+                unsafe {
+                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+                }
             } else {
+                unsafe {
+                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+                }
                 unsafe {
                     g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_end, 0);
                 }
             }
-
-            unsafe {
-                g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
-            }
-
-            self.preedit_visible = visible;
         } else {
             // visible update
             if visible {
@@ -311,11 +315,10 @@ unsafe fn register_module(module: *mut GTypeModule) {
         cursor_pos: *mut c_int,
     ) {
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
+        let ch = ctx.engine.preedit_char();
         let mut str_len = 0;
 
         if !out.is_null() {
-            let ch = ctx.engine.preedit_char();
-
             // Noting to display
             if ch == '\0' {
                 if !cursor_pos.is_null() {
@@ -337,7 +340,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
         if !attrs.is_null() {
             attrs.write(pango_sys::pango_attr_list_new());
 
-            if !out.is_null() {
+            if !out.is_null() && ch != '\0' {
                 let attr = pango_sys::pango_attr_underline_new(pango_sys::PANGO_UNDERLINE_SINGLE);
                 (*attr).start_index = 0;
                 (*attr).end_index = str_len as _;

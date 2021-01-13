@@ -75,3 +75,47 @@ S-N: ㅜ
 
 M: ㅡ
 S-M: ㅡ
+
+Grave: '`'
+S-Grave: '~'
+1: 1
+2: 2
+3: 3
+4: 4
+5: 5
+6: 6
+7: 7
+8: 8
+9: 9
+0: 0
+
+S-1: '!'
+S-2: '@'
+S-3: '#'
+S-4: '$'
+S-5: '%'
+S-6: '^'
+S-7: '&'
+S-8: '*'
+S-9: '('
+S-0: ')'
+Minus: '-'
+S-Minus: _
+Equal: '='
+S-Equal: +
+Backslash: \
+S-Backslash: '|'
+OpenBracket: '['
+S-OpenBracket: '{'
+CloseBracket: ']'
+S-CloseBracket: '}'
+SemiColon: ;
+S-SemiColon: ':'
+Quote: "'"
+S-Quote: '"'
+Comma: '<'
+S-Comma: '<'
+Period: '.'
+S-Period: '<'
+Slash: /
+S-Slash: '?'

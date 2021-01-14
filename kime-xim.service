@@ -4,7 +4,6 @@ Description=Kime XIM Daemon
 [Service]
 Type=simple
 ExecStart=/usr/bin/kime-xim
-Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target

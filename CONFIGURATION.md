@@ -18,9 +18,9 @@ Turn off hangul mode when esc is pressed especially for VIM users
 
 ## hangul_keys
 
-### default
-
 Keycodes for switch hangul mode
+
+### default
 
 `[Hangul, Henkan, AltR]`
 

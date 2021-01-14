@@ -7,4 +7,4 @@ hangul_keys:
   - AltR
 xim_preedit_font: D2Coding
 gtk_commit_english: true
-compose_ssangjaum: true
+compose_ssangjaum: false

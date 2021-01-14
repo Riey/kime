@@ -241,6 +241,8 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             .engine
             .press_key(Key::new(code, xev.state & 0x1 != 0), &self.config);
 
+        log::trace!("{:?}", ret);
+
         match ret {
             InputResult::Bypass => Ok(false),
             InputResult::Consume => Ok(true),

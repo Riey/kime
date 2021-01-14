@@ -25,7 +25,7 @@ impl Default for RawConfig {
             ],
             xim_preedit_font: "D2Coding".to_string(),
             gtk_commit_english: true,
-            compose_ssangjaum: true,
+            compose_ssangjaum: false,
         }
     }
 }

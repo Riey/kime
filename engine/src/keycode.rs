@@ -73,11 +73,6 @@ pub enum KeyCode {
     N,
     M,
 
-    LeftArrow,
-    RightArrow,
-    UpArrow,
-    DownArrow,
-
     Esc,
     Shift,
     Backspace,
@@ -144,11 +139,6 @@ impl KeyCode {
 
             22 => Some(Self::Backspace),
             65 => Some(Self::Space),
-
-            113 => Some(Self::LeftArrow),
-            114 => Some(Self::RightArrow),
-            111 => Some(Self::UpArrow),
-            116 => Some(Self::DownArrow),
 
             9 => Some(Self::Esc),
             100 => Some(Self::Henkan),

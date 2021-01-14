@@ -1,7 +1,8 @@
 use gdk_sys::{
-    gdk_keyval_to_unicode, gdk_window_get_user_data, GdkColor, GdkEventKey, GdkWindow,
-    GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK, GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK,
-    GDK_MOD5_MASK, GDK_SHIFT_MASK,
+    gdk_event_copy, gdk_event_put, gdk_keyval_to_unicode, gdk_window_get_user_data,
+    GDK_KEY_ISO_Enter, GDK_KEY_KP_Enter, GDK_KEY_Return, GdkColor, GdkEvent, GdkEventKey,
+    GdkWindow, GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK, GDK_MOD2_MASK, GDK_MOD3_MASK,
+    GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK,
 };
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
@@ -136,23 +137,23 @@ impl KimeIMContext {
             &CONFIG,
         );
 
-        // dbg!(ret);
+        dbg!(ret);
 
         match ret {
             InputResult::Commit(c) => {
-                self.commit(c);
                 self.update_preedit(false);
+                self.commit(c);
                 true
             }
             InputResult::CommitCommit(f, s) => {
+                self.update_preedit(false);
                 self.commit(f);
                 self.commit(s);
-                self.update_preedit(false);
                 true
             }
             InputResult::CommitBypass(c) => {
-                self.commit(c);
                 self.update_preedit(false);
+                self.commit(c);
                 false
             }
             InputResult::CommitPreedit(c, _p) => {
@@ -176,29 +177,27 @@ impl KimeIMContext {
     pub fn reset(&mut self) {
         match self.engine.reset() {
             Some(c) => {
-                self.commit(c);
                 self.update_preedit(false);
+                self.commit(c);
             }
             _ => {}
         }
     }
 
     pub fn update_preedit(&mut self, visible: bool) {
+        #[cfg(debug_assertions)]
+        eprintln!("update_preedit: {}", visible);
         if self.preedit_visible != visible {
             self.preedit_visible = visible;
 
             if visible {
                 unsafe {
                     g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_start, 0);
-                }
-                unsafe {
                     g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
                 }
             } else {
                 unsafe {
                     g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
-                }
-                unsafe {
                     g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_end, 0);
                 }
             }
@@ -215,6 +214,8 @@ impl KimeIMContext {
     }
 
     pub fn commit(&mut self, c: char) {
+        #[cfg(debug_assertions)]
+        eprintln!("commit: {}", c);
         let mut buf = [0; 8];
         c.encode_utf8(&mut buf);
         unsafe {
@@ -260,8 +261,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
         (*gobject_class).finalize = Some(im_context_instance_finalize);
     }
 
-    unsafe extern "C" fn focus_in(_ctx: *mut GtkIMContext) {
-    }
+    unsafe extern "C" fn focus_in(_ctx: *mut GtkIMContext) {}
 
     unsafe extern "C" fn focus_out(ctx: *mut GtkIMContext) {
         reset_im(ctx);
@@ -274,24 +274,43 @@ unsafe fn register_module(module: *mut GTypeModule) {
 
     unsafe extern "C" fn filter_keypress(
         ctx: *mut GtkIMContext,
-        key: *mut GdkEventKey,
+        key_ptr: *mut GdkEventKey,
     ) -> gboolean {
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
-        let key = key.as_mut().unwrap();
+        let key = key_ptr.as_mut().unwrap();
 
-        let skip_mask = GDK_CONTROL_MASK
+        const FORWARDED_MASK: c_uint = 1 << 25;
+        const SKIP_MASK: c_uint = GDK_CONTROL_MASK
             | GDK_MOD1_MASK
             | GDK_MOD2_MASK
             | GDK_MOD3_MASK
             | GDK_MOD4_MASK
-            | GDK_MOD5_MASK;
+            | GDK_MOD5_MASK
+            | FORWARDED_MASK;
+
+        macro_rules! need_reset {
+            ($($keyval:expr),+) => {
+                $(key.keyval == $keyval as c_uint ||)+ key.state & SKIP_MASK != 0
+            }
+        }
 
         if key.type_ != GDK_KEY_PRESS {
             GFALSE
-        // skip modifiers
-        } else if key.state & skip_mask != 0 {
-            ctx.reset();
+        } else if key.state & FORWARDED_MASK != 0 {
             GFALSE
+        } else if need_reset!(GDK_KEY_Return, GDK_KEY_ISO_Enter, GDK_KEY_KP_Enter) {
+            match ctx.engine.reset() {
+                Some(c) => {
+                    // when preedit_end then return GFALSE firefox doesn't work it with keyevent
+                    ctx.update_preedit(false);
+                    ctx.commit(c);
+                    key.state |= FORWARDED_MASK;
+                    let e = gdk_event_copy(key_ptr.cast());
+                    gdk_event_put(e);
+                    GTRUE
+                }
+                None => GFALSE,
+            }
         } else if ctx.filter_keypress(key) {
             GTRUE
         } else {

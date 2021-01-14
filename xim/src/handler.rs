@@ -317,9 +317,9 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_unset_focus(
         &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
-        _input_context: &mut xim::InputContext<Self::InputContextData>,
+        server: &mut X11rbServer<XCBConnection>,
+        input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        Ok(())
+        self.reset(server, input_context)
     }
 }

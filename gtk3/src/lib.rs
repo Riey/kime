@@ -1,8 +1,7 @@
 use gdk_sys::{
-    gdk_event_copy, gdk_event_put, gdk_keyval_to_unicode, gdk_window_get_user_data,
-    GDK_KEY_ISO_Enter, GDK_KEY_KP_Enter, GDK_KEY_Return, GdkColor, GdkEvent, GdkEventKey,
-    GdkWindow, GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK, GDK_MOD2_MASK, GDK_MOD3_MASK,
-    GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK,
+    gdk_event_copy, gdk_event_put, gdk_keyval_to_unicode, gdk_window_get_user_data, GdkColor,
+    GdkEvent, GdkEventKey, GdkWindow, GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK,
+    GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK,
 };
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
@@ -25,6 +24,15 @@ use std::{
 };
 
 use kime_engine::{Config, InputEngine, InputResult};
+
+const FORWARDED_MASK: c_uint = 1 << 25;
+const SKIP_MASK: c_uint = GDK_CONTROL_MASK
+    | GDK_MOD1_MASK
+    | GDK_MOD2_MASK
+    | GDK_MOD3_MASK
+    | GDK_MOD4_MASK
+    | GDK_MOD5_MASK
+    | FORWARDED_MASK;
 
 #[repr(transparent)]
 struct TypeInfoWrapper(GTypeInfo);
@@ -57,6 +65,17 @@ const DEFAULT_HL_BG: GdkColor = GdkColor {
     green: 0xacff,
     blue: 0xe8ff,
 };
+
+fn put_event(key: &mut GdkEventKey) {
+    #[cfg(debug_assertions)]
+    eprintln!("put_event");
+
+    key.state |= FORWARDED_MASK;
+    unsafe {
+        let e = gdk_event_copy(key as *const GdkEventKey as *const GdkEvent);
+        gdk_event_put(e);
+    }
+}
 
 unsafe fn lookup_color(
     context: *mut gtk_sys::GtkStyleContext,
@@ -123,12 +142,11 @@ impl KimeIMContext {
         &mut self.parent.parent_instance
     }
 
-    pub fn filter_keypress(&mut self, key: &GdkEventKey) -> bool {
+    pub fn filter_keypress(&mut self, key: &mut GdkEventKey) -> bool {
         let code = match kime_engine::KeyCode::from_hardward_code(key.hardware_keycode) {
             Some(code) => code,
             None => {
-                self.reset();
-                return false;
+                return self.bypass(key);
             }
         };
 
@@ -154,7 +172,8 @@ impl KimeIMContext {
             InputResult::CommitBypass(c) => {
                 self.update_preedit(false);
                 self.commit(c);
-                false
+                put_event(key);
+                true
             }
             InputResult::CommitPreedit(c, _p) => {
                 self.commit(c);
@@ -210,6 +229,18 @@ impl KimeIMContext {
             // invisible noop
             } else {
             }
+        }
+    }
+
+    pub fn bypass(&mut self, key: &mut GdkEventKey) -> bool {
+        match self.engine.reset() {
+            Some(c) => {
+                self.update_preedit(false);
+                self.commit(c);
+                put_event(key);
+                true
+            }
+            _ => false,
         }
     }
 
@@ -279,38 +310,14 @@ unsafe fn register_module(module: *mut GTypeModule) {
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
         let key = key_ptr.as_mut().unwrap();
 
-        const FORWARDED_MASK: c_uint = 1 << 25;
-        const SKIP_MASK: c_uint = GDK_CONTROL_MASK
-            | GDK_MOD1_MASK
-            | GDK_MOD2_MASK
-            | GDK_MOD3_MASK
-            | GDK_MOD4_MASK
-            | GDK_MOD5_MASK
-            | FORWARDED_MASK;
-
-        macro_rules! need_reset {
-            ($($keyval:expr),+) => {
-                $(key.keyval == $keyval as c_uint ||)+ key.state & SKIP_MASK != 0
-            }
-        }
-
         if key.type_ != GDK_KEY_PRESS {
             GFALSE
         } else if key.state & FORWARDED_MASK != 0 {
+            #[cfg(debug_assertions)]
+            eprintln!("FORWARDED: {}", key.keyval);
             GFALSE
-        } else if need_reset!(GDK_KEY_Return, GDK_KEY_ISO_Enter, GDK_KEY_KP_Enter) {
-            match ctx.engine.reset() {
-                Some(c) => {
-                    // when preedit_end then return GFALSE firefox doesn't work it with keyevent
-                    ctx.update_preedit(false);
-                    ctx.commit(c);
-                    key.state |= FORWARDED_MASK;
-                    let e = gdk_event_copy(key_ptr.cast());
-                    gdk_event_put(e);
-                    GTRUE
-                }
-                None => GFALSE,
-            }
+        } else if key.state & SKIP_MASK != 0 {
+            ctx.bypass(key).into()
         } else if ctx.filter_keypress(key) {
             GTRUE
         } else {

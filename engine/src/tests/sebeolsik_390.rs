@@ -1,12 +1,12 @@
 const SEBEOLSIK_390_LAYOUT: &str = include_str!("../../data/sebeolsik-390.yaml");
 
-use crate::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout, RawConfig};
+use crate::{config::RawConfig, Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
 
 #[track_caller]
 fn test_input(inputs: &[(Key, InputResult)]) {
     let config = Config::new(
         Layout::load_from(SEBEOLSIK_390_LAYOUT).expect("Load layout"),
-        RawConfig::default(),
+        Default::default(),
     );
 
     let mut engine = InputEngine::new();

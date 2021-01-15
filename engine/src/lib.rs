@@ -2,12 +2,13 @@ mod characters;
 mod config;
 mod keycode;
 mod state;
+#[cfg(test)]
 mod tests;
 
 use self::characters::KeyValue;
 use ahash::AHashMap;
 
-use self::config::{Config, RawConfig};
+use self::config::Config;
 use self::keycode::{Key, KeyCode};
 use self::state::CharacterState;
 
@@ -34,6 +35,7 @@ impl Layout {
         Self { keymap }
     }
 
+    #[cfg(test)]
     pub fn load_from(content: &str) -> Result<Self, serde_yaml::Error> {
         Ok(Self::from_items(serde_yaml::from_str(content)?))
     }

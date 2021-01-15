@@ -10,7 +10,7 @@ const DEFAULT_HANGUK_KEYS: &[Key] = &[
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
-pub struct RawConfig {
+pub(crate) struct RawConfig {
     pub layout: String,
     pub esc_turn_off: bool,
     pub hangul_keys: Vec<String>,

@@ -26,12 +26,8 @@ use std::{
 use kime_engine::{Config, InputEngine, InputResult};
 
 const FORWARDED_MASK: c_uint = 1 << 25;
-const SKIP_MASK: c_uint = GDK_MOD1_MASK
-    | GDK_MOD2_MASK
-    | GDK_MOD3_MASK
-    | GDK_MOD4_MASK
-    | GDK_MOD5_MASK
-    | FORWARDED_MASK;
+const SKIP_MASK: c_uint =
+    GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD4_MASK | GDK_MOD5_MASK | FORWARDED_MASK;
 
 #[repr(transparent)]
 struct TypeInfoWrapper(GTypeInfo);
@@ -150,7 +146,11 @@ impl KimeIMContext {
         };
 
         let ret = self.engine.press_key(
-            kime_engine::Key::new(code, key.state & GDK_SHIFT_MASK != 0, key.state & GDK_CONTROL_MASK != 0),
+            kime_engine::Key::new(
+                code,
+                key.state & GDK_SHIFT_MASK != 0,
+                key.state & GDK_CONTROL_MASK != 0,
+            ),
             &CONFIG,
         );
 
@@ -200,6 +200,19 @@ impl KimeIMContext {
             }
             _ => {}
         }
+    }
+
+    pub fn commit_event(&mut self, key: &GdkEventKey) -> gboolean {
+        if CONFIG.gtk_commit_english && key.state & GDK_CONTROL_MASK == 0 {
+            let c = unsafe { std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval)) };
+
+            if !c.is_control() {
+                self.commit(c);
+                return GTRUE;
+            }
+        }
+
+        GFALSE
     }
 
     pub fn update_preedit(&mut self, visible: bool) {
@@ -314,22 +327,13 @@ unsafe fn register_module(module: *mut GTypeModule) {
         } else if key.state & FORWARDED_MASK != 0 {
             #[cfg(debug_assertions)]
             eprintln!("FORWARDED: {}", key.keyval);
-            GFALSE
+            ctx.commit_event(key)
         } else if key.state & SKIP_MASK != 0 {
             ctx.bypass(key).into()
         } else if ctx.filter_keypress(key) {
             GTRUE
         } else {
-            if CONFIG.gtk_commit_english && key.state & GDK_CONTROL_MASK == 0 {
-                let c = std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval));
-
-                if !c.is_control() {
-                    ctx.commit(c);
-                    return GTRUE;
-                }
-            }
-
-            GFALSE
+            ctx.commit_event(key)
         }
     }
 

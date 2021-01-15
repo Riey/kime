@@ -14,7 +14,12 @@ fn test_input(inputs: &[(Key, InputResult)]) {
     engine.set_enable_hangul(true);
 
     for (key, expect_result) in inputs.iter().copied() {
-        assert_eq!(expect_result, engine.press_key(key, &config));
+        assert_eq!(
+            expect_result,
+            engine.press_key(key, &config),
+            "key: {}",
+            key
+        );
     }
 }
 
@@ -106,6 +111,12 @@ fn backspace() {
         (Key::normal(Backspace), InputResult::preedit('갑')),
         (Key::normal(Backspace), InputResult::preedit('가')),
         (Key::normal(Backspace), InputResult::preedit('ㄱ')),
+        (Key::normal(Backspace), InputResult::clear_preedit()),
+        (Key::normal(D), InputResult::preedit('ㅇ')),
+        (Key::normal(H), InputResult::preedit('오')),
+        (Key::normal(K), InputResult::preedit('와')),
+        (Key::normal(Backspace), InputResult::preedit('오')),
+        (Key::normal(Backspace), InputResult::preedit('ㅇ')),
         (Key::normal(Backspace), InputResult::clear_preedit()),
         (Key::normal(R), InputResult::preedit('ㄱ')),
     ])

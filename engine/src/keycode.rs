@@ -1,13 +1,13 @@
-use std::str::FromStr;
+use std::{fmt, str::FromStr};
 
 use serde::{
     de::{Error, Unexpected},
     Deserialize,
 };
-use strum_macros::EnumString;
+use strum_macros::{Display, EnumString};
 
 // TODO: complete
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumString)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumString, Display)]
 pub enum KeyCode {
     #[strum(to_string = "1")]
     One,
@@ -166,6 +166,16 @@ impl Key {
 
     pub const fn shift(code: KeyCode) -> Self {
         Self::new(code, true)
+    }
+}
+
+impl fmt::Display for Key {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.shift {
+            f.write_str("S-")?;
+        }
+
+        write!(f, "{}", self.code)
     }
 }
 

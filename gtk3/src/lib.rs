@@ -8,19 +8,24 @@ use gobject_sys::{
     g_object_new, g_object_ref, g_object_unref, g_signal_emit, g_signal_lookup,
     g_type_check_class_cast, g_type_check_instance_cast, g_type_check_instance_is_a,
     g_type_module_register_type, g_type_module_use, g_type_register_static, GObject, GObjectClass,
-    GTypeClass, GTypeInfo, GTypeInstance, GTypeModule, G_TYPE_OBJECT,
+    GTypeInfo, GTypeInstance, GTypeModule, G_TYPE_OBJECT,
 };
 use gtk_sys::{
     gtk_im_context_get_type, gtk_style_context_lookup_color, gtk_widget_get_style_context,
     gtk_widget_get_type, gtk_window_get_type, GtkIMContext, GtkIMContextClass, GtkIMContextInfo,
 };
-use once_cell::sync::{Lazy, OnceCell};
 use pango_sys::PangoAttrList;
-use std::os::raw::{c_char, c_int, c_uint};
-use std::ptr::{self, NonNull};
 use std::{
     mem::{size_of, MaybeUninit},
     os::raw::c_double,
+};
+use std::{
+    os::raw::{c_char, c_int, c_uint},
+    rc::Rc,
+};
+use std::{
+    ptr::{self, NonNull},
+    sync::atomic::AtomicUsize,
 };
 
 use kime_engine::{Config, InputEngine, InputResult};
@@ -103,9 +108,8 @@ struct KimeIMSignals {
 }
 
 impl KimeIMSignals {
-    pub unsafe fn new(class: *mut KimeIMContextClass) -> Self {
-        let ty = type_of_class(class.cast());
-
+    /// SAFETY: ty must be KimeIMContextClass
+    pub unsafe fn new(ty: GType) -> Self {
         macro_rules! sig {
             ($($name:ident),+) => {
                 Self { $($name: g_signal_lookup(cs!(stringify!($name)), ty),)+ }
@@ -116,12 +120,15 @@ impl KimeIMSignals {
     }
 }
 
-static SIGNALS: OnceCell<KimeIMSignals> = OnceCell::new();
-static CONFIG: Lazy<Config> = Lazy::new(|| Config::load_from_config_dir().unwrap_or_default());
+struct KimeSharedData {
+    config: Config,
+    signals: KimeIMSignals,
+}
 
 #[repr(C)]
 struct KimeIMContextClass {
-    _parent: GtkIMContextClass,
+    parent: GtkIMContextClass,
+    shared: Rc<KimeSharedData>,
 }
 
 #[repr(C)]
@@ -130,6 +137,7 @@ struct KimeIMContext {
     client_window: Option<NonNull<GdkWindow>>,
     engine: InputEngine,
     preedit_visible: bool,
+    shared: Rc<KimeSharedData>,
 }
 
 impl KimeIMContext {
@@ -151,9 +159,10 @@ impl KimeIMContext {
                 key.state & GDK_SHIFT_MASK != 0,
                 key.state & GDK_CONTROL_MASK != 0,
             ),
-            &CONFIG,
+            &self.shared.config,
         );
 
+        #[cfg(debug_assertions)]
         dbg!(ret);
 
         match ret {
@@ -203,7 +212,7 @@ impl KimeIMContext {
     }
 
     pub fn commit_event(&mut self, key: &GdkEventKey) -> gboolean {
-        if CONFIG.gtk_commit_english && key.state & GDK_CONTROL_MASK == 0 {
+        if self.shared.config.gtk_commit_english && key.state & GDK_CONTROL_MASK == 0 {
             let c = unsafe { std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval)) };
 
             if !c.is_control() {
@@ -216,6 +225,9 @@ impl KimeIMContext {
     }
 
     pub fn update_preedit(&mut self, visible: bool) {
+        let instance = self.as_obj();
+        let signals = &self.shared.signals;
+
         #[cfg(debug_assertions)]
         eprintln!("update_preedit: {}", visible);
         if self.preedit_visible != visible {
@@ -223,20 +235,20 @@ impl KimeIMContext {
 
             if visible {
                 unsafe {
-                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_start, 0);
-                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+                    g_signal_emit(instance, signals.preedit_start, 0);
+                    g_signal_emit(instance, signals.preedit_changed, 0);
                 }
             } else {
                 unsafe {
-                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
-                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_end, 0);
+                    g_signal_emit(instance, signals.preedit_changed, 0);
+                    g_signal_emit(instance, signals.preedit_end, 0);
                 }
             }
         } else {
             // visible update
             if visible {
                 unsafe {
-                    g_signal_emit(self.as_obj(), SIGNALS.get().unwrap().preedit_changed, 0);
+                    g_signal_emit(instance, signals.preedit_changed, 0);
                 }
             // invisible noop
             } else {
@@ -262,46 +274,37 @@ impl KimeIMContext {
         let mut buf = [0; 8];
         c.encode_utf8(&mut buf);
         unsafe {
-            g_signal_emit(
-                self.as_obj(),
-                SIGNALS.get().unwrap().commit,
-                0,
-                buf.as_ptr(),
-            );
+            g_signal_emit(self.as_obj(), self.shared.signals.commit, 0, buf.as_ptr());
         }
     }
 }
 
-static KIME_TYPE_IM_CONTEXT: OnceCell<GType> = OnceCell::new();
-
-unsafe fn type_of_class(class: *mut GTypeClass) -> GType {
-    (*class).g_type
-}
+static KIME_TYPE_IM_CONTEXT: AtomicUsize = AtomicUsize::new(0);
 
 unsafe fn register_module(module: *mut GTypeModule) {
     unsafe extern "C" fn im_context_class_init(class: gpointer, _data: gpointer) {
-        let class = class.cast::<KimeIMContextClass>();
-
+        let ty = KIME_TYPE_IM_CONTEXT.load(std::sync::atomic::Ordering::Relaxed);
         let im_context_class = g_type_check_class_cast(class.cast(), gtk_im_context_get_type())
-            .cast::<GtkIMContextClass>()
-            .as_mut()
-            .unwrap();
-        let gobject_class =
-            g_type_check_class_cast(class.cast(), G_TYPE_OBJECT).cast::<GObjectClass>();
+            .cast::<GtkIMContextClass>();
+        let class = g_type_check_class_cast(class.cast(), ty).cast::<KimeIMContextClass>();
 
-        im_context_class.set_client_window = Some(set_client_window);
-        im_context_class.filter_keypress = Some(filter_keypress);
-        im_context_class.reset = Some(reset_im);
-        im_context_class.get_preedit_string = Some(get_preedit_string);
-        im_context_class.focus_in = Some(focus_in);
-        im_context_class.focus_out = Some(focus_out);
-        im_context_class.set_cursor_location = None;
-        im_context_class.set_use_preedit = None;
-        im_context_class.set_surrounding = None;
+        class.write(KimeIMContextClass {
+            parent: im_context_class.read(),
+            shared: Rc::new(KimeSharedData {
+                config: Config::load_from_config_dir().unwrap_or_default(),
+                signals: KimeIMSignals::new(ty),
+            }),
+        });
 
-        SIGNALS.get_or_init(|| KimeIMSignals::new(class));
+        let class = class.as_mut().unwrap();
 
-        (*gobject_class).finalize = Some(im_context_instance_finalize);
+        class.parent.set_client_window = Some(set_client_window);
+        class.parent.filter_keypress = Some(filter_keypress);
+        class.parent.reset = Some(reset_im);
+        class.parent.get_preedit_string = Some(get_preedit_string);
+        class.parent.focus_in = Some(focus_in);
+        class.parent.focus_out = Some(focus_out);
+        class.parent.parent_class.finalize = Some(im_context_instance_finalize);
     }
 
     unsafe extern "C" fn focus_in(_ctx: *mut GtkIMContext) {}
@@ -321,6 +324,9 @@ unsafe fn register_module(module: *mut GTypeModule) {
     ) -> gboolean {
         let ctx = ctx.cast::<KimeIMContext>().as_mut().unwrap();
         let key = key_ptr.as_mut().unwrap();
+
+        #[cfg(debug_assertions)]
+        eprintln!("key: {:?}", key);
 
         if key.type_ != GDK_KEY_PRESS {
             GFALSE
@@ -426,17 +432,20 @@ unsafe fn register_module(module: *mut GTypeModule) {
     }
 
     unsafe extern "C" fn im_context_class_finalize(class: gpointer, _data: gpointer) {
-        let _class = class.cast::<KimeIMContextClass>();
+        let class = class.cast::<KimeIMContextClass>();
+        class.drop_in_place();
     }
 
-    unsafe extern "C" fn im_context_instance_init(ctx: *mut GTypeInstance, _class: gpointer) {
+    unsafe extern "C" fn im_context_instance_init(ctx: *mut GTypeInstance, class: gpointer) {
         let parent = ctx.cast::<GtkIMContext>();
+        let class = class.cast::<KimeIMContextClass>().as_mut().unwrap();
 
         ctx.cast::<KimeIMContext>().write(KimeIMContext {
             parent: parent.read(),
             client_window: None,
             engine: InputEngine::new(),
             preedit_visible: false,
+            shared: class.shared.clone(),
         });
     }
 
@@ -458,19 +467,22 @@ unsafe fn register_module(module: *mut GTypeModule) {
         value_table: ptr::null(),
     });
 
-    KIME_TYPE_IM_CONTEXT.get_or_init(|| {
-        if module.is_null() {
-            g_type_register_static(gtk_im_context_get_type(), cs!("KimeImContext"), &INFO.0, 0)
-        } else {
-            g_type_module_register_type(
-                module,
-                gtk_im_context_get_type(),
-                cs!("KimeIMContext"),
-                &INFO.0,
-                0,
-            )
-        }
-    });
+    KIME_TYPE_IM_CONTEXT.store(
+        {
+            if module.is_null() {
+                g_type_register_static(gtk_im_context_get_type(), cs!("KimeImContext"), &INFO.0, 0)
+            } else {
+                g_type_module_register_type(
+                    module,
+                    gtk_im_context_get_type(),
+                    cs!("KimeIMContext"),
+                    &INFO.0,
+                    0,
+                )
+            }
+        },
+        std::sync::atomic::Ordering::Relaxed,
+    );
 }
 
 #[no_mangle]
@@ -508,7 +520,12 @@ pub unsafe extern "C" fn im_module_create(
     context_id: *const c_char,
 ) -> Option<ptr::NonNull<GtkIMContext>> {
     if !context_id.is_null() && g_strcmp0(context_id, cs!("kime")) == 0 {
-        let ty = *KIME_TYPE_IM_CONTEXT.get()?;
+        let ty = KIME_TYPE_IM_CONTEXT.load(std::sync::atomic::Ordering::Relaxed);
+
+        if ty == 0 {
+            return None;
+        }
+
         let obj = g_object_new(ty, ptr::null());
         ptr::NonNull::new(g_type_check_instance_cast(obj.cast(), ty).cast())
     } else {

@@ -417,7 +417,7 @@ dependencies = [
 
 [[package]]
 name = "kime-engine"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "ahash",
  "num-derive",
@@ -432,7 +432,7 @@ dependencies = [
 
 [[package]]
 name = "kime-gtk3"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gdk-sys",
  "glib-sys",
@@ -444,7 +444,7 @@ dependencies = [
 
 [[package]]
 name = "kime-xim"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "ahash",
  "cairo-rs",

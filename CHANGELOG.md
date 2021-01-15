@@ -1,3 +1,11 @@
+# 0.4.0
+
+* Reset when focus_out (XIM)
+* Change compose_ssangjaum config default false
+* Fix XIM start bug when XIM_SERVER is not set
+* Support Control modifiers
+* Commit forwarded events
+
 # 0.3.0
 
 * Add `compose_ssangjaum` config

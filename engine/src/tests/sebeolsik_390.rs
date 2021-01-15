@@ -1,6 +1,6 @@
 const SEBEOLSIK_390_LAYOUT: &str = include_str!("../../data/sebeolsik-390.yaml");
 
-use crate::{config::RawConfig, Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
+use crate::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
 
 #[track_caller]
 fn test_input(inputs: &[(Key, InputResult)]) {

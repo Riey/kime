@@ -14,7 +14,12 @@ fn test_input(inputs: &[(Key, InputResult)]) {
     engine.set_enable_hangul(true);
 
     for (key, expect_result) in inputs.iter().copied() {
-        assert_eq!(expect_result, engine.press_key(key, &config));
+        assert_eq!(
+            expect_result,
+            engine.press_key(key, &config),
+            "key: {}",
+            key
+        );
     }
 }
 
@@ -42,6 +47,16 @@ fn next_jaum() {
         (Key::normal(K), InputResult::preedit('아')),
         (Key::normal(D), InputResult::preedit('앙')),
         (Key::normal(E), InputResult::commit_preedit('앙', 'ㄷ')),
+    ])
+}
+
+#[test]
+fn next_ssangjaum() {
+    test_input(&[
+        (Key::normal(A), InputResult::preedit('ㅁ')),
+        (Key::normal(K), InputResult::preedit('마')),
+        (Key::shift(T), InputResult::preedit('맜')),
+        (Key::normal(K), InputResult::commit_preedit('마', '싸')),
     ])
 }
 
@@ -106,6 +121,12 @@ fn backspace() {
         (Key::normal(Backspace), InputResult::preedit('갑')),
         (Key::normal(Backspace), InputResult::preedit('가')),
         (Key::normal(Backspace), InputResult::preedit('ㄱ')),
+        (Key::normal(Backspace), InputResult::clear_preedit()),
+        (Key::normal(D), InputResult::preedit('ㅇ')),
+        (Key::normal(H), InputResult::preedit('오')),
+        (Key::normal(K), InputResult::preedit('와')),
+        (Key::normal(Backspace), InputResult::preedit('오')),
+        (Key::normal(Backspace), InputResult::preedit('ㅇ')),
         (Key::normal(Backspace), InputResult::clear_preedit()),
         (Key::normal(R), InputResult::preedit('ㄱ')),
     ])

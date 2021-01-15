@@ -3,7 +3,7 @@
 * Create CHANGELOG
 * Decrease binary sizes with make engine cdylib
 * Reset when focus_out (XIM)
-* Change compose_ssangjaum config default false
+* Add compose config
 * Fix XIM start bug when XIM_SERVER is not set
 * Support Control modifiers
 * Support Super modifiers

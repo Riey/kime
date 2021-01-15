@@ -158,6 +158,7 @@ impl KimeIMContext {
                 code,
                 key.state & GDK_SHIFT_MASK != 0,
                 key.state & GDK_CONTROL_MASK != 0,
+                key.state & GDK_MOD4_MASK != 0,
             ),
             &self.shared.config,
         );

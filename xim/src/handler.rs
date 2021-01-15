@@ -237,7 +237,12 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         };
 
         let ret = input_context.user_data.engine.press_key(
-            Key::new(code, xev.state & 0x1 != 0, xev.state & 0x4 != 0),
+            Key::new(
+                code,
+                xev.state & 0x1 != 0,
+                xev.state & 0x4 != 0,
+                xev.state & 0x40 != 0,
+            ),
             &self.config,
         );
 

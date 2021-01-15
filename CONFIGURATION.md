@@ -44,7 +44,7 @@ Commit english rather then bypass keyevent need for some programs like gedit
 
 Adjust compose, decompose jamo
 
-* compose_choseong_ssang
+### compose_choseong_ssang
 
 ```
 ㄱ + ㄱ = ㄲ
@@ -54,49 +54,49 @@ Adjust compose, decompose jamo
 ㅈ + ㅈ = ㅉ
 ```
 
-### default
+#### default
 
 `true`
 
-* decompose_choseong_ssang
+### decompose_choseong_ssang
 
 Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 
-### default
+#### default
 
 `false`
 
-* compose_jungseong_ssang
+### compose_jungseong_ssang
 
 ```
 ㅑ + ㅣ = ㅒ
 ㅕ + ㅣ = ㅖ
 ```
 
-### default
+#### default
 
 `false`
 
 
-* decompose_jungseong_ssang
+### decompose_jungseong_ssang
 
-### default
+#### default
 
 `false`
 
-* compose_jongseong_ssang
+### compose_jongseong_ssang
 
 ```
 ㄱ + ㄱ = ㄲ
 ㅅ + ㅅ = ㅆ
 ```
 
-### default
+#### default
 
 `false`
 
-* decompose_jongseong_ssang
+### decompose_jongseong_ssang
 
-### default
+#### default
 
 `false`

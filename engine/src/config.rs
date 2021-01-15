@@ -1,6 +1,12 @@
-use crate::{keycode::Key, Layout};
+use crate::{keycode::Key, KeyCode, Layout};
 use ahash::AHashSet;
 use serde::{Deserialize, Serialize};
+
+const DEFAULT_HANGUK_KEYS: &[Key] = &[
+    Key::normal(KeyCode::AltR),
+    Key::normal(KeyCode::Henkan),
+    Key::normal(KeyCode::Hangul),
+];
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
@@ -18,11 +24,10 @@ impl Default for RawConfig {
         Self {
             layout: "dubeolsik".to_string(),
             esc_turn_off: true,
-            hangul_keys: vec![
-                "Hangul".to_string(),
-                "Henkan".to_string(),
-                "Alt_R".to_string(),
-            ],
+            hangul_keys: DEFAULT_HANGUK_KEYS
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
             xim_preedit_font: "D2Coding".to_string(),
             gtk_commit_english: true,
             compose_ssangjaum: false,

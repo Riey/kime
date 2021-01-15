@@ -2,7 +2,11 @@
 
 ## layout
 
-Hangushift
+Hangul layout name
+
+### default
+
+`dubeolsik`
 
 ## esc_turn_off
 

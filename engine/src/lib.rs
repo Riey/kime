@@ -9,6 +9,7 @@ mod tests;
 
 use self::characters::KeyValue;
 use ahash::AHashMap;
+use std::fmt;
 
 use self::config::Config;
 use self::keycode::{Key, KeyCode};
@@ -58,7 +59,7 @@ impl Layout {
                     }
                 }
                 KeyValue::ChoJong(cho, jong) => state.cho_jong(cho, jong, config),
-                KeyValue::Jungseong(jung) => state.jung(jung),
+                KeyValue::Jungseong(jung) => state.jung(jung, config),
                 KeyValue::Choseong(cho) => state.cho(cho, config),
                 KeyValue::Jongseong(jong) => state.jong(jong, config),
             }
@@ -82,11 +83,25 @@ pub enum InputResultType {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct InputResult {
     pub ty: InputResultType,
     pub char1: u32,
     pub char2: u32,
+}
+
+impl fmt::Debug for InputResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("InputResult")
+            .field("ty", &self.ty)
+            .field("char1", unsafe {
+                &std::char::from_u32_unchecked(self.char1)
+            })
+            .field("char2", unsafe {
+                &std::char::from_u32_unchecked(self.char2)
+            })
+            .finish()
+    }
 }
 
 impl InputResult {

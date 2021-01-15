@@ -2,11 +2,7 @@
 
 ## layout
 
-Hangul layout name
-
-### default
-
-`dubeolsik`
+Hangushift
 
 ## esc_turn_off
 
@@ -40,9 +36,62 @@ Commit english rather then bypass keyevent need for some programs like gedit
 
 `true`
 
-## compose_ssangjaum
+## compose
 
-Compose some jaum to ssangjaum (e.g. ㄱ + ㄱ = ㄲ)
+Adjust compose, decompose jamo
+
+* compose_choseong_ssang
+
+```
+ㄱ + ㄱ = ㄲ
+ㅅ + ㅅ = ㅆ
+ㄷ + ㄷ = ㄸ
+ㅂ + ㅂ = ㅃ
+ㅈ + ㅈ = ㅉ
+```
+
+### default
+
+`true`
+
+* decompose_choseong_ssang
+
+Same as above but work on backspace(e.g. ㄲ -> ㄱ)
+
+### default
+
+`false`
+
+* compose_jungseong_ssang
+
+```
+ㅑ + ㅣ = ㅒ
+ㅕ + ㅣ = ㅖ
+```
+
+### default
+
+`false`
+
+
+* decompose_jungseong_ssang
+
+### default
+
+`false`
+
+* compose_jongseong_ssang
+
+```
+ㄱ + ㄱ = ㄲ
+ㅅ + ㅅ = ㅆ
+```
+
+### default
+
+`false`
+
+* decompose_jongseong_ssang
 
 ### default
 

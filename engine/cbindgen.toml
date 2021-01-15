@@ -1,0 +1,8 @@
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY */"""
+include_version = true
+braces = "SameLine"
+language = "C"
+style = "both"
+
+[export]
+prefix = "Kime"

@@ -2,15 +2,9 @@ use crate::{keycode::Key, KeyCode, Layout};
 use ahash::AHashSet;
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_HANGUK_KEYS: &[Key] = &[
-    Key::normal(KeyCode::AltR),
-    Key::normal(KeyCode::Henkan),
-    Key::normal(KeyCode::Hangul),
-];
-
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
-pub(crate) struct RawConfig {
+pub struct RawConfig {
     pub layout: String,
     pub esc_turn_off: bool,
     pub hangul_keys: Vec<String>,
@@ -21,6 +15,12 @@ pub(crate) struct RawConfig {
 
 impl Default for RawConfig {
     fn default() -> Self {
+        const DEFAULT_HANGUK_KEYS: &[Key] = &[
+            Key::normal(KeyCode::AltR),
+            Key::normal(KeyCode::Henkan),
+            Key::normal(KeyCode::Hangul),
+        ];
+
         Self {
             layout: "dubeolsik".to_string(),
             esc_turn_off: true,
@@ -35,7 +35,7 @@ impl Default for RawConfig {
     }
 }
 
-pub(crate) struct Config {
+pub struct Config {
     pub(crate) layout: Layout,
     pub(crate) esc_turn_off: bool,
     pub(crate) hangul_keys: AHashSet<Key>,

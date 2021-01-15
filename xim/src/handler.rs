@@ -11,7 +11,7 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use kime_engine::{InputEngine, InputResult, Key, KeyCode};
+use kime_engine_cffi::{Config, InputEngine, KimeInputResultType};
 
 pub struct KimeData {
     engine: InputEngine,
@@ -29,12 +29,12 @@ impl KimeData {
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
-    config: kime_engine::Config,
+    config: Config,
     screen_num: usize,
 }
 
 impl KimeHandler {
-    pub fn new(screen_num: usize, config: kime_engine::Config) -> Self {
+    pub fn new(screen_num: usize, config: Config) -> Self {
         Self {
             preedit_windows: AHashMap::new(),
             config,
@@ -79,11 +79,12 @@ impl KimeHandler {
             // off-the-spot draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
-                &self.config.xim_preedit_font,
+                self.config.xim_font_name(),
                 ic.app_win(),
                 ic.preedit_spot(),
                 self.screen_num,
             )?;
+
             pe.set_preedit(ch);
 
             ic.user_data.pe = Some(pe.window());
@@ -99,9 +100,9 @@ impl KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         ic: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if let Some(commit) = ic.user_data.engine.reset() {
+        if let Some(c) = ic.user_data.engine.reset() {
             self.clear_preedit(server.conn(), ic)?;
-            self.commit(server, ic, commit)?;
+            self.commit(server, ic, c)?;
         }
 
         Ok(())
@@ -228,51 +229,44 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             return Ok(false);
         }
 
-        let code = match KeyCode::from_hardward_code(xev.detail as _) {
-            Some(code) => code,
-            _ => {
-                self.reset(server, input_context)?;
-                return Ok(false);
-            }
-        };
-
         let ret = input_context.user_data.engine.press_key(
-            Key::new(code, xev.state & 0x1 != 0, xev.state & 0x4 != 0),
             &self.config,
+            xev.detail as u16,
+            xev.state as u32,
         );
 
         log::trace!("{:?}", ret);
 
-        match ret {
-            InputResult::Bypass => Ok(false),
-            InputResult::Consume => Ok(true),
-            InputResult::ClearPreedit => {
+        match ret.ty {
+            KimeInputResultType::Bypass => Ok(false),
+            KimeInputResultType::Consume => Ok(true),
+            KimeInputResultType::ClearPreedit => {
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(true)
             }
-            InputResult::CommitBypass(ch) => {
-                self.commit(server, input_context, ch)?;
+            KimeInputResultType::CommitBypass => {
+                self.commit(server, input_context, ret.char1)?;
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(false)
             }
-            InputResult::Commit(ch) => {
-                self.commit(server, input_context, ch)?;
+            KimeInputResultType::Commit => {
+                self.commit(server, input_context, ret.char1)?;
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(true)
             }
-            InputResult::CommitCommit(first, second) => {
-                self.commit(server, input_context, first)?;
-                self.commit(server, input_context, second)?;
+            KimeInputResultType::CommitCommit => {
+                self.commit(server, input_context, ret.char1)?;
+                self.commit(server, input_context, ret.char2)?;
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(true)
             }
-            InputResult::CommitPreedit(commit, preedit) => {
-                self.commit(server, input_context, commit)?;
-                self.preedit(server, input_context, preedit)?;
+            KimeInputResultType::CommitPreedit => {
+                self.commit(server, input_context, ret.char1)?;
+                self.preedit(server, input_context, ret.char2)?;
                 Ok(true)
             }
-            InputResult::Preedit(preedit) => {
-                self.preedit(server, input_context, preedit)?;
+            KimeInputResultType::Preedit => {
+                self.preedit(server, input_context, ret.char1)?;
                 Ok(true)
             }
         }

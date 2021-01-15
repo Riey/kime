@@ -5,7 +5,6 @@ hangul_keys:
   - Hangul
   - Henkan
   - AltR
-  - C-Space
 xim_preedit_font: D2Coding
 gtk_commit_english: true
 compose_ssangjaum: false

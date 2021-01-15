@@ -7,8 +7,8 @@ use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE
 use gobject_sys::{
     g_object_new, g_object_ref, g_object_unref, g_signal_emit, g_signal_lookup,
     g_type_check_class_cast, g_type_check_instance_cast, g_type_check_instance_is_a,
-    g_type_module_register_type, g_type_module_use, g_type_register_static, GObject, GObjectClass,
-    GTypeInfo, GTypeInstance, GTypeModule, G_TYPE_OBJECT,
+    g_type_module_register_type, g_type_module_use, g_type_register_static, GObject, GTypeInfo,
+    GTypeInstance, GTypeModule,
 };
 use gtk_sys::{
     gtk_im_context_get_type, gtk_style_context_lookup_color, gtk_widget_get_style_context,

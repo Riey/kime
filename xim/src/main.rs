@@ -8,7 +8,15 @@ mod handler;
 mod pe_window;
 
 fn main() -> Result<(), ServerError> {
-    pretty_env_logger::init();
+    simplelog::SimpleLogger::init(
+        if cfg!(debug_assertions) {
+            log::LevelFilter::Trace
+        } else {
+            log::LevelFilter::Warn
+        },
+        simplelog::ConfigBuilder::new().build(),
+    )
+    .ok();
 
     let config = kime_engine_cffi::Config::new();
 

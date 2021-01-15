@@ -35,7 +35,7 @@ impl Default for RawConfig {
     }
 }
 
-pub struct Config {
+pub(crate) struct Config {
     pub(crate) layout: Layout,
     pub(crate) esc_turn_off: bool,
     pub(crate) hangul_keys: AHashSet<Key>,

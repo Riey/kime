@@ -7,6 +7,7 @@ use serde::{
 use strum_macros::{Display, EnumString};
 
 // TODO: complete
+#[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumString, Display)]
 pub enum KeyCode {
     #[strum(to_string = "1")]

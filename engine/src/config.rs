@@ -39,7 +39,7 @@ pub struct RawConfig {
 
 impl Default for RawConfig {
     fn default() -> Self {
-        const DEFAULT_HANGUK_KEYS: &[Key] = &[
+        const DEFAULT_HANGUL_KEYS: &[Key] = &[
             Key::normal(KeyCode::AltR),
             Key::normal(KeyCode::Henkan),
             Key::normal(KeyCode::Hangul),
@@ -49,7 +49,7 @@ impl Default for RawConfig {
         Self {
             layout: "dubeolsik".to_string(),
             esc_turn_off: true,
-            hangul_keys: DEFAULT_HANGUK_KEYS
+            hangul_keys: DEFAULT_HANGUL_KEYS
                 .iter()
                 .map(ToString::to_string)
                 .collect(),

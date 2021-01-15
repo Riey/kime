@@ -2,12 +2,6 @@ use crate::{keycode::Key, KeyCode, Layout};
 use ahash::AHashSet;
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_HANGUK_KEYS: &[Key] = &[
-    Key::normal(KeyCode::AltR),
-    Key::normal(KeyCode::Henkan),
-    Key::normal(KeyCode::Hangul),
-];
-
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct RawConfig {
@@ -21,6 +15,12 @@ pub struct RawConfig {
 
 impl Default for RawConfig {
     fn default() -> Self {
+        const DEFAULT_HANGUK_KEYS: &[Key] = &[
+            Key::normal(KeyCode::AltR),
+            Key::normal(KeyCode::Henkan),
+            Key::normal(KeyCode::Hangul),
+        ];
+
         Self {
             layout: "dubeolsik".to_string(),
             esc_turn_off: true,

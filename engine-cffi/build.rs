@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf};
 
 fn main() {
-    println!("cargo:rustc-link-lib=kime-engine");
+    println!("cargo:rustc-link-lib=kime_engine");
     println!("cargo:rerun-if-changed=../engine");
 
     let bindings = bindgen::Builder::default()

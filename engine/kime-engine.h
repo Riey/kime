@@ -13,8 +13,8 @@ typedef enum KimeInputResultType {
   ClearPreedit,
   Preedit,
   Commit,
-  CommitPreedit,
   CommitBypass,
+  CommitPreedit,
   CommitCommit,
 } KimeInputResultType;
 
@@ -31,6 +31,8 @@ typedef struct KimeInputResult {
 struct KimeInputEngine *kime_engine_new(void);
 
 void kime_engine_delete(struct KimeInputEngine *engine);
+
+uint32_t kime_engine_preedit_char(struct KimeInputEngine *engine);
 
 uint32_t kime_engine_reset(struct KimeInputEngine *engine);
 

@@ -154,28 +154,46 @@ pub struct Key {
     pub code: KeyCode,
     pub shift: bool,
     pub ctrl: bool,
+    pub super_: bool,
 }
 
 impl Key {
-    pub const fn new(code: KeyCode, shift: bool, ctrl: bool) -> Self {
-        Self { code, shift, ctrl }
+    pub const fn new(code: KeyCode, shift: bool, ctrl: bool, super_: bool) -> Self {
+        Self {
+            code,
+            shift,
+            ctrl,
+            super_,
+        }
     }
 
     pub const fn normal(code: KeyCode) -> Self {
-        Self::new(code, false, false)
+        Self::new(code, false, false, false)
     }
 
     pub const fn shift(code: KeyCode) -> Self {
-        Self::new(code, true, false)
+        Self::new(code, true, false, false)
     }
 
     pub const fn ctrl(code: KeyCode) -> Self {
-        Self::new(code, false, true)
+        Self::new(code, false, true, false)
+    }
+
+    pub const fn super_(code: KeyCode) -> Self {
+        Self::new(code, false, false, true)
     }
 }
 
 impl fmt::Display for Key {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.super_ {
+            f.write_str("Super-")?;
+        }
+
+        if self.ctrl {
+            f.write_str("C-")?;
+        }
+
         if self.shift {
             f.write_str("S-")?;
         }
@@ -188,8 +206,14 @@ impl FromStr for Key {
     type Err = <KeyCode as FromStr>::Err;
 
     fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+        let mut super_ = false;
         let mut shift = false;
         let mut ctrl = false;
+
+        if let Some(left) = s.strip_prefix("Super-") {
+            super_ = true;
+            s = left;
+        }
 
         if let Some(left) = s.strip_prefix("C-") {
             ctrl = true;
@@ -201,7 +225,12 @@ impl FromStr for Key {
             s = left;
         }
 
-        Ok(Self::new(s.parse()?, shift, ctrl))
+        Ok(Self {
+            code: s.parse()?,
+            shift,
+            ctrl,
+            super_,
+        })
     }
 }
 
@@ -218,6 +247,10 @@ impl<'de> Deserialize<'de> for Key {
 
 #[test]
 fn key_parse() {
+    assert_eq!(
+        "Super-Space".parse::<Key>().unwrap(),
+        Key::super_(KeyCode::Space)
+    );
     assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
     assert_eq!("C-Space".parse::<Key>().unwrap(), Key::ctrl(KeyCode::Space));
 }

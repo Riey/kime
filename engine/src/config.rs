@@ -43,6 +43,7 @@ impl Default for RawConfig {
             Key::normal(KeyCode::AltR),
             Key::normal(KeyCode::Henkan),
             Key::normal(KeyCode::Hangul),
+            Key::super_(KeyCode::Space),
         ];
 
         Self {

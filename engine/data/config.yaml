@@ -4,6 +4,7 @@ esc_turn_off: true
 hangul_keys:
   - Hangul
   - Henkan
+  - Super-Space
   - AltR
 xim_preedit_font: D2Coding
 gtk_commit_english: true

@@ -166,10 +166,12 @@ impl Key {
         Self::new(code, false, false)
     }
 
+    #[cfg(test)]
     pub const fn shift(code: KeyCode) -> Self {
         Self::new(code, true, false)
     }
 
+    #[cfg(test)]
     pub const fn ctrl(code: KeyCode) -> Self {
         Self::new(code, false, true)
     }

@@ -51,6 +51,16 @@ fn next_jaum() {
 }
 
 #[test]
+fn next_ssangjaum() {
+    test_input(&[
+        (Key::normal(A), InputResult::preedit('ㅁ')),
+        (Key::normal(K), InputResult::preedit('마')),
+        (Key::shift(T), InputResult::preedit('맜')),
+        (Key::normal(K), InputResult::commit_preedit('마', '싸')),
+    ])
+}
+
+#[test]
 fn not_com_moum_when_continue() {
     test_input(&[
         (Key::normal(D), InputResult::preedit('ㅇ')),

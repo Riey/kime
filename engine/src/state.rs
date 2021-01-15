@@ -125,7 +125,7 @@ impl CharacterState {
                 // has choseong move jongseong to next choseong
                 let new;
 
-                match jong.to_cho() {
+                match jong.to_cho(&config.compose) {
                     JongToCho::Direct(cho) => {
                         self.jong = None;
                         new = Self {
@@ -165,7 +165,7 @@ impl CharacterState {
                     let new;
 
                     if let Some(jong) = self.jong {
-                        match jong.to_cho() {
+                        match jong.to_cho(&config.compose) {
                             JongToCho::Direct(cho) => {
                                 self.jong = None;
                                 new = Self {
@@ -209,7 +209,7 @@ impl CharacterState {
                 None => {
                     let new;
 
-                    match jong.to_cho() {
+                    match jong.to_cho(&config.compose) {
                         JongToCho::Direct(cho) => {
                             new = Self {
                                 cho: Some(cho),

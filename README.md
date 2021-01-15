@@ -9,6 +9,16 @@ Korean IME
 * Write in Rust no segfaults
 * Allow custom layouts
 
+## Supported frontend
+
+- [x] XIM
+- [ ] Wayland
+- [ ] GTK2
+- [x] GTK3
+- [ ] GTK4
+- [ ] Qt4
+- [ ] Qt5
+
 ## Dependencies
 
 ### GTK3

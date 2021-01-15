@@ -14,5 +14,4 @@ glib-sys = "0.10.1"
 gobject-sys = "0.10.0"
 gtk-sys = "0.10.0"
 kime-engine = { path = "../engine" }
-once_cell = "1.5.2"
 pango-sys = "0.10.0"

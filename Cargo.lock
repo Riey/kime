@@ -439,7 +439,6 @@ dependencies = [
  "gobject-sys",
  "gtk-sys",
  "kime-engine",
- "once_cell",
  "pango-sys",
 ]
 

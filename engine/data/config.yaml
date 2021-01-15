@@ -8,4 +8,10 @@ hangul_keys:
   - AltR
 xim_preedit_font: D2Coding
 gtk_commit_english: true
-compose_ssangjaum: false
+compose:
+  compose_choseong_ssang: true
+  decompose_choseong_ssang: false
+  compose_jungseong_ssang: false
+  decompose_jungseong_ssang: false
+  compose_jongseong_ssang: false
+  decompose_jongseong_ssang: false

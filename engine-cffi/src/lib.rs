@@ -39,6 +39,10 @@ impl InputEngine {
         }
     }
 
+    pub fn preedit_char(&self) -> char {
+        unsafe { from_u32_unchecked(ffi::kime_engine_preedit_char(self.engine)) }
+    }
+
     pub fn reset(&mut self) -> Option<char> {
         unsafe {
             match ffi::kime_engine_reset(self.engine) {
@@ -79,11 +83,9 @@ impl Config {
             ))
         }
     }
-    
+
     pub fn gtk_commit_english(&self) -> bool {
-        unsafe {
-            ffi::kime_config_gtk_commit_english(self.config) != 0
-        }
+        unsafe { ffi::kime_config_gtk_commit_english(self.config) != 0 }
     }
 }
 

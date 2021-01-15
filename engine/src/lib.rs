@@ -188,6 +188,11 @@ impl InputEngine {
     }
 
     #[inline]
+    pub fn preedit_char(&self) -> char {
+        self.state.to_char()
+    }
+
+    #[inline]
     pub fn reset(&mut self) -> Option<char> {
         self.state.reset()
     }
@@ -208,6 +213,13 @@ pub extern "C" fn kime_engine_new() -> *mut InputEngine {
 #[no_mangle]
 pub unsafe extern "C" fn kime_engine_delete(engine: *mut InputEngine) {
     drop(Box::from_raw(engine));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kime_engine_preedit_char(engine: *const InputEngine) -> u32 {
+    let engine = engine.as_ref().unwrap();
+
+    engine.preedit_char() as u32
 }
 
 #[no_mangle]
@@ -253,17 +265,17 @@ pub unsafe extern "C" fn kime_config_delete(config: *mut Config) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn kime_config_gtk_commit_english(config: *mut Config) -> u32 {
-    config.as_mut().unwrap().gtk_commit_english.into()
+pub unsafe extern "C" fn kime_config_gtk_commit_english(config: *const Config) -> u32 {
+    config.as_ref().unwrap().gtk_commit_english.into()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn kime_config_xim_preedit_font(
-    config: *mut Config,
+    config: *const Config,
     name: *mut *const u8,
     len: *mut usize,
 ) {
-    let font = config.as_mut().unwrap().xim_preedit_font.as_str();
+    let font = config.as_ref().unwrap().xim_preedit_font.as_str();
     name.write(font.as_ptr());
     len.write(font.len());
 }

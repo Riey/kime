@@ -501,6 +501,7 @@ name = "kime-engine-cffi"
 version = "0.4.0"
 dependencies = [
  "bindgen",
+ "kime-engine",
 ]
 
 [[package]]
@@ -511,7 +512,7 @@ dependencies = [
  "glib-sys",
  "gobject-sys",
  "gtk-sys",
- "kime-engine",
+ "kime-engine-cffi",
  "pango-sys",
 ]
 

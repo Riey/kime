@@ -246,6 +246,7 @@ pub unsafe extern "C" fn kime_engine_press_key(
                     code,
                     shift: state & 0x1 != 0,
                     ctrl: state & 0x4 != 0,
+                    super_: state & 0x40 != 0,
                 },
                 config,
             )

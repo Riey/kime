@@ -384,10 +384,13 @@ impl Jongseong {
         }
     }
 
-    pub const fn to_cho(self) -> JongToCho {
+    pub const fn to_cho(self, compose: &ComposeConfig) -> JongToCho {
         use JongToCho::{Compose, Direct};
         match self {
             Self::Giyeok => Direct(Choseong::Giyeok),
+            Self::SsangGiyeok if compose.decompose_jongseong_ssang => {
+                Compose(Self::Giyeok, Choseong::Giyeok)
+            }
             Self::SsangGiyeok => Direct(Choseong::SsangGiyeok),
             Self::GiyeokSiot => Compose(Self::Giyeok, Choseong::Siot),
             Self::Nieun => Direct(Choseong::Nieun),
@@ -406,6 +409,9 @@ impl Jongseong {
             Self::Bieup => Direct(Choseong::Bieup),
             Self::BieupSiot => Compose(Self::Bieup, Choseong::Siot),
             Self::Siot => Direct(Choseong::Siot),
+            Self::SsangSiot if compose.decompose_jongseong_ssang => {
+                Compose(Self::Siot, Choseong::Siot)
+            }
             Self::SsangSiot => Direct(Choseong::SsangSiot),
             Self::Ieung => Direct(Choseong::Ieung),
             Self::Jieut => Direct(Choseong::Jieut),

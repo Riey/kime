@@ -26,8 +26,7 @@ use std::{
 use kime_engine::{Config, InputEngine, InputResult};
 
 const FORWARDED_MASK: c_uint = 1 << 25;
-const SKIP_MASK: c_uint = GDK_CONTROL_MASK
-    | GDK_MOD1_MASK
+const SKIP_MASK: c_uint = GDK_MOD1_MASK
     | GDK_MOD2_MASK
     | GDK_MOD3_MASK
     | GDK_MOD4_MASK
@@ -151,7 +150,7 @@ impl KimeIMContext {
         };
 
         let ret = self.engine.press_key(
-            kime_engine::Key::new(code, key.state & GDK_SHIFT_MASK != 0),
+            kime_engine::Key::new(code, key.state & GDK_SHIFT_MASK != 0, key.state & GDK_CONTROL_MASK != 0),
             &CONFIG,
         );
 
@@ -321,7 +320,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
         } else if ctx.filter_keypress(key) {
             GTRUE
         } else {
-            if CONFIG.gtk_commit_english {
+            if CONFIG.gtk_commit_english && key.state & GDK_CONTROL_MASK == 0 {
                 let c = std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval));
 
                 if !c.is_control() {

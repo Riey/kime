@@ -153,19 +153,24 @@ impl KeyCode {
 pub struct Key {
     pub code: KeyCode,
     pub shift: bool,
+    pub ctrl: bool,
 }
 
 impl Key {
-    pub const fn new(code: KeyCode, shift: bool) -> Self {
-        Self { code, shift }
+    pub const fn new(code: KeyCode, shift: bool, ctrl: bool) -> Self {
+        Self { code, shift, ctrl }
     }
 
     pub const fn normal(code: KeyCode) -> Self {
-        Self::new(code, false)
+        Self::new(code, false, false)
     }
 
     pub const fn shift(code: KeyCode) -> Self {
-        Self::new(code, true)
+        Self::new(code, true, false)
+    }
+
+    pub const fn ctrl(code: KeyCode) -> Self {
+        Self::new(code, false, true)
     }
 }
 
@@ -182,12 +187,21 @@ impl fmt::Display for Key {
 impl FromStr for Key {
     type Err = <KeyCode as FromStr>::Err;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Some(s) = s.strip_prefix("S-") {
-            Ok(Self::new(s.parse()?, true))
-        } else {
-            Ok(Self::new(s.parse()?, false))
+    fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+        let mut shift = false;
+        let mut ctrl = false;
+
+        if let Some(left) = s.strip_prefix("C-") {
+            ctrl = true;
+            s = left;
         }
+
+        if let Some(left) = s.strip_prefix("S-") {
+            shift = true;
+            s = left;
+        }
+
+        Ok(Self::new(s.parse()?, shift, ctrl))
     }
 }
 
@@ -205,4 +219,5 @@ impl<'de> Deserialize<'de> for Key {
 #[test]
 fn key_parse() {
     assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
+    assert_eq!("C-Space".parse::<Key>().unwrap(), Key::ctrl(KeyCode::Space));
 }

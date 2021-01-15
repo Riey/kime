@@ -1,3 +1,7 @@
+# 0.4.1
+
+* Fix unhandled keycode doesn't occur reset 
+
 # 0.4.0
 
 * Create CHANGELOG

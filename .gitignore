@@ -1,3 +1,4 @@
 /target
 /build
+/cargo-timing*
 /.idea

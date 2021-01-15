@@ -4,8 +4,8 @@ version = "0.4.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 
-[dependencies]
-kime-engine = { path = "../engine" }
-
 [build-dependencies]
-bindgen = "0.56.0"
+bindgen = { version = "0.56.0", default-features = false }
+cbindgen = { version = "0.16.0", default-features = false }
+# cbindgen will compile this
+# kime-engine = { path = "../engine" }

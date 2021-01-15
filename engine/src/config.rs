@@ -4,13 +4,37 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
+pub struct ComposeConfig {
+    pub compose_choseong_ssang: bool,
+    pub decompose_choseong_ssang: bool,
+    pub compose_jungseong_ssang: bool,
+    pub decompose_jungseong_ssang: bool,
+    pub compose_jongseong_ssang: bool,
+    pub decompose_jongseong_ssang: bool,
+}
+
+impl Default for ComposeConfig {
+    fn default() -> Self {
+        Self {
+            compose_choseong_ssang: true,
+            decompose_choseong_ssang: false,
+            compose_jungseong_ssang: false,
+            decompose_jungseong_ssang: false,
+            compose_jongseong_ssang: false,
+            decompose_jongseong_ssang: false,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(default)]
 pub struct RawConfig {
     pub layout: String,
     pub esc_turn_off: bool,
     pub hangul_keys: Vec<String>,
     pub xim_preedit_font: String,
     pub gtk_commit_english: bool,
-    pub compose_ssangjaum: bool,
+    pub compose: ComposeConfig,
 }
 
 impl Default for RawConfig {
@@ -30,7 +54,7 @@ impl Default for RawConfig {
                 .collect(),
             xim_preedit_font: "D2Coding".to_string(),
             gtk_commit_english: true,
-            compose_ssangjaum: false,
+            compose: ComposeConfig::default(),
         }
     }
 }
@@ -39,9 +63,9 @@ pub struct Config {
     pub(crate) layout: Layout,
     pub(crate) esc_turn_off: bool,
     pub(crate) hangul_keys: AHashSet<Key>,
+    pub(crate) compose: ComposeConfig,
     pub xim_preedit_font: String,
     pub gtk_commit_english: bool,
-    pub compose_ssangjaum: bool,
 }
 
 impl Default for Config {
@@ -55,6 +79,7 @@ impl Config {
         Self {
             layout,
             esc_turn_off: raw.esc_turn_off,
+            compose: raw.compose,
             hangul_keys: raw
                 .hangul_keys
                 .iter()
@@ -62,7 +87,6 @@ impl Config {
                 .collect(),
             xim_preedit_font: raw.xim_preedit_font,
             gtk_commit_english: raw.gtk_commit_english,
-            compose_ssangjaum: raw.compose_ssangjaum,
         }
     }
 

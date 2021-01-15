@@ -3,6 +3,8 @@ use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, str::FromStr};
 
+use crate::config::ComposeConfig;
+
 macro_rules! impl_jamo {
     ($ty:ty, [$(($item:ident, $ch:expr),)+]) => {
         impl $ty {
@@ -265,44 +267,40 @@ impl Choseong {
         }
     }
 
-    pub const fn try_add(self, other: Self, compose_ssangjaum: bool) -> Option<Self> {
-        if !compose_ssangjaum {
-            return None;
-        }
-
+    pub const fn try_add(self, other: Self, compose: &ComposeConfig) -> Option<Self> {
         match (self, other) {
-            (Self::Giyeok, Self::Giyeok) => Some(Self::SsangGiyeok),
-            (Self::Bieup, Self::Bieup) => Some(Self::SsangBieup),
-            (Self::Siot, Self::Siot) => Some(Self::SsangSiot),
-            (Self::Jieut, Self::Jieut) => Some(Self::SsangJieut),
-            (Self::Digeut, Self::Digeut) => Some(Self::SsangDigeut),
+            (Self::Giyeok, Self::Giyeok) if compose.compose_choseong_ssang => {
+                Some(Self::SsangGiyeok)
+            }
+            (Self::Bieup, Self::Bieup) if compose.compose_choseong_ssang => Some(Self::SsangBieup),
+            (Self::Siot, Self::Siot) if compose.compose_choseong_ssang => Some(Self::SsangSiot),
+            (Self::Jieut, Self::Jieut) if compose.compose_choseong_ssang => Some(Self::SsangJieut),
+            (Self::Digeut, Self::Digeut) if compose.compose_choseong_ssang => {
+                Some(Self::SsangDigeut)
+            }
             _ => None,
         }
     }
 
-    pub const fn backspace(self, compose_ssangjaum: bool) -> Option<Self> {
-        if !compose_ssangjaum {
-            return None;
-        }
-
+    pub const fn backspace(self, compose: &ComposeConfig) -> Option<Self> {
         match self {
-            Self::SsangGiyeok => Some(Self::Giyeok),
-            Self::SsangBieup => Some(Self::Bieup),
-            Self::SsangSiot => Some(Self::Siot),
-            Self::SsangJieut => Some(Self::SsangJieut),
-            Self::SsangDigeut => Some(Self::Digeut),
+            Self::SsangGiyeok if compose.decompose_choseong_ssang => Some(Self::Giyeok),
+            Self::SsangBieup if compose.decompose_choseong_ssang => Some(Self::Bieup),
+            Self::SsangSiot if compose.decompose_choseong_ssang => Some(Self::Siot),
+            Self::SsangJieut if compose.decompose_choseong_ssang => Some(Self::SsangJieut),
+            Self::SsangDigeut if compose.decompose_choseong_ssang => Some(Self::Digeut),
             _ => None,
         }
     }
 }
 
 impl Jungseong {
-    pub const fn try_add(self, other: Self) -> Option<Self> {
+    pub const fn try_add(self, other: Self, compose: &ComposeConfig) -> Option<Self> {
         match (self, other) {
             // ㅑ ㅣ = ㅒ
-            (Self::YA, Self::I) => Some(Self::YAE),
+            (Self::YA, Self::I) if compose.compose_jungseong_ssang => Some(Self::YAE),
             // ㅕ ㅣ = ㅖ
-            (Self::YEO, Self::I) => Some(Self::YE),
+            (Self::YEO, Self::I) if compose.compose_jungseong_ssang => Some(Self::YE),
             // ㅗ ㅏ = ㅘ
             (Self::O, Self::A) => Some(Self::WA),
             // ㅗ ㅣ = ㅚ
@@ -321,21 +319,39 @@ impl Jungseong {
         }
     }
 
-    pub const fn backspace(self) -> Option<Self> {
+    pub const fn backspace(self, compose: &ComposeConfig) -> Option<Self> {
         match self {
-            Self::AE => Some(Self::A),
-            Self::YAE => Some(Self::YA),
-            Self::WA | Self::OE => Some(Self::O),
+            // ㅖ -> ㅕ
+            Self::YE if compose.decompose_jungseong_ssang => Some(Self::YEO),
+            // ㅒ -> ㅑ
+            Self::YAE if compose.decompose_jungseong_ssang => Some(Self::YA),
+            // // ㅘ -> ㅗ
+            Self::WA => Some(Self::O),
+            // (Self::O, Self::A) => Some(Self::WA),
+            // // ㅗ ㅣ = ㅚ
+            // (Self::O, Self::I) => Some(Self::OE),
+            // // ㅗ ㅐ = ㅙ
+            // (Self::O, Self::AE) => Some(Self::WAE),
+            // // ㅜ ㅓ = ㅝ
+            // (Self::U, Self::EO) => Some(Self::WEO),
+            // // ㅜ ㅔ = ㅞ
+            // (Self::U, Self::E) => Some(Self::WE),
+            // // ㅜ ㅣ = ㅟ
+            // (Self::U, Self::I) => Some(Self::WI),
+            // // ㅡ ㅣ = ㅢ
+            // (Self::EU, Self::I) => Some(Self::YI),
             _ => None,
         }
     }
 }
 
 impl Jongseong {
-    pub const fn try_add(self, other: Self, compose_ssangjaum: bool) -> Option<Self> {
+    pub const fn try_add(self, other: Self, compose: &ComposeConfig) -> Option<Self> {
         match (self, other) {
-            (Self::Giyeok, Self::Giyeok) if compose_ssangjaum => Some(Self::SsangGiyeok),
-            (Self::Siot, Self::Siot) if compose_ssangjaum => Some(Self::SsangSiot),
+            (Self::Giyeok, Self::Giyeok) if compose.compose_jongseong_ssang => {
+                Some(Self::SsangGiyeok)
+            }
+            (Self::Siot, Self::Siot) if compose.compose_jongseong_ssang => Some(Self::SsangSiot),
 
             (Self::Giyeok, Self::Siot) => Some(Self::GiyeokSiot),
             (Self::Nieun, Self::Hieuh) => Some(Self::NieunHieuh),
@@ -352,10 +368,10 @@ impl Jongseong {
         }
     }
 
-    pub const fn backspace(self, compose_ssangjaum: bool) -> Option<Self> {
+    pub const fn backspace(self, compose: &ComposeConfig) -> Option<Self> {
         match self {
-            Self::SsangGiyeok if compose_ssangjaum => Some(Self::Giyeok),
-            Self::SsangSiot if compose_ssangjaum => Some(Self::Siot),
+            Self::SsangGiyeok if compose.decompose_jongseong_ssang => Some(Self::Giyeok),
+            Self::SsangSiot if compose.decompose_jongseong_ssang => Some(Self::Siot),
             Self::GiyeokSiot => Some(Self::Giyeok),
             Self::NieunHieuh | Self::NieunJieut => Some(Self::Nieun),
             Self::RieulMieum
@@ -368,10 +384,13 @@ impl Jongseong {
         }
     }
 
-    pub const fn to_cho(self) -> JongToCho {
+    pub const fn to_cho(self, compose: &ComposeConfig) -> JongToCho {
         use JongToCho::{Compose, Direct};
         match self {
             Self::Giyeok => Direct(Choseong::Giyeok),
+            Self::SsangGiyeok if compose.decompose_jongseong_ssang => {
+                Compose(Self::Giyeok, Choseong::Giyeok)
+            }
             Self::SsangGiyeok => Direct(Choseong::SsangGiyeok),
             Self::GiyeokSiot => Compose(Self::Giyeok, Choseong::Siot),
             Self::Nieun => Direct(Choseong::Nieun),
@@ -390,6 +409,9 @@ impl Jongseong {
             Self::Bieup => Direct(Choseong::Bieup),
             Self::BieupSiot => Compose(Self::Bieup, Choseong::Siot),
             Self::Siot => Direct(Choseong::Siot),
+            Self::SsangSiot if compose.decompose_jongseong_ssang => {
+                Compose(Self::Siot, Choseong::Siot)
+            }
             Self::SsangSiot => Direct(Choseong::SsangSiot),
             Self::Ieung => Direct(Choseong::Ieung),
             Self::Jieut => Direct(Choseong::Jieut),

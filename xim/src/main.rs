@@ -1,4 +1,3 @@
-use kime_engine::Config;
 use x11rb::{
     connection::Connection,
     protocol::{ErrorKind, Event},
@@ -19,7 +18,7 @@ fn main() -> Result<(), ServerError> {
     )
     .ok();
 
-    let config = Config::load_from_config_dir().unwrap_or_default();
+    let config = kime_engine_cffi::Config::new();
 
     let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;
     let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime")?;

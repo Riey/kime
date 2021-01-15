@@ -4,12 +4,25 @@
             "type": "shell",
             "label": "install-immodule",
             "command": "sudo",
+            "dependsOn": ["install-engine"],
             "args": [
                 "install",
                 "-Dm755",
                 "target/debug/libkime_gtk3.so",
                 "-T",
                 "/usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "install-engine",
+            "command": "sudo",
+            "args": [
+                "install",
+                "-Dm755",
+                "target/debug/libkime_engine.so",
+                "-t",
+                "/usr/lib/"
             ]
         },
         {

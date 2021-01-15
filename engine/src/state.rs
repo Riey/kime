@@ -4,7 +4,7 @@ use crate::Config;
 
 /// 한글 입력 오토마타
 #[derive(Debug, Default, Clone, Copy)]
-pub struct CharacterState {
+pub(crate) struct CharacterState {
     cho: Option<Choseong>,
     jung: Option<Jungseong>,
     jong: Option<Jongseong>,
@@ -54,8 +54,8 @@ impl CharacterState {
         let prev = std::mem::replace(self, new);
 
         match prev.commit_char() {
-            Some(prev) => InputResult::CommitPreedit(prev, self.to_char()),
-            None => InputResult::Preedit(self.to_char()),
+            Some(prev) => InputResult::commit_preedit(prev, self.to_char()),
+            None => InputResult::preedit(self.to_char()),
         }
     }
 
@@ -80,15 +80,15 @@ impl CharacterState {
             }
         } else {
             // empty
-            return InputResult::Bypass;
+            return InputResult::bypass();
         }
 
         let ch = self.to_char();
 
         if ch == '\0' {
-            InputResult::ClearPreedit
+            InputResult::clear_preedit()
         } else {
-            InputResult::Preedit(ch)
+            InputResult::preedit(ch)
         }
     }
 
@@ -106,7 +106,7 @@ impl CharacterState {
             match prev_cho.try_add(cho, config.compose_ssangjaum) {
                 Some(new) => {
                     self.cho = Some(new);
-                    InputResult::Preedit(self.to_char())
+                    InputResult::preedit(self.to_char())
                 }
                 None => self.replace(Self {
                     cho: Some(cho),
@@ -115,7 +115,7 @@ impl CharacterState {
             }
         } else {
             self.cho = Some(cho);
-            InputResult::Preedit(self.to_char())
+            InputResult::preedit(self.to_char())
         }
     }
 
@@ -159,7 +159,7 @@ impl CharacterState {
             match prev_jung.try_add(jung) {
                 Some(new) => {
                     self.jung = Some(new);
-                    InputResult::Preedit(self.to_char())
+                    InputResult::preedit(self.to_char())
                 }
                 None => {
                     let new;
@@ -195,7 +195,7 @@ impl CharacterState {
             }
         } else {
             self.jung = Some(jung);
-            InputResult::Preedit(self.to_char())
+            InputResult::preedit(self.to_char())
         }
     }
 
@@ -204,7 +204,7 @@ impl CharacterState {
             match prev_jong.try_add(jong, config.compose_ssangjaum) {
                 Some(new) => {
                     self.jong = Some(new);
-                    InputResult::Preedit(self.to_char())
+                    InputResult::preedit(self.to_char())
                 }
                 None => {
                     let new;
@@ -229,7 +229,7 @@ impl CharacterState {
             }
         } else {
             self.jong = Some(jong);
-            InputResult::Preedit(self.to_char())
+            InputResult::preedit(self.to_char())
         }
     }
 }
@@ -244,16 +244,16 @@ mod tests {
         let config = Config::default();
 
         assert_eq!(
-            InputResult::Preedit('ㅇ'),
+            InputResult::preedit('ㅇ'),
             state.cho_jong(Choseong::Ieung, Jongseong::Ieung, &config)
         );
-        assert_eq!(InputResult::Preedit('아'), state.jung(Jungseong::A));
+        assert_eq!(InputResult::preedit('아'), state.jung(Jungseong::A));
         assert_eq!(
-            InputResult::Preedit('앙'),
+            InputResult::preedit('앙'),
             state.cho_jong(Choseong::Ieung, Jongseong::Ieung, &config)
         );
         assert_eq!(
-            InputResult::CommitPreedit('아', '아'),
+            InputResult::commit_preedit('아', '아'),
             state.jung(Jungseong::A)
         );
     }

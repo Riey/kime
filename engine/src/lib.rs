@@ -251,9 +251,9 @@ pub unsafe extern "C" fn kime_engine_press_key(
     hardware_code: u16,
     state: u32,
 ) -> InputResult {
+    let engine = engine.as_mut().unwrap();
     match KeyCode::from_hardward_code(hardware_code) {
         Some(code) => {
-            let engine = engine.as_mut().unwrap();
             let config = config.as_ref().unwrap();
 
             engine.press_key(
@@ -266,7 +266,7 @@ pub unsafe extern "C" fn kime_engine_press_key(
                 config,
             )
         }
-        None => InputResult::bypass(),
+        None => bypass(&mut engine.state),
     }
 }
 

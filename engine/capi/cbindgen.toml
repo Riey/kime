@@ -1,0 +1,13 @@
+autogen_warning = "/* DO NOT MODIFY THIS MANUALLY */"
+documentation = true
+pragma_once = true
+include_version = true
+braces = "SameLine"
+language = "C"
+usize_is_size_t = true
+no_includes = true
+sys_includes = ["stdint.h", "stddef.h"]
+
+[parse]
+parse_deps = true
+include = ["kime-engine-core"]

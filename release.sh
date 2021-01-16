@@ -1,7 +1,6 @@
 cargo build --release
 
 mkdir -pv build
-mkdir -pv build/layouts
 
 cp target/release/kime-xim build/kime-xim
 cp target/release/libkime_gtk3.so build/im-kime.so

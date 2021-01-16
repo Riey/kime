@@ -16,7 +16,8 @@ fn main() {
         .with_braces(cbindgen::Braces::SameLine)
         .with_language(cbindgen::Language::C)
         .with_style(cbindgen::Style::Both)
-        .with_crate("../engine")
+        .with_src("../core/src/lib.rs")
+        .with_crate("../capi")
         .with_item_prefix("Kime")
         .generate()
         .expect("Unable to generate C bindings");

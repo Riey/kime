@@ -1,6 +1,7 @@
 [package]
 name = "kime-engine-capi"
-version = "0.1.0"
+description = "Kime engine library"
+version = "0.4.1"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -12,3 +13,14 @@ crate-type = ["cdylib"]
 [dependencies]
 kime-engine-core = { path = "../core" }
 
+[package.metadata.deb]
+name = "kime-engine"
+maintainer = "Riey"
+copyright = "2021, Riey <creeper844@gmail.com>"
+depends = ""
+provides = "kime-engine"
+conflicts = "kime-engine"
+
+assets = [
+    ["target/release/libkime_engine.so", "usr/lib", "755"],
+]

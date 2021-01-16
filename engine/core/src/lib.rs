@@ -10,7 +10,7 @@ use ahash::AHashMap;
 
 pub use self::config::{Config, RawConfig};
 pub use self::input_result::{InputResult, InputResultType};
-pub use self::keycode::{Key, KeyCode};
+pub use self::keycode::{Key, KeyCode, ModifierState};
 
 #[derive(Clone, Default)]
 pub struct Layout {
@@ -68,12 +68,10 @@ impl InputEngine {
                 self.state.backspace(config)
             } else if let Some(v) = config.layout.keymap.get(&key) {
                 match *v {
-                    KeyValue::Pass(pass) => {
-                        match self.state.reset() {
-                            '\0' => InputResult::commit(pass),
-                            commit => InputResult::commit2(commit, pass),
-                        }
-                    }
+                    KeyValue::Pass(pass) => match self.state.reset() {
+                        '\0' => InputResult::commit(pass),
+                        commit => InputResult::commit2(commit, pass),
+                    },
                     KeyValue::ChoJong(cho, jong) => self.state.cho_jong(cho, jong, config),
                     KeyValue::Jungseong(jung) => self.state.jung(jung, config),
                     KeyValue::Choseong(cho) => self.state.cho(cho, config),
@@ -90,19 +88,11 @@ impl InputEngine {
     pub fn press_key_code(
         &mut self,
         hardware_code: u16,
-        state: u32,
+        state: ModifierState,
         config: &Config,
     ) -> InputResult {
         match KeyCode::from_hardward_code(hardware_code) {
-            Some(code) => self.press_key(
-                Key {
-                    code,
-                    shift: state & 0x1 != 0,
-                    ctrl: state & 0x4 != 0,
-                    super_: state & 0x40 != 0,
-                },
-                config,
-            ),
+            Some(code) => self.press_key(Key::new(code, state), config),
             None => self.bypass(),
         }
     }

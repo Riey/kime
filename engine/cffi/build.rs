@@ -1,3 +1,3 @@
 fn main() {
-    println!("cargo:rustc-link-lib=kime_engine");
+    println!("cargo:rustc-link-lib=dylib=kime_engine");
 }

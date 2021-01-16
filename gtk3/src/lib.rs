@@ -1,7 +1,7 @@
 use gdk_sys::{
     gdk_event_copy, gdk_event_put, gdk_keyval_to_unicode, gdk_window_get_user_data, GdkColor,
     GdkEvent, GdkEventKey, GdkWindow, GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK,
-    GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK,
+    GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK, GDK_SUPER_MASK,
 };
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
@@ -28,7 +28,9 @@ use std::{
     sync::atomic::AtomicUsize,
 };
 
-use kime_engine_cffi::{Config, InputEngine, InputResultType};
+use kime_engine_cffi::{
+    Config, InputEngine, InputResultType, MODIFIER_CONTROL, MODIFIER_SHIFT, MODIFIER_SUPER,
+};
 
 const FORWARDED_MASK: c_uint = 1 << 25;
 const SKIP_MASK: c_uint =
@@ -146,9 +148,23 @@ impl KimeIMContext {
     }
 
     pub fn filter_keypress(&mut self, key: &mut GdkEventKey) -> bool {
+        let mut state = 0;
+
+        if key.state & GDK_SHIFT_MASK != 0 {
+            state |= MODIFIER_SHIFT;
+        }
+
+        if key.state & GDK_CONTROL_MASK != 0 {
+            state |= MODIFIER_CONTROL;
+        }
+
+        if key.state & GDK_SUPER_MASK != 0 {
+            state |= MODIFIER_SUPER;
+        }
+
         let ret = self
             .engine
-            .press_key(&self.shared.config, key.hardware_keycode, key.state);
+            .press_key(&self.shared.config, key.hardware_keycode, state);
 
         #[cfg(debug_assertions)]
         dbg!(ret);

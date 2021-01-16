@@ -235,7 +235,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         if xev.response_type != KEY_PRESS_EVENT {
             return Ok(false);
         }
-        
+
         log::trace!("{:?}", xev);
 
         // other modifiers then shift

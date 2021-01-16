@@ -1,5 +1,6 @@
 [package]
 name = "kime-xim"
+description = "Kime XIM server"
 version = "0.4.1"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
@@ -12,7 +13,19 @@ log = "0.4.11"
 x11rb = { version = "0.7.0", features = ["render"] }
 simplelog = "0.9.0"
 
-# xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
-xim = { path = "../../xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
+xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
+# xim = { path = "../../xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 
 kime-engine-cffi = { path = "../engine/cffi" }
+
+[package.metadata.deb]
+name = "kime-xim"
+maintainer = "Riey"
+copyright = "2020, Riey <creeper844@gmail.com>"
+depends = "libxcb,cairo,kime-engine"
+provides = "kime-xim"
+conflicts = "kime-xim"
+
+assets = [
+    ["target/release/kime-xim", "usr/bin", "755"],
+]

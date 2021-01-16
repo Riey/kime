@@ -215,6 +215,8 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         _server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<String, xim::ServerError> {
+        log::trace!("reset_ic");
+
         Ok(input_context
             .user_data
             .engine

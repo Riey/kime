@@ -91,6 +91,45 @@ impl Config {
         }
     }
 
+    pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {
+        let layout = dir
+            .and_then(|dir| {
+                dir.list_data_files("layouts")
+                    .into_iter()
+                    .find_map(|layout| {
+                        if layout.file_stem()?.to_str()? == raw.layout {
+                            Some(Layout::from_items(
+                                serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
+                            ))
+                        } else {
+                            None
+                        }
+                    })
+            })
+            .unwrap_or_else(|| {
+                // User layout not exists fallback to embeded layouts
+                match raw.layout.as_str() {
+                    "dubeolsik" => Layout::load_from(include_str!("../data/dubeolsik.yaml"))
+                        .expect("Load dubeolsik layout"),
+                    "sebeolsik-390" => {
+                        Layout::load_from(include_str!("../data/sebeolsik-390.yaml"))
+                            .expect("Load sebeolsik-390 layout")
+                    }
+                    "sebeolsik-391" => {
+                        Layout::load_from(include_str!("../data/sebeolsik-391.yaml"))
+                            .expect("Load sebeolsik-391 layout")
+                    }
+                    // custom layout
+                    other => {
+                        eprintln!("Can't find layout {}", other);
+                        Layout::default()
+                    }
+                }
+            });
+
+        Self::new(layout, raw)
+    }
+
     pub fn load_from_config_dir() -> Option<Self> {
         let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
 
@@ -103,23 +142,9 @@ impl Config {
             }
         };
 
-        let config: RawConfig =
+        let raw: RawConfig =
             serde_yaml::from_reader(std::fs::File::open(config).ok()?).unwrap_or_default();
 
-        let layout = dir
-            .list_data_files("layouts")
-            .into_iter()
-            .find_map(|layout| {
-                if layout.file_stem()?.to_str()? == config.layout {
-                    Some(Layout::from_items(
-                        serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
-                    ))
-                } else {
-                    None
-                }
-            })
-            .unwrap_or_default();
-
-        Some(Self::new(layout, config))
+        Some(Self::from_raw_config(raw, Some(dir)))
     }
 }

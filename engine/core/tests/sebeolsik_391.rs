@@ -1,11 +1,11 @@
-const SEBEOLSIK_390_LAYOUT: &str = include_str!("../../data/sebeolsik-390.yaml");
+const SEBEOLSIK_391_LAYOUT: &str = include_str!("../data/sebeolsik-391.yaml");
 
-use crate::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
+use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
 
 #[track_caller]
 fn test_input(inputs: &[(Key, InputResult)]) {
     let config = Config::new(
-        Layout::load_from(SEBEOLSIK_390_LAYOUT).expect("Load layout"),
+        Layout::load_from(SEBEOLSIK_391_LAYOUT).expect("Load layout"),
         Default::default(),
     );
 
@@ -14,7 +14,7 @@ fn test_input(inputs: &[(Key, InputResult)]) {
     engine.set_enable_hangul(true);
 
     for (key, expect_result) in inputs.iter().copied() {
-        assert_eq!(engine.press_key(key, &config), expect_result);
+        assert_eq!(expect_result, engine.press_key(key, &config));
     }
 }
 
@@ -40,21 +40,6 @@ fn switch_next() {
 }
 
 #[test]
-fn s_number() {
-    test_input(&[
-        (Key::shift(Two), InputResult::commit('@')),
-        (Key::shift(Three), InputResult::commit('#')),
-        (Key::shift(Four), InputResult::commit('$')),
-        (Key::shift(Five), InputResult::commit('%')),
-        (Key::shift(Six), InputResult::commit('^')),
-        (Key::shift(Seven), InputResult::commit('&')),
-        (Key::shift(Eight), InputResult::commit('*')),
-        (Key::shift(Nine), InputResult::commit('(')),
-        (Key::shift(Zero), InputResult::commit(')')),
-    ])
-}
-
-#[test]
 fn colon() {
-    test_input(&[(Key::shift(SemiColon), InputResult::commit(':'))]);
+    test_input(&[(Key::normal(Backslash), InputResult::commit(':'))]);
 }

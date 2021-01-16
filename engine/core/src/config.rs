@@ -91,31 +91,20 @@ impl Config {
         }
     }
 
-    pub fn load_from_config_dir() -> Option<Self> {
-        let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
-
-        let config = match dir.find_config_file("config.yaml") {
-            Some(config) => config,
-            None => {
-                let path = dir.place_config_file("config.yaml").ok()?;
-                std::fs::write(&path, serde_yaml::to_string(&RawConfig::default()).ok()?).ok()?;
-                path
-            }
-        };
-
-        let raw: RawConfig =
-            serde_yaml::from_reader(std::fs::File::open(config).ok()?).unwrap_or_default();
+    pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {
         let layout = dir
-            .list_data_files("layouts")
-            .into_iter()
-            .find_map(|layout| {
-                if layout.file_stem()?.to_str()? == raw.layout {
-                    Some(Layout::from_items(
-                        serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
-                    ))
-                } else {
-                    None
-                }
+            .and_then(|dir| {
+                dir.list_data_files("layouts")
+                    .into_iter()
+                    .find_map(|layout| {
+                        if layout.file_stem()?.to_str()? == raw.layout {
+                            Some(Layout::from_items(
+                                serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
+                            ))
+                        } else {
+                            None
+                        }
+                    })
             })
             .unwrap_or_else(|| {
                 // User layout not exists fallback to embeded layouts
@@ -138,6 +127,24 @@ impl Config {
                 }
             });
 
-        Some(Self::new(layout, raw))
+        Self::new(layout, raw)
+    }
+
+    pub fn load_from_config_dir() -> Option<Self> {
+        let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
+
+        let config = match dir.find_config_file("config.yaml") {
+            Some(config) => config,
+            None => {
+                let path = dir.place_config_file("config.yaml").ok()?;
+                std::fs::write(&path, serde_yaml::to_string(&RawConfig::default()).ok()?).ok()?;
+                path
+            }
+        };
+
+        let raw: RawConfig =
+            serde_yaml::from_reader(std::fs::File::open(config).ok()?).unwrap_or_default();
+
+        Some(Self::from_raw_config(raw, Some(dir)))
     }
 }

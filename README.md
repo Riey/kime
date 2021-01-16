@@ -24,6 +24,7 @@ Korean IME
 ### GTK3
 
 * gtk3
+* pango
 
 ### XIM
 

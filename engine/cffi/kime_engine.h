@@ -5,8 +5,9 @@
 /* DO NOT MODIFY THIS MANUALLY */
 
 #include <stdint.h>
+#include <stddef.h>
 
-typedef enum KimeInputResultType {
+typedef enum InputResultType {
   Bypass,
   Consume,
   ClearPreedit,
@@ -15,37 +16,83 @@ typedef enum KimeInputResultType {
   CommitBypass,
   CommitPreedit,
   CommitCommit,
-} KimeInputResultType;
+} InputResultType;
 
-typedef struct KimeConfig KimeConfig;
+typedef struct Config Config;
 
-typedef struct KimeInputEngine KimeInputEngine;
+typedef struct InputEngine InputEngine;
 
-typedef struct KimeInputResult {
-  enum KimeInputResultType ty;
+typedef struct InputResult {
+  enum InputResultType ty;
   uint32_t char1;
   uint32_t char2;
-} KimeInputResult;
+} InputResult;
 
-struct KimeInputEngine *kime_engine_new(void);
+/**
+ * Create new engine
+ */
+struct InputEngine *kime_engine_new(void);
 
-void kime_engine_delete(struct KimeInputEngine *engine);
+/**
+ * Delete engine
+ */
+void kime_engine_delete(struct InputEngine *engine);
 
-uint32_t kime_engine_preedit_char(const struct KimeInputEngine *engine);
+/**
+ * Get preedit_char of engine
+ *
+ * ## Return
+ *
+ * valid ucs4 char NULL to represent empty
+ */
+uint32_t kime_engine_preedit_char(const struct InputEngine *engine);
 
-uint32_t kime_engine_reset(struct KimeInputEngine *engine);
+/**
+ * Reset preedit state then returm commit char
+ *
+ * ## Return
+ *
+ * valid ucs4 char NULL to represent empty
+ */
+uint32_t kime_engine_reset(struct InputEngine *engine);
 
-struct KimeInputResult kime_engine_press_key(struct KimeInputEngine *engine,
-                                             const struct KimeConfig *config,
-                                             uint16_t hardware_code,
-                                             uint32_t state);
+/**
+ * Press key when modifier state
+ *
+ * ## Return
+ *
+ * input result
+ */
+struct InputResult kime_engine_press_key(struct InputEngine *engine,
+                                         const struct Config *config,
+                                         uint16_t hardware_code,
+                                         uint32_t state);
 
-struct KimeConfig *kime_config_load(void);
+/**
+ * Load config from local file
+ */
+struct Config *kime_config_load(void);
 
-void kime_config_delete(struct KimeConfig *config);
+/**
+ * Delete config
+ */
+void kime_config_delete(struct Config *config);
 
-uint32_t kime_config_gtk_commit_english(const struct KimeConfig *config);
+/**
+ * Get gtk_commit_english config
+ *
+ * ## Return
+ *
+ * 1 = true, 0 = false
+ */
+uint32_t kime_config_gtk_commit_english(const struct Config *config);
 
-void kime_config_xim_preedit_font(const struct KimeConfig *config,
-                                  const uint8_t **name,
-                                  uintptr_t *len);
+/**
+ * Get xim_preedit_font config
+ * name only valid while config is live
+ *
+ * ## Return
+ *
+ * utf-8 string when len
+ */
+void kime_config_xim_preedit_font(const struct Config *config, const uint8_t **name, size_t *len);

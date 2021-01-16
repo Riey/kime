@@ -69,10 +69,9 @@ impl InputEngine {
             } else if let Some(v) = config.layout.keymap.get(&key) {
                 match *v {
                     KeyValue::Pass(pass) => {
-                        if let Some(commit) = self.state.reset() {
-                            InputResult::commit2(commit, pass)
-                        } else {
-                            InputResult::commit(pass)
+                        match self.state.reset() {
+                            '\0' => InputResult::commit(pass),
+                            commit => InputResult::commit2(commit, pass),
                         }
                     }
                     KeyValue::ChoJong(cho, jong) => self.state.cho_jong(cho, jong, config),
@@ -110,8 +109,8 @@ impl InputEngine {
 
     fn bypass(&mut self) -> InputResult {
         match self.state.reset() {
-            Some(c) => InputResult::commit_bypass(c),
-            None => InputResult::bypass(),
+            '\0' => InputResult::bypass(),
+            c => InputResult::commit_bypass(c),
         }
     }
 
@@ -121,7 +120,7 @@ impl InputEngine {
     }
 
     #[inline]
-    pub fn reset(&mut self) -> Option<char> {
+    pub fn reset(&mut self) -> char {
         self.state.reset()
     }
 }

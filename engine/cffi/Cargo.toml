@@ -4,9 +4,3 @@ version = "0.4.1"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
-
-[build-dependencies]
-bindgen = { version = "0.56.0", default-features = false }
-cbindgen = { version = "0.16.0", default-features = false }
-# cbindgen will compile this
-# kime-engine-capi = { path = "../capi" }

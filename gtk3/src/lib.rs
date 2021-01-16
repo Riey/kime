@@ -28,7 +28,7 @@ use std::{
     sync::atomic::AtomicUsize,
 };
 
-use kime_engine_cffi::{Config, InputEngine, KimeInputResultType};
+use kime_engine_cffi::{Config, InputEngine, InputResultType};
 
 const FORWARDED_MASK: c_uint = 1 << 25;
 const SKIP_MASK: c_uint =
@@ -154,38 +154,38 @@ impl KimeIMContext {
         dbg!(ret);
 
         match ret.ty {
-            KimeInputResultType::Commit => {
+            InputResultType::Commit => {
                 self.update_preedit(false);
                 self.commit(ret.char1);
                 true
             }
-            KimeInputResultType::CommitCommit => {
+            InputResultType::CommitCommit => {
                 self.update_preedit(false);
                 self.commit(ret.char1);
                 self.commit(ret.char2);
                 true
             }
-            KimeInputResultType::CommitBypass => {
+            InputResultType::CommitBypass => {
                 self.update_preedit(false);
                 self.commit(ret.char1);
                 put_event(key);
                 true
             }
-            KimeInputResultType::CommitPreedit => {
+            InputResultType::CommitPreedit => {
                 self.commit(ret.char1);
                 self.update_preedit(true);
                 true
             }
-            KimeInputResultType::Preedit => {
+            InputResultType::Preedit => {
                 self.update_preedit(true);
                 true
             }
-            KimeInputResultType::ClearPreedit => {
+            InputResultType::ClearPreedit => {
                 self.update_preedit(false);
                 true
             }
-            KimeInputResultType::Bypass => false,
-            KimeInputResultType::Consume => true,
+            InputResultType::Bypass => false,
+            InputResultType::Consume => true,
         }
     }
 

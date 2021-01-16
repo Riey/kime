@@ -1,23 +1,21 @@
 use std::char::from_u32_unchecked;
 use std::mem::MaybeUninit;
 
-mod ffi {
-    #![allow(non_camel_case_types)]
-    #![allow(non_snake_case)]
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+mod ffi;
 
-pub use ffi::KimeInputResultType;
+pub use ffi::InputResultType;
 
 #[derive(Clone, Copy, Debug)]
 pub struct InputResult {
-    pub ty: KimeInputResultType,
+    pub ty: InputResultType,
     pub char1: char,
     pub char2: char,
 }
 
 pub struct InputEngine {
-    engine: *mut ffi::KimeInputEngine,
+    engine: *mut ffi::InputEngine,
 }
 
 impl InputEngine {
@@ -63,7 +61,7 @@ impl Drop for InputEngine {
 }
 
 pub struct Config {
-    config: *mut ffi::KimeConfig,
+    config: *mut ffi::Config,
 }
 
 impl Config {

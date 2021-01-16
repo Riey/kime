@@ -15,4 +15,4 @@ simplelog = "0.9.0"
 xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 # xim = { path = "../../xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 
-kime-engine-cffi = { path = "../engine-cffi" }
+kime-engine-cffi = { path = "../engine/cffi" }

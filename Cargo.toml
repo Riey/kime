@@ -1,7 +1,8 @@
 [workspace]
 members = [
-    "engine",
-    "engine-cffi",
+    "engine/core",
+    "engine/capi",
+    "engine/cffi",
     "gtk3",
     "xim",
 ]

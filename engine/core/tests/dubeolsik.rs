@@ -1,6 +1,6 @@
-const DUBEOLSIK_LAYOUT: &str = include_str!("../../data/dubeolsik.yaml");
+const DUBEOLSIK_LAYOUT: &str = include_str!("../data/dubeolsik.yaml");
 
-use crate::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
+use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout};
 
 #[track_caller]
 fn test_input(inputs: &[(Key, InputResult)]) {

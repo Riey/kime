@@ -17,6 +17,7 @@ use kime_engine_cffi::{
 
 pub struct KimeData {
     engine: InputEngine,
+    callback_started: bool,
     pe: Option<NonZeroU32>,
 }
 
@@ -24,6 +25,7 @@ impl KimeData {
     pub fn new() -> Self {
         Self {
             engine: InputEngine::new(),
+            callback_started: false,
             pe: None,
         }
     }
@@ -69,16 +71,19 @@ impl KimeHandler {
         ch: char,
     ) -> Result<(), xim::ServerError> {
         if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
-            log::trace!("Preedit callback {}", ch);
+            log::trace!("Preedit callback");
             // on-the-spot send preedit callback
-            let mut buf = [0; 4];
-            let s = ch.encode_utf8(&mut buf);
-            server.preedit_draw(ic, s)?;
+            if !ic.user_data.callback_started {
+                server.preedit_start(ic)?;
+            } else {
+                let mut b = [0; 4];
+                server.preedit_draw(ic, ch.encode_utf8(&mut b))?;
+            }
         } else if let Some(pe) = ic.user_data.pe.as_mut() {
-            // off-the-spot draw in server (already have pe_window)
+            // over-the-spot draw in server (already have pe_window)
             self.preedit_windows.get_mut(pe).unwrap().set_preedit(ch);
         } else {
-            // off-the-spot draw in server
+            // over-the-spot draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
                 self.config.xim_font_name(),
@@ -103,7 +108,7 @@ impl KimeHandler {
         ic: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         if let Some(c) = ic.user_data.engine.reset() {
-            self.clear_preedit(server.conn(), ic)?;
+            self.clear_preedit(server, ic)?;
             self.commit(server, ic, c)?;
         }
 
@@ -112,14 +117,17 @@ impl KimeHandler {
 
     fn clear_preedit(
         &mut self,
-        c: &XCBConnection,
+        server: &mut X11rbServer<XCBConnection>,
         ic: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if let Some(pe) = ic.user_data.pe.take() {
+        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
+            ic.user_data.callback_started = false;
+            server.preedit_done(ic)?;
+        } else if let Some(pe) = ic.user_data.pe.take() {
             // off-the-spot draw in server
             if let Some(w) = self.preedit_windows.remove(&pe) {
                 log::trace!("Destory PeWindow: {}", w.window());
-                w.clean(c)?;
+                w.clean(server.conn())?;
             }
         }
 
@@ -153,16 +161,15 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn input_styles(&self) -> Self::InputStyleArray {
         [
-            // root
+            // over-spot
             InputStyle::PREEDIT_NOTHING | InputStyle::STATUS_NOTHING,
-            // off-the-spot
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_AREA,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NONE,
             // on-the-spot
-            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_AREA,
             InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NOTHING,
             InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NONE,
+            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_AREA,
         ]
     }
 
@@ -175,9 +182,11 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_set_ic_values(
         &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
-        _input_context: &mut xim::InputContext<KimeData>,
+        server: &mut X11rbServer<XCBConnection>,
+        input_context: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
+        // FIXME: or move preedit window position?
+        self.reset(server, input_context)?;
         Ok(())
     }
 
@@ -224,6 +233,8 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         if xev.response_type != KEY_PRESS_EVENT {
             return Ok(false);
         }
+        
+        log::trace!("{:?}", xev);
 
         // other modifiers then shift
         if xev.state & (!0x1) != 0 {
@@ -256,23 +267,23 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             InputResultType::Bypass => Ok(false),
             InputResultType::Consume => Ok(true),
             InputResultType::ClearPreedit => {
-                self.clear_preedit(server.conn(), input_context)?;
+                self.clear_preedit(server, input_context)?;
                 Ok(true)
             }
             InputResultType::CommitBypass => {
                 self.commit(server, input_context, ret.char1)?;
-                self.clear_preedit(server.conn(), input_context)?;
+                self.clear_preedit(server, input_context)?;
                 Ok(false)
             }
             InputResultType::Commit => {
                 self.commit(server, input_context, ret.char1)?;
-                self.clear_preedit(server.conn(), input_context)?;
+                self.clear_preedit(server, input_context)?;
                 Ok(true)
             }
             InputResultType::CommitCommit => {
                 self.commit(server, input_context, ret.char1)?;
                 self.commit(server, input_context, ret.char2)?;
-                self.clear_preedit(server.conn(), input_context)?;
+                self.clear_preedit(server, input_context)?;
                 Ok(true)
             }
             InputResultType::CommitPreedit => {
@@ -303,9 +314,18 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_preedit_start(
         &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
-        _input_context: &mut xim::InputContext<Self::InputContextData>,
+        server: &mut X11rbServer<XCBConnection>,
+        input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
+        log::trace!("preedit started");
+        input_context.user_data.callback_started = true;
+        let mut b = [0; 4];
+        let s = input_context
+            .user_data
+            .engine
+            .preedit_char()
+            .encode_utf8(&mut b);
+        server.preedit_draw(input_context, s)?;
         Ok(())
     }
 

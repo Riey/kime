@@ -8,6 +8,9 @@ usize_is_size_t = true
 no_includes = true
 sys_includes = ["stdint.h", "stddef.h"]
 
+[macro_expansion]
+bitflags = true
+
 [parse]
 parse_deps = true
 include = ["kime-engine-core"]

@@ -28,6 +28,11 @@ typedef struct InputResult {
   uint32_t char2;
 } InputResult;
 
+typedef uint32_t ModifierState;
+#define ModifierState_CONTROL (uint32_t)1
+#define ModifierState_SUPER (uint32_t)2
+#define ModifierState_SHIFT (uint32_t)4
+
 /**
  * Create new engine
  */
@@ -66,7 +71,7 @@ uint32_t kime_engine_reset(struct InputEngine *engine);
 struct InputResult kime_engine_press_key(struct InputEngine *engine,
                                          const struct Config *config,
                                          uint16_t hardware_code,
-                                         uint32_t state);
+                                         ModifierState state);
 
 /**
  * Load config from local file

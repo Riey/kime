@@ -11,7 +11,9 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use kime_engine_cffi::{Config, InputEngine, InputResultType};
+use kime_engine_cffi::{
+    Config, InputEngine, InputResultType, MODIFIER_CONTROL, MODIFIER_SHIFT, MODIFIER_SUPER,
+};
 
 pub struct KimeData {
     engine: InputEngine,
@@ -229,11 +231,24 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             return Ok(false);
         }
 
-        let ret = input_context.user_data.engine.press_key(
-            &self.config,
-            xev.detail as u16,
-            xev.state as u32,
-        );
+        let mut state = 0;
+
+        if xev.state & 0x1 != 0 {
+            state |= MODIFIER_SHIFT;
+        }
+
+        if xev.state & 0x4 != 0 {
+            state |= MODIFIER_CONTROL;
+        }
+
+        if xev.state & 0x40 != 0 {
+            state |= MODIFIER_SUPER;
+        }
+
+        let ret = input_context
+            .user_data
+            .engine
+            .press_key(&self.config, xev.detail as u16, state);
 
         log::trace!("{:?}", ret);
 

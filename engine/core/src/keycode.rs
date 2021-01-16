@@ -6,6 +6,15 @@ use serde::{
 };
 use strum_macros::{Display, EnumString};
 
+bitflags::bitflags! {
+    #[repr(transparent)]
+    pub struct ModifierState: u32 {
+        const CONTROL = 0x1;
+        const SUPER = 0x2;
+        const SHIFT= 0x4;
+    }
+}
+
 // TODO: complete
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumString, Display)]
@@ -153,49 +162,42 @@ impl KeyCode {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Key {
     pub code: KeyCode,
-    pub shift: bool,
-    pub ctrl: bool,
-    pub super_: bool,
+    pub state: ModifierState,
 }
 
 impl Key {
-    pub const fn new(code: KeyCode, shift: bool, ctrl: bool, super_: bool) -> Self {
-        Self {
-            code,
-            shift,
-            ctrl,
-            super_,
-        }
+    pub const fn new(code: KeyCode, state: ModifierState) -> Self {
+        Self { code, state }
     }
 
     pub const fn normal(code: KeyCode) -> Self {
-        Self::new(code, false, false, false)
+        Self::new(code, ModifierState::empty())
     }
 
     pub const fn shift(code: KeyCode) -> Self {
-        Self::new(code, true, false, false)
+        Self::new(code, ModifierState::SHIFT)
     }
 
     pub const fn ctrl(code: KeyCode) -> Self {
-        Self::new(code, false, true, false)
+        Self::new(code, ModifierState::CONTROL)
     }
 
     pub const fn super_(code: KeyCode) -> Self {
-        Self::new(code, false, false, true)
+        Self::new(code, ModifierState::SUPER)
     }
 }
 
 impl fmt::Display for Key {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.super_ {
+        if self.state.contains(ModifierState::SUPER) {
             f.write_str("Super-")?;
         }
 
-        if self.ctrl {
+        if self.state.contains(ModifierState::CONTROL) {
             f.write_str("C-")?;
         }
 
-        if self.shift {
+        if self.state.contains(ModifierState::SUPER) {
             f.write_str("S-")?;
         }
 
@@ -207,31 +209,31 @@ impl FromStr for Key {
     type Err = <KeyCode as FromStr>::Err;
 
     fn from_str(mut s: &str) -> Result<Self, Self::Err> {
-        let mut super_ = false;
-        let mut shift = false;
-        let mut ctrl = false;
+        let mut state = ModifierState::empty();
 
-        if let Some(left) = s.strip_prefix("Super-") {
-            super_ = true;
-            s = left;
+        loop {
+            if let Some(n) = s.strip_prefix("C-") {
+                s = n;
+                state |= ModifierState::CONTROL;
+                continue;
+            }
+
+            if let Some(n) = s.strip_prefix("Super-") {
+                s = n;
+                state |= ModifierState::SUPER;
+                continue;
+            }
+
+            if let Some(n) = s.strip_prefix("S-") {
+                s = n;
+                state |= ModifierState::SHIFT;
+                continue;
+            }
+
+            break;
         }
 
-        if let Some(left) = s.strip_prefix("C-") {
-            ctrl = true;
-            s = left;
-        }
-
-        if let Some(left) = s.strip_prefix("S-") {
-            shift = true;
-            s = left;
-        }
-
-        Ok(Self {
-            code: s.parse()?,
-            shift,
-            ctrl,
-            super_,
-        })
+        Ok(Self::new(s.parse()?, state))
     }
 }
 

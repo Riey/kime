@@ -5,7 +5,11 @@ use std::mem::MaybeUninit;
 #[allow(non_snake_case)]
 mod ffi;
 
-pub use ffi::InputResultType;
+pub use ffi::{InputResultType, ModifierState};
+
+pub const MODIFIER_CONTROL: ModifierState = 1;
+pub const MODIFIER_SUPER: ModifierState = 2;
+pub const MODIFIER_SHIFT: ModifierState = 4;
 
 #[derive(Clone, Copy, Debug)]
 pub struct InputResult {
@@ -25,7 +29,12 @@ impl InputEngine {
         }
     }
 
-    pub fn press_key(&mut self, config: &Config, hardware_code: u16, state: u32) -> InputResult {
+    pub fn press_key(
+        &mut self,
+        config: &Config,
+        hardware_code: u16,
+        state: ModifierState,
+    ) -> InputResult {
         let ret =
             unsafe { ffi::kime_engine_press_key(self.engine, config.config, hardware_code, state) };
 

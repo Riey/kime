@@ -1,10 +1,6 @@
 #![allow(clippy::missing_safety_doc)]
 
-pub use kime_engine_core::{
-    InputResult,
-    InputEngine,
-    Config,
-};
+pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState};
 
 /// Create new engine
 #[no_mangle]
@@ -51,7 +47,7 @@ pub unsafe extern "C" fn kime_engine_press_key(
     engine: *mut InputEngine,
     config: *const Config,
     hardware_code: u16,
-    state: u32,
+    state: ModifierState,
 ) -> InputResult {
     let engine = engine.as_mut().unwrap();
     let config = config.as_ref().unwrap();

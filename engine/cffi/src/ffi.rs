@@ -75,6 +75,7 @@ fn bindgen_test_layout_InputResult() {
         )
     );
 }
+pub type ModifierState = u32;
 extern "C" {
     #[doc = " Create new engine"]
     pub fn kime_engine_new() -> *mut InputEngine;
@@ -109,7 +110,7 @@ extern "C" {
         engine: *mut InputEngine,
         config: *const Config,
         hardware_code: u16,
-        state: u32,
+        state: ModifierState,
     ) -> InputResult;
 }
 extern "C" {

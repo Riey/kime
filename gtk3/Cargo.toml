@@ -22,7 +22,7 @@ kime-engine-cffi = { path = "../engine/cffi" }
 [package.metadata.deb]
 name = "kime-gtk3"
 maintainer = "Riey"
-copyright = "2020, Riey <creeper844@gmail.com>"
+copyright = "2021, Riey <creeper844@gmail.com>"
 depends = "gtk3,kime-engine"
 provides = "kime-gtk3"
 conflicts = "kime-gtk3"

@@ -8,7 +8,7 @@ use self::characters::KeyValue;
 use self::state::CharacterState;
 use ahash::AHashMap;
 
-pub use self::config::Config;
+pub use self::config::{Config, RawConfig};
 pub use self::input_result::{InputResult, InputResultType};
 pub use self::keycode::{Key, KeyCode};
 

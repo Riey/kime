@@ -1,3 +1,9 @@
+# 0.5.0
+
+* Now `dubeolsik`, `sebeolsik-390`, `sebeolsik-391` layouts are embeded and no need local file
+* Fix Super key bug
+* Package deb file 
+
 # 0.4.1
 
 * Fix unhandled keycode doesn't occur reset 

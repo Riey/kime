@@ -26,7 +26,7 @@ impl CharacterState {
         }
     }
 
-    pub fn reset(&mut self) -> Option<char> {
+    pub fn reset(&mut self) -> char {
         let cc = self.commit_char();
         self.cho = None;
         self.jung = None;
@@ -34,18 +34,18 @@ impl CharacterState {
         cc
     }
 
-    pub fn commit_char(&self) -> Option<char> {
+    pub fn commit_char(&self) -> char {
         match (self.cho, self.jung, self.jong) {
-            (None, None, None) => None,
-            (Some(cho), Some(jung), jong) => Some(cho.compose(jung, jong)),
+            (None, None, None) => '\0',
+            (Some(cho), Some(jung), jong) => cho.compose(jung, jong),
 
-            (Some(cho), None, None) => Some(cho.jamo()),
-            (None, Some(jung), None) => Some(jung.jamo()),
-            (None, None, Some(jong)) => Some(jong.jamo()),
+            (Some(cho), None, None) => cho.jamo(),
+            (None, Some(jung), None) => jung.jamo(),
+            (None, None, Some(jong)) => jong.jamo(),
 
             // can't be char
-            (None, Some(_jung), Some(_jong)) => None,
-            (Some(_cho), None, Some(_jong)) => None,
+            (None, Some(_jung), Some(_jong)) => '\0',
+            (Some(_cho), None, Some(_jong)) => '\0',
         }
     }
 
@@ -54,8 +54,8 @@ impl CharacterState {
         let prev = std::mem::replace(self, new);
 
         match prev.commit_char() {
-            Some(prev) => InputResult::commit_preedit(prev, self.to_char()),
-            None => InputResult::preedit(self.to_char()),
+            '\0' => InputResult::preedit(self.to_char()),
+            prev => InputResult::commit_preedit(prev, self.to_char()),
         }
     }
 

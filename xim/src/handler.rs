@@ -11,7 +11,7 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use kime_engine_cffi::{Config, InputEngine, KimeInputResultType};
+use kime_engine_cffi::{Config, InputEngine, InputResultType};
 
 pub struct KimeData {
     engine: InputEngine,
@@ -238,34 +238,34 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         log::trace!("{:?}", ret);
 
         match ret.ty {
-            KimeInputResultType::Bypass => Ok(false),
-            KimeInputResultType::Consume => Ok(true),
-            KimeInputResultType::ClearPreedit => {
+            InputResultType::Bypass => Ok(false),
+            InputResultType::Consume => Ok(true),
+            InputResultType::ClearPreedit => {
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(true)
             }
-            KimeInputResultType::CommitBypass => {
+            InputResultType::CommitBypass => {
                 self.commit(server, input_context, ret.char1)?;
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(false)
             }
-            KimeInputResultType::Commit => {
+            InputResultType::Commit => {
                 self.commit(server, input_context, ret.char1)?;
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(true)
             }
-            KimeInputResultType::CommitCommit => {
+            InputResultType::CommitCommit => {
                 self.commit(server, input_context, ret.char1)?;
                 self.commit(server, input_context, ret.char2)?;
                 self.clear_preedit(server.conn(), input_context)?;
                 Ok(true)
             }
-            KimeInputResultType::CommitPreedit => {
+            InputResultType::CommitPreedit => {
                 self.commit(server, input_context, ret.char1)?;
                 self.preedit(server, input_context, ret.char2)?;
                 Ok(true)
             }
-            KimeInputResultType::Preedit => {
+            InputResultType::Preedit => {
                 self.preedit(server, input_context, ret.char1)?;
                 Ok(true)
             }

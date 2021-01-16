@@ -9,10 +9,6 @@ cp target/release/libkime_engine.so build/libkime_engine.so
 
 cp engine/cffi/kime_engine.h build
 
-cp engine/core/data/dubeolsik.yaml build/layouts
-cp engine/core/data/sebeolsik-390.yaml build/layouts
-cp engine/core/data/sebeolsik-391.yaml build/layouts
-
 # cp engine/data/config.yaml build/
 
 strip -s build/kime-xim

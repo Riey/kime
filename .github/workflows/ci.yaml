@@ -2,9 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [ develop ]
+    branches-ignore:
+      - 'master'
   pull_request:
-    branches: [ master, release ]
+    branches:
+      - 'develop'
+      - 'master'
 
 env:
   CARGO_TERM_COLOR: always

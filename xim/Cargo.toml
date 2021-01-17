@@ -22,7 +22,7 @@ kime-engine-cffi = { path = "../engine/cffi" }
 name = "kime-xim"
 maintainer = "Riey"
 copyright = "2021, Riey <creeper844@gmail.com>"
-depends = "libxcb,cairo,kime-engine"
+depends = "libxcb1,libcairo2,kime-engine"
 provides = "kime-xim"
 conflicts = "kime-xim"
 

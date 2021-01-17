@@ -23,7 +23,7 @@ kime-engine-cffi = { path = "../engine/cffi" }
 name = "kime-gtk3"
 maintainer = "Riey"
 copyright = "2021, Riey <creeper844@gmail.com>"
-depends = "gtk3,kime-engine"
+depends = "gtk+3.0,libpango-1.0,libglib2.0,kime-engine"
 provides = "kime-gtk3"
 conflicts = "kime-gtk3"
 assets = [

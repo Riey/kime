@@ -17,7 +17,6 @@ use kime_engine_cffi::{
 
 pub struct KimeData {
     engine: InputEngine,
-    callback_started: bool,
     pe: Option<NonZeroU32>,
 }
 
@@ -25,7 +24,6 @@ impl KimeData {
     pub fn new() -> Self {
         Self {
             engine: InputEngine::new(),
-            callback_started: false,
             pe: None,
         }
     }
@@ -70,20 +68,11 @@ impl KimeHandler {
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
-        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
-            log::trace!("Preedit callback");
-            // on-the-spot send preedit callback
-            if !ic.user_data.callback_started {
-                server.preedit_start(ic)?;
-            } else {
-                let mut b = [0; 4];
-                server.preedit_draw(ic, ch.encode_utf8(&mut b))?;
-            }
-        } else if let Some(pe) = ic.user_data.pe.as_mut() {
-            // over-the-spot draw in server (already have pe_window)
+        if let Some(pe) = ic.user_data.pe.as_mut() {
+            // draw in server (already have pe_window)
             self.preedit_windows.get_mut(pe).unwrap().set_preedit(ch);
         } else {
-            // over-the-spot draw in server
+            // draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
                 self.config.xim_font_name(),
@@ -120,10 +109,7 @@ impl KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         ic: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
-            ic.user_data.callback_started = false;
-            server.preedit_done(ic)?;
-        } else if let Some(pe) = ic.user_data.pe.take() {
+        if let Some(pe) = ic.user_data.pe.take() {
             // off-the-spot draw in server
             if let Some(w) = self.preedit_windows.remove(&pe) {
                 log::trace!("Destory PeWindow: {}", w.window());
@@ -148,7 +134,7 @@ impl KimeHandler {
 }
 
 impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
-    type InputStyleArray = [InputStyle; 7];
+    type InputStyleArray = [InputStyle; 3];
     type InputContextData = KimeData;
 
     fn new_ic_data(
@@ -163,13 +149,9 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         [
             // over-spot
             InputStyle::PREEDIT_NOTHING | InputStyle::STATUS_NOTHING,
-            InputStyle::PREEDIT_POSITION | InputStyle::STATUS_AREA,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NONE,
-            // on-the-spot
-            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NOTHING,
-            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NONE,
-            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_AREA,
+            // // on-the-spot when enable this java awt doesn't work I don't know why
         ]
     }
 
@@ -200,12 +182,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             input_context.input_style(),
             input_context.preedit_spot()
         );
-        server.set_event_mask(
-            input_context,
-            EventMask::KeyPress | EventMask::KeyRelease,
-            0,
-            // EventMask::KeyPress | EventMask::KeyRelease,
-        )?;
+        server.set_event_mask(input_context, EventMask::KeyPress.into(), 0)?;
 
         Ok(())
     }
@@ -316,18 +293,9 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_preedit_start(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
-        input_context: &mut xim::InputContext<Self::InputContextData>,
+        _server: &mut X11rbServer<XCBConnection>,
+        _input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        log::trace!("preedit started");
-        input_context.user_data.callback_started = true;
-        let mut b = [0; 4];
-        let s = input_context
-            .user_data
-            .engine
-            .preedit_char()
-            .encode_utf8(&mut b);
-        server.preedit_draw(input_context, s)?;
         Ok(())
     }
 

@@ -360,27 +360,30 @@ unsafe fn register_module(module: *mut GTypeModule) {
 
         if !out.is_null() {
             // Noting to display
-            if ch == '\0' {
-                if !cursor_pos.is_null() {
-                    cursor_pos.write(0);
+            match ch {
+                None => {
+                    if !cursor_pos.is_null() {
+                        cursor_pos.write(0);
+                    }
+                    out.write(g_strdup(cs!("")));
                 }
-                out.write(g_strdup(cs!("")));
-            } else {
-                if !cursor_pos.is_null() {
-                    cursor_pos.write(1);
+                Some(ch) => {
+                    if !cursor_pos.is_null() {
+                        cursor_pos.write(1);
+                    }
+                    str_len = ch.len_utf8();
+                    let s = g_malloc0(str_len + 1).cast::<c_char>();
+                    ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), str_len));
+                    s.add(str_len).write(0);
+                    out.write(s);
                 }
-                str_len = ch.len_utf8();
-                let s = g_malloc0(str_len + 1).cast::<c_char>();
-                ch.encode_utf8(std::slice::from_raw_parts_mut(s.cast(), str_len));
-                s.add(str_len).write(0);
-                out.write(s);
             }
         }
 
         if !attrs.is_null() {
             attrs.write(pango_sys::pango_attr_list_new());
 
-            if !out.is_null() && ch != '\0' {
+            if !out.is_null() && ch.is_none() {
                 let attr = pango_sys::pango_attr_underline_new(pango_sys::PANGO_UNDERLINE_SINGLE);
                 (*attr).start_index = 0;
                 (*attr).end_index = str_len as _;

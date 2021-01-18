@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-capi"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "kime-engine-core",
  "serde_yaml",
@@ -345,11 +345,11 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-cffi"
-version = "0.5.1"
+version = "0.6.0"
 
 [[package]]
 name = "kime-engine-core"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "ahash",
  "bitflags",
@@ -364,7 +364,7 @@ dependencies = [
 
 [[package]]
 name = "kime-gtk3"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "gdk-sys",
  "glib-sys",
@@ -376,7 +376,7 @@ dependencies = [
 
 [[package]]
 name = "kime-xim"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "ahash",
  "cairo-rs",

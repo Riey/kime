@@ -24,11 +24,11 @@ jobs:
       - name: Generate package...
         run: pkg/release.sh
       - name: Archiving package...
-        run: 7z a kime.7z ./build/out/*
+        run: 7z a build/kime.7z ./build/out/*
       - name: Generate deb package...
         run: pkg/release-deb.sh
       - name: Archiving deb package...
-        run: 7z a kime-deb.7z ./build/deb/*
+        run: 7z a build/kime-deb.7z ./build/deb/*
 
       - name: Create draft release
         id: create_release

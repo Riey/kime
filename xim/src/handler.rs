@@ -215,8 +215,8 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
         log::trace!("{:?}", xev);
 
-        // other modifiers then shift
-        if xev.state & (!0x1) != 0 {
+        // other modifiers then shift or control or super
+        if xev.state & !(0x1 | 0x4 | 0x40) != 0 {
             self.reset(server, input_context)?;
             return Ok(false);
         }

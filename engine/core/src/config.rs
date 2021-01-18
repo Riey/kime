@@ -94,7 +94,7 @@ impl Config {
     pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {
         let layout = dir
             .and_then(|dir| {
-                dir.list_data_files("layouts")
+                dir.list_config_files("layouts")
                     .into_iter()
                     .find_map(|layout| {
                         if layout.file_stem()?.to_str()? == raw.layout {
@@ -133,17 +133,10 @@ impl Config {
     pub fn load_from_config_dir() -> Option<Self> {
         let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
 
-        let config = match dir.find_config_file("config.yaml") {
-            Some(config) => config,
-            None => {
-                let path = dir.place_config_file("config.yaml").ok()?;
-                std::fs::write(&path, serde_yaml::to_string(&RawConfig::default()).ok()?).ok()?;
-                path
-            }
-        };
-
-        let raw: RawConfig =
-            serde_yaml::from_reader(std::fs::File::open(config).ok()?).unwrap_or_default();
+        let raw = dir
+            .find_config_file("config.yaml")
+            .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
+            .unwrap_or_default();
 
         Some(Self::from_raw_config(raw, Some(dir)))
     }

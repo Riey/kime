@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - 'releases/*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  packaging:
+    runs-on: ubuntu-20.04
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update apt
+        run: sudo apt-get update -y
+      - name: Install packages
+        run: sudo apt-get install -y pkg-config libpango1.0-dev libcairo2-dev libgtk-3-dev libglib2.0 libxcb1
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+
+      - name: Generate 7z package...
+        run: pkg/release-7z.sh
+      - name: Upload 7z package
+        uses: actions/upload-artifact@v2
+        with:
+          name: pkg-7z
+          path: build/7z
+
+      - name: Generate deb package...
+        run: pkg/release-deb.sh
+      - name: Upload deb package
+        uses: actions/upload-artifact@v2
+        with:
+          name: pkg-deb
+          path: build/deb
+  

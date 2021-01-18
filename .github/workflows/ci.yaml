@@ -4,17 +4,17 @@ on:
   push:
     branches-ignore:
       - 'master'
+      - 'releases/*'
   pull_request:
     branches:
       - 'develop'
-      - 'master'
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2

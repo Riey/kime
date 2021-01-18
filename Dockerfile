@@ -18,6 +18,5 @@ RUN cargo install -f cargo-deb
 COPY LICENSE .
 
 COPY pkg ./pkg
-COPY release.sh ./release.sh
 
-CMD ./release.sh
+CMD ./pkg/release-deb.sh

@@ -216,7 +216,7 @@ impl KimeIMContext {
     }
 
     pub fn commit_event(&mut self, key: &GdkEventKey) -> gboolean {
-        if self.shared.config.gtk_commit_english() && key.state & GDK_CONTROL_MASK == 0 {
+        if self.shared.config.gtk_commit_english() && (key.state == 0 || key.state == GDK_SHIFT_MASK) {
             let c = unsafe { std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval)) };
 
             if !c.is_control() {

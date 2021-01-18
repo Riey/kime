@@ -1,6 +1,7 @@
 # 0.5.0
 
 * Now `dubeolsik`, `sebeolsik-390`, `sebeolsik-391` layouts are embeded and no need local file
+* Fix intellij issue
 * Fix Super key bug
 * Package deb file 
 

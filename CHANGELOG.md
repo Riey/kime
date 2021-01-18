@@ -1,3 +1,7 @@
+# 0.5.2
+
+* Don't reset on XIM set_ic_values
+
 # 0.5.1
 
 * Fix XIM modifier bug

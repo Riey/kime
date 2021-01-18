@@ -2,6 +2,12 @@
 
 Korean IME
 
+[![ci](https://github.com/Riey/kime/workflows/CI/badge.svg)](https://github.com/Riey/kime/actions?query=workflow%3ACI)
+[![release](https://github.com/Riey/kime/workflows/Release/badge.svg)](https://github.com/Riey/kime/actions?query=workflow%3ARelease)
+[![Release version](https://img.shields.io/github/v/release/Riey/kime)](https://github.com/Riey/kime/releases)
+[![AUR version](https://img.shields.io/aur/version/kime)](https://aur.archlinux.org/packages/kime/)
+[![LICENSE](https://img.shields.io/github/license/Riey/kime)](https://github.com/Riey/kime/blob/master/LICENSE)
+
 ## Why kime
 
 * Well tested input engine

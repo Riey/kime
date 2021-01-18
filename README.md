@@ -38,16 +38,12 @@ git clone https://github.com/Riey/kime
 cd kime
 
 cargo build --release
-./pkg/release-7z.sh
-7z x -obuild/out build/7z/kime.7z
 
-cd build/out
+pkg/release.sh
 
-sudo install -Dm755 kime-xim -t "/usr/bin"
-sudo install -Dm755 im-kime.so -t "/usr/lib/gtk-3.0/3.0.0/immodules"
-sudo install -Dm755 libkime_engine.so -t "/usr/lib"
-sudo install -Dm644 kime_engine.h -t "/usr/include/kime"
-sudo install -Dm644 config.yaml -t "/etc/kime"
+# You can now install files from build/out
+# or use script in pkg/install.sh
+# e.g. sudo pkg/install.sh
 ```
 
 ## Configuration

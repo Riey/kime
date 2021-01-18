@@ -2,6 +2,8 @@
 
 * Don't reset on XIM set_ic_values
 * Redraw when XIM preedit state changed
+* Update packaging scripts
+* Add Install guide
 
 # 0.5.1
 

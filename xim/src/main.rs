@@ -12,7 +12,7 @@ fn main() -> Result<(), ServerError> {
         if cfg!(debug_assertions) {
             log::LevelFilter::Trace
         } else {
-            log::LevelFilter::Warn
+            log::LevelFilter::Info
         },
         simplelog::ConfigBuilder::new().build(),
     )

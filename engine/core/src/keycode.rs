@@ -197,7 +197,7 @@ impl fmt::Display for Key {
             f.write_str("C-")?;
         }
 
-        if self.state.contains(ModifierState::SUPER) {
+        if self.state.contains(ModifierState::SHIFT) {
             f.write_str("S-")?;
         }
 

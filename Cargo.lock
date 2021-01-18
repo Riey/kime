@@ -340,6 +340,7 @@ name = "kime-engine-capi"
 version = "0.5.0"
 dependencies = [
  "kime-engine-core",
+ "serde_yaml",
 ]
 
 [[package]]

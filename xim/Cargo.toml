@@ -18,14 +18,3 @@ xim = { git = "https://github.com/Riey/xim-rs", default-features = false, featur
 
 kime-engine-cffi = { path = "../engine/cffi" }
 
-[package.metadata.deb]
-name = "kime-xim"
-maintainer = "Riey"
-copyright = "2021, Riey <creeper844@gmail.com>"
-depends = "libxcb1,libcairo2,kime-engine"
-provides = "kime-xim"
-conflicts = "kime-xim"
-
-assets = [
-    ["target/release/kime-xim", "usr/bin", "755"],
-]

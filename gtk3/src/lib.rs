@@ -33,8 +33,7 @@ use kime_engine_cffi::{
 };
 
 const FORWARDED_MASK: c_uint = 1 << 25;
-const SKIP_MASK: c_uint =
-    GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD5_MASK;
+const SKIP_MASK: c_uint = GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD5_MASK;
 
 #[repr(transparent)]
 struct TypeInfoWrapper(GTypeInfo);
@@ -216,7 +215,9 @@ impl KimeIMContext {
     }
 
     pub fn commit_event(&mut self, key: &GdkEventKey) -> gboolean {
-        if self.shared.config.gtk_commit_english() && (key.state == 0 || key.state == GDK_SHIFT_MASK) {
+        if self.shared.config.gtk_commit_english()
+            && (key.state == 0 || key.state == GDK_SHIFT_MASK)
+        {
             let c = unsafe { std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval)) };
 
             if !c.is_control() {

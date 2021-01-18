@@ -1,3 +1,7 @@
+# 0.5.1
+
+* Fix XIM modifier bug
+
 # 0.5.0
 
 * Now `dubeolsik`, `sebeolsik-390`, `sebeolsik-391` layouts are embeded and no need local file

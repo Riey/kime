@@ -1,7 +1,7 @@
 use gdk_sys::{
     gdk_event_copy, gdk_event_put, gdk_keyval_to_unicode, gdk_window_get_user_data, GdkColor,
     GdkEvent, GdkEventKey, GdkWindow, GDK_CONTROL_MASK, GDK_KEY_PRESS, GDK_MOD1_MASK,
-    GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK, GDK_SUPER_MASK,
+    GDK_MOD2_MASK, GDK_MOD3_MASK, GDK_MOD4_MASK, GDK_MOD5_MASK, GDK_SHIFT_MASK,
 };
 use glib_sys::{g_malloc0, g_strcmp0, g_strdup, gboolean, gpointer, GType, GFALSE, GTRUE};
 use gobject_sys::{
@@ -33,8 +33,7 @@ use kime_engine_cffi::{
 };
 
 const FORWARDED_MASK: c_uint = 1 << 25;
-const SKIP_MASK: c_uint =
-    GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD4_MASK | GDK_MOD5_MASK;
+const SKIP_MASK: c_uint = GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD5_MASK;
 
 #[repr(transparent)]
 struct TypeInfoWrapper(GTypeInfo);
@@ -158,7 +157,7 @@ impl KimeIMContext {
             state |= MODIFIER_CONTROL;
         }
 
-        if key.state & GDK_SUPER_MASK != 0 {
+        if key.state & GDK_MOD4_MASK != 0 {
             state |= MODIFIER_SUPER;
         }
 
@@ -216,7 +215,9 @@ impl KimeIMContext {
     }
 
     pub fn commit_event(&mut self, key: &GdkEventKey) -> gboolean {
-        if self.shared.config.gtk_commit_english() && key.state & GDK_CONTROL_MASK == 0 {
+        if self.shared.config.gtk_commit_english()
+            && (key.state == 0 || key.state == GDK_SHIFT_MASK)
+        {
             let c = unsafe { std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval)) };
 
             if !c.is_control() {

@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    branches:
-      - 'releases/*'
+    tags:
+    - 'v*'
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,26 +14,49 @@ jobs:
     
     steps:
       - uses: actions/checkout@v2
+      - name: Set VER
+        id: version
+        run: echo "::set-output name=ver::$(grep '^version =' gtk3/Cargo.toml|head -n1|cut -d\" -f2)"
       - name: Update apt
         run: sudo apt-get update -y
       - name: Install packages
         run: sudo apt-get install -y pkg-config libpango1.0-dev libcairo2-dev libgtk-3-dev libglib2.0 libxcb1
-      - name: Install cargo-deb
-        run: cargo install cargo-deb
 
-      - name: Generate 7z package...
-        run: pkg/release-7z.sh
-      - name: Upload 7z package
-        uses: actions/upload-artifact@v2
-        with:
-          name: pkg-7z
-          path: build/7z
-
+      - name: Generate package...
+        run: pkg/release.sh
+      - name: Archiving package...
+        run: 7z a build/kime.7z ./build/out/*
       - name: Generate deb package...
         run: pkg/release-deb.sh
-      - name: Upload deb package
-        uses: actions/upload-artifact@v2
+
+      - name: Create draft release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: pkg-deb
-          path: build/deb
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - name: Upload archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/kime.7z
+          asset_name: kime-${{ steps.version.outputs.ver }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      - name: Upload deb package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/deb/kime_${{ steps.version.outputs.ver }}_amd64.deb
+          asset_name: kime_${{ steps.version.outputs.ver }}_amd64.deb
+          asset_content_type: application/x-xz
   

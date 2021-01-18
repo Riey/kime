@@ -47,8 +47,13 @@ impl InputEngine {
         }
     }
 
-    pub fn preedit_char(&self) -> char {
-        unsafe { from_u32_unchecked(ffi::kime_engine_preedit_char(self.engine)) }
+    pub fn preedit_char(&self) -> Option<char> {
+        unsafe {
+            match ffi::kime_engine_preedit_char(self.engine) {
+                0 => None,
+                n => Some(from_u32_unchecked(n)),
+            }
+        }
     }
 
     pub fn reset(&mut self) -> Option<char> {

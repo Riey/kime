@@ -1,3 +1,11 @@
+# 0.6.0
+
+* Don't reset on XIM set_ic_values
+* Redraw when XIM preedit state changed
+* Update packaging scripts
+* Add Install guide
+* Now kime-xim print version when pass `--version`
+
 # 0.5.1
 
 * Fix XIM modifier bug

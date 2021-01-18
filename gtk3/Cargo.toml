@@ -1,7 +1,7 @@
 [package]
 name = "kime-gtk3"
 description = "Kime gtk3 immodule"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -19,13 +19,3 @@ pango-sys = "0.10.0"
 
 kime-engine-cffi = { path = "../engine/cffi" }
 
-[package.metadata.deb]
-name = "kime-gtk3"
-maintainer = "Riey"
-copyright = "2021, Riey <creeper844@gmail.com>"
-depends = "gtk+3.0,libpango-1.0,libglib2.0,kime-engine"
-provides = "kime-gtk3"
-conflicts = "kime-gtk3"
-assets = [
-    ["target/release/libkime_gtk3.so", "usr/gtk-3.0/3.0.0/immodules", "755"],
-]

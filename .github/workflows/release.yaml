@@ -15,7 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set VER
-        run: export VER=$(grep '^version =' gtk3/Cargo.toml|head -n1|cut -d\" -f2)
+        id: version
+        run: echo "::set-output name=ver::$(grep '^version =' gtk3/Cargo.toml|head -n1|cut -d\" -f2)"
       - name: Update apt
         run: sudo apt-get update -y
       - name: Install packages
@@ -46,7 +47,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: build/kime.7z
-          asset_name: kime-${VER}.7z
+          asset_name: kime-${{ steps.version.outputs.ver }}.7z
           asset_content_type: application/x-7z-compressed
 
       - name: Upload deb package
@@ -55,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/deb/kime_${VER}_amd64.deb
-          asset_name: kime_${VER}_amd64.deb
+          asset_path: build/deb/kime_${{ steps.version.outputs.ver }}_amd64.deb
+          asset_name: kime_${{ steps.version.outputs.ver }}_amd64.deb
           asset_content_type: application/x-xz
   

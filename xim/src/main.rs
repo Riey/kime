@@ -8,6 +8,12 @@ mod handler;
 mod pe_window;
 
 fn main() -> Result<(), ServerError> {
+    if std::env::args().nth(1).as_deref() == Some("--version") {
+        println!("kime-xim: {}", env!("CARGO_PKG_VERSION"));
+
+        return Ok(());
+    }
+
     simplelog::SimpleLogger::init(
         if cfg!(debug_assertions) {
             log::LevelFilter::Trace

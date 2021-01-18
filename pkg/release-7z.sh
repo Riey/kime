@@ -11,7 +11,7 @@ strip -s build/7z/kime-xim
 strip -s build/7z/libkime_engine.so
 strip -s build/7z/im-kime.so
 
-7z a build/kime.7z build/7z/*
+7z a build/kime.7z ./build/7z/*
 
 rm build/7z/*
 

@@ -60,7 +60,7 @@ kime-xim &
 export XMODIFIERS=@im=kime
 ```
 
-read <CONFIGURATION.md> for detailed options.
+read [CONFIGURATION.md](CONFIGURATION.md) for detailed options.
 
 ## Dependencies
 

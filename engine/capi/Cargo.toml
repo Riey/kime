@@ -17,15 +17,3 @@ kime-engine-core = { path = "../core" }
 kime-engine-core = { path = "../core" }
 serde_yaml = "0.8.15"
 
-[package.metadata.deb]
-name = "kime-engine"
-maintainer = "Riey"
-copyright = "2021, Riey <creeper844@gmail.com>"
-depends = ""
-provides = "kime-engine"
-conflicts = "kime-engine"
-
-assets = [
-    ["target/release/libkime_engine.so", "usr/lib", "755"],
-    ["data/config.yaml", "etc/kime", "644"],
-]

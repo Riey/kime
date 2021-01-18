@@ -52,7 +52,7 @@ sudo install -Dm644 config.yaml -t "/etc/kime"
 
 ## Configuration
 
-add the folowing to .xprofile or .xinitrc and restart X:
+add the following to .xprofile or .xinitrc and restart X:
 
 ```sh
 export GTK_IM_MODULE=kime
@@ -60,7 +60,7 @@ kime-xim &
 export XMODIFIERS=@im=kime
 ```
 
-read (CONFIGURATION.md) for detailed options.
+read <CONFIGURATION.md> for detailed options.
 
 ## Dependencies
 

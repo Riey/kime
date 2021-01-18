@@ -70,7 +70,9 @@ impl KimeHandler {
     ) -> Result<(), xim::ServerError> {
         if let Some(pe) = ic.user_data.pe.as_mut() {
             // draw in server (already have pe_window)
-            self.preedit_windows.get_mut(pe).unwrap().set_preedit(ch);
+            let pe = self.preedit_windows.get_mut(pe).unwrap();
+            pe.set_preedit(ch);
+            pe.refresh(server.conn())?;
         } else {
             // draw in server
             let mut pe = PeWindow::new(
@@ -167,8 +169,13 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        // FIXME: or move preedit window position?
-        self.reset(server, input_context)?;
+        log::trace!("spot: {:?}", input_context.preedit_spot());
+
+        if let Some(preedit) = input_context.user_data.engine.preedit_char() {
+            self.clear_preedit(server, input_context)?;
+            self.preedit(server, input_context, preedit)?;
+        }
+
         Ok(())
     }
 
@@ -213,7 +220,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             return Ok(false);
         }
 
-        log::trace!("{:?}", xev);
+        // log::trace!("{:?}", xev);
 
         // other modifiers then shift or control or super
         if xev.state & !(0x1 | 0x4 | 0x40) != 0 {

@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    branches:
-      - 'releases/*'
+    tags:
+    - 'v*'
 
 env:
   CARGO_TERM_COLOR: always
@@ -21,19 +21,40 @@ jobs:
       - name: Install cargo-deb
         run: cargo install cargo-deb
 
-      - name: Generate 7z package...
-        run: pkg/release-7z.sh
-      - name: Upload 7z package
-        uses: actions/upload-artifact@v2
-        with:
-          name: pkg-7z
-          path: build/7z
-
+      - name: Generate package...
+        run: pkg/release.sh
+      - name: Archiving package...
+        run: 7z a kime.7z ./build/out/*
       - name: Generate deb package...
         run: pkg/release-deb.sh
-      - name: Upload deb package
-        uses: actions/upload-artifact@v2
+      - name: Archiving deb package...
+        run: 7z a kime-deb.7z ./build/deb/*
+
+      - name: Create draft release
+        uses: actions/create-release@v1
         with:
-          name: pkg-deb
-          path: build/deb
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - name: Upload archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/kime.7z
+          asset_name: kime-${{ github.ref }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      - name: Upload deb package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/kime-deb.7z
+          asset_name: kime-dev-${{ github.ref }}.7z
+          asset_content_type: application/x-7z-compressed
   

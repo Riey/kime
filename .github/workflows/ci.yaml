@@ -5,6 +5,7 @@ on:
     branches-ignore:
       - 'master'
       - 'releases/*'
+      - 'features/*'
   pull_request:
     branches:
       - 'develop'

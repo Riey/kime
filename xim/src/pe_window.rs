@@ -6,7 +6,7 @@ use x11rb::{
         render::{self, ConnectionExt as _, PictType},
         xproto::{
             AtomEnum, ColormapAlloc, ConfigureNotifyEvent, ConnectionExt as _, CreateWindowAux,
-            EventMask, PropMode, Visualid, Visualtype, WindowClass,
+            EventMask, ExposeEvent, PropMode, Visualid, Visualtype, WindowClass, EXPOSE_EVENT,
         },
     },
     rust_connection::ReplyError,
@@ -122,6 +122,7 @@ impl PeWindow {
 
     pub fn clean<C: HasConnection>(self, c: C) -> Result<(), xim::ServerError> {
         let conn = c.conn();
+        self.surface.finish();
         conn.destroy_window(self.preedit_window.get())?
             .ignore_error();
 
@@ -156,10 +157,30 @@ impl PeWindow {
         self.redraw();
     }
 
+    pub fn refresh(&self, conn: &XCBConnection) -> Result<(), xim::ServerError> {
+        conn.send_event(
+            false,
+            self.preedit_window.get(),
+            0u32,
+            ExposeEvent {
+                response_type: EXPOSE_EVENT,
+                window: self.window().get(),
+                width: 0,
+                height: 0,
+                x: 0,
+                y: 0,
+                sequence: 0,
+                count: 0,
+            },
+        )?;
+        conn.flush()?;
+
+        Ok(())
+    }
+
     pub fn set_preedit(&mut self, ch: char) {
         self.preedit.clear();
         self.preedit.push(ch);
-        self.redraw();
     }
 }
 

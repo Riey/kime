@@ -52,8 +52,8 @@ add the following to .xprofile or .xinitrc and restart X:
 
 ```sh
 export GTK_IM_MODULE=kime
-kime-xim &
 export XMODIFIERS=@im=kime
+kime-xim &
 ```
 
 read [CONFIGURATION.md](CONFIGURATION.md) for detailed options.

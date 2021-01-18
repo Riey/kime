@@ -1,3 +1,9 @@
+#!/bin/sh
+
+set -e
+
+cargo build --release
+
 mkdir -pv build/7z
 
 cp target/release/kime-xim build/7z/kime-xim

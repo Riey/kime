@@ -94,7 +94,7 @@ impl Config {
     pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {
         let layout = dir
             .and_then(|dir| {
-                dir.list_data_files("layouts")
+                dir.list_config_files("layouts")
                     .into_iter()
                     .find_map(|layout| {
                         if layout.file_stem()?.to_str()? == raw.layout {

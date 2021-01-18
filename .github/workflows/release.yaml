@@ -31,6 +31,7 @@ jobs:
         run: 7z a kime-deb.7z ./build/deb/*
 
       - name: Create draft release
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

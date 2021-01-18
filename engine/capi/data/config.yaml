@@ -2,10 +2,10 @@
 layout: dubeolsik
 esc_turn_off: true
 hangul_keys:
-  - Hangul
-  - Henkan
-  - Super-Space
   - AltR
+  - Henkan
+  - Hangul
+  - Super-Space
 xim_preedit_font: D2Coding
 gtk_commit_english: true
 compose:

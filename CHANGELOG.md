@@ -4,6 +4,7 @@
 * Redraw when XIM preedit state changed
 * Update packaging scripts
 * Add Install guide
+* Now kime-xim print version when pass `--version`
 
 # 0.5.1
 

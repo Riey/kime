@@ -1,6 +1,7 @@
-# 0.5.2
+# Dev
 
 * Don't reset on XIM set_ic_values
+* Redraw when XIM preedit state changed
 
 # 0.5.1
 

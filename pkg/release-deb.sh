@@ -2,14 +2,21 @@
 
 set -e
 
-cd $(dirname $0)/..
+cd $(readlink -f $(dirname $0))/..
 
-cargo build --release
+VER=$(grep '^version =' gtk3/Cargo.toml|head -n1|cut -d\" -f2)
 
-mkdir -pv build/deb
+mkdir -pv build/deb/kime/DEBIAN
 
-cargo deb -p kime-engine-capi
-cargo deb -p kime-gtk3
-cargo deb -p kime-xim
+sed "s/%VER%/${VER}/" pkg/control.in > build/deb/kime/DEBIAN/control
 
-cp target/debian/* build/deb
+PREFIX=$PWD/build/deb/kime pkg/install.sh
+
+cd build/deb
+
+dpkg-deb --build kime
+
+mv kime.deb "kime_${VER}_amd64.deb"
+
+rm -rf kime
+

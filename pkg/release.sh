@@ -2,7 +2,7 @@
 
 set -e
 
-cd $(dirname $0)/..
+cd $(readlink -f $(dirname $0))/..
 
 cargo build --release
 

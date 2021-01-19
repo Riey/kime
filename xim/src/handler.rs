@@ -220,10 +220,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             return Ok(false);
         }
 
-        // log::trace!("{:?}", xev);
+        log::trace!("{:?}", xev);
 
-        // other modifiers then shift or control or super
-        if xev.state & !(0x1 | 0x4 | 0x40) != 0 {
+        // other modifiers then shift or lock or control or super
+        if xev.state & !(0x1 | 0x2 | 0x4 | 0x40) != 0 {
             self.reset(server, input_context)?;
             return Ok(false);
         }

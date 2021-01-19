@@ -8,21 +8,25 @@ mod handler;
 mod pe_window;
 
 fn main() -> Result<(), ServerError> {
-    if std::env::args().nth(1).as_deref() == Some("--version") {
+    let mut args = pico_args::Arguments::from_env();
+
+    if args.contains("--version") {
         println!("kime-xim: {}", env!("CARGO_PKG_VERSION"));
 
         return Ok(());
     }
 
-    simplelog::SimpleLogger::init(
-        if cfg!(debug_assertions) {
-            log::LevelFilter::Trace
-        } else {
-            log::LevelFilter::Info
-        },
-        simplelog::ConfigBuilder::new().build(),
-    )
-    .ok();
+    let mut log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Trace
+    } else {
+        log::LevelFilter::Info
+    };
+
+    if args.contains("--log") {
+        log_level = log::LevelFilter::Trace;
+    }
+
+    simplelog::SimpleLogger::init(log_level, simplelog::ConfigBuilder::new().build()).ok();
 
     let config = kime_engine_cffi::Config::new();
 

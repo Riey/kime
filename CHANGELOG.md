@@ -1,3 +1,9 @@
+# Dev
+
+* Fix hangul bug on NumLock, CapLock, ScrollLock
+* Fix deb file
+* Add `--log` option in `kime-xim`
+
 # 0.6.0
 
 * Don't reset on XIM set_ic_values

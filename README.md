@@ -2,11 +2,12 @@
 
 Korean IME
 
-[![ci](https://github.com/Riey/kime/workflows/CI/badge.svg)](https://github.com/Riey/kime/actions?query=workflow%3ACI)
-[![release](https://github.com/Riey/kime/workflows/Release/badge.svg)](https://github.com/Riey/kime/actions?query=workflow%3ARelease)
-[![Release version](https://img.shields.io/github/v/release/Riey/kime)](https://github.com/Riey/kime/releases)
-[![AUR version](https://img.shields.io/aur/version/kime)](https://aur.archlinux.org/packages/kime/)
-[![LICENSE](https://img.shields.io/github/license/Riey/kime)](https://github.com/Riey/kime/blob/master/LICENSE)
+[<img alt="discord" src="https://discordapp.com/api/guilds/801107569505992705/widget.png?style=shield" height="20">](https://discord.gg/YPnEfZqC6y)
+[<img alt="build status" src="https://img.shields.io/github/workflow/status/Riey/kime/CI/master?style=for-the-badge" height="20">](https://github.com/Riey/kime/actions?query=workflow%3ACI)
+[<img alt="release version" src="https://img.shields.io/github/v/release/Riey/kime?style=for-the-badge" height="20">](https://github.com/Riey/kime/releases)
+[<img alt="aur version" src="https://img.shields.io/aur/version/kime?style=for-the-badge" height="20">](https://aur.archlinux.org/packages/kime/)
+[<img alt="license" src="https://img.shields.io/github/license/Riey/kime?style=for-the-badge" height="20">](https://github.com/Riey/kime/blob/master/LICENSE)
+
 
 ## Why kime
 

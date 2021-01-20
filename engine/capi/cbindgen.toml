@@ -4,7 +4,6 @@ pragma_once = true
 include_version = true
 braces = "SameLine"
 language = "C"
-usize_is_size_t = true
 no_includes = true
 sys_includes = ["stdint.h", "stddef.h"]
 

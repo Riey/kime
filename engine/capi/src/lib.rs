@@ -88,8 +88,10 @@ pub unsafe extern "C" fn kime_config_xim_preedit_font(
     config: *const Config,
     name: *mut *const u8,
     len: *mut usize,
+    font_size: *mut f64,
 ) {
-    let font = config.as_ref().unwrap().xim_preedit_font.as_str();
+    let (ref font, size) = config.as_ref().unwrap().xim_preedit_font;
     name.write(font.as_ptr());
     len.write(font.len());
+    font_size.write(size);
 }

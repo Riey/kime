@@ -33,6 +33,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: mbrobbel/rustfmt-check@master
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check Rustfmt
+        run: cargo fmt -- --check

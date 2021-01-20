@@ -2,8 +2,7 @@ use std::char::from_u32_unchecked;
 use std::mem::MaybeUninit;
 
 #[link(name = "kime_engine")]
-extern "C" {
-}
+extern "C" {}
 
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]

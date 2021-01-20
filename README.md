@@ -2,7 +2,7 @@
 
 Korean IME
 
-[<img alt="discord" src="https://img.shields.io/discord/308323056592486420.svg?style=for-the-badge" height="25">](https://discord.gg/YPnEfZqC6y)
+[<img alt="discord" src="https://img.shields.io/discord/801107569505992705.svg?style=for-the-badge" height="25">](https://discord.gg/YPnEfZqC6y)
 [<img alt="build status" src="https://img.shields.io/github/workflow/status/Riey/kime/CI/master?style=for-the-badge" height="25">](https://github.com/Riey/kime/actions?query=workflow%3ACI)
 [<img alt="release version" src="https://img.shields.io/github/v/release/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/releases)
 [<img alt="aur version" src="https://img.shields.io/aur/version/kime?style=for-the-badge" height="25">](https://aur.archlinux.org/packages/kime/)

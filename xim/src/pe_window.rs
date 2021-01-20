@@ -31,7 +31,7 @@ impl PeWindow {
         spot_location: xim::Point,
         screen_num: usize,
     ) -> Result<Self, xim::ServerError> {
-        let size = (font_size * 2.0) as u16;
+        let size = (font_size * 1.7) as u16;
         let size = (size, size);
         let preedit_window = conn.generate_id()?;
         let colormap = conn.generate_id()?;
@@ -117,7 +117,7 @@ impl PeWindow {
             cr,
             preedit_window: NonZeroU32::new(preedit_window).unwrap(),
             preedit: String::with_capacity(10),
-            text_pos: (font_size * 0.45, font_size * 1.2),
+            text_pos: (font_size * 0.36, font_size * 1.10),
         })
     }
 

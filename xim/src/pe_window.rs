@@ -126,6 +126,7 @@ impl PeWindow {
         self.surface.finish();
         conn.destroy_window(self.preedit_window.get())?
             .ignore_error();
+        conn.flush()?;
 
         Ok(())
     }

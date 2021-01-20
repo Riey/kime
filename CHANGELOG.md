@@ -1,6 +1,7 @@
 # 0.7.0
 
 * Fix hangul bug on NumLock, CapLock, ScrollLock
+* Fix xim preedit window delete bug
 * Fix deb file
 * Add `--log` option in `kime-xim`
 * Add size in `xim-preedit-font`

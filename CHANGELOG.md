@@ -1,4 +1,4 @@
-# Dev
+# 0.7.0
 
 * Fix hangul bug on NumLock, CapLock, ScrollLock
 * Fix deb file

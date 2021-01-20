@@ -77,7 +77,7 @@ impl KimeHandler {
             // draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
-                self.config.xim_font_name(),
+                self.config.xim_font(),
                 ic.app_win(),
                 ic.preedit_spot(),
                 self.screen_num,

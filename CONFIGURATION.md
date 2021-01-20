@@ -26,11 +26,11 @@ Keycodes for switch hangul mode
 
 ## xim_preedit_font
 
-Preedit window font for XIM
+Preedit window font name and size for XIM
 
 ### default
 
-`D2Coding`
+`[D2Coding, 15.0]`
 
 ## gtk_commit_english
 

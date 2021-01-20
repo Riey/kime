@@ -140,5 +140,6 @@ extern "C" {
         config: *const Config,
         name: *mut *const u8,
         len: *mut usize,
+        font_size: *mut f64,
     );
 }

@@ -88,15 +88,25 @@ impl Config {
         }
     }
 
-    pub fn xim_font_name(&self) -> &str {
+    pub fn xim_font(&self) -> (&str, f64) {
         unsafe {
             let mut ptr = MaybeUninit::uninit();
             let mut len = MaybeUninit::uninit();
-            ffi::kime_config_xim_preedit_font(self.config, ptr.as_mut_ptr(), len.as_mut_ptr());
-            std::str::from_utf8_unchecked(std::slice::from_raw_parts(
-                ptr.assume_init(),
-                len.assume_init(),
-            ))
+            let mut size = MaybeUninit::uninit();
+            ffi::kime_config_xim_preedit_font(
+                self.config,
+                ptr.as_mut_ptr(),
+                len.as_mut_ptr(),
+                size.as_mut_ptr(),
+            );
+
+            (
+                std::str::from_utf8_unchecked(std::slice::from_raw_parts(
+                    ptr.assume_init(),
+                    len.assume_init(),
+                )),
+                size.assume_init(),
+            )
         }
     }
 

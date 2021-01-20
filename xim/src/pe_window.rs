@@ -40,7 +40,7 @@ impl PeWindow {
         let screen = &conn.setup().roots[screen_num];
         let pos = find_position(conn, screen.root, app_win, spot_location)?;
 
-        conn.create_colormap(ColormapAlloc::None, colormap, screen.root, visual_id)?
+        conn.create_colormap(ColormapAlloc::NONE, colormap, screen.root, visual_id)?
             .check()?;
 
         conn.create_window(
@@ -52,13 +52,13 @@ impl PeWindow {
             size.0,
             size.1,
             0,
-            WindowClass::InputOutput,
+            WindowClass::INPUT_OUTPUT,
             visual_id,
             &CreateWindowAux::default()
                 .background_pixel(x11rb::NONE)
                 .border_pixel(x11rb::NONE)
                 .override_redirect(1u32)
-                .event_mask(EventMask::Exposure | EventMask::StructureNotify)
+                .event_mask(EventMask::EXPOSURE | EventMask::STRUCTURE_NOTIFY)
                 .colormap(colormap),
         )?
         .check()?;
@@ -75,7 +75,7 @@ impl PeWindow {
             .atom;
 
         conn.change_property32(
-            PropMode::Replace,
+            PropMode::REPLACE,
             preedit_window,
             window_type,
             AtomEnum::ATOM,
@@ -83,7 +83,7 @@ impl PeWindow {
         )?;
 
         conn.change_property8(
-            PropMode::Replace,
+            PropMode::REPLACE,
             preedit_window,
             AtomEnum::WM_CLASS,
             AtomEnum::STRING,
@@ -200,7 +200,7 @@ fn choose_visual(conn: &impl Connection, screen_num: usize) -> Result<(u8, Visua
         let format = formats
             .formats
             .iter()
-            .filter(|info| (info.type_, info.depth) == (PictType::Direct, depth))
+            .filter(|info| (info.type_, info.depth) == (PictType::DIRECT, depth))
             .filter(|info| {
                 let d = info.direct;
                 (d.red_mask, d.green_mask, d.blue_mask, d.alpha_mask) == (0xff, 0xff, 0xff, 0xff)

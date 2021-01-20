@@ -13,7 +13,3 @@ crate-type = ["cdylib"]
 [dependencies]
 kime-engine-core = { path = "../core" }
 
-[build-dependencies]
-kime-engine-core = { path = "../core" }
-serde_yaml = "0.8.15"
-

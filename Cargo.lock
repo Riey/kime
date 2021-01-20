@@ -340,12 +340,19 @@ name = "kime-engine-capi"
 version = "0.7.0"
 dependencies = [
  "kime-engine-core",
- "serde_yaml",
 ]
 
 [[package]]
 name = "kime-engine-cffi"
 version = "0.7.0"
+
+[[package]]
+name = "kime-engine-config-writer"
+version = "0.1.0"
+dependencies = [
+ "kime-engine-core",
+ "serde_yaml",
+]
 
 [[package]]
 name = "kime-engine-core"

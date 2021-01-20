@@ -189,7 +189,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             input_context.input_style(),
             input_context.preedit_spot()
         );
-        server.set_event_mask(input_context, EventMask::KeyPress.into(), 0)?;
+        server.set_event_mask(input_context, EventMask::KEY_PRESS.into(), 0)?;
 
         Ok(())
     }

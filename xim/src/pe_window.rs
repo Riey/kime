@@ -20,18 +20,19 @@ pub struct PeWindow {
     preedit: String,
     surface: cairo::XCBSurface,
     cr: cairo::Context,
-    size: (u16, u16),
+    text_pos: (f64, f64),
 }
 
 impl PeWindow {
     pub fn new(
         conn: &XCBConnection,
-        font: &str,
+        (font, font_size): (&str, f64),
         app_win: Option<NonZeroU32>,
         spot_location: xim::Point,
         screen_num: usize,
     ) -> Result<Self, xim::ServerError> {
-        let size = (30, 30);
+        let size = (font_size * 2.0) as u16;
+        let size = (size, size);
         let preedit_window = conn.generate_id()?;
         let colormap = conn.generate_id()?;
         let (depth, visual_id) = choose_visual(conn, screen_num)?;
@@ -109,14 +110,14 @@ impl PeWindow {
         let cr = cairo::Context::new(&surface);
 
         cr.select_font_face(&font, cairo::FontSlant::Normal, cairo::FontWeight::Normal);
-        cr.set_font_size(15.0);
+        cr.set_font_size(font_size);
 
         Ok(Self {
             surface,
             cr,
             preedit_window: NonZeroU32::new(preedit_window).unwrap(),
             preedit: String::with_capacity(10),
-            size,
+            text_pos: (font_size * 0.45, font_size * 1.2),
         })
     }
 
@@ -140,7 +141,7 @@ impl PeWindow {
 
         if !self.preedit.is_empty() {
             self.cr.set_source_rgb(0.0, 0.0, 0.0);
-            self.cr.move_to(6.0, 17.5);
+            self.cr.move_to(self.text_pos.0, self.text_pos.1);
             self.cr.show_text(&self.preedit);
         }
 
@@ -152,7 +153,6 @@ impl PeWindow {
     }
 
     pub fn configure_notify(&mut self, e: ConfigureNotifyEvent) {
-        self.size = (e.width, e.height);
         self.surface.set_size(e.width as _, e.height as _).unwrap();
         self.redraw();
     }

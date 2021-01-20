@@ -100,4 +100,7 @@ uint32_t kime_config_gtk_commit_english(const struct Config *config);
  *
  * utf-8 string when len
  */
-void kime_config_xim_preedit_font(const struct Config *config, const uint8_t **name, size_t *len);
+void kime_config_xim_preedit_font(const struct Config *config,
+                                  const uint8_t **name,
+                                  uintptr_t *len,
+                                  double *font_size);

@@ -6,7 +6,9 @@ hangul_keys:
   - Henkan
   - Hangul
   - Super-Space
-xim_preedit_font: D2Coding
+xim_preedit_font:
+  - D2Coding
+  - 15.0
 gtk_commit_english: true
 compose:
   compose_choseong_ssang: true

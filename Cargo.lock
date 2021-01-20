@@ -807,6 +807,7 @@ checksum = "d089681aa106a86fade1b0128fb5daf07d5867a509ab036d99988dec80429a57"
 [[package]]
 name = "xim"
 version = "0.1.0"
+source = "git+https://github.com/Riey/xim-rs#f09771a0c4cbef803f9f275b179ff18442dbb5e6"
 dependencies = [
  "ahash",
  "ctext",
@@ -819,6 +820,7 @@ dependencies = [
 [[package]]
 name = "xim-parser"
 version = "0.1.0"
+source = "git+https://github.com/Riey/xim-rs#f09771a0c4cbef803f9f275b179ff18442dbb5e6"
 dependencies = [
  "bitflags",
  "thiserror",

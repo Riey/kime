@@ -325,21 +325,20 @@ impl Jungseong {
             Self::YE if compose.decompose_jungseong_ssang => Some(Self::YEO),
             // ㅒ -> ㅑ
             Self::YAE if compose.decompose_jungseong_ssang => Some(Self::YA),
-            // // ㅘ -> ㅗ
+            // ㅘ -> ㅗ
             Self::WA => Some(Self::O),
-            // (Self::O, Self::A) => Some(Self::WA),
-            // // ㅗ ㅣ = ㅚ
-            // (Self::O, Self::I) => Some(Self::OE),
-            // // ㅗ ㅐ = ㅙ
-            // (Self::O, Self::AE) => Some(Self::WAE),
-            // // ㅜ ㅓ = ㅝ
-            // (Self::U, Self::EO) => Some(Self::WEO),
-            // // ㅜ ㅔ = ㅞ
-            // (Self::U, Self::E) => Some(Self::WE),
-            // // ㅜ ㅣ = ㅟ
-            // (Self::U, Self::I) => Some(Self::WI),
-            // // ㅡ ㅣ = ㅢ
-            // (Self::EU, Self::I) => Some(Self::YI),
+            // ㅚ -> ㅗ
+            Self::OE => Some(Self::O),
+            // ㅙ -> ㅗ
+            Self::WAE => Some(Self::O),
+            // ㅝ -> ㅜ
+            Self::WEO => Some(Self::U),
+            // ㅞ -> ㅜ
+            Self::WE => Some(Self::U),
+            // ㅟ -> ㅜ
+            Self::WI => Some(Self::U),
+            // ㅢ -> ㅡ
+            Self::YI => Some(Self::EU),
             _ => None,
         }
     }

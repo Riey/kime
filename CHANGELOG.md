@@ -1,3 +1,7 @@
+# Dev
+
+* Complete moum backspace (e.g. ㅚ -> ㅗ, ㅞ -> ㅜ)
+
 # 0.7.0
 
 * Fix hangul bug on NumLock, CapLock, ScrollLock

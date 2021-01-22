@@ -3,14 +3,31 @@
         {
             "type": "shell",
             "label": "install-immodule",
+            "dependsOn": ["install-engine", "install-gtkimmodule", "install-qt-immodule"],
+        },
+        {
+            "type": "shell",
+            "label": "install-gtkimmodule",
             "command": "sudo",
-            "dependsOn": ["install-engine"],
             "args": [
                 "install",
                 "-Dm755",
                 "target/debug/libkime_gtk3.so",
                 "-T",
                 "/usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "install-qtimmodule",
+            "command": "sudo",
+            "dependsOn": ["install-engine"],
+            "args": [
+                "install",
+                "-Dm755",
+                "qt/build/libkime-qt5.so",
+                "-T",
+                "/usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"
             ]
         },
         {

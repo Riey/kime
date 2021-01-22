@@ -28,7 +28,14 @@
                 "/usr/include/blkid",
                 "/usr/include/uuid",
                 "/usr/include/glib-2.0",
-                "/usr/lib/glib-2.0/include"
+                "/usr/lib/glib-2.0/include",
+                "/usr/include/qt",
+                "/usr/include/qt/QtGui/5.15.2",
+                "/usr/include/qt/QtGui/5.15.2/QtGui",
+                "/usr/include/qt/QtCore/5.15.2",
+                "/usr/include/qt/QtCore",
+                "/usr/include/qt/QtGui",
+                "/usr/include/qt/QtCore/5.15.2/QtCore"
             ],
             "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",

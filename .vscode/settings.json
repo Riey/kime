@@ -1,5 +1,11 @@
 {
     "files.associations": {
-        "build-script-build": "cpp"
-    }
+        "build-script-build": "cpp",
+        "qtglobal": "cpp",
+        "*.tcc": "cpp",
+        "chrono": "cpp",
+        "string_view": "cpp",
+        "variant": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

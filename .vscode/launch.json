@@ -49,6 +49,22 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug with kate",
+            "cargo": {
+                "args": [
+                    "build"
+                ]
+            },
+            "preLaunchTask": "install-immodule",
+            "env": {
+                "QT_IM_MODULE": "kime"
+            },
+            "program": "kate",
+            "args": []
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug with gedit",
             "cargo": {
                 "args": [

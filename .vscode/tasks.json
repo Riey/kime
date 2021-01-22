@@ -11,7 +11,7 @@
             "command": "sudo",
             "args": [
                 "install",
-                "-Dm755",
+                "-m755",
                 "target/debug/libkime_gtk3.so",
                 "-T",
                 "/usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"
@@ -21,10 +21,9 @@
             "type": "shell",
             "label": "install-qtimmodule",
             "command": "sudo",
-            "dependsOn": ["install-engine"],
             "args": [
                 "install",
-                "-Dm755",
+                "-m755",
                 "qt/build/libkime-qt5.so",
                 "-T",
                 "/usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"
@@ -36,7 +35,7 @@
             "command": "sudo",
             "args": [
                 "install",
-                "-Dm755",
+                "-m755",
                 "target/debug/libkime_engine.so",
                 "-t",
                 "/usr/lib/"

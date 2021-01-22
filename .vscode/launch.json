@@ -50,11 +50,6 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug with kate",
-            "cargo": {
-                "args": [
-                    "build"
-                ]
-            },
             "preLaunchTask": "install-immodule",
             "env": {
                 "QT_IM_MODULE": "kime"

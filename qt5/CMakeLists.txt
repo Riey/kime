@@ -18,3 +18,5 @@ add_definitions(${Qt5Gui_DEFINITIONS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 add_library(kime-qt5 SHARED src/plugin.cc)
+
+target_link_libraries(kime-qt5 kime_engine)

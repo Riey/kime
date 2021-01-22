@@ -18,4 +18,5 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
 add_library(kime-qt5 SHARED src/plugin.cc src/input_context.cc)
 
+target_link_directories(kime-qt5 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../target/release" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../target/debug")
 target_link_libraries(kime-qt5 kime_engine)

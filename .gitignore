@@ -1,6 +1,4 @@
 /target
 /build
-/qt5/build
 /cargo-timing*
 /.idea
-/vendor

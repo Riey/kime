@@ -14,7 +14,7 @@ include_directories(${Qt5Gui_INCLUDE_DIRS} ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
 add_definitions(${Qt5Gui_DEFINITIONS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
 add_library(kime-qt5 SHARED src/plugin.cc src/input_context.cc)
 

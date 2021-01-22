@@ -1,32 +1,31 @@
 #include "kime-qt5.hpp"
 
-#include <qpa/qplatforminputcontext.h>
 #include <QtGui/QInputMethodEvent>
+#include <qpa/qplatforminputcontext.h>
 
-class KimeInputContext : public QPlatformInputContext
-{
-    Q_OBJECT
+class KimeInputContext : public QPlatformInputContext {
+  Q_OBJECT
 
 public:
-    KimeInputContext(InputEngine *engine, const Config *config);
-    ~KimeInputContext();
+  KimeInputContext(InputEngine *engine, const Config *config);
+  ~KimeInputContext();
 
-    bool isValid() const override;
-    Qt::LayoutDirection inputDirection() const override;
+  bool isValid() const override;
+  Qt::LayoutDirection inputDirection() const override;
 
-    void reset() override;
-    void commit() override;
-    void update(Qt::InputMethodQueries queries) override;
-    void invokeAction(QInputMethod::Action action, int cursorPosition) override;
-    bool filterEvent(const QEvent *event) override;
-    void setFocusObject(QObject *object) override;
+  void reset() override;
+  void commit() override;
+  void update(Qt::InputMethodQueries queries) override;
+  void invokeAction(QInputMethod::Action action, int cursorPosition) override;
+  bool filterEvent(const QEvent *event) override;
+  void setFocusObject(QObject *object) override;
 
 private:
-    void commit_ch(char32_t ch);
-    void preedit_ch(char32_t ch);
+  void commit_ch(char32_t ch);
+  void preedit_ch(char32_t ch);
 
-    QList<QInputMethodEvent::Attribute> attributes;
-    InputEngine *engine = nullptr;
-    const Config *config = nullptr;
-    QObject *focus_object = nullptr;
+  QList<QInputMethodEvent::Attribute> attributes;
+  InputEngine *engine = nullptr;
+  const Config *config = nullptr;
+  QObject *focus_object = nullptr;
 };

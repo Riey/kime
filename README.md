@@ -65,12 +65,16 @@ read [CONFIGURATION.md](CONFIGURATION.md) for detailed options.
 
 ## Dependencies
 
+### XIM
+
+* libxcb
+* cairo
+
 ### GTK3
 
 * gtk3
 * pango
 
-### XIM
+### Qt
 
-* libxcb
-* cairo
+* qt5gui

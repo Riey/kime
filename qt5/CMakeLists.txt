@@ -10,13 +10,12 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5Gui)
 
-include_directories(${Qt5Gui_INCLUDE_DIRS})
-include_directories(${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+include_directories(${Qt5Gui_INCLUDE_DIRS} ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
 add_definitions(${Qt5Gui_DEFINITIONS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-add_library(kime-qt5 SHARED src/plugin.cc)
+add_library(kime-qt5 SHARED src/plugin.cc src/input_context.cc)
 
 target_link_libraries(kime-qt5 kime_engine)

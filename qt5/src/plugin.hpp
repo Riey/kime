@@ -1,11 +1,8 @@
+#include "kime-qt5.hpp"
+
 #include <QtPlugin>
 #include <QString>
-#include <QInputMethodEvent>
 #include <qpa/qplatforminputcontextplugin_p.h>
-
-extern "C" {
-    #include <kime/kime_engine.h>
-}
 
 class KimePlatformInputContextPlugin: public QPlatformInputContextPlugin {
     Q_OBJECT

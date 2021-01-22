@@ -1,5 +1,19 @@
 {
     "files.associations": {
-        "build-script-build": "cpp"
-    }
+        "build-script-build": "cpp",
+        "qtglobal": "cpp",
+        "*.tcc": "cpp",
+        "chrono": "cpp",
+        "string_view": "cpp",
+        "variant": "cpp",
+        "qkeyevent": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "system_error": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

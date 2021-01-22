@@ -13,7 +13,7 @@ cargo build --release
 mkdir -pv build/qt5
 cd build/qt5
 cmake ../../qt5 -DCMAKE_BUILD_TYPE=Release
-make -j8
+make -j$(nproc)
 cd ../..
 
 mkdir -pv build/out

@@ -7,4 +7,3 @@ bindgen kime_engine.h -o src/ffi.rs \
     --whitelist-type 'kime_.*' \
     --default-macro-constant-type \
     --default-enum-style rust
-

@@ -1,5 +1,6 @@
 # Dev
 
+* Add Qt5 immodule
 * Complete moum backspace (e.g. ㅚ -> ㅗ, ㅞ -> ㅜ)
 
 # 0.7.0

@@ -20,11 +20,9 @@ Korean IME
 
 - [x] XIM
 - [ ] Wayland
-- [ ] GTK2
 - [x] GTK3
 - [ ] GTK4
-- [ ] Qt4
-- [ ] Qt5
+- [x] Qt5
 
 ## Installation
 

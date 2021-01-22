@@ -8,7 +8,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt5Gui)
+include(GNUInstallDirs)
+
+find_package(Qt5Gui 5.1.0 REQUIRED Private)
 
 include_directories(${Qt5Gui_INCLUDE_DIRS} ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 

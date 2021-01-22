@@ -15,5 +15,5 @@ public:
     KimePlatformInputContextPlugin();
     ~KimePlatformInputContextPlugin();
     
-    QPlatformInputContext *create(const QString &key, const QStringList &param_list) Q_DECL_OVERRIDE;
+    QPlatformInputContext *create(const QString &key, const QStringList &param_list) override;
 };

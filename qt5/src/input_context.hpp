@@ -1,14 +1,32 @@
 #include "kime-qt5.hpp"
-#include <qpa/qplatforminputcontext.h>
 
-class KimeInputContext: public QPlatformInputContext {
+#include <qpa/qplatforminputcontext.h>
+#include <QtGui/QInputMethodEvent>
+
+class KimeInputContext : public QPlatformInputContext
+{
     Q_OBJECT
-        
+
 public:
-    KimeInputContext(InputEngine *engine, Config *config);
+    KimeInputContext(InputEngine *engine, const Config *config);
     ~KimeInputContext();
-    
+
+    bool isValid() const override;
+    Qt::LayoutDirection inputDirection() const override;
+
+    void reset() override;
+    void commit() override;
+    void update(Qt::InputMethodQueries queries) override;
+    void invokeAction(QInputMethod::Action action, int cursorPosition) override;
+    bool filterEvent(const QEvent *event) override;
+    void setFocusObject(QObject *object) override;
+
 private:
-    InputEngine *engine;
-    Config *config;
+    void commit_ch(char32_t ch);
+    void preedit_ch(char32_t ch);
+
+    QList<QInputMethodEvent::Attribute> attributes;
+    InputEngine *engine = nullptr;
+    const Config *config = nullptr;
+    QObject *focus_object = nullptr;
 };

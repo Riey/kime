@@ -384,7 +384,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
         if !attrs.is_null() {
             attrs.write(pango_sys::pango_attr_list_new());
 
-            if !out.is_null() && ch.is_none() {
+            if !out.is_null() && ch.is_some() {
                 let attr = pango_sys::pango_attr_underline_new(pango_sys::PANGO_UNDERLINE_SINGLE);
                 (*attr).start_index = 0;
                 (*attr).end_index = str_len as _;

@@ -4,7 +4,6 @@ members = [
     "engine/capi",
     "engine/config-writer",
     "engine/cffi",
-    "gtk3",
     "xim",
 ]
 

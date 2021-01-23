@@ -41,7 +41,7 @@ impl Default for RawConfig {
     fn default() -> Self {
         const DEFAULT_HANGUL_KEYS: &[Key] = &[
             Key::normal(KeyCode::AltR),
-            Key::normal(KeyCode::Henkan),
+            Key::normal(KeyCode::Muhenkan),
             Key::normal(KeyCode::Hangul),
             Key::super_(KeyCode::Space),
         ];

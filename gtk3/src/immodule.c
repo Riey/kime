@@ -254,6 +254,8 @@ void im_context_class_init(KimeImContextClass *klass, gpointer _data) {
   klass->parent.reset = reset;
   klass->parent.filter_keypress = filter_keypress;
   klass->parent.get_preedit_string = get_preedit_string;
+  // klass->parent.focus_in = NULL;
+  klass->parent.focus_out = reset;
 }
 
 static const GTypeInfo TYPE_INFO = {

@@ -110,12 +110,15 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
 }
 
 void KimeInputContext::preedit_ch(char32_t ch) {
+  assert(ch != U'\0');
   QInputMethodEvent e(QString::fromUcs4(&ch, 1), this->attributes);
   QCoreApplication::sendEvent(this->focus_object, &e);
 }
 
 void KimeInputContext::commit_ch(char32_t ch) {
   QInputMethodEvent e;
-  e.setCommitString(QString::fromUcs4(&ch, 1));
+  if (ch) {
+    e.setCommitString(QString::fromUcs4(&ch, 1));
+  }
   QCoreApplication::sendEvent(this->focus_object, &e);
 }

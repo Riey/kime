@@ -1,3 +1,7 @@
+# Dev
+
+* Fix gtk space commit bug
+
 # 0.8.0
 
 * Add Qt5 immodule

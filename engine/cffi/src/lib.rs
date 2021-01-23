@@ -109,10 +109,6 @@ impl Config {
             )
         }
     }
-
-    pub fn gtk_commit_english(&self) -> bool {
-        unsafe { ffi::kime_config_gtk_commit_english(self.config) != 0 }
-    }
 }
 
 impl Drop for Config {

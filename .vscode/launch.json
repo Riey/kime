@@ -25,6 +25,7 @@
             "cargo": {
                 "args": [
                     "build",
+                    "--bin=kime-xim"
                 ]
             },
             "program": "${cargo:program}",
@@ -34,11 +35,6 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug with firefox",
-            "cargo": {
-                "args": [
-                    "build"
-                ]
-            },
             "preLaunchTask": "install-immodule",
             "env": {
                 "GTK_IM_MODULE": "kime"
@@ -61,11 +57,6 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug with gedit",
-            "cargo": {
-                "args": [
-                    "build"
-                ]
-            },
             "preLaunchTask": "install-immodule",
             "env": {
                 "GTK_IM_MODULE": "kime"

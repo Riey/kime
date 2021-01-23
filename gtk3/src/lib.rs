@@ -146,7 +146,7 @@ impl KimeIMContext {
         &mut self.parent.parent_instance
     }
 
-    pub fn filter_keypress(&mut self, key: &mut GdkEventKey) -> bool {
+    pub fn filter_keypress(&mut self, key: &mut GdkEventKey) -> gboolean {
         let mut state = 0;
 
         if key.state & GDK_SHIFT_MASK != 0 {
@@ -172,35 +172,37 @@ impl KimeIMContext {
             InputResultType::Commit => {
                 self.update_preedit(false);
                 self.commit(ret.char1);
-                true
+                GTRUE
             }
             InputResultType::CommitCommit => {
                 self.update_preedit(false);
                 self.commit(ret.char1);
                 self.commit(ret.char2);
-                true
+                GTRUE
             }
             InputResultType::CommitBypass => {
                 self.update_preedit(false);
                 self.commit(ret.char1);
-                put_event(key);
-                true
+                if self.commit_event(key) == GFALSE {
+                    put_event(key);
+                }
+                GTRUE
             }
             InputResultType::CommitPreedit => {
                 self.commit(ret.char1);
                 self.update_preedit(true);
-                true
+                GTRUE
             }
             InputResultType::Preedit => {
                 self.update_preedit(true);
-                true
+                GTRUE
             }
             InputResultType::ClearPreedit => {
                 self.update_preedit(false);
-                true
+                GTRUE
             }
-            InputResultType::Bypass => false,
-            InputResultType::Consume => true,
+            InputResultType::Bypass => GFALSE,
+            InputResultType::Consume => GTRUE,
         }
     }
 
@@ -218,7 +220,7 @@ impl KimeIMContext {
         // commit english when LOCK or NUMLOCK
         let state = key.state & !(GDK_LOCK_MASK | GDK_MOD2_MASK);
 
-        if self.shared.config.gtk_commit_english() && (state == 0 || state == GDK_SHIFT_MASK) {
+        if state == 0 || state == GDK_SHIFT_MASK {
             let c = unsafe { std::char::from_u32_unchecked(gdk_keyval_to_unicode(key.keyval)) };
 
             if !c.is_control() {
@@ -342,7 +344,7 @@ unsafe fn register_module(module: *mut GTypeModule) {
             ctx.commit_event(key)
         } else if key.state & SKIP_MASK != 0 {
             ctx.bypass(key).into()
-        } else if ctx.filter_keypress(key) {
+        } else if ctx.filter_keypress(key) == GTRUE {
             GTRUE
         } else {
             ctx.commit_event(key)

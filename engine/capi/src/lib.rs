@@ -67,16 +67,6 @@ pub unsafe extern "C" fn kime_config_delete(config: *mut Config) {
     drop(Box::from_raw(config));
 }
 
-/// Get gtk_commit_english config
-///
-/// ## Return
-///
-/// 1 = true, 0 = false
-#[no_mangle]
-pub unsafe extern "C" fn kime_config_gtk_commit_english(config: *const Config) -> u32 {
-    config.as_ref().unwrap().gtk_commit_english.into()
-}
-
 /// Get xim_preedit_font config
 /// name only valid while config is live
 ///

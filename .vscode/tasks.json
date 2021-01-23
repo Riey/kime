@@ -8,6 +8,7 @@
         {
             "type": "shell",
             "label": "install-gtkimmodule",
+            "dependsOn": ["cargo build"],
             "command": "sudo",
             "args": [
                 "install",
@@ -32,6 +33,7 @@
         {
             "type": "shell",
             "label": "install-engine",
+            "dependsOn": ["cargo build"],
             "command": "sudo",
             "args": [
                 "install",
@@ -48,7 +50,7 @@
                 "$rustc"
             ],
             "group": "build",
-            "label": "rust: cargo build"
+            "label": "cargo build"
         }
     ]
 }

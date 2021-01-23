@@ -1,8 +1,8 @@
-# Dev
+# 0.8.1
 
 * Fix GTK3 space commit bug
-* Use C in GTK3
 * Fix Qt5 backspace bug
+* Use C in GTK3
 
 # 0.8.0
 

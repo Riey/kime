@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0)
 
-project(kime VERSION 0.8.0)
+project(kime VERSION 0.8.1)
 
 set(CMAKE_SKIP_RPATH TRUE)
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG")

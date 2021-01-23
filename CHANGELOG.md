@@ -1,6 +1,7 @@
 # Dev
 
-* Fix gtk space commit bug
+* Fix GTK3 space commit bug
+* Fix Qt5 backspace bug
 
 # 0.8.0
 

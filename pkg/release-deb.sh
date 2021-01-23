@@ -4,7 +4,7 @@ set -e
 
 cd $(readlink -f $(dirname $0))/..
 
-VER=$(grep '^version =' gtk3/Cargo.toml|head -n1|cut -d\" -f2)
+VER=$(grep '^version =' engine/core/Cargo.toml|head -n1|cut -d\" -f2)
 
 mkdir -pv build/deb/kime/DEBIAN
 

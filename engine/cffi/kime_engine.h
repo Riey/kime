@@ -84,15 +84,6 @@ struct Config *kime_config_load(void);
 void kime_config_delete(struct Config *config);
 
 /**
- * Get gtk_commit_english config
- *
- * ## Return
- *
- * 1 = true, 0 = false
- */
-uint32_t kime_config_gtk_commit_english(const struct Config *config);
-
-/**
  * Get xim_preedit_font config
  * name only valid while config is live
  *

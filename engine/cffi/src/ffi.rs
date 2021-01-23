@@ -122,14 +122,6 @@ extern "C" {
     pub fn kime_config_delete(config: *mut Config);
 }
 extern "C" {
-    #[doc = " Get gtk_commit_english config"]
-    #[doc = ""]
-    #[doc = " ## Return"]
-    #[doc = ""]
-    #[doc = " 1 = true, 0 = false"]
-    pub fn kime_config_gtk_commit_english(config: *const Config) -> u32;
-}
-extern "C" {
     #[doc = " Get xim_preedit_font config"]
     #[doc = " name only valid while config is live"]
     #[doc = ""]

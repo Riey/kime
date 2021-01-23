@@ -33,7 +33,6 @@ pub struct RawConfig {
     pub esc_turn_off: bool,
     pub hangul_keys: Vec<String>,
     pub xim_preedit_font: (String, f64),
-    pub gtk_commit_english: bool,
     pub compose: ComposeConfig,
 }
 
@@ -54,7 +53,6 @@ impl Default for RawConfig {
                 .map(ToString::to_string)
                 .collect(),
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
-            gtk_commit_english: true,
             compose: ComposeConfig::default(),
         }
     }
@@ -66,7 +64,6 @@ pub struct Config {
     pub(crate) hangul_keys: AHashSet<Key>,
     pub(crate) compose: ComposeConfig,
     pub xim_preedit_font: (String, f64),
-    pub gtk_commit_english: bool,
 }
 
 impl Default for Config {
@@ -87,7 +84,6 @@ impl Config {
                 .filter_map(|s| s.parse().ok())
                 .collect(),
             xim_preedit_font: raw.xim_preedit_font,
-            gtk_commit_english: raw.gtk_commit_english,
         }
     }
 

@@ -264,14 +264,14 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-capi"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "kime-engine-core",
 ]
 
 [[package]]
 name = "kime-engine-cffi"
-version = "0.8.0"
+version = "0.8.1"
 
 [[package]]
 name = "kime-engine-config-writer"
@@ -283,7 +283,7 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-core"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "ahash",
  "bitflags",
@@ -298,7 +298,7 @@ dependencies = [
 
 [[package]]
 name = "kime-xim"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "ahash",
  "cairo-rs",

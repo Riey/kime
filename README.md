@@ -42,14 +42,16 @@ make sure **cargo** and other dependencies listed below are installed before bui
 git clone https://github.com/Riey/kime
 cd kime
 
-cargo build --release
-
-pkg/release.sh
+cargo xtask build XIM GTK3 QT5
 
 # You can now install files from build/out
-# or use script in pkg/install.sh
-# e.g. sudo pkg/install.sh
+# or use install task
+# cargo xtask install <target-path>
+# or you are debian user, use release-deb
+# cargo xtask release-deb <deb-out-path>
 ```
+
+See `cargo xtask --help` for more detail
 
 ## Configuration
 

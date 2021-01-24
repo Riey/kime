@@ -1,6 +1,7 @@
 # Dev
 
-* Refix #100
+* Rework build scripts
+* Fix NumLock bug again
 
 # 0.8.1
 

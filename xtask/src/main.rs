@@ -66,7 +66,7 @@ enum TaskCommand {
         #[structopt(long, parse(from_os_str))]
         out_path: Option<PathBuf>,
         #[structopt(parse(from_os_str))]
-        target_path: PathBuf,
+        target_path: Option<PathBuf>,
     },
 }
 
@@ -93,6 +93,8 @@ impl TaskCommand {
                 out_path,
                 target_path,
             } => {
+                let target_path = target_path
+                    .unwrap_or_else(|| std::env::current_dir().expect("Get current dir"));
                 let deb_dir = tempfile::tempdir().expect("Create tempdir");
                 let control_path = deb_dir.as_ref().join("DEBIAN/control");
                 std::fs::create_dir_all(control_path.parent().unwrap()).expect("Create DEBIAN dir");

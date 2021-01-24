@@ -52,10 +52,12 @@ enum Frontend {
     Xim,
     #[strum(to_string = "QT5")]
     Qt5,
-    // Gtk2,
+    #[strum(to_string = "GTK2")]
+    Gtk2,
     #[strum(to_string = "GTK3")]
     Gtk3,
-    // Gtk4,
+    #[strum(to_string = "GTK4")]
+    Gtk4,
 }
 
 #[derive(StructOpt)]

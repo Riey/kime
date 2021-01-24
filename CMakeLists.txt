@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.1.0)
 
 project(kime VERSION 0.8.1)
 
+option(ENABLE_GTK2 "Enable GTK2 immodule" OFF)
 option(ENABLE_GTK3 "Enable GTK3 immodule" OFF)
+option(ENABLE_GTK4 "Enable GTK4 immodule" OFF)
 option(ENABLE_QT5 "Enable Qt5 immodule" OFF)
 
 set(CMAKE_SKIP_RPATH TRUE)
@@ -14,8 +16,14 @@ set(KIME_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/engine/cffi)
 
 include(GNUInstallDirs)
 
+if(${ENABLE_GTK2})
+    add_subdirectory(gtk2)
+endif()
 if(${ENABLE_GTK3})
     add_subdirectory(gtk3)
+endif()
+if(${ENABLE_GTK4})
+    add_subdirectory(gtk4)
 endif()
 
 if(${ENABLE_QT5})

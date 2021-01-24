@@ -1,3 +1,7 @@
+# Dev
+
+* Refix #100
+
 # 0.8.1
 
 * Fix GTK3 space commit bug

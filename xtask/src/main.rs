@@ -195,7 +195,10 @@ impl TaskCommand {
                 if build_xim {
                     Command::new("cargo")
                         .args(&["build", "--bin=kime-xim", mode.cargo_profile()])
-                        .env("RUSTFLAGS", format!("-L{}", src_path.join(mode.cargo_target_dir()).display()))
+                        .env(
+                            "RUSTFLAGS",
+                            format!("-L{}", src_path.join(mode.cargo_target_dir()).display()),
+                        )
                         .spawn()
                         .expect("Spawn cargo")
                         .wait()

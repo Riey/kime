@@ -184,9 +184,18 @@ impl TaskCommand {
                     }
                 }
 
+                // build engine
+                Command::new("cargo")
+                    .args(&["build", "--lib=kime_engine_capi", mode.cargo_profile()])
+                    .spawn()
+                    .expect("Spawn cargo")
+                    .wait()
+                    .expect("Run cargo");
+
                 if build_xim {
                     Command::new("cargo")
                         .args(&["build", "--bin=kime-xim", mode.cargo_profile()])
+                        .env("RUSTFLAGS", format!("-L{}", src_path.join(mode.cargo_target_dir()).display()))
                         .spawn()
                         .expect("Spawn cargo")
                         .wait()

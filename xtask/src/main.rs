@@ -46,6 +46,7 @@ enum Frontend {
 
 #[derive(StructOpt)]
 enum TaskCommand {
+    Test {},
     Build {
         #[structopt(long, parse(try_from_str), default_value = "Release")]
         mode: BuildMode,
@@ -68,6 +69,15 @@ enum TaskCommand {
         #[structopt(parse(from_os_str))]
         target_path: Option<PathBuf>,
     },
+}
+
+fn build_core(mode: BuildMode) {
+    Command::new("cargo")
+        .args(&["build", "--lib=kime_engine_capi", mode.cargo_profile()])
+        .spawn()
+        .expect("Spawn cargo")
+        .wait()
+        .expect("Run cargo");
 }
 
 fn install(exe: bool, src: PathBuf, target: PathBuf) {
@@ -159,6 +169,14 @@ impl TaskCommand {
                     target_path.join("etc/kime/config.yaml"),
                 );
             }
+            TaskCommand::Test {} => {
+                Command::new("cargo")
+                    .args(&["test", "-p=kime-engine-core"])
+                    .spawn()
+                    .expect("Spawn cargo")
+                    .wait()
+                    .expect("Run test");
+            }
             TaskCommand::Build {
                 frontends,
                 mode,
@@ -185,12 +203,7 @@ impl TaskCommand {
                 }
 
                 // build engine
-                Command::new("cargo")
-                    .args(&["build", "--lib=kime_engine_capi", mode.cargo_profile()])
-                    .spawn()
-                    .expect("Spawn cargo")
-                    .wait()
-                    .expect("Run cargo");
+                build_core(mode);
 
                 if build_xim {
                     Command::new("cargo")

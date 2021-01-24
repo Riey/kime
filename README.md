@@ -53,9 +53,23 @@ cargo xtask build XIM GTK3 QT5
 
 See `cargo xtask --help` for more detail
 
+
+#### GTK
+
+```sh
+# If you install gtk2
+sudo gtk-query-immodules-2.0 --update-cache
+# If you install gtk3
+sudo gtk-query-immodules-3.0 --update-cache
+# If you install gtk4
+sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
+```
+
 ## Configuration
 
 add the following to .xprofile or .xinitrc and restart X:
+
+if you don't use XIM, you don't have to run `kime-xim`
 
 ```sh
 export GTK_IM_MODULE=kime
@@ -73,10 +87,17 @@ read [CONFIGURATION.md](CONFIGURATION.md) for detailed options.
 * libxcb
 * cairo
 
+### GTK2
+
+* gtk2
+
 ### GTK3
 
 * gtk3
-* pango
+
+### GTK4
+
+* gtk4
 
 ### Qt
 

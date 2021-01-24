@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::{path::Path, process::Command};
+use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(Clone, Copy, strum_macros::EnumString)]
@@ -10,10 +10,17 @@ enum BuildMode {
 }
 
 impl BuildMode {
+    fn cmake_build_type(self) -> &'static str {
+        match self {
+            BuildMode::Debug => "-DCMAKE_BUILD_TYPE=Debug",
+            BuildMode::Release => "-DCMAKE_BUILD_TYPE=Release",
+        }
+    }
+
     fn cargo_profile(self) -> &'static str {
         match self {
-            BuildMode::Debug => "dev",
-            BuildMode::Release => "release",
+            BuildMode::Debug => "",
+            BuildMode::Release => "--release",
         }
     }
 
@@ -81,7 +88,7 @@ impl TaskCommand {
 
                 if build_xim {
                     Command::new("cargo")
-                        .args(&["build", "--bin=kime-xim", "--profile", mode.cargo_profile()])
+                        .args(&["build", "--bin=kime-xim", mode.cargo_profile()])
                         .spawn()
                         .expect("Spawn cargo")
                         .wait()
@@ -89,17 +96,21 @@ impl TaskCommand {
 
                     std::fs::copy(
                         src_path.join(mode.cargo_target_dir()).join("kime-xim"),
-                        &out_path,
+                        &out_path.join("kime-xim"),
                     )
                     .expect("Copy xim file");
                 }
 
                 let mut cmake_command = Command::new("cmake");
 
-                cmake_command.current_dir(&cmake_path).arg(src_path).arg("-GNinja");
+                cmake_command
+                    .current_dir(&cmake_path)
+                    .arg(src_path)
+                    .arg("-GNinja")
+                    .arg(mode.cmake_build_type());
 
                 for flags in cmake_flags.iter() {
-                    cmake_command.arg(format!("-DENABLE_{}", flags));
+                    cmake_command.arg(format!("-DENABLE_{}=ON", flags));
                 }
 
                 cmake_command

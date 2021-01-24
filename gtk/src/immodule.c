@@ -249,12 +249,14 @@ void im_context_class_init(KimeImContextClass *klass, gpointer _data) {
   klass->config = kime_config_load();
 
   klass->parent.set_client_window = set_client_window;
-  klass->parent.parent_class.finalize = im_context_finalize;
   klass->parent.reset = reset;
   klass->parent.filter_keypress = filter_keypress;
   klass->parent.get_preedit_string = get_preedit_string;
   // klass->parent.focus_in = NULL;
   klass->parent.focus_out = reset;
+
+  GObjectClass *parent_class = G_OBJECT_CLASS(klass);
+  parent_class->finalize = im_context_finalize;
 }
 
 static const GTypeInfo TYPE_INFO = {

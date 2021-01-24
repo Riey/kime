@@ -14,6 +14,7 @@ set(KIME_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/engine/cffi)
 
 include(GNUInstallDirs)
 
+add_subdirectory(gtk2)
 if(${ENABLE_GTK3})
     add_subdirectory(gtk3)
 endif()

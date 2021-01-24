@@ -56,11 +56,71 @@ enum TaskCommand {
         #[structopt(parse(try_from_str))]
         frontends: Vec<Frontend>,
     },
+    Install {
+        #[structopt(long, parse(from_os_str))]
+        out_path: Option<PathBuf>,
+        #[structopt(parse(from_os_str))]
+        target_path: PathBuf,
+    },
+}
+
+fn install(exe: bool, src: PathBuf, target: PathBuf) {
+    if src.exists() {
+        println!("Install {} into {}", src.display(), target.display());
+
+        Command::new("install")
+            .arg(if exe { "-Dsm755" } else { "-Dm644" })
+            .arg(src)
+            .arg("-T")
+            .arg(target)
+            .spawn()
+            .expect("Spawn install")
+            .wait()
+            .expect("Run install");
+    }
 }
 
 impl TaskCommand {
     pub fn run(self) {
         match self {
+            TaskCommand::Install {
+                out_path,
+                target_path,
+            } => {
+                let out_path = out_path.unwrap_or_else(|| {
+                    std::env::current_dir()
+                        .expect("Load current dir")
+                        .join("build")
+                        .join("out")
+                });
+
+                install(
+                    true,
+                    out_path.join("kime-xim"),
+                    target_path.join("usr/bin/kime-xim"),
+                );
+                install(
+                    true,
+                    out_path.join("libkime-gtk3.so"),
+                    target_path.join("usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"),
+                );
+                install(true, out_path.join("libkime-qt5.so"), target_path.join("usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
+                install(
+                    true,
+                    out_path.join("libkime_engine.so"),
+                    target_path.join("usr/lib/libkime_engine.so"),
+                );
+                install(
+                    false,
+                    out_path.join("kime_engine.h"),
+                    target_path.join("usr/include/kime_engine.h"),
+                );
+                install(
+                    false,
+                    out_path.join("config.yaml"),
+                    target_path.join("etc/kime/config.yaml"),
+                );
+            }
             TaskCommand::Build {
                 frontends,
                 mode,
@@ -105,7 +165,7 @@ impl TaskCommand {
 
                 cmake_command
                     .current_dir(&cmake_path)
-                    .arg(src_path)
+                    .arg(&src_path)
                     .arg("-GNinja")
                     .arg(mode.cmake_build_type());
 
@@ -132,6 +192,19 @@ impl TaskCommand {
                     std::fs::copy(file.path(), &out_path.join(file.file_name()))
                         .expect("Copy file");
                 }
+
+                std::fs::copy(
+                    src_path.join("engine").join("cffi").join("kime_engine.h"),
+                    out_path.join("kime_engine.h"),
+                )
+                .expect("Copy engine header file");
+
+                serde_yaml::to_writer(
+                    std::fs::File::create(out_path.join("config.yaml"))
+                        .expect("Create config file"),
+                    &kime_engine_core::RawConfig::default(),
+                )
+                .expect("Write config file");
             }
         }
     }

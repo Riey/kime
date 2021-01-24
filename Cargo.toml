@@ -2,7 +2,6 @@
 members = [
     "engine/core",
     "engine/capi",
-    "engine/config-writer",
     "engine/cffi",
     "xim",
 

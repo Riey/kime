@@ -4,8 +4,7 @@
 
 static GType KIME_TYPE_IM_CONTEXT = 0;
 static const guint FORWARDED_MASK = 1 << 25;
-static const guint SKIP_MASK = GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK |
-                               GDK_MOD4_MASK | GDK_MOD5_MASK;
+static const guint SKIP_MASK = GDK_MOD1_MASK | GDK_MOD3_MASK | GDK_MOD5_MASK;
 
 typedef struct KimeSignals {
   guint commit;
@@ -79,7 +78,7 @@ gboolean commit_event(KimeImContext *ctx, GdkEventKey *key) {
   // ignore LOCK or NUMLOCK
   guint state = key->state & !(GDK_LOCK_MASK | GDK_MOD2_MASK);
 
-  if (!key->state || key->state == GDK_SHIFT_MASK) {
+  if (!state || state == GDK_SHIFT_MASK) {
     uint32_t c = gdk_keyval_to_unicode(key->keyval);
 
     if (!g_unichar_iscntrl(c)) {

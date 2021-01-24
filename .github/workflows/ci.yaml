@@ -19,6 +19,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Update apt
       run: sudo apt-get update -y
     - name: Install packages

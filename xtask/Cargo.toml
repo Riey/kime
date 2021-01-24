@@ -1,0 +1,10 @@
+[package]
+name = "kime-xtask"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+structopt = "0.3.21"
+strum = "0.20.0"
+strum_macros = "0.20.1"

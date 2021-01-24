@@ -5,6 +5,8 @@ members = [
     "engine/config-writer",
     "engine/cffi",
     "xim",
+
+    "xtask",
 ]
 
 [profile.release]

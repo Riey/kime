@@ -62,6 +62,12 @@ enum TaskCommand {
         #[structopt(parse(from_os_str))]
         target_path: PathBuf,
     },
+    ReleaseDeb {
+        #[structopt(long, parse(from_os_str))]
+        out_path: Option<PathBuf>,
+        #[structopt(parse(from_os_str))]
+        target_path: PathBuf,
+    },
 }
 
 fn install(exe: bool, src: PathBuf, target: PathBuf) {
@@ -83,6 +89,36 @@ fn install(exe: bool, src: PathBuf, target: PathBuf) {
 impl TaskCommand {
     pub fn run(self) {
         match self {
+            TaskCommand::ReleaseDeb {
+                out_path,
+                target_path,
+            } => {
+                let deb_dir = tempfile::tempdir().expect("Create tempdir");
+                let control_path = deb_dir.as_ref().join("DEBIAN/control");
+                std::fs::create_dir_all(control_path.parent().unwrap()).expect("Create DEBIAN dir");
+
+                std::fs::write(
+                    control_path,
+                    include_str!("../control.in").replace("%VER%", env!("CARGO_PKG_VERSION")),
+                )
+                .expect("Write control");
+
+                // Install into tempdir
+                TaskCommand::Install {
+                    out_path,
+                    target_path: deb_dir.path().into(),
+                }
+                .run();
+
+                Command::new("dpkg-deb")
+                    .arg("--build")
+                    .arg(deb_dir.as_ref())
+                    .arg(target_path.join(format!("kime_{}_amd64.deb", env!("CARGO_PKG_VERSION"))))
+                    .spawn()
+                    .expect("Spawn dpkg-deb")
+                    .wait()
+                    .expect("Run dpkg-deb");
+            }
             TaskCommand::Install {
                 out_path,
                 target_path,

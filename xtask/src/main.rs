@@ -3,6 +3,20 @@ use std::path::PathBuf;
 use std::process::Command;
 use structopt::StructOpt;
 
+trait CommandExt: Sized {
+    fn mode(&mut self, mode: BuildMode) -> &mut Self;
+}
+
+impl CommandExt for Command {
+    fn mode(&mut self, mode: BuildMode) -> &mut Self {
+        if mode.is_release() {
+            self.arg("--release")
+        } else {
+            self
+        }
+    }
+}
+
 #[derive(Clone, Copy, strum_macros::EnumString)]
 enum BuildMode {
     Debug,
@@ -17,10 +31,10 @@ impl BuildMode {
         }
     }
 
-    fn cargo_profile(self) -> &'static str {
+    fn is_release(self) -> bool {
         match self {
-            BuildMode::Debug => "",
-            BuildMode::Release => "--release",
+            BuildMode::Debug => false,
+            BuildMode::Release => true,
         }
     }
 
@@ -73,7 +87,8 @@ enum TaskCommand {
 
 fn build_core(mode: BuildMode) {
     Command::new("cargo")
-        .args(&["build", "--lib=kime_engine_capi", mode.cargo_profile()])
+        .args(&["build", "-p=kime-engine-capi"])
+        .mode(mode)
         .spawn()
         .expect("Spawn cargo")
         .wait()
@@ -215,7 +230,8 @@ impl TaskCommand {
 
                 if build_xim {
                     Command::new("cargo")
-                        .args(&["build", "--bin=kime-xim", mode.cargo_profile()])
+                        .args(&["build", "--bin=kime-xim"])
+                        .mode(mode)
                         .env(
                             "RUSTFLAGS",
                             format!("-L{}", src_path.join(mode.cargo_target_dir()).display()),

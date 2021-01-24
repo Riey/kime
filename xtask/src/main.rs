@@ -205,6 +205,14 @@ impl TaskCommand {
                 // build engine
                 build_core(mode);
 
+                std::fs::copy(
+                    src_path
+                        .join(mode.cargo_target_dir())
+                        .join("libkime_engine.so"),
+                    out_path.join("libkime_engine.so"),
+                )
+                .expect("Copy engine file");
+
                 if build_xim {
                     Command::new("cargo")
                         .args(&["build", "--bin=kime-xim", mode.cargo_profile()])
@@ -219,7 +227,7 @@ impl TaskCommand {
 
                     std::fs::copy(
                         src_path.join(mode.cargo_target_dir()).join("kime-xim"),
-                        &out_path.join("kime-xim"),
+                        out_path.join("kime-xim"),
                     )
                     .expect("Copy xim file");
                 }

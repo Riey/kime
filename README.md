@@ -25,6 +25,7 @@ Korean IME
 - [x] GTK3
 - [x] GTK4
 - [x] Qt5
+- [x] Qt6
 
 ## Installation
 

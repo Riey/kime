@@ -3,6 +3,7 @@ members = [
     "engine/core",
     "engine/capi",
     "engine/cffi",
+    "wayland",
     "xim",
 
     "xtask",

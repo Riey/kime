@@ -20,7 +20,7 @@ Korean IME
 ## Supported frontend
 
 - [x] XIM
-- [ ] Wayland
+- [x] Wayland
 - [x] GTK2
 - [x] GTK3
 - [x] GTK4

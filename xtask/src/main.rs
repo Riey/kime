@@ -1,3 +1,4 @@
+use is_executable::is_executable;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{collections::HashMap, path::Path};
@@ -143,44 +144,36 @@ impl TaskCommand {
                 let out_path = get_build_path().join("out");
 
                 install(
-                    true,
                     out_path.join("kime-xim"),
                     target_path.join("usr/bin/kime-xim"),
                 );
                 install(
-                    true,
                     out_path.join("kime-wayland"),
                     target_path.join("usr/bin/kime-wayland"),
                 );
                 install(
-                    true,
                     out_path.join("libkime-gtk2.so"),
                     target_path.join("usr/lib/gtk-2.0/2.10.0/immodules/im-kime.so"),
                 );
                 install(
-                    true,
                     out_path.join("libkime-gtk3.so"),
                     target_path.join("usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"),
                 );
                 install(
-                    true,
                     out_path.join("libkime-gtk4.so"),
                     target_path.join("usr/lib/gtk-4.0/4.0.0/immodules/libkime-gtk4.so"),
                 );
-                install(true, out_path.join("libkime-qt5.so"), target_path.join("usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
-                install(true, out_path.join("libkime-qt6.so"), target_path.join("usr/lib/qt6/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
+                install(out_path.join("libkime-qt5.so"), target_path.join("usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
+                install(out_path.join("libkime-qt6.so"), target_path.join("usr/lib/qt6/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
                 install(
-                    true,
                     out_path.join("libkime_engine.so"),
                     target_path.join("usr/lib/libkime_engine.so"),
                 );
                 install(
-                    false,
                     out_path.join("kime_engine.h"),
                     target_path.join("usr/include/kime_engine.h"),
                 );
                 install(
-                    false,
                     out_path.join("config.yaml"),
                     target_path.join("etc/kime/config.yaml"),
                 );
@@ -307,6 +300,10 @@ impl TaskCommand {
                     out_path.join("kime_engine.h"),
                 )
                 .expect("Copy default config file");
+
+                if mode.is_release() {
+                    strip_all(&out_path).ok();
+                }
             }
         }
     }
@@ -330,12 +327,36 @@ fn build_core(mode: BuildMode) {
         .expect("Run cargo");
 }
 
-fn install(exe: bool, src: PathBuf, target: PathBuf) {
+fn strip_all(dir: &Path) -> std::io::Result<()> {
+    for path in dir.read_dir()? {
+        let path = path?.path();
+
+        if !is_executable(&path) {
+            continue;
+        }
+
+        Command::new("strip")
+            .arg("-s")
+            .arg(path)
+            .spawn()
+            .expect("Spawn strip")
+            .wait()
+            .expect("Run strip");
+    }
+
+    Ok(())
+}
+
+fn install(src: PathBuf, target: PathBuf) {
     if src.exists() {
         println!("Install {} into {}", src.display(), target.display());
 
         Command::new("install")
-            .arg(if exe { "-Dsm755" } else { "-Dm644" })
+            .arg(if is_executable(&src) {
+                "-Dsm755"
+            } else {
+                "-Dm644"
+            })
             .arg(src)
             .arg("-T")
             .arg(target)

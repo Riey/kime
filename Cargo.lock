@@ -313,6 +313,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "is_executable"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1426a051d4e6edd01995e55e2cb58eef936d773093b7e6ed1a2109fca474906d"
+dependencies = [
+ "winapi",
+]
+
+[[package]]
 name = "itertools"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -380,6 +389,7 @@ dependencies = [
 name = "kime-xtask"
 version = "0.8.0"
 dependencies = [
+ "is_executable",
  "structopt",
  "strum 0.20.0",
  "strum_macros 0.20.1",

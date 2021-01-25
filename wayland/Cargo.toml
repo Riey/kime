@@ -9,9 +9,11 @@ edition = "2018"
 [dependencies]
 kime-engine-cffi = { path = "../engine/cffi" }
 libc = "0.2.82"
+log = "0.4.13"
+pico-args = "0.4.0"
+simplelog = "0.9.0"
 
 wayland-client = { version = "0.28.3", features = ["use_system_lib"] }
 wayland-protocols = { version = "0.28.3", features = ["client", "unstable_protocols"] }
-# zwp-input-method = "0.2.0"
-zwp-input-method = { path = "../../zwp-input-method" }
+zwp-input-method = { git = "https://github.com/Riey/zwp-input-method" }
 zwp-virtual-keyboard = "0.2.0"

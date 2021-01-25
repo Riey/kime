@@ -1,9 +1,10 @@
 use wayland_client::{
-    protocol::{wl_compositor, wl_keyboard::KeyState, wl_seat},
+    protocol::{wl_keyboard::KeyState, wl_seat},
     Display, GlobalManager,
 };
 use wayland_protocols::unstable::text_input::v3::client::zwp_text_input_v3;
 
+use std::cell::Cell;
 use std::num::NonZeroI32;
 use zwp_input_method::input_method_unstable_v2::{
     zwp_input_method_keyboard_grab_v2::Event as KeyEvent,
@@ -38,6 +39,8 @@ struct SurroundingText {
 }
 
 struct InputMethodState {
+    activate: bool,
+    deactivate: bool,
     change_cause: zwp_text_input_v3::ChangeCause,
     hint: zwp_text_input_v3::ContentHint,
     purpose: zwp_text_input_v3::ContentPurpose,
@@ -47,6 +50,8 @@ struct InputMethodState {
 impl Default for InputMethodState {
     fn default() -> Self {
         Self {
+            activate: false,
+            deactivate: false,
             change_cause: zwp_text_input_v3::ChangeCause::Other,
             hint: zwp_text_input_v3::ContentHint::empty(),
             purpose: zwp_text_input_v3::ContentPurpose::Normal,
@@ -56,7 +61,33 @@ impl Default for InputMethodState {
 }
 
 fn main() {
-    let config = Box::leak(Box::new(Config::new())) as &'static Config;
+    let mut args = pico_args::Arguments::from_env();
+
+    if args.contains("--version") {
+        println!("kime-xim: {}", env!("CARGO_PKG_VERSION"));
+
+        return;
+    }
+
+    let mut log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Trace
+    } else {
+        log::LevelFilter::Info
+    };
+
+    if args.contains("--log") {
+        log_level = log::LevelFilter::Trace;
+    }
+
+    simplelog::SimpleLogger::init(log_level, simplelog::ConfigBuilder::new().build()).ok();
+
+    log::info!(
+        "Start wayland im server version: {}",
+        env!("CARGO_PKG_VERSION")
+    );
+
+    let config: &'static Config = Box::leak(Box::new(Config::new()));
+    let serial: &'static Cell<u32> = Box::leak(Box::new(Cell::new(0)));
 
     let display = Display::connect_to_env().expect("Failed to connect wayland display");
     let mut event_queue = display.create_event_queue();
@@ -67,10 +98,6 @@ fn main() {
         .sync_roundtrip(&mut (), |_, _, _| unreachable!())
         .unwrap();
 
-    let compositor = globals
-        .instantiate_exact::<wl_compositor::WlCompositor>(1)
-        .expect("Load compositor");
-    let surface = compositor.create_surface();
     let input_manager = globals
         .instantiate_exact::<ZwpInputMethodManagerV2>(1)
         .expect("Load InputManager");
@@ -82,150 +109,173 @@ fn main() {
         .expect("Load seat");
     let vk = virtual_keyboard_manager.create_virtual_keyboard(&seat);
     let im = input_manager.get_input_method(&seat);
-    let mut serial = 0;
-    let mut active = false;
-    let mut pending_active = false;
     let mut kb_grab = None;
     let mut pending_state = InputMethodState::default();
     let mut current_state = InputMethodState::default();
+    let mut engine = InputEngine::new();
 
-    im.quick_assign(move |im, event, _| match event {
-        ImEvent::Activate => {
-            pending_active = true;
-        }
-        ImEvent::Deactivate => {
-            pending_active = false;
-        }
-        ImEvent::ContentType { hint, purpose } => {
-            pending_state.hint = hint;
-            pending_state.purpose = purpose;
-        }
-        ImEvent::TextChangeCause { cause } => {
-            pending_state.change_cause = cause;
-        }
-        ImEvent::SurroundingText {
-            text,
-            anchor,
-            cursor,
-        } => {
-            pending_state.surrounding_text = SurroundingText {
+    im.quick_assign(move |im, event, mut data| {
+        log::trace!("Im event: {:?}", event);
+
+        match event {
+            ImEvent::Activate => {
+                pending_state.activate = true;
+            }
+            ImEvent::Deactivate => {
+                pending_state.deactivate = true;
+            }
+            ImEvent::ContentType { hint, purpose } => {
+                pending_state.hint = hint;
+                pending_state.purpose = purpose;
+            }
+            ImEvent::TextChangeCause { cause } => {
+                pending_state.change_cause = cause;
+            }
+            ImEvent::SurroundingText {
                 text,
-                cursor: cursor as usize,
-                anchor: anchor as usize,
-            };
-        }
-        ImEvent::Unavailable => {
-            im.destroy();
-        }
-        ImEvent::Done => {
-            let prev_active = active;
-            serial += 1;
-            current_state = std::mem::take(&mut pending_state);
-            active = pending_active;
+                anchor,
+                cursor,
+            } => {
+                pending_state.surrounding_text = SurroundingText {
+                    text,
+                    cursor: cursor as usize,
+                    anchor: anchor as usize,
+                };
+            }
+            ImEvent::Unavailable => {
+                im.destroy();
+            }
+            ImEvent::Done => {
+                serial.set(serial.get() + 1);
 
-            if active && !prev_active {
-                let kb = im.grab_keyboard();
-                let vk = vk.clone();
-                let mut keymap_init = false;
-                let mut kime_state = 0;
-                let mut engine = InputEngine::new();
-                let mut repeat_info = RepeatInfo::default();
-                kb.quick_assign(move |_kb, event, _| {
-                    eprintln!("{:?}", event);
-                    match event {
-                        KeyEvent::Keymap { fd, format, size } => {
-                            if !keymap_init {
-                                vk.keymap(format as _, fd, size);
-                                unsafe {
-                                    libc::close(fd);
+                if !current_state.activate && pending_state.activate {
+                    let kb = im.grab_keyboard();
+                    let vk = vk.clone();
+                    let mut keymap_init = false;
+                    let mut kime_state = 0;
+                    let mut repeat_info = RepeatInfo::default();
+                    kb.quick_assign(move |_kb, event, mut data| {
+                        let engine = data.get::<InputEngine>().unwrap();
+                        match event {
+                            KeyEvent::Keymap { fd, format, size } => {
+                                if !keymap_init {
+                                    vk.keymap(format as _, fd, size);
+                                    unsafe {
+                                        libc::close(fd);
+                                    }
+                                    keymap_init = true;
                                 }
-                                keymap_init = true;
                             }
-                        }
-                        KeyEvent::Key {
-                            state, key, time, ..
-                        } => {
-                            if state == KeyState::Pressed {
-                                let mut bypass = false;
-                                let ret = engine.press_key(config, (key + 8) as u16, kime_state);
-                                dbg!(ret);
+                            KeyEvent::Key {
+                                state, key, time, ..
+                            } => {
+                                if state == KeyState::Pressed {
+                                    let mut bypass = false;
+                                    let ret =
+                                        engine.press_key(config, (key + 8) as u16, kime_state);
+                                    log::trace!("ret: {:#?}", ret);
 
-                                match ret.ty {
-                                    InputResultType::Consume => {}
-                                    InputResultType::Bypass => bypass = true,
-                                    InputResultType::CommitBypass => {
-                                        im.commit_string(ret.char1.to_string());
-                                        bypass = true;
+                                    match ret.ty {
+                                        InputResultType::Consume => {}
+                                        InputResultType::Bypass => bypass = true,
+                                        InputResultType::CommitBypass => {
+                                            im.commit_string(ret.char1.to_string());
+                                            bypass = true;
+                                        }
+                                        InputResultType::Commit => {
+                                            im.commit_string(ret.char1.to_string());
+                                        }
+                                        InputResultType::Preedit => {
+                                            im.set_preedit_string(
+                                                ret.char1.to_string(),
+                                                0,
+                                                ret.char1.len_utf8() as _,
+                                            );
+                                        }
+                                        InputResultType::CommitPreedit => {
+                                            im.commit_string(ret.char1.to_string());
+                                            im.set_preedit_string(
+                                                ret.char2.to_string(),
+                                                0,
+                                                ret.char2.len_utf8() as _,
+                                            );
+                                        }
+                                        InputResultType::CommitCommit => {
+                                            im.commit_string(ret.char1.to_string());
+                                            im.commit_string(ret.char2.to_string());
+                                        }
+                                        InputResultType::ClearPreedit => {
+                                            im.set_preedit_string(String::new(), -1, -1);
+                                        }
                                     }
-                                    InputResultType::Commit => {
-                                        im.commit_string(ret.char1.to_string());
-                                    }
-                                    InputResultType::Preedit => {
-                                        im.set_preedit_string(ret.char1.to_string(), 0, ret.char1.len_utf8() as _);
-                                    }
-                                    InputResultType::CommitPreedit => {
-                                        im.commit_string(ret.char1.to_string());
-                                        im.set_preedit_string(ret.char2.to_string(), 0, ret.char2.len_utf8() as _);
-                                    }
-                                    InputResultType::CommitCommit => {
-                                        im.commit_string(ret.char1.to_string());
-                                        im.commit_string(ret.char2.to_string());
-                                    }
-                                    InputResultType::ClearPreedit => {
-                                        im.set_preedit_string(String::new(), -1, -1);
-                                    }
-                                }
 
-                                im.commit(serial);
+                                    im.commit(serial.get());
 
-                                if bypass {
+                                    if bypass {
+                                        vk.key(time, key, state as _);
+                                    }
+                                } else {
                                     vk.key(time, key, state as _);
                                 }
-                            } else {
-                                vk.key(time, key, state as _);
-                            }
 
-                            // TODO repeat key
-                        }
-                        KeyEvent::Modifiers {
-                            mods_depressed,
-                            mods_latched,
-                            mods_locked,
-                            group,
-                            ..
-                        } => {
-                            kime_state = 0;
-                            if mods_depressed & 0x1 != 0 {
-                                kime_state |= MODIFIER_SHIFT;
+                                // TODO repeat key
                             }
-                            if mods_depressed & 0x4 != 0 {
-                                kime_state |= MODIFIER_CONTROL;
+                            KeyEvent::Modifiers {
+                                mods_depressed,
+                                mods_latched,
+                                mods_locked,
+                                group,
+                                ..
+                            } => {
+                                kime_state = 0;
+                                if mods_depressed & 0x1 != 0 {
+                                    log::trace!("Set SHIFT");
+                                    kime_state |= MODIFIER_SHIFT;
+                                }
+                                if mods_depressed & 0x4 != 0 {
+                                    log::trace!("Set CONTROL");
+                                    kime_state |= MODIFIER_CONTROL;
+                                }
+                                if mods_depressed & 0x40 != 0 {
+                                    log::trace!("Set SUPER");
+                                    kime_state |= MODIFIER_SUPER;
+                                }
+                                vk.modifiers(mods_depressed, mods_latched, mods_locked, group);
                             }
-                            if mods_depressed & 0x40 != 0 {
-                                kime_state |= MODIFIER_SUPER;
+                            KeyEvent::RepeatInfo { delay, rate } => {
+                                repeat_info = RepeatInfo::new(rate, delay);
                             }
-                            vk.modifiers(mods_depressed, mods_latched, mods_locked, group);
+                            _ => {}
                         }
-                        KeyEvent::RepeatInfo { delay, rate } => {
-                            repeat_info = RepeatInfo::new(rate, delay);
-                        }
-                        _ => {}
+                    });
+                    kb_grab = Some(kb);
+                } else if pending_state.deactivate {
+                    log::trace!("Focus out");
+
+                    let engine = data.get::<InputEngine>().unwrap();
+
+                    if let Some(c) = engine.reset() {
+                        // This act wrong now so disable temporary it will cause end letter bug
+                        // im.commit_string(c.to_string());
+                        // im.commit(serial.get());
                     }
-                });
-                kb_grab = Some(kb);
-            } else if !active && prev_active {
-                if let Some(grab) = kb_grab.as_ref() {
-                    grab.release();
+                    if let Some(grab) = kb_grab.take() {
+                        grab.release();
+                    }
                 }
-                kb_grab = None;
+
+                current_state = std::mem::take(&mut pending_state);
             }
+            _ => {}
         }
-        _ => {}
     });
 
     event_queue.sync_roundtrip(&mut (), |_, _, _| ()).unwrap();
+
+    log::info!("Server init success!");
+
     loop {
         // ignore unfiltered messages
-        event_queue.dispatch(&mut (), |_, _, _| ()).unwrap();
+        event_queue.dispatch(&mut engine, |_, _, _| ()).unwrap();
     }
 }

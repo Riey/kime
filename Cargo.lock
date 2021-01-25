@@ -353,6 +353,9 @@ version = "0.1.0"
 dependencies = [
  "kime-engine-cffi",
  "libc",
+ "log",
+ "pico-args",
+ "simplelog",
  "wayland-client",
  "wayland-protocols",
  "zwp-input-method",
@@ -1057,6 +1060,7 @@ dependencies = [
 [[package]]
 name = "zwp-input-method"
 version = "0.2.0"
+source = "git+https://github.com/Riey/zwp-input-method#3b45ffdcd15fad6c2408a66bb391983d3a32cc39"
 dependencies = [
  "wayland-client",
  "wayland-commons",

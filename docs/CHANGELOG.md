@@ -1,3 +1,11 @@
+# 0.9.0
+
+* Rework build scripts
+* Fix NumLock bug again
+* Add GTK2, GTK4 immodule
+* Add Qt6 immodule
+* Add Wayland frontend
+
 # 0.8.1
 
 * Fix GTK3 space commit bug

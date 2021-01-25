@@ -8,6 +8,7 @@ Korean IME
 [<img alt="aur version" src="https://img.shields.io/aur/version/kime?style=for-the-badge" height="25">](https://aur.archlinux.org/packages/kime/)
 [<img alt="license" src="https://img.shields.io/github/license/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/blob/master/LICENSE)
 
+## [Changelog](docs/CHANGELOG.md)
 
 ## Why kime
 
@@ -79,7 +80,7 @@ export XMODIFIERS=@im=kime
 kime-xim &
 ```
 
-read [CONFIGURATION.md](CONFIGURATION.md) for detailed options.
+read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ## Dependencies
 

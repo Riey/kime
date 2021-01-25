@@ -25,7 +25,7 @@
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=kime-xim"
+                    "-p=kime-wayland"
                 ]
             },
             "program": "${cargo:program}",

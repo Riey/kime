@@ -297,7 +297,7 @@ impl TaskCommand {
 
                 std::fs::copy(
                     src_path.join("docs").join("default_config.yaml"),
-                    out_path.join("kime_engine.h"),
+                    out_path.join("config.yaml"),
                 )
                 .expect("Copy default config file");
 

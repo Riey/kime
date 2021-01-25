@@ -218,10 +218,11 @@ fn main() {
 
                     let engine = data.get::<InputEngine>().unwrap();
 
-                    if let Some(_c) = engine.reset() {
+                    if let Some(c) = engine.reset() {
                         // This act wrong now so disable temporary it will cause end letter bug
-                        // im.commit_string(c.to_string());
-                        // im.commit(serial.get());
+                        im.commit_string(c.to_string());
+                        im.set_preedit_string(String::new(), -1, -1);
+                        im.commit(serial.get());
                     }
                     if let Some(grab) = kb_grab.take() {
                         grab.release();

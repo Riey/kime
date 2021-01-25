@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{collections::HashMap, path::Path};
 use structopt::StructOpt;
+use strum::IntoEnumIterator;
 
 trait CommandExt: Sized {
     fn mode(&mut self, mode: BuildMode) -> &mut Self;
@@ -46,10 +47,21 @@ impl BuildMode {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, strum_macros::EnumString, strum_macros::Display)]
+#[derive(
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    strum_macros::EnumString,
+    strum_macros::Display,
+    strum_macros::EnumIter,
+)]
 enum Frontend {
     #[strum(to_string = "XIM")]
     Xim,
+    #[strum(to_string = "WAYLAND")]
+    Wayland,
     #[strum(to_string = "QT5")]
     Qt5,
     #[strum(to_string = "QT6")]
@@ -62,6 +74,15 @@ enum Frontend {
     Gtk4,
 }
 
+impl Frontend {
+    pub fn is_cmake(self) -> bool {
+        match self {
+            Frontend::Xim | Frontend::Wayland => false,
+            _ => true,
+        }
+    }
+}
+
 #[derive(StructOpt)]
 enum TaskCommand {
     Test,
@@ -69,7 +90,10 @@ enum TaskCommand {
     Build {
         #[structopt(long, parse(try_from_str), default_value = "Release")]
         mode: BuildMode,
-        #[structopt(parse(try_from_str))]
+        #[structopt(
+            parse(try_from_str),
+            about = "Select frontend availiable list: [XIM, WAYLAND, QT5, QT6, GTK2, GTK3, GTK4]"
+        )]
         frontends: Vec<Frontend>,
     },
     Install {
@@ -125,6 +149,11 @@ impl TaskCommand {
                 );
                 install(
                     true,
+                    out_path.join("kime-wayland"),
+                    target_path.join("usr/bin/kime-wayland"),
+                );
+                install(
+                    true,
                     out_path.join("libkime-gtk2.so"),
                     target_path.join("usr/lib/gtk-2.0/2.10.0/immodules/im-kime.so"),
                 );
@@ -167,17 +196,14 @@ impl TaskCommand {
             }
             TaskCommand::Clean => {}
             TaskCommand::Build { frontends, mode } => {
-                let mut build_xim = false;
-                let mut cmake_flags = [
-                    (Frontend::Gtk2, false),
-                    (Frontend::Gtk3, false),
-                    (Frontend::Gtk4, false),
-                    (Frontend::Qt5, false),
-                    (Frontend::Qt6, false),
-                ]
-                .iter()
-                .copied()
-                .collect::<HashMap<_, _>>();
+                let mut frontends = frontends
+                    .into_iter()
+                    .map(|f| (f, true))
+                    .collect::<HashMap<_, _>>();
+
+                for f in Frontend::iter() {
+                    frontends.entry(f).or_insert(false);
+                }
 
                 let src_path = get_src_path();
                 let build_path = get_build_path();
@@ -187,13 +213,6 @@ impl TaskCommand {
 
                 std::fs::create_dir_all(&out_path).expect("create out_path");
                 std::fs::create_dir_all(&cmake_out_path).expect("create cmake_out_path");
-
-                for frontend in frontends.iter() {
-                    match frontend {
-                        Frontend::Xim => build_xim = true,
-                        other => drop(cmake_flags.insert(*other, true)),
-                    }
-                }
 
                 // build engine core
                 build_core(mode);
@@ -206,7 +225,7 @@ impl TaskCommand {
                 )
                 .expect("Copy engine file");
 
-                if build_xim {
+                if frontends[&Frontend::Xim] {
                     Command::new("cargo")
                         .args(&["build", "--bin=kime-xim"])
                         .current_dir(get_src_path())
@@ -223,6 +242,23 @@ impl TaskCommand {
                     .expect("Copy xim file");
                 }
 
+                if frontends[&Frontend::Wayland] {
+                    Command::new("cargo")
+                        .args(&["build", "--bin=kime-wayland"])
+                        .current_dir(get_src_path())
+                        .mode(mode)
+                        .spawn()
+                        .expect("Spawn cargo")
+                        .wait()
+                        .expect("Run cargo");
+
+                    std::fs::copy(
+                        src_path.join(mode.cargo_target_dir()).join("kime-wayland"),
+                        out_path.join("kime-wayland"),
+                    )
+                    .expect("Copy xim file");
+                }
+
                 let mut cmake_command = Command::new("cmake");
 
                 cmake_command
@@ -231,7 +267,10 @@ impl TaskCommand {
                     .arg("-GNinja")
                     .arg(mode.cmake_build_type());
 
-                for (frontend, on) in cmake_flags.iter() {
+                for (frontend, on) in frontends.iter() {
+                    if !frontend.is_cmake() {
+                        continue;
+                    }
                     let flag = if *on { "ON" } else { "OFF" };
 
                     cmake_command.arg(format!("-DENABLE_{}={}", frontend, flag));

@@ -5,7 +5,6 @@ use wayland_client::{
 use wayland_protocols::unstable::text_input::v3::client::zwp_text_input_v3;
 
 use std::cell::Cell;
-use std::num::NonZeroI32;
 use zwp_input_method::input_method_unstable_v2::{
     zwp_input_method_keyboard_grab_v2::Event as KeyEvent,
     zwp_input_method_manager_v2::ZwpInputMethodManagerV2, zwp_input_method_v2::Event as ImEvent,
@@ -16,35 +15,12 @@ use kime_engine_cffi::{
     Config, InputEngine, InputResultType, MODIFIER_CONTROL, MODIFIER_SHIFT, MODIFIER_SUPER,
 };
 
-#[derive(Default)]
-struct RepeatInfo {
-    rate: Option<NonZeroI32>,
-    delay: Option<NonZeroI32>,
-}
-
-impl RepeatInfo {
-    pub fn new(rate: i32, delay: i32) -> Self {
-        Self {
-            rate: NonZeroI32::new(rate),
-            delay: NonZeroI32::new(delay),
-        }
-    }
-}
-
-#[derive(Default)]
-struct SurroundingText {
-    text: String,
-    cursor: usize,
-    anchor: usize,
-}
-
 struct InputMethodState {
     activate: bool,
     deactivate: bool,
     change_cause: zwp_text_input_v3::ChangeCause,
     hint: zwp_text_input_v3::ContentHint,
     purpose: zwp_text_input_v3::ContentPurpose,
-    surrounding_text: SurroundingText,
 }
 
 impl Default for InputMethodState {
@@ -55,7 +31,6 @@ impl Default for InputMethodState {
             change_cause: zwp_text_input_v3::ChangeCause::Other,
             hint: zwp_text_input_v3::ContentHint::empty(),
             purpose: zwp_text_input_v3::ContentPurpose::Normal,
-            surrounding_text: SurroundingText::default(),
         }
     }
 }
@@ -131,17 +106,6 @@ fn main() {
             ImEvent::TextChangeCause { cause } => {
                 pending_state.change_cause = cause;
             }
-            ImEvent::SurroundingText {
-                text,
-                anchor,
-                cursor,
-            } => {
-                pending_state.surrounding_text = SurroundingText {
-                    text,
-                    cursor: cursor as usize,
-                    anchor: anchor as usize,
-                };
-            }
             ImEvent::Unavailable => {
                 im.destroy();
             }
@@ -153,7 +117,7 @@ fn main() {
                     let vk = vk.clone();
                     let mut keymap_init = false;
                     let mut kime_state = 0;
-                    let mut repeat_info = RepeatInfo::default();
+                    // let mut repeat_info = RepeatInfo::default();
                     kb.quick_assign(move |_kb, event, mut data| {
                         let engine = data.get::<InputEngine>().unwrap();
                         match event {
@@ -218,7 +182,7 @@ fn main() {
                                     vk.key(time, key, state as _);
                                 }
 
-                                // TODO repeat key
+                                // TODO: repeat key
                             }
                             KeyEvent::Modifiers {
                                 mods_depressed,
@@ -242,8 +206,8 @@ fn main() {
                                 }
                                 vk.modifiers(mods_depressed, mods_latched, mods_locked, group);
                             }
-                            KeyEvent::RepeatInfo { delay, rate } => {
-                                repeat_info = RepeatInfo::new(rate, delay);
+                            KeyEvent::RepeatInfo { .. } => {
+                                // TODO: repeat key
                             }
                             _ => {}
                         }
@@ -254,7 +218,7 @@ fn main() {
 
                     let engine = data.get::<InputEngine>().unwrap();
 
-                    if let Some(c) = engine.reset() {
+                    if let Some(_c) = engine.reset() {
                         // This act wrong now so disable temporary it will cause end letter bug
                         // im.commit_string(c.to_string());
                         // im.commit(serial.get());

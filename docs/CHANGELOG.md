@@ -3,6 +3,7 @@
 * Rework build scripts
 * Fix NumLock bug again
 * Add GTK2, GTK4 immodule
+* Add Qt6 immodule
 
 # 0.8.1
 

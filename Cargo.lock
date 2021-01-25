@@ -350,8 +350,6 @@ dependencies = [
 name = "kime-xtask"
 version = "0.8.0"
 dependencies = [
- "kime-engine-core",
- "serde_yaml",
  "structopt",
  "strum 0.20.0",
  "strum_macros 0.20.1",

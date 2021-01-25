@@ -229,7 +229,7 @@ impl TaskCommand {
                     }
                 }
 
-                // build engine
+                // build engine core
                 build_core(mode);
 
                 std::fs::copy(
@@ -244,10 +244,6 @@ impl TaskCommand {
                     Command::new("cargo")
                         .args(&["build", "--bin=kime-xim"])
                         .mode(mode)
-                        .env(
-                            "RUSTFLAGS",
-                            format!("-L{}", src_path.join(mode.cargo_target_dir()).display()),
-                        )
                         .spawn()
                         .expect("Spawn cargo")
                         .wait()
@@ -298,12 +294,11 @@ impl TaskCommand {
                 )
                 .expect("Copy engine header file");
 
-                serde_yaml::to_writer(
-                    std::fs::File::create(out_path.join("config.yaml"))
-                        .expect("Create config file"),
-                    &kime_engine_core::RawConfig::default(),
+                std::fs::copy(
+                    src_path.join("docs").join("default_config.yaml"),
+                    out_path.join("kime_engine.h"),
                 )
-                .expect("Write config file");
+                .expect("Copy default config file");
             }
         }
     }

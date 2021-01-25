@@ -1,4 +1,5 @@
 /target
 /build
+/cmake_build
 /cargo-timing*
 /.idea

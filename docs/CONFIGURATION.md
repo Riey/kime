@@ -32,14 +32,6 @@ Preedit window font name and size for XIM
 
 `[D2Coding, 15.0]`
 
-## gtk_commit_english
-
-Commit english rather then bypass keyevent need for some programs like gedit
-
-### default
-
-`true`
-
 ## compose
 
 Adjust compose, decompose jamo

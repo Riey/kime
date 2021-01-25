@@ -8,21 +8,24 @@ Korean IME
 [<img alt="aur version" src="https://img.shields.io/aur/version/kime?style=for-the-badge" height="25">](https://aur.archlinux.org/packages/kime/)
 [<img alt="license" src="https://img.shields.io/github/license/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/blob/master/LICENSE)
 
+## [Changelog](docs/CHANGELOG.md)
 
 ## Why kime
 
 * Well tested input engine
 * Low memory footprint
-* Write in Rust no segfaults
+* Write in mostly Rust no segfaults
 * Allow custom layouts
 
 ## Supported frontend
 
 - [x] XIM
-- [ ] Wayland
+- [x] Wayland
+- [x] GTK2
 - [x] GTK3
-- [ ] GTK4
+- [x] GTK4
 - [x] Qt5
+- [x] Qt6
 
 ## Installation
 
@@ -42,18 +45,34 @@ make sure **cargo** and other dependencies listed below are installed before bui
 git clone https://github.com/Riey/kime
 cd kime
 
-cargo build --release
-
-pkg/release.sh
+cargo xtask build XIM GTK3 QT5
 
 # You can now install files from build/out
-# or use script in pkg/install.sh
-# e.g. sudo pkg/install.sh
+# or use install task
+# cargo xtask install <target-path>
+# or you are debian user, use release-deb
+# cargo xtask release-deb <deb-out-path>
+```
+
+See `cargo xtask --help` for more detail
+
+
+#### GTK
+
+```sh
+# If you install gtk2
+sudo gtk-query-immodules-2.0 --update-cache
+# If you install gtk3
+sudo gtk-query-immodules-3.0 --update-cache
+# If you install gtk4
+sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
 
 ## Configuration
 
 add the following to .xprofile or .xinitrc and restart X:
+
+if you don't use XIM, you don't have to run `kime-xim`
 
 ```sh
 export GTK_IM_MODULE=kime
@@ -62,7 +81,7 @@ export XMODIFIERS=@im=kime
 kime-xim &
 ```
 
-read [CONFIGURATION.md](CONFIGURATION.md) for detailed options.
+read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ## Dependencies
 
@@ -71,11 +90,6 @@ read [CONFIGURATION.md](CONFIGURATION.md) for detailed options.
 * libxcb
 * cairo
 
-### GTK3
+### Other specific toolkit immodule
 
-* gtk3
-* pango
-
-### Qt
-
-* qt5gui
+* that toolkit(e.g. gtk3, qt5 ...)

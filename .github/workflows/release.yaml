@@ -16,18 +16,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set VER
         id: version
-        run: echo "::set-output name=ver::$(grep '^version =' engine/core/Cargo.toml|head -n1|cut -d\" -f2)"
-      - name: Update apt
-        run: sudo apt-get update -y
-      - name: Install packages
-        run: sudo apt-get install -y pkg-config libpango1.0-dev libcairo2-dev libgtk-3-dev libglib2.0 libxcb1 qt5-default qtbase5-dev qtbase5-private-dev libqt5gui5 cmake
-      - name: Generate package...
-        run: pkg/release.sh
-      - name: Archiving package...
-        run: 7z a build/kime.7z ./build/out/*
-      - name: Generate deb package...
-        run: pkg/release-deb.sh
-
+        run: echo "::set-output name=ver::$(grep '^version =' xtask/Cargo.toml|head -n1|cut -d\" -f2)"
+      - name: Make temp dir
+        run: mkdir /tmp/kime
+      - name: Build image
+        run: docker build --tag riey/kime --network=host .
+      - name: Run release image
+        run: docker run --network=host -v /tmp/kime:/opt/kime-out riey/kime
       - name: Create draft release
         id: create_release
         uses: actions/create-release@v1
@@ -45,7 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/kime.7z
+          asset_path: /tmp/kime/kime.7z
           asset_name: kime-${{ steps.version.outputs.ver }}.7z
           asset_content_type: application/x-7z-compressed
 
@@ -55,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/deb/kime_${{ steps.version.outputs.ver }}_amd64.deb
+          asset_path: /tmp/kime/kime_${{ steps.version.outputs.ver }}_amd64.deb
           asset_name: kime_${{ steps.version.outputs.ver }}_amd64.deb
           asset_content_type: application/x-xz
   

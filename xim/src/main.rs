@@ -28,6 +28,8 @@ fn main() -> Result<(), ServerError> {
 
     simplelog::SimpleLogger::init(log_level, simplelog::ConfigBuilder::new().build()).ok();
 
+    log::info!("Start xim server version: {}", env!("CARGO_PKG_VERSION"));
+
     let config = kime_engine_cffi::Config::new();
 
     let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;

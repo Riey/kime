@@ -52,6 +52,8 @@ enum Frontend {
     Xim,
     #[strum(to_string = "QT5")]
     Qt5,
+    #[strum(to_string = "QT6")]
+    Qt6,
     #[strum(to_string = "GTK2")]
     Gtk2,
     #[strum(to_string = "GTK3")]
@@ -137,6 +139,7 @@ impl TaskCommand {
                     target_path.join("usr/lib/gtk-4.0/4.0.0/immodules/libkime-gtk4.so"),
                 );
                 install(true, out_path.join("libkime-qt5.so"), target_path.join("usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
+                install(true, out_path.join("libkime-qt6.so"), target_path.join("usr/lib/qt6/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
                 install(
                     true,
                     out_path.join("libkime_engine.so"),
@@ -170,6 +173,7 @@ impl TaskCommand {
                     (Frontend::Gtk3, false),
                     (Frontend::Gtk4, false),
                     (Frontend::Qt5, false),
+                    (Frontend::Qt6, false),
                 ]
                 .iter()
                 .copied()

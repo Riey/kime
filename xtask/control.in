@@ -6,4 +6,4 @@ Homepage: https://github.com/Riey/kime
 Section: utils
 Priority: optional
 Architecture: amd64
-Depends: libpango-1.0-0, libcairo2, libgtk-3-0, libglib2.0-0, libxcb1, libqt5gui5
+Depends: libcairo2, libxcb1

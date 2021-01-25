@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 use std::path::PathBuf;
 use std::process::Command;
+use std::{collections::HashSet, path::Path};
 use structopt::StructOpt;
 
 trait CommandExt: Sized {
@@ -62,64 +62,28 @@ enum Frontend {
 
 #[derive(StructOpt)]
 enum TaskCommand {
-    Test {},
+    Test,
+    Clean,
     Build {
         #[structopt(long, parse(try_from_str), default_value = "Release")]
         mode: BuildMode,
-        #[structopt(long, parse(from_os_str))]
-        build_path: Option<PathBuf>,
-        #[structopt(long, parse(from_os_str))]
-        src_path: Option<PathBuf>,
         #[structopt(parse(try_from_str))]
         frontends: Vec<Frontend>,
     },
     Install {
-        #[structopt(long, parse(from_os_str))]
-        out_path: Option<PathBuf>,
         #[structopt(parse(from_os_str))]
         target_path: PathBuf,
     },
     ReleaseDeb {
-        #[structopt(long, parse(from_os_str))]
-        out_path: Option<PathBuf>,
         #[structopt(parse(from_os_str))]
         target_path: Option<PathBuf>,
     },
 }
 
-fn build_core(mode: BuildMode) {
-    Command::new("cargo")
-        .args(&["build", "-p=kime-engine-capi"])
-        .mode(mode)
-        .spawn()
-        .expect("Spawn cargo")
-        .wait()
-        .expect("Run cargo");
-}
-
-fn install(exe: bool, src: PathBuf, target: PathBuf) {
-    if src.exists() {
-        println!("Install {} into {}", src.display(), target.display());
-
-        Command::new("install")
-            .arg(if exe { "-Dsm755" } else { "-Dm644" })
-            .arg(src)
-            .arg("-T")
-            .arg(target)
-            .spawn()
-            .expect("Spawn install")
-            .wait()
-            .expect("Run install");
-    }
-}
-
 impl TaskCommand {
     pub fn run(self) {
         match self {
-            TaskCommand::ReleaseDeb {
-                out_path,
-                target_path,
-            } => {
+            TaskCommand::ReleaseDeb { target_path } => {
                 let target_path = target_path
                     .unwrap_or_else(|| std::env::current_dir().expect("Get current dir"));
                 let deb_dir = tempfile::tempdir().expect("Create tempdir");
@@ -128,13 +92,14 @@ impl TaskCommand {
 
                 std::fs::write(
                     control_path,
-                    include_str!("../control.in").replace("%VER%", env!("CARGO_PKG_VERSION")),
+                    std::fs::read_to_string(get_src_path().join("xtask").join("control.in"))
+                        .expect("Read control.in")
+                        .replace("%VER%", env!("CARGO_PKG_VERSION")),
                 )
                 .expect("Write control");
 
                 // Install into tempdir
                 TaskCommand::Install {
-                    out_path,
                     target_path: deb_dir.path().into(),
                 }
                 .run();
@@ -148,16 +113,8 @@ impl TaskCommand {
                     .wait()
                     .expect("Run dpkg-deb");
             }
-            TaskCommand::Install {
-                out_path,
-                target_path,
-            } => {
-                let out_path = out_path.unwrap_or_else(|| {
-                    std::env::current_dir()
-                        .expect("Load current dir")
-                        .join("build")
-                        .join("out")
-                });
+            TaskCommand::Install { target_path } => {
+                let out_path = get_build_path().join("out");
 
                 install(
                     true,
@@ -196,25 +153,21 @@ impl TaskCommand {
                     target_path.join("etc/kime/config.yaml"),
                 );
             }
-            TaskCommand::Test {} => {
+            TaskCommand::Test => {
                 Command::new("cargo")
                     .args(&["test", "-p=kime-engine-core"])
+                    .current_dir(get_src_path())
                     .spawn()
                     .expect("Spawn cargo")
                     .wait()
                     .expect("Run test");
             }
-            TaskCommand::Build {
-                frontends,
-                mode,
-                build_path,
-                src_path,
-            } => {
+            TaskCommand::Clean => {}
+            TaskCommand::Build { frontends, mode } => {
                 let mut build_xim = false;
                 let mut cmake_flags = HashSet::new();
-                let src_path =
-                    src_path.unwrap_or_else(|| std::env::current_dir().expect("Load current dir"));
-                let build_path = build_path.unwrap_or_else(|| src_path.join("build"));
+                let src_path = get_src_path();
+                let build_path = get_build_path();
                 let out_path = build_path.join("out");
                 let cmake_path = build_path.join("cmake");
                 let cmake_out_path = cmake_path.join("lib");
@@ -243,6 +196,7 @@ impl TaskCommand {
                 if build_xim {
                     Command::new("cargo")
                         .args(&["build", "--bin=kime-xim"])
+                        .current_dir(get_src_path())
                         .mode(mode)
                         .spawn()
                         .expect("Spawn cargo")
@@ -301,6 +255,40 @@ impl TaskCommand {
                 .expect("Copy default config file");
             }
         }
+    }
+}
+
+fn get_src_path() -> &'static Path {
+    Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap()
+}
+
+fn get_build_path() -> PathBuf {
+    get_src_path().join("build")
+}
+
+fn build_core(mode: BuildMode) {
+    Command::new("cargo")
+        .args(&["build", "-p=kime-engine-capi"])
+        .mode(mode)
+        .spawn()
+        .expect("Spawn cargo")
+        .wait()
+        .expect("Run cargo");
+}
+
+fn install(exe: bool, src: PathBuf, target: PathBuf) {
+    if src.exists() {
+        println!("Install {} into {}", src.display(), target.display());
+
+        Command::new("install")
+            .arg(if exe { "-Dsm755" } else { "-Dm644" })
+            .arg(src)
+            .arg("-T")
+            .arg(target)
+            .spawn()
+            .expect("Spawn install")
+            .wait()
+            .expect("Run install");
     }
 }
 

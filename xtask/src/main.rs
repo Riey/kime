@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::process::Command;
-use std::{collections::HashSet, path::Path};
+use std::{collections::HashMap, path::Path};
 use structopt::StructOpt;
 
 trait CommandExt: Sized {
@@ -165,7 +165,16 @@ impl TaskCommand {
             TaskCommand::Clean => {}
             TaskCommand::Build { frontends, mode } => {
                 let mut build_xim = false;
-                let mut cmake_flags = HashSet::new();
+                let mut cmake_flags = [
+                    (Frontend::Gtk2, false),
+                    (Frontend::Gtk3, false),
+                    (Frontend::Gtk4, false),
+                    (Frontend::Qt5, false),
+                ]
+                .iter()
+                .copied()
+                .collect::<HashMap<_, _>>();
+
                 let src_path = get_src_path();
                 let build_path = get_build_path();
                 let out_path = build_path.join("out");
@@ -178,7 +187,7 @@ impl TaskCommand {
                 for frontend in frontends.iter() {
                     match frontend {
                         Frontend::Xim => build_xim = true,
-                        other => drop(cmake_flags.insert(other)),
+                        other => drop(cmake_flags.insert(*other, true)),
                     }
                 }
 
@@ -218,8 +227,10 @@ impl TaskCommand {
                     .arg("-GNinja")
                     .arg(mode.cmake_build_type());
 
-                for flags in cmake_flags.iter() {
-                    cmake_command.arg(format!("-DENABLE_{}=ON", flags));
+                for (frontend, on) in cmake_flags.iter() {
+                    let flag = if *on { "ON" } else { "OFF" };
+
+                    cmake_command.arg(format!("-DENABLE_{}={}", frontend, flag));
                 }
 
                 cmake_command

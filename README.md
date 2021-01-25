@@ -89,18 +89,6 @@ read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 * libxcb
 * cairo
 
-### GTK2
+### Other specific toolkit immodule
 
-* gtk2
-
-### GTK3
-
-* gtk3
-
-### GTK4
-
-* gtk4
-
-### Qt
-
-* qt5gui
+* that toolkit(e.g. gtk3, qt5 ...)

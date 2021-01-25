@@ -352,6 +352,7 @@ name = "kime-wayland"
 version = "0.1.0"
 dependencies = [
  "kime-engine-cffi",
+ "libc",
  "wayland-client",
  "wayland-protocols",
  "zwp-input-method",

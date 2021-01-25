@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 kime-engine-cffi = { path = "../engine/cffi" }
+libc = "0.2.82"
 
 wayland-client = { version = "0.28.3", features = ["use_system_lib"] }
 wayland-protocols = { version = "0.28.3", features = ["client", "unstable_protocols"] }

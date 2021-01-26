@@ -56,7 +56,7 @@ impl InputEngine {
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         if config.hangul_keys.contains(&key) {
             self.enable_hangul = !self.enable_hangul;
-            InputResult::consume()
+            InputResult::toggle_hangul()
         } else if key.code == KeyCode::Shift {
             // Don't reset state
             InputResult::bypass()

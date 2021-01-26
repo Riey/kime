@@ -7,7 +7,7 @@ pub type __uint32_t = ::std::os::raw::c_uint;
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum InputResultType {
     Bypass = 0,
-    Consume = 1,
+    ToggleHangul = 1,
     ClearPreedit = 2,
     Preedit = 3,
     Commit = 4,

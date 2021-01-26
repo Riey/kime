@@ -156,7 +156,7 @@ impl KimeContext {
                     log::trace!("ret: {:#?}", ret);
 
                     match ret.ty {
-                        InputResultType::Consume => {}
+                        InputResultType::ToggleHangul => {}
                         InputResultType::Bypass => bypass = true,
                         InputResultType::CommitBypass => {
                             self.commit_ch(ret.char1);

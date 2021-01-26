@@ -251,7 +251,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
         match ret.ty {
             InputResultType::Bypass => Ok(false),
-            InputResultType::Consume => Ok(true),
+            InputResultType::ToggleHangul => Ok(true),
             InputResultType::ClearPreedit => {
                 self.clear_preedit(server, input_context)?;
                 Ok(true)

@@ -192,7 +192,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     case ClearPreedit:
       update_preedit(ctx, FALSE);
       return TRUE;
-    case Consume:
+    case ToggleHangul:
       return TRUE;
     case Bypass:
     default:

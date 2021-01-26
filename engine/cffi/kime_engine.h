@@ -9,7 +9,7 @@
 
 typedef enum InputResultType {
   Bypass,
-  Consume,
+  ToggleHangul,
   ClearPreedit,
   Preedit,
   Commit,

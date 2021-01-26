@@ -70,16 +70,17 @@ sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 
 ## Configuration
 
-add the following to .xprofile or .xinitrc and restart X:
-
-if you don't use XIM, you don't have to run `kime-xim`
+add the following to your init script
 
 ```sh
 export GTK_IM_MODULE=kime
 export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
-kime-xim &
 ```
+
+and run `kime-xim` or `kime-wayland` binary after session initialized
+
+if you use X it could be done in .xprofile
 
 read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 

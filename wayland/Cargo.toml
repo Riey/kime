@@ -4,9 +4,8 @@ version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+ctrlc = { version = "3.1.7", features = ["termination"] }
 kime-engine-cffi = { path = "../engine/cffi" }
 libc = "0.2.82"
 log = "0.4.13"
@@ -14,6 +13,5 @@ pico-args = "0.4.0"
 simplelog = "0.9.0"
 
 wayland-client = { version = "0.28.3" }
-wayland-protocols = { version = "0.28.3", features = ["client", "unstable_protocols"] }
 zwp-input-method = { git = "https://github.com/Riey/zwp-input-method" }
 zwp-virtual-keyboard = "0.2.0"

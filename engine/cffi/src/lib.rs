@@ -8,7 +8,7 @@ extern "C" {}
 #[allow(non_snake_case)]
 mod ffi;
 
-pub use ffi::{InputResultType, ModifierState};
+pub use ffi::{InputResultType, ModifierState, ModuleType};
 
 pub const MODIFIER_CONTROL: ModifierState = 1;
 pub const MODIFIER_SUPER: ModifierState = 2;
@@ -26,9 +26,9 @@ pub struct InputEngine {
 }
 
 impl InputEngine {
-    pub fn new() -> Self {
+    pub fn new(ty: ModuleType) -> Self {
         Self {
-            engine: unsafe { ffi::kime_engine_new() },
+            engine: unsafe { ffi::kime_engine_new(ty) },
         }
     }
 

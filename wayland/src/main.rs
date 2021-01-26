@@ -15,10 +15,7 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
     zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1,
 };
 
-use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, ModifierState, MODIFIER_CONTROL, MODIFIER_SHIFT,
-    MODIFIER_SUPER,
-};
+use kime_engine_cffi::{Config, InputEngine, InputResultType, MODIFIER_CONTROL, MODIFIER_SHIFT, MODIFIER_SUPER, ModifierState, ModuleType};
 
 event_enum! {
     Events |
@@ -68,7 +65,7 @@ impl KimeContext {
     pub fn new(vk: Main<ZwpVirtualKeyboardV1>, im: Main<ZwpInputMethodV2>) -> Self {
         Self {
             config: Config::new(),
-            engine: InputEngine::new(),
+            engine: InputEngine::new(ModuleType::Wayland),
             mod_state: 0,
             current_state: InputMethodState::default(),
             pending_state: InputMethodState::default(),
@@ -91,6 +88,14 @@ impl KimeContext {
 
     fn commit_ch(&mut self, ch: char) {
         self.im.commit_string(ch.to_string());
+    }
+
+    fn commit_ch2(&mut self, ch1: char, ch2: char) {
+        let mut s = String::with_capacity(ch1.len_utf8() + ch2.len_utf8());
+        s.push(ch1);
+        s.push(ch2);
+
+        self.im.commit_string(s);
     }
 
     fn clear_preedit(&mut self) {
@@ -173,8 +178,7 @@ impl KimeContext {
                             self.preedit_ch(ret.char2);
                         }
                         InputResultType::CommitCommit => {
-                            self.commit_ch(ret.char1);
-                            self.commit_ch(ret.char2);
+                            self.commit_ch2(ret.char1, ret.char2);
                         }
                         InputResultType::ClearPreedit => {
                             self.clear_preedit();

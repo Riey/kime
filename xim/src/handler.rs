@@ -12,7 +12,8 @@ use xim::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, MODIFIER_CONTROL, MODIFIER_SHIFT, MODIFIER_SUPER,
+    Config, InputEngine, InputResultType, ModuleType, MODIFIER_CONTROL, MODIFIER_SHIFT,
+    MODIFIER_SUPER,
 };
 
 pub struct KimeData {
@@ -23,7 +24,7 @@ pub struct KimeData {
 impl KimeData {
     pub fn new() -> Self {
         Self {
-            engine: InputEngine::new(),
+            engine: InputEngine::new(ModuleType::Xim),
             pe: None,
         }
     }

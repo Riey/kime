@@ -1,11 +1,11 @@
 #![allow(clippy::missing_safety_doc)]
 
-pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState};
+pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState, ModuleType};
 
 /// Create new engine
 #[no_mangle]
-pub extern "C" fn kime_engine_new() -> *mut InputEngine {
-    Box::into_raw(Box::new(InputEngine::new()))
+pub extern "C" fn kime_engine_new(ty: ModuleType) -> *mut InputEngine {
+    Box::into_raw(Box::new(InputEngine::with_module_ty(ty)))
 }
 
 /// Delete engine
@@ -80,8 +80,8 @@ pub unsafe extern "C" fn kime_config_xim_preedit_font(
     len: *mut usize,
     font_size: *mut f64,
 ) {
-    let (ref font, size) = config.as_ref().unwrap().xim_preedit_font;
-    name.write(font.as_ptr());
-    len.write(font.len());
-    font_size.write(size);
+    let font = config.as_ref().unwrap().xim_preedit_font();
+    name.write(font.0.as_ptr());
+    len.write(font.0.len());
+    font_size.write(font.1);
 }

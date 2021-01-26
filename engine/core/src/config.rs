@@ -26,14 +26,29 @@ impl Default for ComposeConfig {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
+#[repr(C)]
+pub enum ModuleType {
+    Xim,
+    Wayland,
+    Gtk,
+    Qt,
+    Unknown,
+}
+
+impl Default for ModuleType {
+    fn default() -> Self { Self::Unknown }
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct RawConfig {
-    pub layout: String,
-    pub esc_turn_off: bool,
-    pub hangul_keys: Vec<String>,
-    pub xim_preedit_font: (String, f64),
-    pub compose: ComposeConfig,
+    layout: String,
+    esc_turn_off: bool,
+    hangul_keys: Vec<String>,
+    xim_preedit_font: (String, f64),
+    notify_modules: AHashSet<ModuleType>,
+    compose: ComposeConfig,
 }
 
 impl Default for RawConfig {
@@ -52,6 +67,10 @@ impl Default for RawConfig {
                 .iter()
                 .map(ToString::to_string)
                 .collect(),
+            notify_modules: [ModuleType::Xim, ModuleType::Wayland]
+                .iter()
+                .copied()
+                .collect(),
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
             compose: ComposeConfig::default(),
         }
@@ -63,7 +82,8 @@ pub struct Config {
     pub(crate) esc_turn_off: bool,
     pub(crate) hangul_keys: AHashSet<Key>,
     pub(crate) compose: ComposeConfig,
-    pub xim_preedit_font: (String, f64),
+    pub(crate) notify_modules: AHashSet<ModuleType>,
+    xim_preedit_font: (String, f64),
 }
 
 impl Default for Config {
@@ -83,8 +103,13 @@ impl Config {
                 .iter()
                 .filter_map(|s| s.parse().ok())
                 .collect(),
+            notify_modules: raw.notify_modules,
             xim_preedit_font: raw.xim_preedit_font,
         }
+    }
+
+    pub fn xim_preedit_font(&self) -> &(String, f64) {
+        &self.xim_preedit_font
     }
 
     pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {

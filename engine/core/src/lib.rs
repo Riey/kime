@@ -4,11 +4,13 @@ mod input_result;
 mod keycode;
 mod state;
 
+use ahash::AHashMap;
+use notify_rust::{Notification, NotificationHandle};
+
 use self::characters::KeyValue;
 use self::state::CharacterState;
-use ahash::AHashMap;
 
-pub use self::config::{Config, RawConfig};
+pub use self::config::{Config, ModuleType, RawConfig};
 pub use self::input_result::{InputResult, InputResultType};
 pub use self::keycode::{Key, KeyCode, ModifierState};
 
@@ -41,19 +43,81 @@ impl Layout {
 #[derive(Default)]
 pub struct InputEngine {
     state: CharacterState,
+    module_ty: ModuleType,
+    notification: Option<NotificationHandle>,
     enable_hangul: bool,
 }
 
 impl InputEngine {
     pub fn new() -> Self {
-        Self::default()
+        Self::with_module_ty(ModuleType::default())
+    }
+
+    pub fn with_module_ty(module_ty: ModuleType) -> Self {
+        Self {
+            module_ty,
+            ..Default::default()
+        }
     }
 
     pub fn set_enable_hangul(&mut self, enable: bool) {
         self.enable_hangul = enable;
     }
 
+    fn clear_notify(&mut self) {
+        if let Some(handle) = self.notification.take() {
+            handle.close();
+        }
+    }
+
+    fn update_preedit(&mut self, ch: char) {
+        if let Some(handle) = self.notification.as_mut() {
+            handle.body = ch.to_string();
+            handle.update();
+        } else {
+            self.notification = Notification::new()
+                .hint(notify_rust::Hint::Urgency(notify_rust::Urgency::Low))
+                .summary(&ch.to_string())
+                .timeout(2000)
+                .show()
+                .ok();
+        }
+    }
+
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
+        let ret = self.press_key_impl(key, config);
+
+        if config.notify_modules.contains(&self.module_ty) {
+            self.clear_notify();
+            match ret.ty {
+                InputResultType::ClearPreedit
+                | InputResultType::CommitBypass => self.clear_notify(),
+                InputResultType::Preedit => {
+                    self.update_preedit(unsafe { std::char::from_u32_unchecked(ret.char1) });
+                }
+                InputResultType::CommitPreedit => {
+                    self.update_preedit(unsafe { std::char::from_u32_unchecked(ret.char2) });
+                }
+                InputResultType::Consume => {
+                    self.clear_notify();
+                    self.notification = Notification::new()
+                        .summary(if self.enable_hangul {
+                            "Hangul"
+                        } else {
+                            "English"
+                        })
+                        .timeout(1000)
+                        .show()
+                        .ok();
+                }
+                InputResultType::Bypass | InputResultType::Commit | InputResultType::CommitCommit => {}
+            }
+        }
+
+        ret
+    }
+
+    fn press_key_impl(&mut self, key: Key, config: &Config) -> InputResult {
         if config.hangul_keys.contains(&key) {
             self.enable_hangul = !self.enable_hangul;
             InputResult::consume()

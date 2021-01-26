@@ -18,6 +18,14 @@ typedef enum InputResultType {
   CommitCommit,
 } InputResultType;
 
+typedef enum ModuleType {
+  Xim,
+  Wayland,
+  Gtk,
+  Qt,
+  Unknown,
+} ModuleType;
+
 typedef struct Config Config;
 
 typedef struct InputEngine InputEngine;
@@ -36,7 +44,7 @@ typedef uint32_t ModifierState;
 /**
  * Create new engine
  */
-struct InputEngine *kime_engine_new(void);
+struct InputEngine *kime_engine_new(enum ModuleType ty);
 
 /**
  * Delete engine

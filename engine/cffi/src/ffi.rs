@@ -15,6 +15,15 @@ pub enum InputResultType {
     CommitPreedit = 6,
     CommitCommit = 7,
 }
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum ModuleType {
+    Xim = 0,
+    Wayland = 1,
+    Gtk = 2,
+    Qt = 3,
+    Unknown = 4,
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Config {
@@ -78,7 +87,7 @@ fn bindgen_test_layout_InputResult() {
 pub type ModifierState = u32;
 extern "C" {
     #[doc = " Create new engine"]
-    pub fn kime_engine_new() -> *mut InputEngine;
+    pub fn kime_engine_new(ty: ModuleType) -> *mut InputEngine;
 }
 extern "C" {
     #[doc = " Delete engine"]

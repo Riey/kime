@@ -81,7 +81,7 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   switch (ret.ty) {
   case InputResultType::Bypass:
     return false;
-  case InputResultType::Consume:
+  case InputResultType::ToggleHangul:
     return true;
   case InputResultType::ClearPreedit:
     commit_ch(U'\0');

@@ -44,6 +44,11 @@ struct InputEngine *kime_engine_new(void);
 void kime_engine_delete(struct InputEngine *engine);
 
 /**
+ * Is hangul enabled
+ */
+uint32_t kime_engine_is_hangul_enabled(const struct InputEngine *engine);
+
+/**
  * Get preedit_char of engine
  *
  * ## Return

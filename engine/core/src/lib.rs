@@ -53,6 +53,10 @@ impl InputEngine {
         self.enable_hangul = enable;
     }
 
+    pub fn is_hangul_enabled(&self) -> bool {
+        self.enable_hangul
+    }
+
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         if config.hangul_keys.contains(&key) {
             self.enable_hangul = !self.enable_hangul;

@@ -1,5 +1,6 @@
 # 0.9.1
 
+* Add donation link
 * Fix gtk link error
 
 # 0.9.0

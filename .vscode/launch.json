@@ -35,9 +35,10 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug with firefox",
-            "preLaunchTask": "install-immodule",
+            "preLaunchTask": "build all",
             "env": {
-                "GTK_IM_MODULE": "kime"
+                "GTK_IM_MODULE": "kime",
+                "GTK_IM_MODULE_FILE": "${workspaceFolder}/.vscode/immodules.cache"
             },
             "program": "/usr/lib/firefox/firefox",
             "args": ["-g"]
@@ -45,21 +46,11 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug with kate",
-            "preLaunchTask": "install-immodule",
-            "env": {
-                "QT_IM_MODULE": "kime"
-            },
-            "program": "kate",
-            "args": []
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "Debug with gedit",
-            "preLaunchTask": "install-immodule",
+            "preLaunchTask": "build all",
             "env": {
-                "GTK_IM_MODULE": "kime"
+                "GTK_IM_MODULE": "kime",
+                "GTK_IM_MODULE_FILE": "${workspaceFolder}/.vscode/immodules.cache"
             },
             "program": "gedit",
             "args": []

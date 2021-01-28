@@ -295,7 +295,20 @@ fn main() {
 
     while !STOP.load(Ordering::Relaxed) {
         // ignore unfiltered messages
-        event_queue.dispatch(&mut kime_ctx, |_, _, _| ()).ok();
+        match event_queue.dispatch(&mut kime_ctx, |_, _, _| ()) {
+            Ok(_) => {}
+            Err(err) => {
+                if err.kind() == std::io::ErrorKind::WouldBlock {
+                    continue;
+                }
+
+                if err.kind() != std::io::ErrorKind::Interrupted {
+                    log::error!("IO Error: {}", err);
+                }
+
+                break;
+            }
+        }
     }
 
     log::info!("End server...");

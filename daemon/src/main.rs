@@ -1,3 +1,5 @@
+use gio::prelude::*;
+use glib::{Priority, PRIORITY_DEFAULT_IDLE};
 use gtk::prelude::*;
 use libappindicator::{AppIndicator, AppIndicatorStatus};
 use libc::mkfifo;
@@ -68,25 +70,30 @@ fn daemon_main() -> Result<()> {
         std::fs::remove_file(path)?;
     }
 
-    // let pipe = gio::File::new_for_path(path);
+    if unsafe { mkfifo(cs!("/tmp/kime_hangul_state"), 0o644) } != 0 {
+        eprintln!("Failed mkfifo");
+        return Err(io::Error::last_os_error());
+    }
 
-    // if unsafe { mkfifo(cs!("/tmp/kime_hangul_state"), 0o644) } != 0 {
-    //     eprintln!("Failed mkfifo");
-    //     return Err(io::Error::last_os_error());
-    // }
+    let pipe = gio::File::new_for_path(path);
 
-    // loop {
-    //     let mut pipe = OpenOptions::new().read(true).open(path).unwrap();
+    let c = glib::MainContext::default();
+    c.spawn_local(async move {
+        loop {
+            let ret: gio::FileInputStream = pipe
+                .read_async_future(glib::PRIORITY_DEFAULT_IDLE)
+                .await
+                .unwrap();
+            let mut buf = [0; 1];
+            ret.into_read().read_exact(&mut buf).unwrap();
 
-    //     let mut buf = [0; 1];
-    //     pipe.read_exact(&mut buf).unwrap();
-
-    //     if buf[0] == b'0' {
-    //         indicator.disable_hangul();
-    //     } else {
-    //         indicator.enable_hangul();
-    //     }
-    // }
+            if buf[0] == b'0' {
+                indicator.disable_hangul();
+            } else {
+                indicator.enable_hangul();
+            }
+        }
+    });
 
     gtk::main();
 

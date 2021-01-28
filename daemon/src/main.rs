@@ -1,9 +1,8 @@
 use gio::prelude::*;
-use glib::{Priority, PRIORITY_DEFAULT_IDLE};
 use gtk::prelude::*;
 use libappindicator::{AppIndicator, AppIndicatorStatus};
 use libc::mkfifo;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{self, Read, Result};
 
 macro_rules! cs {
@@ -54,23 +53,18 @@ impl Indicator {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Message {
-    EnableHangul,
-    DisableHangul,
-}
-
 fn daemon_main() -> Result<()> {
     gtk::init().unwrap();
+
     let mut indicator = Indicator::new();
 
-    let path = std::path::Path::new("/tmp/kime_hangul_state");
+    let path = std::path::Path::new("/tmp/kimed_hangul_state");
 
     if path.exists() {
         std::fs::remove_file(path)?;
     }
 
-    if unsafe { mkfifo(cs!("/tmp/kime_hangul_state"), 0o644) } != 0 {
+    if unsafe { mkfifo(cs!("/tmp/kimed_hangul_state"), 0o644) } != 0 {
         eprintln!("Failed mkfifo");
         return Err(io::Error::last_os_error());
     }
@@ -102,10 +96,10 @@ fn daemon_main() -> Result<()> {
 
 fn main() {
     let daemonize = daemonize::Daemonize::new()
-        .pid_file("/tmp/kime-daemon.pid")
+        .pid_file("/tmp/kimed.pid")
         .working_directory("/tmp")
-        .stdout(File::create("/tmp/kime-daemon.out").unwrap())
-        .stderr(File::create("/tmp/kime-daemon.err").unwrap());
+        .stdout(File::create("/tmp/kimed.out").unwrap())
+        .stderr(File::create("/tmp/kimed.err").unwrap());
 
     if let Err(err) = daemonize.start() {
         eprintln!("Daemonize Error: {}", err);

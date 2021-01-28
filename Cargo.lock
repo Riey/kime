@@ -632,19 +632,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kime-daemon"
-version = "0.1.0"
-dependencies = [
- "daemonize",
- "gio",
- "glib",
- "gtk",
- "libappindicator",
- "libc",
- "xdg",
-]
-
-[[package]]
 name = "kime-engine-capi"
 version = "0.8.1"
 dependencies = [
@@ -708,6 +695,19 @@ dependencies = [
  "strum 0.20.0",
  "strum_macros 0.20.1",
  "tempfile",
+]
+
+[[package]]
+name = "kimed"
+version = "0.1.0"
+dependencies = [
+ "daemonize",
+ "gio",
+ "glib",
+ "gtk",
+ "libappindicator",
+ "libc",
+ "xdg",
 ]
 
 [[package]]

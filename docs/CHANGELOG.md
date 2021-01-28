@@ -1,3 +1,8 @@
+# Dev
+
+* Set gtk log domain to `kime`
+* Let kime-wayland exit when IO Error occured
+
 # 0.9.1
 
 * Add donation link

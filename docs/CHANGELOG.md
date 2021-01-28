@@ -1,3 +1,7 @@
+# 0.9.1
+
+* Fix gtk link error
+
 # 0.9.0
 
 * Rework build scripts

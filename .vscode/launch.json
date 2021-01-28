@@ -6,6 +6,12 @@
     "configurations": [
         {
             "type": "lldb",
+            "request": "attach",
+            "name": "Attach",
+            "program": "java"
+        },
+        {
+            "type": "lldb",
             "request": "launch",
             "name": "Cargo test",
             "cargo": {

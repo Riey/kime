@@ -51,6 +51,7 @@ fn main() -> Result<(), ServerError> {
                 }
                 Event::UnmapNotify(..) => {}
                 Event::DestroyNotify(..) => {}
+                Event::MappingNotify(..) => {}
                 Event::Error(x11rb::x11_utils::X11Error {
                     error_kind: ErrorKind::RenderPicture,
                     ..

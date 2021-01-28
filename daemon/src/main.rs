@@ -78,8 +78,12 @@ fn daemon_main() -> Result<()> {
                 .read_async_future(glib::PRIORITY_DEFAULT_IDLE)
                 .await
                 .unwrap();
-            let mut buf = [0; 1];
-            ret.into_read().read_exact(&mut buf).unwrap();
+            let mut buf = [0; 1024];
+            let len = ret.into_read().read(&mut buf).unwrap();
+
+            if len < 1 {
+                continue;
+            }
 
             if buf[0] == b'0' {
                 indicator.disable_hangul();

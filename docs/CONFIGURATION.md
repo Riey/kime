@@ -1,8 +1,23 @@
 # Options
+Default config file is located at `/etc/kime/config.yaml`. Check
+[default_config.yaml](default_config.yaml) to see the default configuration
+file. You edit `/etc/kime/config.yaml` or create a new config file at
+`~/.config/kime/config.yaml`.
+
+You can also change the location of config file using [`$XDG_CONFIG_DIR` or
+`$XDG_CONFIG_HOME`][xdg] environment variable. kime will try to read
+`$XDG_CONFIG_DIR/kime/config.yaml` and `$XDG_CONFIG_HOME/kime/config.yaml` too.
+
+[xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
 
 ## layout
 
-Hangul layout name
+Hangul layout name. "dubeolsik", "sebeolsik-390", and "sebeolsik-391" are
+available as default. Custom layout can be added by creating layout YAML filse
+at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
+structure of keyboard layout file.
+
+[dubeolsik.yaml]: engine/core/data/dubeolsik.yaml
 
 ### default
 
@@ -22,7 +37,7 @@ Keycodes for switch hangul mode
 
 ### default
 
-`[Hangul, Henkan, AltR]`
+`[Hangul, Muhenkan, AltR, Super-Space]`
 
 ## xim_preedit_font
 

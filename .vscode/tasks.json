@@ -2,63 +2,14 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "install-immodule",
-            "dependsOn": ["install-engine", "install-gtkimmodule", "install-qt-immodule"],
-        },
-        {
-            "type": "shell",
-            "label": "install-gtkimmodule",
-            "dependsOn": ["cmake build"],
-            "command": "sudo",
-            "args": [
-                "install",
-                "-m755",
-                "build/cmake/gtk3/libkime-gtk3.so",
-                "-T",
-                "/usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"
-            ]
-        },
-        {
-            "type": "shell",
-            "label": "install-qtimmodule",
-            "dependsOn": ["cmake build"],
-            "command": "sudo",
-            "args": [
-                "install",
-                "-m755",
-                "build/cmake/qt5/libkime-qt5.so",
-                "-T",
-                "/usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"
-            ]
-        },
-        {
-            "type": "shell",
-            "label": "install-engine",
-            "dependsOn": ["cargo build"],
-            "command": "sudo",
-            "args": [
-                "install",
-                "-m755",
-                "target/debug/libkime_engine.so",
-                "-t",
-                "/usr/lib/"
-            ]
-        },
-        {
-            "type": "shell",
-            "dependsOn": ["cargo build"],
-            "group": "build",
-            "command": "cd build/cmake && cmake ../.. -DCMAKE_BUILD_TYPE=Debug && make -j8",
-            "label": "cmake build",
-        },
-        {
-            "type": "cargo",
-            "command": "build",
+            "command": [
+                "cargo xtask build --mode Debug GTK3 QT5"
+            ],
             "problemMatcher": [
                 "$rustc"
             ],
             "group": "build",
-            "label": "cargo build"
+            "label": "build all"
         }
     ]
 }

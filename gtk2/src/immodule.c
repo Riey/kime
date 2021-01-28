@@ -44,6 +44,8 @@ typedef struct KimeImContext {
   KimeImContext *ctx =                                                         \
       G_TYPE_CHECK_INSTANCE_CAST(var, KIME_TYPE_IM_CONTEXT, KimeImContext)
 
+#define debug(...) g_log("kime", G_LOG_LEVEL_DEBUG, __VA_ARGS__)
+
 void update_preedit(KimeImContext *ctx, gboolean visible) {
   if (ctx->preedit_visible != visible) {
     ctx->preedit_visible = visible;
@@ -61,7 +63,7 @@ void update_preedit(KimeImContext *ctx, gboolean visible) {
 }
 
 void commit(KimeImContext *ctx, uint32_t ch) {
-  g_debug("commit: %u", ch);
+  debug("commit: %u", ch);
 
   gchar buf[8] = {0};
   g_unichar_to_utf8(ch, buf);
@@ -71,7 +73,7 @@ void commit(KimeImContext *ctx, uint32_t ch) {
 void reset(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
-  g_debug("reset");
+  debug("reset");
 
   uint32_t c = kime_engine_reset(ctx->engine);
 
@@ -142,9 +144,10 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint keyval = key->keyval;
   GdkModifierType state = key->state;
 #endif
+  debug("code %u, state %u", code, state);
 
   if (state & FORWARDED_MASK) {
-    g_debug("Forwarded: %u", keyval);
+    debug("Forwarded: %u", keyval);
     return commit_event(ctx, state, keyval);
   } else if (state & SKIP_MASK) {
     return bypass(ctx, key);

@@ -89,6 +89,10 @@ extern "C" {
     pub fn kime_engine_is_hangul_enabled(engine: *const InputEngine) -> u32;
 }
 extern "C" {
+    #[doc = " Update hangul state"]
+    pub fn kime_engine_update_hangul_state(engine: *const InputEngine);
+}
+extern "C" {
     #[doc = " Get preedit_char of engine"]
     #[doc = ""]
     #[doc = " ## Return"]

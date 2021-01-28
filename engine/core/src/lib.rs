@@ -57,6 +57,12 @@ impl InputEngine {
         self.enable_hangul
     }
 
+    pub fn update_hangul_state(&self) {
+        let ch = if self.is_hangul_enabled() { b'1' } else { b'0' };
+
+        std::fs::write("/tmp/kimed_hangul_state", &[ch]).ok();
+    }
+
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         if config.hangul_keys.contains(&key) {
             self.enable_hangul = !self.enable_hangul;

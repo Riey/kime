@@ -63,18 +63,6 @@ void update_preedit(KimeImContext *ctx, gboolean visible) {
   }
 }
 
-void update_hangul_state(KimeImContext *ctx) {
-  FILE *file = fopen("/tmp/kimed_hangul_state", "w");
-  if (file) {
-    if (kime_engine_is_hangul_enabled(ctx->engine)) {
-      fputc('1', file);
-    } else {
-      fputc('0', file);
-    }
-    fclose(file);
-  }
-}
-
 void commit(KimeImContext *ctx, uint32_t ch) {
   debug("commit: %u", ch);
 
@@ -86,7 +74,7 @@ void commit(KimeImContext *ctx, uint32_t ch) {
 void focus_in(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
-  update_hangul_state(ctx);
+  kime_engine_update_hangul_state(ctx->engine);
 }
 
 void reset(GtkIMContext *im) {
@@ -210,7 +198,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
       update_preedit(ctx, FALSE);
       return TRUE;
     case ToggleHangul:
-      update_hangul_state(ctx);
+      kime_engine_update_hangul_state(ctx->engine);
       return TRUE;
     case Bypass:
     default:

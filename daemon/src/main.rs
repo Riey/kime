@@ -43,12 +43,10 @@ impl Indicator {
     }
 
     pub fn enable_hangul(&mut self) {
-        println!("enable");
         self.indicator.set_icon_full("kime-han-64x64", "icon");
     }
 
     pub fn disable_hangul(&mut self) {
-        println!("disable");
         self.indicator.set_icon_full("kime-eng-64x64", "icon");
     }
 }

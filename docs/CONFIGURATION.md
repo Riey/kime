@@ -1,6 +1,6 @@
 # Options
 
-[🇺🇸](CONFIGURATION.md), [🇰🇷](CONFIGURATION.ko.md)
+[English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
 
 Default config file is located at `/etc/kime/config.yaml`. Check
 [default_config.yaml](default_config.yaml) to see the default configuration

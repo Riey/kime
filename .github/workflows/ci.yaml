@@ -26,7 +26,9 @@ jobs:
     - name: Build image
       run: docker build --tag riey/kime --network=host .
     - name: Run image
-      run: docker run -e "TERM=xterm-256color" --network=host -v $PWD/target:/opt/kime/target riey/kime ci
+      run: docker run -e "TERM=xterm-256color" -e "CARGO_TERM_COLOR=always" --network=host -v $PWD/target:/opt/kime/target riey/kime ci
+    - name: Take target folder
+      run: sudo chown -R $USER ./target
 
   format:
     runs-on: ubuntu-latest

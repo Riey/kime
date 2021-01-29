@@ -2,7 +2,7 @@
 
 [🇺🇸](CONFIGURATION.md), [🇰🇷](CONFIGURATION.ko.md)
 
-`/etc/kime/config.yaml`에 기본값으로 설정된 파일이 있습니다. [default_config.yaml](default_config.yaml)에서 기본 설정 파일을 온라인으로 볼 수도 있습니다. `/etc/kime/config.yaml`에서 전역 설정을 수정하거나 `~/.config/kime/config.yaml`에 새 설정 파일을 만들 수 있습니다.
+`/etc/kime/config.yaml`에 기본값으로 설정된 파일이 있습니다. [default_config.yaml](default_config.yaml)에서 기본 설정 파일을 온라인으로 볼 수도 있습니다. `/etc/kime/config.yaml`에서 전역 설정을 수정하거나 `~/.config/kime/config.yaml`에 새 설정 파일을 만들어 보세요.
 
 [`$XDG_CONFIG_DIR`이나 `$XDG_CONFIG_HOME`][xdg] 환경 변수를 이용해 설정 파일의 위치를 바꿀 수도 있습니다. kime는 `$XDG_CONFIG_DIR/kime/config.yaml`과 `$XDG_CONFIG_HOME/kime/config.yaml`에 있는 설정 파일도 읽으려고 시도할 것입니다.
 

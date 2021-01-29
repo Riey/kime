@@ -1,3 +1,4 @@
+use gio::{prelude::InputStreamExtManual, FileExt};
 use gobject_sys::g_signal_connect_data;
 use libappindicator_sys::{AppIndicator, AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE};
 use libc::mkfifo;
@@ -93,40 +94,41 @@ fn daemon_main() -> Result<()> {
 
     indicator.enable_hangul();
 
-    // let path = std::path::Path::new("/tmp/kimed_hangul_state");
+    let path = std::path::Path::new("/tmp/kimed_hangul_state");
 
-    // if path.exists() {
-    //     std::fs::remove_file(path)?;
-    // }
+    if path.exists() {
+        std::fs::remove_file(path)?;
+    }
 
-    // if unsafe { mkfifo(cs!("/tmp/kimed_hangul_state"), 0o644) } != 0 {
-    //     eprintln!("Failed mkfifo");
-    //     return Err(io::Error::last_os_error());
-    // }
+    if unsafe { mkfifo(cs!("/tmp/kimed_hangul_state"), 0o644) } != 0 {
+        eprintln!("Failed mkfifo");
+        return Err(io::Error::last_os_error());
+    }
 
-    // let pipe = gio::File::new_for_path(path);
+    let pipe = gio::File::new_for_path(path);
+    let c = glib::MainContext::default();
+    assert!(c.acquire());
+    c.spawn_local(async move {
+        loop {
+            let ret: gio::FileInputStream = pipe
+                .read_async_future(glib::PRIORITY_DEFAULT_IDLE)
+                .await
+                .unwrap();
+            let mut buf = [0; 1024];
+            let len = ret.into_read().read(&mut buf).unwrap();
 
-    // let c = glib::MainContext::default();
-    // c.spawn_local(async move {
-    //     loop {
-    //         let ret: gio::FileInputStream = pipe
-    //             .read_async_future(glib::PRIORITY_DEFAULT_IDLE)
-    //             .await
-    //             .unwrap();
-    //         let mut buf = [0; 1024];
-    //         let len = ret.into_read().read(&mut buf).unwrap();
+            if len < 1 {
+                continue;
+            }
 
-    //         if len < 1 {
-    //             continue;
-    //         }
-
-    //         if buf[0] == b'0' {
-    //             indicator.disable_hangul();
-    //         } else {
-    //             indicator.enable_hangul();
-    //         }
-    //     }
-    // });
+            if buf[0] == b'0' {
+                indicator.disable_hangul();
+            } else {
+                indicator.enable_hangul();
+            }
+        }
+    });
+    c.release();
 
     unsafe {
         gtk_sys::gtk_main();

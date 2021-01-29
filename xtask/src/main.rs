@@ -207,8 +207,10 @@ impl TaskCommand {
                 std::fs::create_dir_all(&out_path).expect("create out_path");
                 std::fs::create_dir_all(&cmake_out_path).expect("create cmake_out_path");
 
-                let mut cargo_projects =
-                    vec![("kimed", "kimed"), ("kime-engine-capi", "libkime_engine.so")];
+                let mut cargo_projects = vec![
+                    ("kimed", "kimed"),
+                    ("kime-engine-capi", "libkime_engine.so"),
+                ];
 
                 let mut cargo = Command::new("cargo");
 

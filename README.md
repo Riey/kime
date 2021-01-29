@@ -88,11 +88,10 @@ read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ## Dependencies
 
+* gtk3
+* libappindicator
+
 ### XIM
 
 * libxcb
 * cairo
-
-### Other specific toolkit immodule
-
-* that toolkit(e.g. gtk3, qt5 ...)

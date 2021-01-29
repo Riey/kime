@@ -209,6 +209,8 @@ impl TaskCommand {
 
                 // build engine core
                 build_core(mode);
+                // build daemon
+                build_daemon(mode);
 
                 std::fs::copy(
                     src_path
@@ -217,6 +219,14 @@ impl TaskCommand {
                     out_path.join("libkime_engine.so"),
                 )
                 .expect("Copy engine file");
+
+                std::fs::copy(
+                    src_path
+                        .join(mode.cargo_target_dir())
+                        .join("kimed"),
+                    out_path.join("kimed"),
+                )
+                .expect("Copy daemon");
 
                 if frontends[&Frontend::Xim] {
                     Command::new("cargo")
@@ -320,6 +330,16 @@ fn get_build_path() -> PathBuf {
 fn build_core(mode: BuildMode) {
     Command::new("cargo")
         .args(&["build", "-p=kime-engine-capi"])
+        .mode(mode)
+        .spawn()
+        .expect("Spawn cargo")
+        .wait()
+        .expect("Run cargo");
+}
+
+fn build_daemon(mode: BuildMode) {
+    Command::new("cargo")
+        .args(&["build", "-p=kimed"])
         .mode(mode)
         .spawn()
         .expect("Spawn cargo")

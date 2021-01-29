@@ -116,6 +116,7 @@ impl KimeContext {
             }
             ImEvent::Done => {
                 if !self.current_state.activate && self.pending_state.activate {
+                    self.engine.update_hangul_state();
                     let kb = self.im.grab_keyboard();
                     kb.assign(filter.clone());
                     self.grab_kb = Some(kb);
@@ -156,7 +157,9 @@ impl KimeContext {
                     log::trace!("ret: {:#?}", ret);
 
                     match ret.ty {
-                        InputResultType::ToggleHangul => {}
+                        InputResultType::ToggleHangul => {
+                            self.engine.update_hangul_state();
+                        }
                         InputResultType::Bypass => bypass = true,
                         InputResultType::CommitBypass => {
                             self.commit_ch(ret.char1);

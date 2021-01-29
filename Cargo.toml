@@ -1,5 +1,7 @@
 [workspace]
 members = [
+    "daemon",
+
     "engine/core",
     "engine/capi",
     "engine/cffi",

@@ -22,7 +22,7 @@ jobs:
       - name: Build image
         run: docker build --tag riey/kime --network=host .
       - name: Run release image
-        run: docker run --network=host -v /tmp/kime:/opt/kime-out riey/kime
+        run: docker run --network=host -v /tmp/kime:/opt/kime-out riey/kime release
       - name: Create draft release
         id: create_release
         uses: actions/create-release@v1

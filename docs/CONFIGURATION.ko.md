@@ -2,11 +2,15 @@
 
 [🇺🇸](CONFIGURATION.md), [🇰🇷](CONFIGURATION.ko.md)
 
-`/etc/kime/config.yaml`에 기본값으로 설정된 예시 파일을 볼 수 있습니다. [default_config.yaml](default_config.yaml)에서 온라인으로 볼 수도 있습니다. `~/.config/kime/config.yaml`이나 `$XDG_CONFIG_HOME/kime/config.yaml`에 `/etc/kime/config.yaml`의 내용을 복사해 보세요.
+`/etc/kime/config.yaml`에 기본값으로 설정된 파일이 있습니다. [default_config.yaml](default_config.yaml)에서 기본 설정 파일을 온라인으로 볼 수도 있습니다. `/etc/kime/config.yaml`에서 전역 설정을 수정하거나 `~/.config/kime/config.yaml`에 새 설정 파일을 만들 수 있습니다.
+
+[`$XDG_CONFIG_DIR`이나 `$XDG_CONFIG_HOME`][xdg] 환경 변수를 이용해 설정 파일의 위치를 바꿀 수도 있습니다. kime는 `$XDG_CONFIG_DIR/kime/config.yaml`과 `$XDG_CONFIG_HOME/kime/config.yaml`에 있는 설정 파일도 읽으려고 시도할 것입니다.
+
+[xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
 
 ## layout
 
-키보드 자판을 설정합니다. `dubeolsik`(두벌식), `sebeolsik-390`(세벌식 390), `sebeolsik-391`(세벌식 391)이 기본으로 내장되어 있습니다. `$XDG_CONFIG_HOME/kime/layouts/`에 여기에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
+키보드 자판을 설정합니다. `dubeolsik`(두벌식), `sebeolsik-390`(세벌식 390), `sebeolsik-391`(세벌식 391)이 기본으로 내장되어 있습니다. `$XDG_CONFIG_HOME/kime/layouts/`에 위 목록에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
 
 [dubeolsik.yaml]: engine/core/data/dubeolsik.yaml
 

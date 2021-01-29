@@ -1,4 +1,7 @@
 # Options
+
+[🇺🇸](CONFIGURATION.md), [🇰🇷](CONFIGURATION.ko.md)
+
 Default config file is located at `/etc/kime/config.yaml`. Check
 [default_config.yaml](default_config.yaml) to see the default configuration
 file. You edit `/etc/kime/config.yaml` or create a new config file at
@@ -13,39 +16,35 @@ You can also change the location of config file using [`$XDG_CONFIG_DIR` or
 ## layout
 
 Hangul layout name. "dubeolsik", "sebeolsik-390", and "sebeolsik-391" are
-available as default. Custom layout can be added by creating layout YAML filse
+available as default. Custom layout can be added by creating layout YAML files
 at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
 structure of keyboard layout file.
 
-[dubeolsik.yaml]: engine/core/data/dubeolsik.yaml
+[dubeolsik.yaml]: ../engine/core/data/dubeolsik.yaml
 
-### default
-
-`dubeolsik`
+| default |`dubeolsik`|
+|---------|-----------|
 
 ## esc_turn_off
 
 Turn off hangul mode when esc is pressed especially for VIM users
 
-### default
-
-`true`
+| default |`true`|
+|---------|------|
 
 ## hangul_keys
 
 Keycodes for switch hangul mode
 
-### default
-
-`[Hangul, Muhenkan, AltR, Super-Space]`
+| default |`[Hangul, Muhenkan, AltR, Super-Space]`|
+|---------|---------------------------------------|
 
 ## xim_preedit_font
 
 Preedit window font name and size for XIM
 
-### default
-
-`[D2Coding, 15.0]`
+| default |`[D2Coding, 15.0]`|
+|---------|------------------|
 
 ## compose
 
@@ -61,17 +60,15 @@ Adjust compose, decompose jamo
 ㅈ + ㅈ = ㅉ
 ```
 
-#### default
-
-`true`
+| default |`true`|
+|---------|------|
 
 ### decompose_choseong_ssang
 
 Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 
-#### default
-
-`false`
+| default |`false`|
+|---------|-------|
 
 ### compose_jungseong_ssang
 
@@ -80,16 +77,14 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 ㅕ + ㅣ = ㅖ
 ```
 
-#### default
-
-`false`
+| default |`false`|
+|---------|-------|
 
 
 ### decompose_jungseong_ssang
 
-#### default
-
-`false`
+| default |`false`|
+|---------|-------|
 
 ### compose_jongseong_ssang
 
@@ -98,12 +93,10 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 ㅅ + ㅅ = ㅆ
 ```
 
-#### default
-
-`false`
+| default |`false`|
+|---------|-------|
 
 ### decompose_jongseong_ssang
 
-#### default
-
-`false`
+| default |`false`|
+|---------|-------|

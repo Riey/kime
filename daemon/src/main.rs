@@ -1,9 +1,11 @@
-use gio::prelude::*;
-use gtk::prelude::*;
-use libappindicator::{AppIndicator, AppIndicatorStatus};
+use gobject_sys::g_signal_connect_data;
+use libappindicator_sys::{AppIndicator, AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE};
 use libc::mkfifo;
+use std::ffi::CString;
 use std::fs::File;
 use std::io::{self, Read, Result};
+use std::path::Path;
+use std::ptr;
 
 macro_rules! cs {
     ($ex:expr) => {
@@ -15,83 +17,120 @@ const HAN_ICON: &str = "kime-han-64x64.png";
 const ENG_ICON: &str = "kime-eng-64x64.png";
 
 struct Indicator {
-    indicator: AppIndicator,
+    indicator: *mut AppIndicator,
 }
 
 impl Indicator {
     pub fn new() -> Self {
-        let mut m = gtk::Menu::new();
-        let mi = gtk::CheckMenuItem::with_label("Exit");
-        mi.connect_activate(|_| {
-            gtk::main_quit();
-        });
-        m.append(&mi);
-        let icon_dirs = xdg::BaseDirectories::with_profile("kime", "icons").unwrap();
-        let mut indicator = AppIndicator::new("kime", "");
-        let han = icon_dirs.find_data_file(HAN_ICON).unwrap();
-        let eng = icon_dirs.find_data_file(ENG_ICON).unwrap();
-        indicator.set_icon_theme_path(han.parent().unwrap().to_str().unwrap());
-        if han != eng {
-            indicator.set_icon_theme_path(eng.parent().unwrap().to_str().unwrap());
+        unsafe fn set_icon_path(indicator: *mut AppIndicator, path: &Path) {
+            let s = path.to_str().unwrap();
+            let s = CString::new(s).unwrap();
+            libappindicator_sys::app_indicator_set_icon_theme_path(indicator, s.as_ptr());
         }
-        indicator.set_icon_full("kime-han-64x64", "icon");
-        indicator.set_status(AppIndicatorStatus::Active);
-        indicator.set_menu(&mut m);
-        m.show_all();
 
-        Self { indicator }
+        unsafe {
+            let m = gtk_sys::gtk_menu_new();
+            let mi = gtk_sys::gtk_check_menu_item_new_with_label(cs!("Exit"));
+            unsafe extern "C" fn exit() {
+                gtk_sys::gtk_main_quit();
+            }
+            g_signal_connect_data(
+                mi.cast(),
+                cs!("activate"),
+                Some(exit),
+                ptr::null_mut(),
+                None,
+                0,
+            );
+            gtk_sys::gtk_menu_shell_append(m.cast(), mi.cast());
+            let icon_dirs = xdg::BaseDirectories::with_profile("kime", "icons").unwrap();
+            let indicator = libappindicator_sys::app_indicator_new(
+                cs!("kime"),
+                cs!(""),
+                libappindicator_sys::AppIndicatorCategory_APP_INDICATOR_CATEGORY_APPLICATION_STATUS,
+            );
+            let han = icon_dirs.find_data_file(HAN_ICON).unwrap();
+            let eng = icon_dirs.find_data_file(ENG_ICON).unwrap();
+            set_icon_path(indicator, han.parent().unwrap());
+            set_icon_path(indicator, eng.parent().unwrap());
+            libappindicator_sys::app_indicator_set_status(
+                indicator,
+                AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE,
+            );
+            libappindicator_sys::app_indicator_set_menu(indicator, m.cast());
+            gtk_sys::gtk_widget_show_all(m);
+            Self { indicator }
+        }
     }
 
     pub fn enable_hangul(&mut self) {
-        self.indicator.set_icon_full("kime-han-64x64", "icon");
+        unsafe {
+            libappindicator_sys::app_indicator_set_icon_full(
+                self.indicator,
+                cs!("kime-han-64x64"),
+                cs!("icon"),
+            );
+        }
     }
 
     pub fn disable_hangul(&mut self) {
-        self.indicator.set_icon_full("kime-eng-64x64", "icon");
+        unsafe {
+            libappindicator_sys::app_indicator_set_icon_full(
+                self.indicator,
+                cs!("kime-eng-64x64"),
+                cs!("icon"),
+            );
+        }
     }
 }
 
 fn daemon_main() -> Result<()> {
-    gtk::init().unwrap();
+    unsafe {
+        gtk_sys::gtk_init(ptr::null_mut(), ptr::null_mut());
+    }
 
     let mut indicator = Indicator::new();
 
-    let path = std::path::Path::new("/tmp/kimed_hangul_state");
+    indicator.enable_hangul();
 
-    if path.exists() {
-        std::fs::remove_file(path)?;
+    // let path = std::path::Path::new("/tmp/kimed_hangul_state");
+
+    // if path.exists() {
+    //     std::fs::remove_file(path)?;
+    // }
+
+    // if unsafe { mkfifo(cs!("/tmp/kimed_hangul_state"), 0o644) } != 0 {
+    //     eprintln!("Failed mkfifo");
+    //     return Err(io::Error::last_os_error());
+    // }
+
+    // let pipe = gio::File::new_for_path(path);
+
+    // let c = glib::MainContext::default();
+    // c.spawn_local(async move {
+    //     loop {
+    //         let ret: gio::FileInputStream = pipe
+    //             .read_async_future(glib::PRIORITY_DEFAULT_IDLE)
+    //             .await
+    //             .unwrap();
+    //         let mut buf = [0; 1024];
+    //         let len = ret.into_read().read(&mut buf).unwrap();
+
+    //         if len < 1 {
+    //             continue;
+    //         }
+
+    //         if buf[0] == b'0' {
+    //             indicator.disable_hangul();
+    //         } else {
+    //             indicator.enable_hangul();
+    //         }
+    //     }
+    // });
+
+    unsafe {
+        gtk_sys::gtk_main();
     }
-
-    if unsafe { mkfifo(cs!("/tmp/kimed_hangul_state"), 0o644) } != 0 {
-        eprintln!("Failed mkfifo");
-        return Err(io::Error::last_os_error());
-    }
-
-    let pipe = gio::File::new_for_path(path);
-
-    let c = glib::MainContext::default();
-    c.spawn_local(async move {
-        loop {
-            let ret: gio::FileInputStream = pipe
-                .read_async_future(glib::PRIORITY_DEFAULT_IDLE)
-                .await
-                .unwrap();
-            let mut buf = [0; 1024];
-            let len = ret.into_read().read(&mut buf).unwrap();
-
-            if len < 1 {
-                continue;
-            }
-
-            if buf[0] == b'0' {
-                indicator.disable_hangul();
-            } else {
-                indicator.enable_hangul();
-            }
-        }
-    });
-
-    gtk::main();
 
     Ok(())
 }

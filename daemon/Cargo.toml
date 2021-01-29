@@ -6,9 +6,8 @@ edition = "2018"
 
 [dependencies]
 daemonize = "0.4.1"
-gio = "0.9.1"
-glib = "0.10.3"
-gtk = "0.9.2"
-libappindicator = "0.5.2"
+gobject-sys = "0.10.0"
+gtk-sys = "0.10.0"
+libappindicator-sys = "0.5.0"
 libc = "0.2.82"
 xdg = "2.2.0"

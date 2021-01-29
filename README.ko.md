@@ -14,12 +14,12 @@
 
 ## [Changelog](docs/CHANGELOG.md)
 
-## 왜 kime입니까?
+## kime을 써야 하는 이유?
 
 * 잘 테스트된 입력 엔진
 * 작은 메모리 사용량
 * 세그멘테이션 오류가 없는 Rust로 대부분 작성됨
-* 커스텀 레이아웃들을 허용
+* 사용자 설정 자판 지원
 
 ## 지원되는 프론트엔드
 
@@ -35,11 +35,11 @@
 
 ### 아치 리눅스
 
-최신 릴리스의 AUR 패키지를 설치를 하려는 경우에는 [kime](https://aur.archlinux.org/packages/kime) 또는 만약 소스에서 빌드를 하려는 경우에는 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치 할 수 있습니다.
+최신 릴리스는 [kime](https://aur.archlinux.org/packages/kime) 만약 소스에서 빌드를 하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치 할 수 있습니다.
 
 ### 데비안
 
-[releases](https://github.com/Riey/kime/releases) 탭에서 .deb 파일를 설치할 수 있습니다.
+[releases](https://github.com/Riey/kime/releases) 탭에 있는 .deb 파일를 설치할 수 있습니다.
 
 ### 소스에서 빌드하기
 
@@ -52,9 +52,9 @@ cd kime
 cargo xtask build XIM GTK3 QT5
 
 # 이제 build/out에서 파일을 설치할 수 있습니다.
-# 또는 install를 사용하세요.
+# 아니면 install을 사용하세요.
 # cargo xtask install <target-path>
-# 또는 데비안 유저이면, release-deb를 사용하세요.
+# 또는 데비안 유저이면, release-deb를 사용할 수 있습니다.
 # cargo xtask release-deb <deb-out-path>
 ```
 

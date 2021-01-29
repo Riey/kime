@@ -1,5 +1,6 @@
 # Dev
 
+* Show hangul/english state on tray icon
 * Set gtk log domain to `kime`
 * Let kime-wayland exit when IO Error occured
 

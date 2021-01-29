@@ -207,49 +207,40 @@ impl TaskCommand {
                 std::fs::create_dir_all(&out_path).expect("create out_path");
                 std::fs::create_dir_all(&cmake_out_path).expect("create cmake_out_path");
 
-                // build engine core
-                build_core(mode);
+                let mut cargo_projects = vec![
+                    ("kimed", "kimed"),
+                    ("kime-engine-capi", "libkime_engine.so"),
+                ];
 
-                std::fs::copy(
-                    src_path
-                        .join(mode.cargo_target_dir())
-                        .join("libkime_engine.so"),
-                    out_path.join("libkime_engine.so"),
-                )
-                .expect("Copy engine file");
+                let mut cargo = Command::new("cargo");
+
+                cargo.arg("build").mode(mode);
 
                 if frontends[&Frontend::Xim] {
-                    Command::new("cargo")
-                        .args(&["build", "--bin=kime-xim"])
-                        .current_dir(get_src_path())
-                        .mode(mode)
-                        .spawn()
-                        .expect("Spawn cargo")
-                        .wait()
-                        .expect("Run cargo");
-
-                    std::fs::copy(
-                        src_path.join(mode.cargo_target_dir()).join("kime-xim"),
-                        out_path.join("kime-xim"),
-                    )
-                    .expect("Copy xim file");
+                    cargo_projects.push(("kime-xim", "kime-xim"));
                 }
 
                 if frontends[&Frontend::Wayland] {
-                    Command::new("cargo")
-                        .args(&["build", "--bin=kime-wayland"])
-                        .current_dir(get_src_path())
-                        .mode(mode)
-                        .spawn()
-                        .expect("Spawn cargo")
-                        .wait()
-                        .expect("Run cargo");
+                    cargo_projects.push(("kime-wayland", "kime-wayland"));
+                }
 
+                for (package, _binary) in cargo_projects.iter().copied() {
+                    cargo.arg("-p").arg(package);
+                }
+
+                assert!(cargo
+                    .spawn()
+                    .expect("Spawn cargo")
+                    .wait()
+                    .expect("Run cargo")
+                    .success());
+
+                for (_package, binary) in cargo_projects.iter().copied() {
                     std::fs::copy(
-                        src_path.join(mode.cargo_target_dir()).join("kime-wayland"),
-                        out_path.join("kime-wayland"),
+                        src_path.join(mode.cargo_target_dir()).join(binary),
+                        out_path.join(binary),
                     )
-                    .expect("Copy xim file");
+                    .expect("Copy binary file");
                 }
 
                 let mut cmake_command = Command::new("cmake");
@@ -315,16 +306,6 @@ fn get_src_path() -> &'static Path {
 
 fn get_build_path() -> PathBuf {
     get_src_path().join("build")
-}
-
-fn build_core(mode: BuildMode) {
-    Command::new("cargo")
-        .args(&["build", "-p=kime-engine-capi"])
-        .mode(mode)
-        .spawn()
-        .expect("Spawn cargo")
-        .wait()
-        .expect("Run cargo");
 }
 
 fn strip_all(dir: &Path) -> std::io::Result<()> {

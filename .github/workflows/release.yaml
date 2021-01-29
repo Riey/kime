@@ -5,9 +5,6 @@ on:
     tags:
     - 'v*'
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   packaging:
     runs-on: ubuntu-20.04
@@ -21,8 +18,8 @@ jobs:
         run: mkdir /tmp/kime
       - name: Build image
         run: docker build --tag riey/kime --network=host .
-      - name: Run release image
-        run: docker run --network=host -v /tmp/kime:/opt/kime-out riey/kime
+      - name: Run image
+        run: docker run -e "TERM=xterm-256color" --network=host -v /tmp/kime:/opt/kime-out riey/kime release
       - name: Create draft release
         id: create_release
         uses: actions/create-release@v1

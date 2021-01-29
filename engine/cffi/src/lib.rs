@@ -32,6 +32,14 @@ impl InputEngine {
         }
     }
 
+    pub fn is_hangul_enabled(&self) -> bool {
+        unsafe { ffi::kime_engine_is_hangul_enabled(self.engine) != 0 }
+    }
+
+    pub fn update_hangul_state(&self) {
+        unsafe { ffi::kime_engine_update_hangul_state(self.engine) }
+    }
+
     pub fn press_key(
         &mut self,
         config: &Config,

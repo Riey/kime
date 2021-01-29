@@ -14,6 +14,22 @@ pub unsafe extern "C" fn kime_engine_delete(engine: *mut InputEngine) {
     drop(Box::from_raw(engine));
 }
 
+/// Is hangul enabled
+#[no_mangle]
+pub unsafe extern "C" fn kime_engine_is_hangul_enabled(engine: *const InputEngine) -> u32 {
+    let engine = engine.as_ref().unwrap();
+
+    engine.is_hangul_enabled().into()
+}
+
+/// Update hangul state
+#[no_mangle]
+pub unsafe extern "C" fn kime_engine_update_hangul_state(engine: *const InputEngine) {
+    let engine = engine.as_ref().unwrap();
+
+    engine.update_hangul_state();
+}
+
 /// Get preedit_char of engine
 ///
 /// ## Return

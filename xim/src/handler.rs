@@ -251,7 +251,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
         match ret.ty {
             InputResultType::Bypass => Ok(false),
-            InputResultType::ToggleHangul => Ok(true),
+            InputResultType::ToggleHangul => {
+                input_context.user_data.engine.update_hangul_state();
+                Ok(true)
+            }
             InputResultType::ClearPreedit => {
                 self.clear_preedit(server, input_context)?;
                 Ok(true)
@@ -318,8 +321,9 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn handle_set_focus(
         &mut self,
         _server: &mut X11rbServer<XCBConnection>,
-        _input_context: &mut xim::InputContext<Self::InputContextData>,
+        input_context: &mut xim::InputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
+        input_context.user_data.engine.update_hangul_state();
         Ok(())
     }
 

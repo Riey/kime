@@ -1,6 +1,7 @@
 #include "immodule.h"
 
 #include <kime_engine.h>
+#include <stdio.h>
 
 static GType KIME_TYPE_IM_CONTEXT = 0;
 static const guint FORWARDED_MASK = 1 << 25;
@@ -70,6 +71,12 @@ void commit(KimeImContext *ctx, uint32_t ch) {
   g_signal_emit(ctx, ctx->signals.commit, 0, &buf[0]);
 }
 
+void focus_in(GtkIMContext *im) {
+  KIME_IM_CONTEXT(im);
+
+  kime_engine_update_hangul_state(ctx->engine);
+}
+
 void reset(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
@@ -86,15 +93,10 @@ void reset(GtkIMContext *im) {
 void put_event(KimeImContext *ctx, EventType *key) {
 #if GTK_CHECK_VERSION(3, 98, 4)
   gtk_im_context_filter_key(
-    GTK_IM_CONTEXT(ctx),
-    gdk_event_get_event_type(key) == GDK_KEY_PRESS,
-    gdk_event_get_surface(key),
-    gdk_event_get_device(key),
-    gdk_event_get_time(key),
-    gdk_key_event_get_keycode(key),
-    gdk_event_get_modifier_state(key) | FORWARDED_MASK,
-    0
-  );
+      GTK_IM_CONTEXT(ctx), gdk_event_get_event_type(key) == GDK_KEY_PRESS,
+      gdk_event_get_surface(key), gdk_event_get_device(key),
+      gdk_event_get_time(key), gdk_key_event_get_keycode(key),
+      gdk_event_get_modifier_state(key) | FORWARDED_MASK, 0);
 #else
   key->state |= FORWARDED_MASK;
   gdk_event_put(gdk_event_copy((GdkEvent *)key));
@@ -196,6 +198,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
       update_preedit(ctx, FALSE);
       return TRUE;
     case ToggleHangul:
+      kime_engine_update_hangul_state(ctx->engine);
       return TRUE;
     case Bypass:
     default:
@@ -294,7 +297,7 @@ void im_context_class_init(KimeImContextClass *klass, gpointer _data) {
   klass->parent.reset = reset;
   klass->parent.filter_keypress = filter_keypress;
   klass->parent.get_preedit_string = get_preedit_string;
-  // klass->parent.focus_in = NULL;
+  klass->parent.focus_in = focus_in;
   klass->parent.focus_out = reset;
 
   GObjectClass *parent_class = G_OBJECT_CLASS(klass);

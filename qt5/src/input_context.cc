@@ -27,6 +27,7 @@ void KimeInputContext::reset() {
 void KimeInputContext::setFocusObject(QObject *object) {
   if (object) {
     // set focus
+    kime_engine_update_hangul_state(this->engine);
     this->focus_object = object;
   } else {
     // unset focus
@@ -82,6 +83,7 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   case InputResultType::Bypass:
     return false;
   case InputResultType::ToggleHangul:
+    kime_engine_update_hangul_state(this->engine);
     return true;
   case InputResultType::ClearPreedit:
     commit_ch(U'\0');

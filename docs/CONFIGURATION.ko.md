@@ -1,6 +1,8 @@
 # 설정
 
-`/etc/kime/config.yaml`에 기본값으로 설정된 예시 파일이 있습니다. [default_config.yaml](default_config.yaml)에서 온라인으로 볼 수도 있습니다. `~/.config/kime/config.yaml`이나 `$XDG_CONFIG_HOME/kime/config.yaml`에 `/etc/kime/config.yaml`의 내용을 복사해 보세요.
+[🇺🇸](CONFIGURATION.md), [🇰🇷](CONFIGURATION.ko.md)
+
+`/etc/kime/config.yaml`에 기본값으로 설정된 예시 파일을 볼 수 있습니다. [default_config.yaml](default_config.yaml)에서 온라인으로 볼 수도 있습니다. `~/.config/kime/config.yaml`이나 `$XDG_CONFIG_HOME/kime/config.yaml`에 `/etc/kime/config.yaml`의 내용을 복사해 보세요.
 
 ## layout
 
@@ -55,8 +57,6 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 
 쌍자음에 백스페이스를 누를 때 쌍자음을 분해시킵니다. (e.g. ㄲ -> ㄱ)
 
-#### default
-
 | 기본값 |`false`|
 |--------|-------|
 
@@ -67,15 +67,11 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 ㅕ + ㅣ = ㅖ
 ```
 
-#### default
-
 | 기본값 |`false`|
 |--------|-------|
 
 
 ### decompose_jungseong_ssang
-
-#### default
 
 | 기본값 |`false`|
 |--------|-------|
@@ -87,14 +83,10 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 ㅅ + ㅅ = ㅆ
 ```
 
-#### default
-
 | 기본값 |`false`|
 |--------|-------|
 
 ### decompose_jongseong_ssang
-
-#### default
 
 | 기본값 |`false`|
 |--------|-------|

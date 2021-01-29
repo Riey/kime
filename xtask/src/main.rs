@@ -221,9 +221,7 @@ impl TaskCommand {
                 .expect("Copy engine file");
 
                 std::fs::copy(
-                    src_path
-                        .join(mode.cargo_target_dir())
-                        .join("kimed"),
+                    src_path.join(mode.cargo_target_dir()).join("kimed"),
                     out_path.join("kimed"),
                 )
                 .expect("Copy daemon");

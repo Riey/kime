@@ -13,7 +13,7 @@ You can also change the location of config file using [`$XDG_CONFIG_DIR` or
 ## layout
 
 Hangul layout name. "dubeolsik", "sebeolsik-390", and "sebeolsik-391" are
-available as default. Custom layout can be added by creating layout YAML filse
+available as default. Custom layout can be added by creating layout YAML files
 at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
 structure of keyboard layout file.
 

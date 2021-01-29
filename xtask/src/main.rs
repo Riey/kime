@@ -306,26 +306,6 @@ fn get_build_path() -> PathBuf {
     get_src_path().join("build")
 }
 
-fn build_core(mode: BuildMode) {
-    Command::new("cargo")
-        .args(&["build", "-p=kime-engine-capi"])
-        .mode(mode)
-        .spawn()
-        .expect("Spawn cargo")
-        .wait()
-        .expect("Run cargo");
-}
-
-fn build_daemon(mode: BuildMode) {
-    Command::new("cargo")
-        .args(&["build", "-p=kimed"])
-        .mode(mode)
-        .spawn()
-        .expect("Spawn cargo")
-        .wait()
-        .expect("Run cargo");
-}
-
 fn strip_all(dir: &Path) -> std::io::Result<()> {
     for path in dir.read_dir()? {
         let path = path?.path();

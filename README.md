@@ -2,7 +2,7 @@
 
 Korean IME
 
-[🇺🇸](./README.md), [🇰🇷](./README.ko.md)
+[English](./README.md), [한국어](./README.ko.md)
 
 [<img alt="discord" src="https://img.shields.io/discord/801107569505992705.svg?style=for-the-badge" height="25">](https://discord.gg/YPnEfZqC6y)
 [<img alt="build status" src="https://img.shields.io/github/workflow/status/Riey/kime/CI/master?style=for-the-badge" height="25">](https://github.com/Riey/kime/actions?query=workflow%3ACI)

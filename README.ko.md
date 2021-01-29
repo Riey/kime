@@ -85,7 +85,7 @@ export XMODIFIERS=@im=kime
 
 만약 X를 사용히사면 .xprofile에서 실행을 하실 수 있습니다.
 
-자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.md)를 참고하세요.
+자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.ko.md)를 참고하세요.
 
 ## 종속성 목록
 

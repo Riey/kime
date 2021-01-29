@@ -10,9 +10,6 @@ on:
     branches:
       - 'develop'
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -26,8 +23,8 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build image
       run: docker build --tag riey/kime --network=host .
-    - name: Run docker
-      run: docker run --network=host -v $PWD/target:/opt/kime/target riey/kime ci
+    - name: Run image
+      run: docker run -it  -e "TERM=xterm-256color" --network=host -v $PWD/target:/opt/kime/target riey/kime ci
 
   format:
     runs-on: ubuntu-latest

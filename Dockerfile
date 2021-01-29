@@ -2,7 +2,7 @@ FROM riey/kime-build:0.1.0
 
 WORKDIR /opt/kime
 
-RUN pacman -S --noconfirm llvm libappindicator-gtk3
+RUN pacman -S --noconfirm llvm clang libappindicator-gtk3
 RUN mkdir -pv /opt/kime-out
 
 COPY ci ./ci

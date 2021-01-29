@@ -1,6 +1,6 @@
 # 설정
 
-[🇺🇸](CONFIGURATION.md), [🇰🇷](CONFIGURATION.ko.md)
+[English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
 
 `/etc/kime/config.yaml`에 기본값으로 설정된 파일이 있습니다. [default_config.yaml](default_config.yaml)에서 기본 설정 파일을 온라인으로 볼 수도 있습니다. `/etc/kime/config.yaml`에서 전역 설정을 수정하거나 `~/.config/kime/config.yaml`에 새 설정 파일을 만들어 보세요.
 

@@ -1,6 +1,6 @@
 # kime
 
-Korean IME
+한글 입력기
 
 [🇺🇸](./README.md), [🇰🇷](./README.ko.md)
 
@@ -14,14 +14,14 @@ Korean IME
 
 ## [Changelog](docs/CHANGELOG.md)
 
-## Why kime
+## kime을 써야 하는 이유?
 
-* Well tested input engine
-* Low memory footprint
-* Write in mostly Rust no segfaults
-* Allow custom layouts
+* 잘 테스트된 입력 엔진
+* 작은 메모리 사용량
+* 세그멘테이션 오류가 없는 Rust로 대부분 작성됨
+* 사용자 설정 자판 지원
 
-## Supported frontend
+## 지원되는 프론트엔드
 
 - [x] XIM
 - [x] Wayland
@@ -31,19 +31,19 @@ Korean IME
 - [x] Qt5
 - [x] Qt6
 
-## Installation
+## 설치
 
-### Arch Linux
+### 아치 리눅스
 
-you can install from AUR package [kime](https://aur.archlinux.org/packages/kime) for latest release, or [kime-git](https://aur.archlinux.org/packages/kime-git) if you want to build from source.
+최신 릴리스는 [kime](https://aur.archlinux.org/packages/kime) 만약 소스에서 빌드를 하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치 할 수 있습니다.
 
-### Debian
+### 데비안
 
-you can install from .deb file at [releases](https://github.com/Riey/kime/releases) tab.
+[releases](https://github.com/Riey/kime/releases) 탭에 있는 .deb 파일를 설치할 수 있습니다.
 
-### Build from source
+### 소스에서 빌드하기
 
-make sure **cargo** and other dependencies listed below are installed before build.
+빌드하기 전에 **cargo** 및 아래 나열되어 있는 기타 종속성이 설치되어 있는지 확인하세요.
 
 ```sh
 git clone https://github.com/Riey/kime
@@ -51,30 +51,29 @@ cd kime
 
 cargo xtask build XIM GTK3 QT5
 
-# You can now install files from build/out
-# or use install task
+# 이제 build/out에서 파일을 설치할 수 있습니다.
+# 아니면 install을 사용하세요.
 # cargo xtask install <target-path>
-# or you are debian user, use release-deb
+# 또는 데비안 유저이면, release-deb를 사용할 수 있습니다.
 # cargo xtask release-deb <deb-out-path>
 ```
 
-See `cargo xtask --help` for more detail
-
+자세한 내용은 `cargo xtask --help`를 참고하세요.
 
 #### GTK
 
 ```sh
-# If you install gtk2
+# 만약 gtk2를 설치하려면
 sudo gtk-query-immodules-2.0 --update-cache
-# If you install gtk3
+# 만약 gtk3를 설치하려면
 sudo gtk-query-immodules-3.0 --update-cache
-# If you install gtk4
+# 만약 gtk4를 설치하려면
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
 
-## Configuration
+## 설정
 
-add the following to your init script
+init 스크립트에 다음을 추가하세요.
 
 ```sh
 export GTK_IM_MODULE=kime
@@ -82,19 +81,19 @@ export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
 ```
 
-and run `kime-xim` or `kime-wayland` binary after session initialized
+그리고 세션 초기화 후 `kime-xim` 또는 `kime-wayland` 바이너리를 실행합니다.
 
-if you use X it could be done in .xprofile
+만약 X를 사용히사면 .xprofile에서 실행을 하실 수 있습니다.
 
-read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
+자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.md)를 참고하세요.
 
-## Dependencies
+## 종속성 목록
 
 ### XIM
 
 * libxcb
 * cairo
 
-### Other specific toolkit immodule
+### 다른 툴킷들의 immodule을 쓰는 경우
 
-* that toolkit(e.g. gtk3, qt5 ...)
+* 해당 툴킷(예: gtk3, qt5 등)

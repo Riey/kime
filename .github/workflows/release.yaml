@@ -19,7 +19,7 @@ jobs:
       - name: Build image
         run: docker build --tag riey/kime --network=host .
       - name: Run image
-        run: docker run -it  -e "TERM=xterm-256color" --network=host -v /tmp/kime:/opt/kime-out riey/kime release
+        run: docker run -e "TERM=xterm-256color" --network=host -v /tmp/kime:/opt/kime-out riey/kime release
       - name: Create draft release
         id: create_release
         uses: actions/create-release@v1

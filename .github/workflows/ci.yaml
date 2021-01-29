@@ -21,10 +21,12 @@ jobs:
         path: |
           target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Try create target folder
+      run: mkdir -pv target
     - name: Build image
       run: docker build --tag riey/kime --network=host .
     - name: Run image
-      run: docker run -it  -e "TERM=xterm-256color" --network=host -v $PWD/target:/opt/kime/target riey/kime ci
+      run: docker run -e "TERM=xterm-256color" --network=host -v $PWD/target:/opt/kime/target riey/kime ci
 
   format:
     runs-on: ubuntu-latest

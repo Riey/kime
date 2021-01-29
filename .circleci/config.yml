@@ -1,0 +1,60 @@
+version: 2.1
+jobs:
+  check:
+    docker:
+      - image: riey/kime-build:0.1.0
+    steps:
+      - checkout
+      - run: cargo fmt -- --check
+      - run: pacman -S --noconfirm libappindicator-gtk3 llvm clang
+      - run: cargo xtask build --mode Debug XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
+      - run: cargo xtask test
+
+  build-release:
+    docker:
+      - image: riey/kime-build:0.1.0
+    steps:
+      - checkout
+      - run: pacman -S --noconfirm libappindicator-gtk3 llvm clang
+      - run: cargo xtask build --mode Release XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
+      - run: mkdir -p /tmp/artifacts
+      - run: 7z a /tmp/artifacts/kime-$(git tag --sort=v:refname | tail -1).7z ./build/out/*
+      - run: cargo xtask release-deb /tmp/artifacts 
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - artifacts
+
+  release-github:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: /tmp/artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            VERSION=$(git tag --sort=v:refname | tail -1)
+            ghr -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} -replace ./artifacts
+
+
+workflows:
+  ci:
+    jobs:
+      - check
+  cd:
+    jobs:
+      - build-release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: v.+
+      - release-github:
+          requires:
+            - build-release
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: v.+

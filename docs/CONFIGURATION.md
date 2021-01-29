@@ -20,7 +20,7 @@ available as default. Custom layout can be added by creating layout YAML files
 at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
 structure of keyboard layout file.
 
-[dubeolsik.yaml]: engine/core/data/dubeolsik.yaml
+[dubeolsik.yaml]: ../engine/core/data/dubeolsik.yaml
 
 | default |`dubeolsik`|
 |---------|-----------|

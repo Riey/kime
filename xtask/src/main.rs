@@ -208,10 +208,17 @@ impl TaskCommand {
                 std::fs::create_dir_all(&out_path).expect("create out_path");
                 std::fs::create_dir_all(&cmake_out_path).expect("create cmake_out_path");
 
-                let mut cargo_projects = vec![
-                    ("kimed", "kimed"),
-                    ("kime-engine-capi", "libkime_engine.so"),
-                ];
+                build_core(mode);
+
+                std::fs::copy(
+                    src_path
+                        .join(mode.cargo_target_dir())
+                        .join("libkime_engine.so"),
+                    out_path.join("libkime_engine.so"),
+                )
+                .expect("Copy engine lib");
+
+                let mut cargo_projects = vec![("kimed", "kimed")];
 
                 let mut cargo = Command::new("cargo");
 
@@ -347,6 +354,16 @@ fn install(src: PathBuf, target: PathBuf) {
             .wait()
             .expect("Run install");
     }
+}
+
+fn build_core(mode: BuildMode) {
+    Command::new("cargo")
+        .args(&["build", "-p=kime-engine-capi"])
+        .mode(mode)
+        .spawn()
+        .expect("Spawn cargo")
+        .wait()
+        .expect("Run cargo");
 }
 
 fn main() {

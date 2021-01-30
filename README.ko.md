@@ -4,8 +4,8 @@
 
 [English](./README.md), [한국어](./README.ko.md)
 
+[![CircleCI](https://circleci.com/gh/Riey/kime.svg?style=svg)](https://app.circleci.com/pipelines/github/Riey/kime)
 [<img alt="discord" src="https://img.shields.io/discord/801107569505992705.svg?style=for-the-badge" height="25">](https://discord.gg/YPnEfZqC6y)
-[<img alt="build status" src="https://img.shields.io/github/workflow/status/Riey/kime/CI/master?style=for-the-badge" height="25">](https://github.com/Riey/kime/actions?query=workflow%3ACI)
 [<img alt="release version" src="https://img.shields.io/github/v/release/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/releases)
 [<img alt="aur version" src="https://img.shields.io/aur/version/kime?style=for-the-badge" height="25">](https://aur.archlinux.org/packages/kime/)
 [<img alt="license" src="https://img.shields.io/github/license/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/blob/master/LICENSE)
@@ -17,8 +17,8 @@
 ## kime을 써야 하는 이유?
 
 * 잘 테스트된 입력 엔진
-* 작은 메모리 사용량
-* 세그멘테이션 오류가 없는 Rust로 대부분 작성됨
+* 적은 메모리 사용량
+* 대부분의 코드가 세그멘테이션 오류가 없는 Rust로 작성됨
 * 사용자 설정 자판 지원
 
 ## 지원되는 프론트엔드
@@ -35,11 +35,11 @@
 
 ### 아치 리눅스
 
-최신 릴리스는 [kime](https://aur.archlinux.org/packages/kime) 만약 소스에서 빌드를 하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치 할 수 있습니다.
+최신 릴리스는 [kime](https://aur.archlinux.org/packages/kime) 만약 소스에서 빌드하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치할 수 있습니다.
 
 ### 데비안
 
-[releases](https://github.com/Riey/kime/releases) 탭에 있는 .deb 파일를 설치할 수 있습니다.
+[releases](https://github.com/Riey/kime/releases) 탭에 있는 .deb 파일을 설치할 수 있습니다.
 
 ### 소스에서 빌드하기
 
@@ -63,11 +63,11 @@ cargo xtask build XIM GTK3 QT5
 #### GTK
 
 ```sh
-# 만약 gtk2를 설치하려면
+# GTK2 설치 시
 sudo gtk-query-immodules-2.0 --update-cache
-# 만약 gtk3를 설치하려면
+# GTK3 설치 시
 sudo gtk-query-immodules-3.0 --update-cache
-# 만약 gtk4를 설치하려면
+# GTK4 설치 시
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
 
@@ -83,17 +83,16 @@ export XMODIFIERS=@im=kime
 
 그리고 세션 초기화 후 `kime-xim` 또는 `kime-wayland` 바이너리를 실행합니다.
 
-만약 X를 사용히사면 .xprofile에서 실행을 하실 수 있습니다.
+만약 X를 사용하신다면 .xprofile에서 실행하실 수 있습니다.
 
 자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.ko.md)를 참고하세요.
 
 ## 종속성 목록
 
+* gtk3
+* libappindicator
+
 ### XIM
 
 * libxcb
 * cairo
-
-### 다른 툴킷들의 immodule을 쓰는 경우
-
-* 해당 툴킷(예: gtk3, qt5 등)

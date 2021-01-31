@@ -2,7 +2,10 @@ version: 2.1
 jobs:
   check:
     docker:
-      - image: riey/kime-build:0.2.0
+      - image: riey/kime-build:latest
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     steps:
       - checkout
       - restore_cache:
@@ -20,7 +23,10 @@ jobs:
 
   build-release:
     docker:
-      - image: riey/kime-build:0.2.0
+      - image: riey/kime-build:latest
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     steps:
       - checkout
       - run: cargo xtask build --mode Release XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
@@ -35,6 +41,9 @@ jobs:
   release-github:
     docker:
       - image: cibuilds/github:0.10
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     steps:
       - attach_workspace:
           at: /tmp/artifacts

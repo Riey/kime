@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   check:
     docker:
-      - image: riey/kime-build:0.1.0
+      - image: riey/kime-build:0.2.0
     steps:
       - checkout
       - restore_cache:
@@ -10,7 +10,6 @@ jobs:
             - cargo-${{ checksum "Cargo.lock" }}
             - cargo-
       - run: cargo fmt -- --check
-      - run: pacman -S --noconfirm libappindicator-gtk3 llvm clang
       - run: cargo xtask build --mode Debug XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
       - run: cargo xtask test
       - save_cache:
@@ -21,10 +20,9 @@ jobs:
 
   build-release:
     docker:
-      - image: riey/kime-build:0.1.0
+      - image: riey/kime-build:0.2.0
     steps:
       - checkout
-      - run: pacman -S --noconfirm libappindicator-gtk3 llvm clang
       - run: cargo xtask build --mode Release XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
       - run: mkdir -p /tmp/artifacts
       - run: 7z a /tmp/artifacts/kime-$(git tag --sort=v:refname | tail -1).7z ./build/out/*

@@ -1,14 +1,15 @@
 [workspace]
 members = [
-    "daemon",
+    "src/daemon",
 
-    "engine/core",
-    "engine/capi",
-    "engine/cffi",
-    "wayland",
-    "xim",
+    "src/engine/core",
+    "src/engine/capi",
+    "src/engine/cffi",
 
-    "xtask",
+    "src/frontends/wayland",
+    "src/frontends/xim",
+
+    "src/xtask",
 ]
 
 [profile.release]

@@ -1,4 +1,6 @@
 use is_executable::is_executable;
+use std::env;
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{collections::HashMap, path::Path};
@@ -109,17 +111,28 @@ enum TaskCommand {
 
 impl TaskCommand {
     pub fn run(self) {
+        let current_dir = env::current_dir().expect("Get current dir");
+
+        let project_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap();
+        let src_path = project_root.join("src");
+        let build_path = project_root.join("build");
+
+        env::set_current_dir(project_root).expect("Set current dir project root");
+
         match self {
             TaskCommand::ReleaseDeb { target_path } => {
-                let target_path = target_path
-                    .unwrap_or_else(|| std::env::current_dir().expect("Get current dir"));
+                let target_path = target_path.unwrap_or(current_dir);
                 let deb_dir = tempfile::tempdir().expect("Create tempdir");
                 let control_path = deb_dir.as_ref().join("DEBIAN/control");
-                std::fs::create_dir_all(control_path.parent().unwrap()).expect("Create DEBIAN dir");
+                fs::create_dir_all(control_path.parent().unwrap()).expect("Create DEBIAN dir");
 
-                std::fs::write(
+                fs::write(
                     control_path,
-                    std::fs::read_to_string(get_src_path().join("xtask").join("control.in"))
+                    fs::read_to_string(src_path.join("xtask").join("control.in"))
                         .expect("Read control.in")
                         .replace("%VER%", env!("CARGO_PKG_VERSION")),
                 )
@@ -141,7 +154,7 @@ impl TaskCommand {
                     .expect("Run dpkg-deb");
             }
             TaskCommand::Install { target_path } => {
-                let out_path = get_build_path().join("out");
+                let out_path = build_path.join("out");
 
                 install(out_path.join("kimed"), target_path.join("usr/bin/kimed"));
                 install(
@@ -182,7 +195,6 @@ impl TaskCommand {
             TaskCommand::Test => {
                 Command::new("cargo")
                     .args(&["test", "-p=kime-engine-core"])
-                    .current_dir(get_src_path())
                     .spawn()
                     .expect("Spawn cargo")
                     .wait()
@@ -199,19 +211,17 @@ impl TaskCommand {
                     frontends.entry(f).or_insert(false);
                 }
 
-                let src_path = get_src_path();
-                let build_path = get_build_path();
                 let out_path = build_path.join("out");
                 let cmake_path = build_path.join("cmake");
                 let cmake_out_path = cmake_path.join("lib");
 
-                std::fs::create_dir_all(&out_path).expect("create out_path");
-                std::fs::create_dir_all(&cmake_out_path).expect("create cmake_out_path");
+                fs::create_dir_all(&out_path).expect("create out_path");
+                fs::create_dir_all(&cmake_out_path).expect("create cmake_out_path");
 
                 build_core(mode);
 
-                std::fs::copy(
-                    src_path
+                fs::copy(
+                    project_root
                         .join(mode.cargo_target_dir())
                         .join("libkime_engine.so"),
                     out_path.join("libkime_engine.so"),
@@ -244,8 +254,8 @@ impl TaskCommand {
                     .success());
 
                 for (_package, binary) in cargo_projects.iter().copied() {
-                    std::fs::copy(
-                        src_path.join(mode.cargo_target_dir()).join(binary),
+                    fs::copy(
+                        project_root.join(mode.cargo_target_dir()).join(binary),
                         out_path.join(binary),
                     )
                     .expect("Copy binary file");
@@ -284,18 +294,17 @@ impl TaskCommand {
                 for file in cmake_out_path.read_dir().expect("Read cmake out") {
                     let file = file.expect("Read entry");
 
-                    std::fs::copy(file.path(), &out_path.join(file.file_name()))
-                        .expect("Copy file");
+                    fs::copy(file.path(), &out_path.join(file.file_name())).expect("Copy file");
                 }
 
-                std::fs::copy(
+                fs::copy(
                     src_path.join("engine").join("cffi").join("kime_engine.h"),
                     out_path.join("kime_engine.h"),
                 )
                 .expect("Copy engine header file");
 
-                std::fs::copy(
-                    src_path.join("docs").join("default_config.yaml"),
+                fs::copy(
+                    project_root.join("docs").join("default_config.yaml"),
                     out_path.join("config.yaml"),
                 )
                 .expect("Copy default config file");
@@ -306,14 +315,6 @@ impl TaskCommand {
             }
         }
     }
-}
-
-fn get_src_path() -> &'static Path {
-    Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap()
-}
-
-fn get_build_path() -> PathBuf {
-    get_src_path().join("build")
 }
 
 fn strip_all(dir: &Path) -> std::io::Result<()> {

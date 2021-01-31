@@ -227,6 +227,15 @@ impl TaskCommand {
                     .assert_success();
             }
             TaskCommand::Build { frontends, mode } => {
+                let cargo_args = env::var("KIME_CARGO_ARGS")
+                    .map(|args| args.split(" ").map(ToString::to_string).collect::<Vec<_>>())
+                    .unwrap_or_default();
+                let cmake_args = env::var("KIME_CMAKE_ARGS")
+                    .map(|args| args.split(" ").map(ToString::to_string).collect::<Vec<_>>())
+                    .unwrap_or_default();
+                let ninja_args = env::var("KIME_NINJA_ARGS")
+                    .map(|args| args.split(" ").map(ToString::to_string).collect::<Vec<_>>())
+                    .unwrap_or_default();
                 let mut frontends = frontends
                     .into_iter()
                     .map(|f| (f, true))
@@ -257,6 +266,10 @@ impl TaskCommand {
                 let mut cargo = Command::new("cargo");
 
                 cargo.arg("build").mode(mode);
+
+                for arg in cargo_args {
+                    cargo.arg(arg);
+                }
 
                 if frontends[&Frontend::Xim] {
                     cargo_projects.push(("kime-xim", "kime-xim"));
@@ -297,13 +310,21 @@ impl TaskCommand {
                     cmake_command.arg(format!("-DENABLE_{}={}", frontend, flag));
                 }
 
+                for arg in cmake_args {
+                    cmake_command.arg(arg);
+                }
+
                 cmake_command.spawn()?.wait()?.assert_success();
 
-                Command::new("ninja")
-                    .current_dir(&cmake_path)
-                    .spawn()?
-                    .wait()?
-                    .assert_success();
+                let mut ninja = Command::new("ninja");
+
+                ninja.current_dir(&cmake_path);
+
+                for arg in ninja_args {
+                    ninja.arg(arg);
+                }
+
+                ninja.spawn()?.wait()?.assert_success();
 
                 for file in cmake_out_path.read_dir()? {
                     let file = file?;

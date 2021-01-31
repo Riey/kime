@@ -5,10 +5,19 @@ jobs:
       - image: riey/kime-build:0.1.0
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - cargo-${{ checksum "Cargo.lock" }}
+            - cargo-
       - run: cargo fmt -- --check
       - run: pacman -S --noconfirm libappindicator-gtk3 llvm clang
       - run: cargo xtask build --mode Debug XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
       - run: cargo xtask test
+      - save_cache:
+          paths:
+            - ./target
+            - ~/.cargo
+          key: cargo-${{ checksum "Cargo.lock" }}
 
   build-release:
     docker:

@@ -5,13 +5,13 @@ authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+kime-engine-cffi = { path = "../../engine/cffi" }
+wayland-client = { version = "0.28.3" }
+zwp-input-method = { git = "https://github.com/Riey/zwp-input-method" }
+zwp-virtual-keyboard = "0.2.0"
+
 ctrlc = { version = "3.1.7", features = ["termination"] }
-kime-engine-cffi = { path = "../engine/cffi" }
 libc = "0.2.82"
 log = "0.4.13"
 pico-args = "0.4.0"
 simplelog = "0.9.0"
-
-wayland-client = { version = "0.28.3" }
-zwp-input-method = { git = "https://github.com/Riey/zwp-input-method" }
-zwp-virtual-keyboard = "0.2.0"

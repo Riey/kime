@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use is_executable::is_executable;
 use std::env;
 use std::fs;
@@ -89,7 +90,6 @@ impl Frontend {
 #[derive(StructOpt)]
 enum TaskCommand {
     Test,
-    Clean,
     Build {
         #[structopt(long, parse(try_from_str), default_value = "Release")]
         mode: BuildMode,
@@ -110,8 +110,8 @@ enum TaskCommand {
 }
 
 impl TaskCommand {
-    pub fn run(self) {
-        let current_dir = env::current_dir().expect("Get current dir");
+    pub fn run(self) -> Result<()> {
+        let current_dir = env::current_dir()?;
 
         let project_root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
@@ -119,88 +119,91 @@ impl TaskCommand {
             .parent()
             .unwrap();
         let src_path = project_root.join("src");
+        let res_path = project_root.join("res");
         let build_path = project_root.join("build");
 
-        env::set_current_dir(project_root).expect("Set current dir project root");
+        env::set_current_dir(project_root)?;
 
         match self {
             TaskCommand::ReleaseDeb { target_path } => {
                 let target_path = target_path.unwrap_or(current_dir);
-                let deb_dir = tempfile::tempdir().expect("Create tempdir");
+                let deb_dir = tempfile::tempdir()?;
                 let control_path = deb_dir.as_ref().join("DEBIAN/control");
-                fs::create_dir_all(control_path.parent().unwrap()).expect("Create DEBIAN dir");
+                fs::create_dir_all(control_path.parent().unwrap())?;
 
                 fs::write(
                     control_path,
-                    fs::read_to_string(src_path.join("xtask").join("control.in"))
-                        .expect("Read control.in")
+                    fs::read_to_string(src_path.join("xtask").join("control.in"))?
                         .replace("%VER%", env!("CARGO_PKG_VERSION")),
                 )
-                .expect("Write control");
+                .context("Write control")?;
 
                 // Install into tempdir
                 TaskCommand::Install {
                     target_path: deb_dir.path().into(),
                 }
-                .run();
+                .run()?;
 
                 Command::new("dpkg-deb")
                     .arg("--build")
                     .arg(deb_dir.as_ref())
                     .arg(target_path.join(format!("kime_{}_amd64.deb", env!("CARGO_PKG_VERSION"))))
-                    .spawn()
-                    .expect("Spawn dpkg-deb")
-                    .wait()
-                    .expect("Run dpkg-deb");
+                    .spawn()?
+                    .wait()?;
             }
             TaskCommand::Install { target_path } => {
                 let out_path = build_path.join("out");
 
-                install(out_path.join("kimed"), target_path.join("usr/bin/kimed"));
+                install(out_path.join("kimed"), target_path.join("usr/bin/kimed"))?;
                 install(
                     out_path.join("kime-xim"),
                     target_path.join("usr/bin/kime-xim"),
-                );
+                )?;
                 install(
                     out_path.join("kime-wayland"),
                     target_path.join("usr/bin/kime-wayland"),
-                );
+                )?;
                 install(
                     out_path.join("libkime-gtk2.so"),
                     target_path.join("usr/lib/gtk-2.0/2.10.0/immodules/im-kime.so"),
-                );
+                )?;
                 install(
                     out_path.join("libkime-gtk3.so"),
                     target_path.join("usr/lib/gtk-3.0/3.0.0/immodules/im-kime.so"),
-                );
+                )?;
                 install(
                     out_path.join("libkime-gtk4.so"),
                     target_path.join("usr/lib/gtk-4.0/4.0.0/immodules/libkime-gtk4.so"),
-                );
-                install(out_path.join("libkime-qt5.so"), target_path.join("usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
-                install(out_path.join("libkime-qt6.so"), target_path.join("usr/lib/qt6/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"));
+                )?;
+                install(out_path.join("libkime-qt5.so"), target_path.join("usr/lib/qt/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"))?;
+                install(out_path.join("libkime-qt6.so"), target_path.join("usr/lib/qt6/plugins/platforminputcontexts/libkimeplatforminputcontextplugin.so"))?;
                 install(
                     out_path.join("libkime_engine.so"),
                     target_path.join("usr/lib/libkime_engine.so"),
-                );
+                )?;
                 install(
                     out_path.join("kime_engine.h"),
                     target_path.join("usr/include/kime_engine.h"),
-                );
+                )?;
                 install(
-                    out_path.join("config.yaml"),
+                    out_path.join("default_config.yaml"),
                     target_path.join("etc/kime/config.yaml"),
-                );
+                )?;
+                install(
+                    out_path.join("kime-eng-64x64.png"),
+                    target_path.join("usr/share/kime/kime-eng-64x64.png"),
+                )?;
+                install(
+                    out_path.join("kime-han-64x64.png"),
+                    target_path.join("usr/share/kime/kime-han-64x64.png"),
+                )?;
             }
             TaskCommand::Test => {
                 Command::new("cargo")
                     .args(&["test", "-p=kime-engine-core"])
-                    .spawn()
-                    .expect("Spawn cargo")
-                    .wait()
-                    .expect("Run test");
+                    .spawn()?
+                    .wait()?;
             }
-            TaskCommand::Clean => {}
             TaskCommand::Build { frontends, mode } => {
                 let mut frontends = frontends
                     .into_iter()
@@ -215,18 +218,17 @@ impl TaskCommand {
                 let cmake_path = build_path.join("cmake");
                 let cmake_out_path = cmake_path.join("lib");
 
-                fs::create_dir_all(&out_path).expect("create out_path");
-                fs::create_dir_all(&cmake_out_path).expect("create cmake_out_path");
+                fs::create_dir_all(&out_path)?;
+                fs::create_dir_all(&cmake_out_path)?;
 
-                build_core(mode);
+                build_core(mode)?;
 
                 fs::copy(
                     project_root
                         .join(mode.cargo_target_dir())
                         .join("libkime_engine.so"),
                     out_path.join("libkime_engine.so"),
-                )
-                .expect("Copy engine lib");
+                )?;
 
                 let mut cargo_projects = vec![("kimed", "kimed")];
 
@@ -246,19 +248,14 @@ impl TaskCommand {
                     cargo.arg("-p").arg(package);
                 }
 
-                assert!(cargo
-                    .spawn()
-                    .expect("Spawn cargo")
-                    .wait()
-                    .expect("Run cargo")
-                    .success());
+                assert!(cargo.spawn()?.wait()?.success());
 
                 for (_package, binary) in cargo_projects.iter().copied() {
                     fs::copy(
                         project_root.join(mode.cargo_target_dir()).join(binary),
                         out_path.join(binary),
                     )
-                    .expect("Copy binary file");
+                    .context("Copy binary file")?;
                 }
 
                 let mut cmake_command = Command::new("cmake");
@@ -278,46 +275,49 @@ impl TaskCommand {
                     cmake_command.arg(format!("-DENABLE_{}={}", frontend, flag));
                 }
 
-                cmake_command
-                    .spawn()
-                    .expect("Spawn cmake")
-                    .wait()
-                    .expect("Run cmake");
+                cmake_command.spawn()?.wait()?;
 
                 Command::new("ninja")
                     .current_dir(&cmake_path)
-                    .spawn()
-                    .expect("Spawn ninja")
-                    .wait()
-                    .expect("Run ninja");
+                    .spawn()?
+                    .wait()?;
 
-                for file in cmake_out_path.read_dir().expect("Read cmake out") {
-                    let file = file.expect("Read entry");
+                for file in cmake_out_path.read_dir()? {
+                    let file = file?;
 
-                    fs::copy(file.path(), &out_path.join(file.file_name())).expect("Copy file");
+                    fs::copy(file.path(), &out_path.join(file.file_name())).context("Copy file")?;
                 }
 
                 fs::copy(
                     src_path.join("engine").join("cffi").join("kime_engine.h"),
                     out_path.join("kime_engine.h"),
                 )
-                .expect("Copy engine header file");
+                .context("Copy engine header file")?;
 
-                fs::copy(
-                    project_root.join("docs").join("default_config.yaml"),
-                    out_path.join("config.yaml"),
-                )
-                .expect("Copy default config file");
+                for res in res_path.read_dir()? {
+                    let res = res?;
+                    let path = res.path();
+                    let ty = res.file_type()?;
+
+                    if !ty.is_file() {
+                        continue;
+                    }
+
+                    let file_name = path.file_name().unwrap();
+                    fs::copy(&path, out_path.join(file_name))?;
+                }
 
                 if mode.is_release() {
                     strip_all(&out_path).ok();
                 }
             }
         }
+
+        Ok(())
     }
 }
 
-fn strip_all(dir: &Path) -> std::io::Result<()> {
+fn strip_all(dir: &Path) -> Result<()> {
     for path in dir.read_dir()? {
         let path = path?.path();
 
@@ -325,19 +325,13 @@ fn strip_all(dir: &Path) -> std::io::Result<()> {
             continue;
         }
 
-        Command::new("strip")
-            .arg("-s")
-            .arg(path)
-            .spawn()
-            .expect("Spawn strip")
-            .wait()
-            .expect("Run strip");
+        Command::new("strip").arg("-s").arg(path).spawn()?.wait()?;
     }
 
     Ok(())
 }
 
-fn install(src: PathBuf, target: PathBuf) {
+fn install(src: PathBuf, target: PathBuf) -> Result<()> {
     if src.exists() {
         println!("Install {} into {}", src.display(), target.display());
 
@@ -350,25 +344,25 @@ fn install(src: PathBuf, target: PathBuf) {
             .arg(src)
             .arg("-T")
             .arg(target)
-            .spawn()
-            .expect("Spawn install")
-            .wait()
-            .expect("Run install");
+            .spawn()?
+            .wait()?;
     }
+
+    Ok(())
 }
 
-fn build_core(mode: BuildMode) {
+fn build_core(mode: BuildMode) -> Result<()> {
     Command::new("cargo")
         .args(&["build", "-p=kime-engine-capi"])
         .mode(mode)
-        .spawn()
-        .expect("Spawn cargo")
-        .wait()
-        .expect("Run cargo");
+        .spawn()?
+        .wait()?;
+
+    Ok(())
 }
 
 fn main() {
     let args = TaskCommand::from_args();
 
-    args.run();
+    args.run().expect("Run command");
 }

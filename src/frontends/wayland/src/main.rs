@@ -93,6 +93,13 @@ impl KimeContext {
         self.im.commit_string(ch.to_string());
     }
 
+    fn commit_ch2(&mut self, ch1: char, ch2: char) {
+        let mut buf = String::with_capacity(ch1.len_utf8() + ch2.len_utf8());
+        buf.push(ch1);
+        buf.push(ch2);
+        self.im.commit_string(buf);
+    }
+
     fn clear_preedit(&mut self) {
         self.im.set_preedit_string(String::new(), -1, -1);
     }
@@ -176,8 +183,7 @@ impl KimeContext {
                             self.preedit_ch(ret.char2);
                         }
                         InputResultType::CommitCommit => {
-                            self.commit_ch(ret.char1);
-                            self.commit_ch(ret.char2);
+                            self.commit_ch2(ret.char1, ret.char2);
                         }
                         InputResultType::ClearPreedit => {
                             self.clear_preedit();

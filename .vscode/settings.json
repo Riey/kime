@@ -15,5 +15,6 @@
         "vector": "cpp",
         "system_error": "cpp"
     },
-    "C_Cpp.errorSquiggles": "Disabled"
+    "C_Cpp.errorSquiggles": "Disabled",
+    "cmake.sourceDirectory": "${workspaceFolder}/src"
 }

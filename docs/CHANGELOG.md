@@ -1,9 +1,12 @@
 # Dev
 
+* Make CONFIGURATION.md more newbie friendly
+* Create Korean version of documents
 * Show hangul/english state on tray icon
 * Set gtk log domain to `kime`
-* Let kime-wayland exit when IO Error occured
+* Let `kime-wayland` exit when IO Error occured
 * Fix wayland input bug
+* `kime-xtask` now read `KIME_CARGO_ARGS`, `KIME_CMAKE_ARGS`, `KIME_NINJA_ARGS`
 
 # 0.9.1
 

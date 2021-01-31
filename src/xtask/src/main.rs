@@ -3,12 +3,22 @@ use is_executable::is_executable;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 use std::{collections::HashMap, path::Path};
 use structopt::StructOpt;
 use strum::IntoEnumIterator;
 
-trait CommandExt: Sized {
+trait ExitStatusExt: Sized {
+    fn assert_success(self);
+}
+
+impl ExitStatusExt for ExitStatus {
+    fn assert_success(self) {
+        assert!(self.success(), "Command run failed");
+    }
+}
+
+trait CommandExt {
     fn mode(&mut self, mode: BuildMode) -> &mut Self;
 }
 
@@ -94,7 +104,12 @@ enum TaskCommand {
     Test,
     #[structopt(about = "Build kime with given frontends")]
     Build {
-        #[structopt(long, parse(try_from_str), default_value = "Release", help = "Build mode: [Debug, Release]")]
+        #[structopt(
+            long,
+            parse(try_from_str),
+            default_value = "Release",
+            help = "Build mode: [Debug, Release]"
+        )]
         mode: BuildMode,
         #[structopt(
             parse(try_from_str),
@@ -154,7 +169,8 @@ impl TaskCommand {
                     .arg(deb_dir.as_ref())
                     .arg(target_path.join(format!("kime_{}_amd64.deb", env!("CARGO_PKG_VERSION"))))
                     .spawn()?
-                    .wait()?;
+                    .wait()?
+                    .assert_success();
             }
             TaskCommand::Install { target_path } => {
                 let out_path = build_path.join("out");
@@ -207,7 +223,8 @@ impl TaskCommand {
                 Command::new("cargo")
                     .args(&["test", "-p=kime-engine-core"])
                     .spawn()?
-                    .wait()?;
+                    .wait()?
+                    .assert_success();
             }
             TaskCommand::Build { frontends, mode } => {
                 let mut frontends = frontends
@@ -253,7 +270,7 @@ impl TaskCommand {
                     cargo.arg("-p").arg(package);
                 }
 
-                assert!(cargo.spawn()?.wait()?.success());
+                cargo.spawn()?.wait()?.assert_success();
 
                 for (_package, binary) in cargo_projects.iter().copied() {
                     fs::copy(
@@ -280,12 +297,13 @@ impl TaskCommand {
                     cmake_command.arg(format!("-DENABLE_{}={}", frontend, flag));
                 }
 
-                cmake_command.spawn()?.wait()?;
+                cmake_command.spawn()?.wait()?.assert_success();
 
                 Command::new("ninja")
                     .current_dir(&cmake_path)
                     .spawn()?
-                    .wait()?;
+                    .wait()?
+                    .assert_success();
 
                 for file in cmake_out_path.read_dir()? {
                     let file = file?;
@@ -313,7 +331,7 @@ impl TaskCommand {
                 }
 
                 if mode.is_release() {
-                    strip_all(&out_path).ok();
+                    strip_all(&out_path)?;
                 }
             }
         }
@@ -330,7 +348,12 @@ fn strip_all(dir: &Path) -> Result<()> {
             continue;
         }
 
-        Command::new("strip").arg("-s").arg(path).spawn()?.wait()?;
+        Command::new("strip")
+            .arg("-s")
+            .arg(path)
+            .spawn()?
+            .wait()?
+            .assert_success();
     }
 
     Ok(())
@@ -350,7 +373,8 @@ fn install(src: PathBuf, target: PathBuf) -> Result<()> {
             .arg("-T")
             .arg(target)
             .spawn()?
-            .wait()?;
+            .wait()?
+            .assert_success();
     }
 
     Ok(())
@@ -361,7 +385,8 @@ fn build_core(mode: BuildMode) -> Result<()> {
         .args(&["build", "-p=kime-engine-capi"])
         .mode(mode)
         .spawn()?
-        .wait()?;
+        .wait()?
+        .assert_success();
 
     Ok(())
 }

@@ -88,23 +88,28 @@ impl Frontend {
 }
 
 #[derive(StructOpt)]
+#[structopt(about = "Tool for build, test, deploy kime")]
 enum TaskCommand {
+    #[structopt(about = "Test kime")]
     Test,
+    #[structopt(about = "Build kime with given frontends")]
     Build {
-        #[structopt(long, parse(try_from_str), default_value = "Release")]
+        #[structopt(long, parse(try_from_str), default_value = "Release", help = "Build mode: [Debug, Release]")]
         mode: BuildMode,
         #[structopt(
             parse(try_from_str),
-            about = "Select frontend availiable list: [XIM, WAYLAND, QT5, QT6, GTK2, GTK3, GTK4]"
+            help = "Select frontend availiable list: [XIM, WAYLAND, QT5, QT6, GTK2, GTK3, GTK4]"
         )]
         frontends: Vec<Frontend>,
     },
+    #[structopt(about = "Install kime files into given path")]
     Install {
-        #[structopt(parse(from_os_str))]
+        #[structopt(parse(from_os_str), help = "Path to install files")]
         target_path: PathBuf,
     },
+    #[structopt(about = "Make deb file into given path")]
     ReleaseDeb {
-        #[structopt(parse(from_os_str))]
+        #[structopt(parse(from_os_str), help = "Path to write deb file")]
         target_path: Option<PathBuf>,
     },
 }

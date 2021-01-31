@@ -186,8 +186,16 @@ impl TaskCommand {
                     target_path.join("usr/include/kime_engine.h"),
                 )?;
                 install(
-                    out_path.join("config.yaml"),
+                    out_path.join("default_config.yaml"),
                     target_path.join("etc/kime/config.yaml"),
+                )?;
+                install(
+                    out_path.join("kime-eng-64x64.png"),
+                    target_path.join("usr/share/kime/kime-eng-64x64.png"),
+                )?;
+                install(
+                    out_path.join("kime-han-64x64.png"),
+                    target_path.join("usr/share/kime/kime-han-64x64.png"),
                 )?;
             }
             TaskCommand::Test => {

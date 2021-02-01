@@ -576,7 +576,7 @@ version = "0.8.1"
 
 [[package]]
 name = "kime-engine-core"
-version = "0.8.1"
+version = "1.0.0"
 dependencies = [
  "ahash",
  "bitflags",

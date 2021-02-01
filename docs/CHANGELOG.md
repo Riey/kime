@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Dev
+## 1.0.0-pre1
 
 * Add more help messages for binary tools
 * Show more version info

@@ -3,7 +3,7 @@
 [English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
 
 Default config file is located at `/etc/kime/config.yaml`. Check
-[default_config.yaml](default_config.yaml) to see the default configuration
+[default_config.yaml](../res/default_config.yaml) to see the default configuration
 file. You edit `/etc/kime/config.yaml` or create a new config file at
 `~/.config/kime/config.yaml`.
 
@@ -20,7 +20,7 @@ available as default. Custom layout can be added by creating layout YAML files
 at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
 structure of keyboard layout file.
 
-[dubeolsik.yaml]: ../engine/core/data/dubeolsik.yaml
+[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
 
 | default |`dubeolsik`|
 |---------|-----------|

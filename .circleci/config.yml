@@ -3,13 +3,13 @@ version: 2.1
 jobs:
   markdown-lint:
     docker:
-      - image: circleci/node:10
+      - image: cimg/node:current
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
     steps:
       - checkout
-      - run: sudo npm install -g markdownlint
+      - run: sudo npm install -g markdownlint-cli
       - run: sudo npm install -g markdown-link-check
       - run: .circleci/check_md.sh
   check:

@@ -1,15 +1,16 @@
 [package]
 name = "kime-xim"
 description = "Kime XIM server"
-version = "0.8.1"
+version = "0.2.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
 
 [dependencies]
+kime-engine-cffi = { path = "../../engine/cffi" }
+kime-shared = { path = "../../shared" }
 xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 # xim = { path = "../../xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
-kime-engine-cffi = { path = "../../engine/cffi" }
 
 ahash = "0.6.2"
 cairo-rs = { version = "0.9.1", features = ["xcb"] }

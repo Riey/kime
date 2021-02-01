@@ -6,6 +6,8 @@ edition = "2018"
 
 [dependencies]
 kime-engine-cffi = { path = "../../engine/cffi" }
+kime-shared = { path = "../../shared" }
+
 wayland-client = { version = "0.28.3" }
 zwp-input-method = { git = "https://github.com/Riey/zwp-input-method" }
 zwp-virtual-keyboard = "0.2.0"

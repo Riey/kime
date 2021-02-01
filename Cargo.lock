@@ -250,6 +250,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "error-chain"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d2f06b9cac1506ece98fe3231e3cc9c4410ec3d5b1f24ae1c8946f0742cdefc"
+dependencies = [
+ "version_check 0.9.2",
+]
+
+[[package]]
 name = "futures"
 version = "0.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -581,11 +590,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kime-shared"
+version = "1.0.0"
+
+[[package]]
 name = "kime-wayland"
 version = "0.1.0"
 dependencies = [
  "ctrlc",
  "kime-engine-cffi",
+ "kime-shared",
  "libc",
  "log",
  "pico-args",
@@ -597,11 +611,12 @@ dependencies = [
 
 [[package]]
 name = "kime-xim"
-version = "0.8.1"
+version = "0.2.0"
 dependencies = [
  "ahash",
  "cairo-rs",
  "kime-engine-cffi",
+ "kime-shared",
  "log",
  "pico-args",
  "simplelog",
@@ -611,7 +626,7 @@ dependencies = [
 
 [[package]]
 name = "kime-xtask"
-version = "0.9.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "is_executable",
@@ -630,8 +645,11 @@ dependencies = [
  "glib",
  "gobject-sys",
  "gtk-sys",
+ "kime-shared",
  "libappindicator-sys",
  "libc",
+ "log",
+ "syslog",
  "xdg",
 ]
 
@@ -682,11 +700,11 @@ checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
 name = "log"
-version = "0.4.13"
+version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcf3805d4480bb5b86070dcfeb9e2cb2ebc148adb753c5cca5f884d1d65a42b2"
+checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 1.0.0",
 ]
 
 [[package]]
@@ -1100,6 +1118,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "syslog"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a5d8ef1b679c07976f3ee336a436453760c470f54b5e7237556728b8589515d"
+dependencies = [
+ "error-chain",
+ "libc",
+ "log",
+ "time",
 ]
 
 [[package]]

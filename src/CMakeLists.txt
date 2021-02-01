@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0)
 
-project(kime VERSION 0.9.1)
+project(kime VERSION 1.0.0)
 
 option(ENABLE_GTK2 "Enable GTK2 immodule" OFF)
 option(ENABLE_GTK3 "Enable GTK3 immodule" OFF)

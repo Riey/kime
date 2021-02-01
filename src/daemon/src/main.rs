@@ -101,7 +101,7 @@ fn daemon_main() -> Result<()> {
     }
 
     if unsafe { mkfifo(cs!("/tmp/kimed_hangul_state"), 0o644) } != 0 {
-        eprintln!("Failed mkfifo");
+        log::error!("Failed mkfifo");
         return Err(io::Error::last_os_error());
     }
 
@@ -147,6 +147,12 @@ fn main() {
     if let Err(err) = daemonize.start() {
         eprintln!("Daemonize Error: {}", err);
     } else {
-        daemon_main().unwrap();
+        syslog::init_unix(syslog::Facility::LOG_DAEMON, log::LevelFilter::Trace).expect("Init syslog");
+        match daemon_main() {
+            Ok(_) => {},
+            Err(err) => {
+                log::error!("Error: {}", err);
+            }
+        }
     }
 }

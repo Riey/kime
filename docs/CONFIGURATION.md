@@ -52,7 +52,7 @@ Adjust compose, decompose jamo
 
 ### compose_choseong_ssang
 
-```
+```txt
 ㄱ + ㄱ = ㄲ
 ㅅ + ㅅ = ㅆ
 ㄷ + ㄷ = ㄸ
@@ -72,14 +72,13 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 
 ### compose_jungseong_ssang
 
-```
+```txt
 ㅑ + ㅣ = ㅒ
 ㅕ + ㅣ = ㅖ
 ```
 
 | default |`false`|
 |---------|-------|
-
 
 ### decompose_jungseong_ssang
 
@@ -88,7 +87,7 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 
 ### compose_jongseong_ssang
 
-```
+```txt
 ㄱ + ㄱ = ㄲ
 ㅅ + ㅅ = ㅆ
 ```

@@ -1,5 +1,17 @@
 version: 2.1
+
 jobs:
+  markdown-lint:
+    docker:
+      - image: circleci/node:10
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    steps:
+      - checkout
+      - run: sudo npm install -g markdownlint
+      - run: sudo npm install -g markdown-link-check
+      - run: .circleci/check_md.sh
   check:
     docker:
       - image: riey/kime-build:latest

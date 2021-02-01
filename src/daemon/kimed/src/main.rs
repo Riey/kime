@@ -1,12 +1,13 @@
-use gio::{prelude::InputStreamExtManual, FileExt};
+use anyhow::Result;
 use gobject_sys::g_signal_connect_data;
+use kimed_types::{bincode, ClientMessage, GetGlobalHangulStateReply};
 use libappindicator_sys::{AppIndicator, AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE};
-use libc::mkfifo;
 use std::ffi::CString;
 use std::fs::File;
-use std::io::{self, Read, Result};
+use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
 use std::ptr;
+use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
 
 macro_rules! cs {
     ($ex:expr) => {
@@ -85,6 +86,30 @@ impl Indicator {
     }
 }
 
+static GLOBAL_HANGUL_STATE: AtomicBool = AtomicBool::new(false);
+
+fn serve_client(mut stream: UnixStream, indicator_tx: glib::SyncSender<bool>) -> Result<()> {
+    loop {
+        match bincode::deserialize_from(&mut stream)? {
+            ClientMessage::GetGlobalHangulState => {
+                bincode::serialize_into(
+                    &mut stream,
+                    &GetGlobalHangulStateReply {
+                        state: GLOBAL_HANGUL_STATE.load(Relaxed),
+                    },
+                )?;
+            }
+            ClientMessage::UpdateHangulState(state) => {
+                GLOBAL_HANGUL_STATE.store(state, Relaxed);
+
+                if indicator_tx.send(state).is_err() {
+                    break Ok(());
+                }
+            }
+        }
+    }
+}
+
 fn daemon_main() -> Result<()> {
     unsafe {
         gtk_sys::gtk_init(ptr::null_mut(), ptr::null_mut());
@@ -92,43 +117,44 @@ fn daemon_main() -> Result<()> {
 
     let mut indicator = Indicator::new();
 
-    indicator.enable_hangul();
+    indicator.disable_hangul();
 
-    let path = std::path::Path::new("/tmp/kimed_hangul_state");
+    let (indicator_tx, indicator_rx) =
+        glib::MainContext::sync_channel(glib::PRIORITY_DEFAULT_IDLE, 10);
 
-    if path.exists() {
-        std::fs::remove_file(path)?;
-    }
+    let ctx = glib::MainContext::ref_thread_default();
 
-    if unsafe { mkfifo(cs!("/tmp/kimed_hangul_state"), 0o644) } != 0 {
-        log::error!("Failed mkfifo");
-        return Err(io::Error::last_os_error());
-    }
+    assert!(ctx.acquire());
 
-    let pipe = gio::File::new_for_path(path);
-    let c = glib::MainContext::default();
-    assert!(c.acquire());
-    c.spawn_local(async move {
+    indicator_rx.attach(Some(&ctx), move |msg| {
+        if msg {
+            indicator.enable_hangul();
+        } else {
+            indicator.disable_hangul();
+        }
+
+        glib::Continue(true)
+    });
+
+    std::thread::spawn(move || {
+        let path = std::path::Path::new("/tmp/kimed.sock");
+        if path.exists() {
+            std::fs::remove_file(path).ok();
+        }
+
+        let server = UnixListener::bind(path).unwrap();
+
         loop {
-            let ret: gio::FileInputStream = pipe
-                .read_async_future(glib::PRIORITY_DEFAULT_IDLE)
-                .await
-                .unwrap();
-            let mut buf = [0; 1024];
-            let len = ret.into_read().read(&mut buf).unwrap();
-
-            if len < 1 {
-                continue;
-            }
-
-            if buf[0] == b'0' {
-                indicator.disable_hangul();
-            } else {
-                indicator.enable_hangul();
-            }
+            let (stream, _addr) = server.accept().expect("Accept");
+            log::info!("Connect client");
+            let tx = indicator_tx.clone();
+            std::thread::spawn(move || {
+                if let Err(err) = serve_client(stream, tx) {
+                    log::error!("Client Error: {}", err);
+                }
+            });
         }
     });
-    c.release();
 
     unsafe {
         gtk_sys::gtk_main();
@@ -147,8 +173,12 @@ fn main() {
     if let Err(err) = daemonize.start() {
         eprintln!("Daemonize Error: {}", err);
     } else {
-        syslog::init_unix(syslog::Facility::LOG_DAEMON, log::LevelFilter::Trace)
-            .expect("Init syslog");
+        simplelog::SimpleLogger::init(
+            log::LevelFilter::Trace,
+            simplelog::ConfigBuilder::new().build(),
+        )
+        .ok();
+        log::info!("Start daemon");
         match daemon_main() {
             Ok(_) => {}
             Err(err) => {

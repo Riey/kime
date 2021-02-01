@@ -232,6 +232,13 @@ impl KimeContext {
 fn main() {
     let mut args = pico_args::Arguments::from_env();
 
+    if args.contains(["-h", "--help"]) {
+        println!("-h or --help: show help");
+        println!("-v or --version: show version");
+        println!("--verbose: more verbose log");
+        return;
+    }
+
     if args.contains(["-v", "--version"]) {
         kime_version::print_version!();
         return;
@@ -250,7 +257,7 @@ fn main() {
         log::LevelFilter::Info
     };
 
-    if args.contains(["-l", "--log"]) {
+    if args.contains("--verbose") {
         log_level = log::LevelFilter::Trace;
     }
 

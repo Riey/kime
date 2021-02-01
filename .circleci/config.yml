@@ -59,10 +59,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/artifacts
+      - checkout
       - run:
           name: "Publish Release on GitHub"
           command: |
-            ghr -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:1} -replace ./artifacts
+            VERSION=$(git tag --sort=v:refname | tail -1)
+            ghr -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /tmp/artifacts
 
 workflows:
   ci:

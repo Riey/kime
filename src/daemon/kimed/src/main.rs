@@ -8,6 +8,7 @@ use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
+use structopt::StructOpt;
 
 macro_rules! cs {
     ($ex:expr) => {
@@ -136,6 +137,8 @@ fn daemon_main() -> Result<()> {
         glib::Continue(true)
     });
 
+    ctx.release();
+
     std::thread::spawn(move || {
         let path = std::path::Path::new("/tmp/kimed.sock");
         if path.exists() {
@@ -163,27 +166,52 @@ fn daemon_main() -> Result<()> {
     Ok(())
 }
 
-fn main() {
-    let daemonize = daemonize::Daemonize::new()
-        .pid_file("/tmp/kimed.pid")
-        .working_directory("/tmp")
-        .stdout(File::create("/tmp/kimed.out").unwrap())
-        .stderr(File::create("/tmp/kimed.err").unwrap());
+#[derive(StructOpt)]
+#[structopt(about = "kime daemon")]
+struct Opts {
+    #[structopt(long, short, help = "Show daemon version")]
+    version: bool,
+    #[structopt(long, help = "Log more messages")]
+    verbose: bool,
+    #[structopt(long, help = "Run as normal process")]
+    not_daemon: bool,
+}
 
-    if let Err(err) = daemonize.start() {
-        eprintln!("Daemonize Error: {}", err);
-    } else {
-        simplelog::SimpleLogger::init(
-            log::LevelFilter::Trace,
-            simplelog::ConfigBuilder::new().build(),
-        )
-        .ok();
-        log::info!("Start daemon");
-        match daemon_main() {
-            Ok(_) => {}
-            Err(err) => {
-                log::error!("Error: {}", err);
-            }
+fn main() {
+    let opt = Opts::from_args();
+
+    if opt.version {
+        kime_version::print_version!();
+        return;
+    }
+
+    if !opt.not_daemon {
+        let daemonize = daemonize::Daemonize::new()
+            .pid_file("/tmp/kimed.pid")
+            .working_directory("/tmp")
+            .stdout(File::create("/tmp/kimed.out").unwrap())
+            .stderr(File::create("/tmp/kimed.err").unwrap());
+
+        if let Err(err) = daemonize.start() {
+            eprintln!("Daemonize Error: {}", err);
+            return;
+        }
+    }
+
+    simplelog::SimpleLogger::init(
+        if cfg!(debug_assertions) || opt.verbose {
+            log::LevelFilter::Trace
+        } else {
+            log::LevelFilter::Info
+        },
+        simplelog::ConfigBuilder::new().build(),
+    )
+    .ok();
+    log::info!("Start daemon");
+    match daemon_main() {
+        Ok(_) => {}
+        Err(err) => {
+            log::error!("Error: {}", err);
         }
     }
 }

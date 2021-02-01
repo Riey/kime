@@ -45,26 +45,8 @@ jobs:
       - run: mkdir -p /tmp/artifacts
       - run: 7z a /tmp/artifacts/kime-$(git tag --sort=v:refname | tail -1).7z ./build/out/*
       - run: cargo xtask release-deb /tmp/artifacts 
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - artifacts
-
-  release-github:
-    docker:
-      - image: cibuilds/github:0.10
-        auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS
-    steps:
-      - attach_workspace:
-          at: /tmp/artifacts
-      - checkout
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            VERSION=$(git tag --sort=v:refname | tail -1)
-            ghr -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
 
 workflows:
   ci:
@@ -77,13 +59,3 @@ workflows:
           filters:
             branches:
               only: /releases.+/
-            tags:
-              only: /v.+/
-      - release-github:
-          requires:
-            - build-release
-          filters:
-            branches:
-              only: /releases.+/
-            tags:
-              only: /v.+/

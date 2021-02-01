@@ -22,8 +22,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - cargo-${{ checksum "Cargo.lock" }}
-            - cargo-
+            - cargo-$CARGO_CACHE_VERSION-${{ checksum "Cargo.lock" }}
+            - cargo-$CARGO_CACHE_VERSION-
       - run: cargo fmt -- --check
       - run: cargo xtask build --mode Debug XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
       - run: cargo xtask test
@@ -31,7 +31,7 @@ jobs:
           paths:
             - ./target
             - ~/.cargo
-          key: cargo-${{ checksum "Cargo.lock" }}
+          key: cargo-$CARGO_CACHE_VERSION-${{ checksum "Cargo.lock" }}
 
   build-release:
     docker:

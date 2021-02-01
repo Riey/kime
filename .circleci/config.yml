@@ -22,8 +22,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - cargo-$CARGO_CACHE_VERSION-${{ checksum "Cargo.lock" }}
-            - cargo-$CARGO_CACHE_VERSION-
+            - cargo-{{ .Environment.CARGO_CACHE_VERSION }}-{{ checksum "Cargo.lock" }}
+            - cargo-{{ .Environment.CARGO_CACHE_VERSION }}-
       - run: cargo fmt -- --check
       - run: cargo xtask build --mode Debug XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
       - run: cargo xtask test
@@ -31,7 +31,7 @@ jobs:
           paths:
             - ./target
             - ~/.cargo
-          key: cargo-$CARGO_CACHE_VERSION-${{ checksum "Cargo.lock" }}
+          key: cargo-{{ .Environment.CARGO_CACHE_VERSION }}-{{ checksum "Cargo.lock" }}
 
   build-release:
     docker:
@@ -62,9 +62,7 @@ jobs:
       - run:
           name: "Publish Release on GitHub"
           command: |
-            VERSION=$(git tag --sort=v:refname | tail -1)
-            ghr -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} -replace ./artifacts
-
+            ghr -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:1} -replace ./artifacts
 
 workflows:
   ci:
@@ -76,14 +74,14 @@ workflows:
       - build-release:
           filters:
             branches:
-              ignore: /.*/
+              only: /releases.+/
             tags:
-              only: v.+
+              only: /v.+/
       - release-github:
           requires:
             - build-release
           filters:
             branches:
-              ignore: /.*/
+              only: /releases.+/
             tags:
-              only: v.+
+              only: /v.+/

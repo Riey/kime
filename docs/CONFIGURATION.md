@@ -25,6 +25,13 @@ structure of keyboard layout file.
 | default |`dubeolsik`|
 |---------|-----------|
 
+## global_hangul_state
+
+Set hangul state globally
+
+| 기본값 |`false`|
+|--------|-------|
+
 ## esc_turn_off
 
 Turn off hangul mode when esc is pressed especially for VIM users

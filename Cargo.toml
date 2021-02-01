@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "src/daemon",
+    "src/daemon/kimed",
+    "src/daemon/types",
 
     "src/engine/core",
     "src/engine/capi",

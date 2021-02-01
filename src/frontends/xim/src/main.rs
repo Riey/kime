@@ -11,7 +11,6 @@ fn main() -> Result<(), ServerError> {
     let mut args = pico_args::Arguments::from_env();
 
     if args.contains("--version") {
-        println!("kime: {}", kime_shared::KIME_VERSION);
         println!("{}: {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 
         return Ok(());

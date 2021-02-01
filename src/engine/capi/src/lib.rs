@@ -24,8 +24,8 @@ pub unsafe extern "C" fn kime_engine_is_hangul_enabled(engine: *const InputEngin
 
 /// Update hangul state
 #[no_mangle]
-pub unsafe extern "C" fn kime_engine_update_hangul_state(engine: *const InputEngine) {
-    let engine = engine.as_ref().unwrap();
+pub unsafe extern "C" fn kime_engine_update_hangul_state(engine: *mut InputEngine) {
+    let engine = engine.as_mut().unwrap();
 
     engine.update_hangul_state();
 }

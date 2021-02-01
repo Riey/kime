@@ -5,6 +5,7 @@
 * Make CONFIGURATION.md more newbie friendly
 * Create Korean version of documents
 * Show hangul/english state on tray icon
+* Support global hangul state
 * Set gtk log domain to `kime`
 * Let `kime-wayland` exit when IO Error occured
 * Fix wayland input bug

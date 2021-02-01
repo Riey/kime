@@ -30,6 +30,7 @@ impl Default for ComposeConfig {
 #[serde(default)]
 pub struct RawConfig {
     pub layout: String,
+    pub global_hangul_state: bool,
     pub esc_turn_off: bool,
     pub hangul_keys: Vec<String>,
     pub xim_preedit_font: (String, f64),
@@ -47,6 +48,7 @@ impl Default for RawConfig {
 
         Self {
             layout: "dubeolsik".to_string(),
+            global_hangul_state: false,
             esc_turn_off: true,
             hangul_keys: DEFAULT_HANGUL_KEYS
                 .iter()
@@ -60,6 +62,7 @@ impl Default for RawConfig {
 
 pub struct Config {
     pub(crate) layout: Layout,
+    pub(crate) global_hangul_state: bool,
     pub(crate) esc_turn_off: bool,
     pub(crate) hangul_keys: AHashSet<Key>,
     pub(crate) compose: ComposeConfig,
@@ -76,6 +79,7 @@ impl Config {
     pub fn new(layout: Layout, raw: RawConfig) -> Self {
         Self {
             layout,
+            global_hangul_state: raw.global_hangul_state,
             esc_turn_off: raw.esc_turn_off,
             compose: raw.compose,
             hangul_keys: raw

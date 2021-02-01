@@ -147,9 +147,10 @@ fn main() {
     if let Err(err) = daemonize.start() {
         eprintln!("Daemonize Error: {}", err);
     } else {
-        syslog::init_unix(syslog::Facility::LOG_DAEMON, log::LevelFilter::Trace).expect("Init syslog");
+        syslog::init_unix(syslog::Facility::LOG_DAEMON, log::LevelFilter::Trace)
+            .expect("Init syslog");
         match daemon_main() {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(err) => {
                 log::error!("Error: {}", err);
             }

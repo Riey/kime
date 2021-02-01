@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 kimed-types = { path = "../types" }
+kime-version = { path = "../../version" }
 
 daemonize = "0.4.1"
 glib = "0.10.3"
@@ -16,3 +17,4 @@ xdg = "2.2.0"
 log = "0.4.14"
 anyhow = "1.0.38"
 simplelog = "0.9.0"
+structopt = "0.3.21"

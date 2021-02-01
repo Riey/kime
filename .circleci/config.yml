@@ -70,6 +70,7 @@ workflows:
   ci:
     jobs:
       - check
+      - markdown-lint
   cd:
     jobs:
       - build-release:

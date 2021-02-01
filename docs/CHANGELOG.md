@@ -2,6 +2,7 @@
 
 ## Dev
 
+* Show more version info
 * Make CONFIGURATION.md more newbie friendly
 * Create Korean version of documents
 * Show hangul/english state on tray icon

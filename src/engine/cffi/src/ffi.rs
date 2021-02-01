@@ -90,7 +90,7 @@ extern "C" {
 }
 extern "C" {
     #[doc = " Update hangul state"]
-    pub fn kime_engine_update_hangul_state(engine: *const InputEngine);
+    pub fn kime_engine_update_hangul_state(engine: *mut InputEngine);
 }
 extern "C" {
     #[doc = " Get preedit_char of engine"]

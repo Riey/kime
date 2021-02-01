@@ -7,10 +7,13 @@ mod state;
 use self::characters::KeyValue;
 use self::state::CharacterState;
 use ahash::AHashMap;
+use kimed_types::bincode;
 
 pub use self::config::{Config, RawConfig};
 pub use self::input_result::{InputResult, InputResultType};
 pub use self::keycode::{Key, KeyCode, ModifierState};
+
+use std::os::unix::net::UnixStream;
 
 #[derive(Clone, Default)]
 pub struct Layout {
@@ -38,15 +41,25 @@ impl Layout {
     }
 }
 
-#[derive(Default)]
 pub struct InputEngine {
     state: CharacterState,
+    daemon: Option<UnixStream>,
     enable_hangul: bool,
+}
+
+impl Default for InputEngine {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl InputEngine {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            state: CharacterState::default(),
+            daemon: UnixStream::connect("/tmp/kimed.sock").ok(),
+            enable_hangul: false,
+        }
     }
 
     pub fn set_enable_hangul(&mut self, enable: bool) {
@@ -57,10 +70,35 @@ impl InputEngine {
         self.enable_hangul
     }
 
-    pub fn update_hangul_state(&self) {
-        let ch = if self.is_hangul_enabled() { b'1' } else { b'0' };
+    fn check_hangul_state(&mut self, config: &Config) -> bool {
+        if config.global_hangul_state {
+            self.enable_hangul = self
+                .daemon
+                .as_mut()
+                .and_then(|mut d| {
+                    bincode::serialize_into(
+                        &mut d,
+                        &kimed_types::ClientMessage::GetGlobalHangulState,
+                    )
+                    .unwrap();
+                    let reply: kimed_types::GetGlobalHangulStateReply =
+                        bincode::deserialize_from(&mut d).ok()?;
+                    Some(reply.state)
+                })
+                .unwrap_or(self.enable_hangul);
+        }
 
-        std::fs::write("/tmp/kimed_hangul_state", &[ch]).ok();
+        self.enable_hangul
+    }
+
+    pub fn update_hangul_state(&mut self) {
+        if let Some(daemon) = self.daemon.as_mut() {
+            bincode::serialize_into(
+                daemon,
+                &kimed_types::ClientMessage::UpdateHangulState(self.enable_hangul),
+            )
+            .unwrap();
+        }
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
@@ -73,7 +111,7 @@ impl InputEngine {
         } else if key.code == KeyCode::Esc && config.esc_turn_off {
             self.enable_hangul = false;
             self.bypass()
-        } else if self.enable_hangul {
+        } else if self.check_hangul_state(config) {
             if key.code == KeyCode::Backspace {
                 self.state.backspace(config)
             } else if let Some(v) = config.layout.keymap.get(&key) {

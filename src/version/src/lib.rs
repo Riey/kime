@@ -7,7 +7,11 @@ pub mod build {
 macro_rules! print_version {
     () => {
         if $crate::build::TAG.is_empty() {
-            println!("kime(git) {} {}", $crate::build::COMMIT_DATE, $crate::build::SHORT_COMMIT);
+            println!(
+                "kime(git) {} {}",
+                $crate::build::COMMIT_DATE,
+                $crate::build::SHORT_COMMIT
+            );
         } else {
             println!("kime(release) {}", $crate::build::TAG);
         }

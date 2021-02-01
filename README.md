@@ -11,7 +11,6 @@ Korean IME
 [<img alt="license" src="https://img.shields.io/github/license/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/blob/master/LICENSE)
 [<img src="https://d1u4yishnma8v5.cloudfront.net/mobile-gift.png" alt="donaricano-btn" height="50">](https://donaricano.com/mypage/1610220543_mjZDXO)
 
-
 ## [Changelog](docs/CHANGELOG.md)
 
 ## Why kime
@@ -35,7 +34,8 @@ Korean IME
 
 ### Arch Linux
 
-you can install from AUR package [kime](https://aur.archlinux.org/packages/kime) for latest release, or [kime-git](https://aur.archlinux.org/packages/kime-git) if you want to build from source.
+you can install from AUR package [kime](https://aur.archlinux.org/packages/kime) for latest release
+or [kime-git](https://aur.archlinux.org/packages/kime-git) if you want to build from source.
 
 ### Debian
 
@@ -59,7 +59,6 @@ cargo xtask build XIM GTK3 QT5
 ```
 
 See `cargo xtask --help` for more detail
-
 
 #### GTK
 

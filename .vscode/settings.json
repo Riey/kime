@@ -16,5 +16,7 @@
         "system_error": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
-    "cmake.sourceDirectory": "${workspaceFolder}/src"
+    "cmake.sourceDirectory": "${workspaceFolder}/src",
+    "rust-analyzer.cargo.loadOutDirsFromCheck": true,
+    "rust-analyzer.procMacro.enable": true
 }

@@ -12,7 +12,7 @@
 
 키보드 자판을 설정합니다. `dubeolsik`(두벌식), `sebeolsik-390`(세벌식 390), `sebeolsik-391`(세벌식 391)이 기본으로 내장되어 있습니다. `$XDG_CONFIG_HOME/kime/layouts/`에 위 목록에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
 
-[dubeolsik.yaml]: ../engine/core/data/dubeolsik.yaml
+[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
 
 | 기본값 |`dubeolsik`|
 |--------|-----------|

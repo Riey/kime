@@ -44,6 +44,25 @@ impl Default for InputMethodState {
     }
 }
 
+#[derive(Clone, Copy)]
+struct RepeatInfo {
+    /// The rate of repeating keys in characters per second
+    rate: i32,
+    /// Delay in milliseconds since key down until repeating starts
+    delay: i32,
+}
+
+#[derive(Clone, Copy)]
+enum PressState {
+    /// User is pressing no key, or user lifted last pressed key. But kime-wayland is ready for key
+    /// long-press.
+    NotPressing,
+    /// User just started pressing a key. Soon, key repeating will be begin.
+    NotRepeatingYet { key: u32 },
+    /// User have pressed a key for a long enough time. Key repeating is happening right now.
+    Repeating { key: u32 },
+}
+
 struct KimeContext {
     config: Config,
     engine: InputEngine,
@@ -56,6 +75,10 @@ struct KimeContext {
     keymap_init: bool,
     serial: u32,
     // Have to consern Multi seats?
+
+    // Key repeat contexts
+    timer: TimerFd,
+    repeat_state: Option<(RepeatInfo, PressState)>,
 }
 
 impl Drop for KimeContext {
@@ -69,7 +92,7 @@ impl Drop for KimeContext {
 }
 
 impl KimeContext {
-    pub fn new(vk: Main<ZwpVirtualKeyboardV1>, im: Main<ZwpInputMethodV2>) -> Self {
+    pub fn new(vk: Main<ZwpVirtualKeyboardV1>, im: Main<ZwpInputMethodV2>, timer: TimerFd) -> Self {
         Self {
             config: Config::new(),
             engine: InputEngine::new(),
@@ -81,6 +104,9 @@ impl KimeContext {
             vk,
             im,
             grab_kb: None,
+
+            timer,
+            repeat_state: None,
         }
     }
 
@@ -162,6 +188,18 @@ impl KimeContext {
             } => {
                 // NOTE: Never read `serial` of KeyEvent. You should rely on serial of KimeContext
                 if state == KeyState::Pressed {
+                    // Start waiting for the key hold timer event
+                    if let Some((info, ref mut press_state)) = self.repeat_state {
+                        match press_state {
+                            PressState::Repeating { key: pressed } if *pressed == key => {}
+                            _ => {
+                                let duration = Duration::from_millis(info.delay as u64);
+                                self.timer.set_timeout(&duration).unwrap(); // TODO: Error handling
+                                *press_state = PressState::NotRepeatingYet { key };
+                            }
+                        }
+                    }
+
                     let mut bypass = false;
                     let ret = self
                         .engine
@@ -201,6 +239,24 @@ impl KimeContext {
                         self.vk.key(time, key, state as _);
                     }
                 } else {
+                    // If user released the last pressed key, clear the timer and state
+                    if let Some((.., ref mut press_state)) = self.repeat_state {
+                        match press_state {
+                            PressState::NotPressing => log::warn!(
+                                "Received released event of unpressed key. (key code: {})",
+                                key
+                            ),
+                            PressState::NotRepeatingYet { key: pressed_key }
+                            | PressState::Repeating { key: pressed_key }
+                                if *pressed_key == key =>
+                            {
+                                self.timer.disarm().unwrap(); // TODO: Error handling
+                                *press_state = PressState::NotPressing;
+                            }
+                            _ => {}
+                        }
+                    }
+
                     self.vk.key(time, key, state as _);
                 }
             }
@@ -224,11 +280,39 @@ impl KimeContext {
                 self.vk
                     .modifiers(mods_depressed, mods_latched, mods_locked, group);
             }
-            KeyEvent::RepeatInfo { .. } => {
-                // TODO: repeat key
+            KeyEvent::RepeatInfo { rate, delay } => {
+                let info = RepeatInfo { rate, delay };
+                let press_state = self.repeat_state.map(|pair| pair.1);
+                self.repeat_state = Some((info, press_state.unwrap_or(PressState::NotPressing)));
             }
             _ => {}
         }
+    }
+
+    pub fn handle_timer_ev(&mut self) -> std::io::Result<()> {
+        // Read timer, this MUST be called or timer will be broken
+        self.timer.read()?;
+
+        if let Some((info, ref mut press_state)) = self.repeat_state {
+            match press_state {
+                PressState::NotPressing => {
+                    log::warn!("Received timer event while pressing no key.")
+                }
+                PressState::NotRepeatingYet { key } => {
+                    log::info!("Start repeating {}", key);
+                    *press_state = PressState::Repeating { key: *key };
+                    // TODO: Emit first key repeat event
+                }
+                PressState::Repeating { key } => {
+                    log::info!("Keep repeating {}", key);
+                    // TODO: Emit key repeat event
+                }
+            }
+        } else {
+            log::warn!("Received timer event when it has never received RepeatInfo.");
+        }
+
+        Ok(())
     }
 }
 
@@ -296,12 +380,6 @@ fn main() {
     let im = im_manager.get_input_method(&seat);
     im.assign(filter);
 
-    let mut kime_ctx = KimeContext::new(vk, im);
-
-    event_queue
-        .sync_roundtrip(&mut kime_ctx, |_, _, _| ())
-        .unwrap();
-
     // Initialize timer
     let mut timer = TimerFd::new(ClockId::Monotonic).expect("Initialize timer");
 
@@ -322,6 +400,12 @@ fn main() {
     registry
         .register(&mut timer, POLL_TIMER, Interest::READABLE)
         .expect("Register timer to the epoll()");
+
+    // Initialize kime context
+    let mut kime_ctx = KimeContext::new(vk, im, timer);
+    event_queue
+        .sync_roundtrip(&mut kime_ctx, |_, _, _| ())
+        .unwrap();
 
     log::info!("Server init success!");
 
@@ -370,13 +454,10 @@ fn main() {
                     }
                 }
                 POLL_TIMER => {
-                    // Consume timer event
-                    if let Err(e) = timer.read() {
+                    // Handle timer event
+                    if let Err(e) = kime_ctx.handle_timer_ev() {
                         break 'main Err(e);
                     }
-
-                    // TODO: Do something meaningful
-                    log::info!("Timer!");
                 }
                 _ => unreachable!(),
             }

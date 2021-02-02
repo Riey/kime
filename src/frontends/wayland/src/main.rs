@@ -198,7 +198,7 @@ impl KimeContext {
                     if let Some(kb) = self.grab_kb.take() {
                         kb.release();
                     }
-                    self.timer.disarm().unwrap(); // TODO: Error handling
+                    self.timer.disarm().unwrap();
                     self.repeat_state = None
                 }
                 self.current_state = std::mem::take(&mut self.pending_state);
@@ -227,7 +227,7 @@ impl KimeContext {
                     if let Some((info, ref mut press_state)) = self.repeat_state {
                         if !press_state.is_pressing(key) {
                             let duration = Duration::from_millis(info.delay as u64);
-                            self.timer.set_timeout(&duration).unwrap(); // TODO: Error handling
+                            self.timer.set_timeout(&duration).unwrap();
                             *press_state = PressState::NotRepeatingYet { key, time };
                         }
                     }
@@ -274,7 +274,7 @@ impl KimeContext {
                     // If user released the last pressed key, clear the timer and state
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
-                            self.timer.disarm().unwrap(); // TODO: Error handling
+                            self.timer.disarm().unwrap();
                             *press_state = PressState::NotPressing;
                         }
                     }

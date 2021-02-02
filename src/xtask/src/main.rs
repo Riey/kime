@@ -252,16 +252,10 @@ impl TaskCommand {
                 fs::create_dir_all(&out_path)?;
                 fs::create_dir_all(&cmake_out_path)?;
 
-                build_core(mode)?;
-
-                fs::copy(
-                    project_root
-                        .join(mode.cargo_target_dir())
-                        .join("libkime_engine.so"),
-                    out_path.join("libkime_engine.so"),
-                )?;
-
-                let mut cargo_projects = vec![("kimed", "kimed")];
+                let mut cargo_projects = vec![
+                    ("kimed", "kimed"),
+                    ("kime-engine-capi", "libkime_engine.so"),
+                ];
 
                 let mut cargo = Command::new("cargo");
 
@@ -397,17 +391,6 @@ fn install(src: PathBuf, target: PathBuf) -> Result<()> {
             .wait()?
             .assert_success();
     }
-
-    Ok(())
-}
-
-fn build_core(mode: BuildMode) -> Result<()> {
-    Command::new("cargo")
-        .args(&["build", "-p=kime-engine-capi"])
-        .mode(mode)
-        .spawn()?
-        .wait()?
-        .assert_success();
 
     Ok(())
 }

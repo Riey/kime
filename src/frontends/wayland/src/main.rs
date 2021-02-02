@@ -469,36 +469,35 @@ fn main() {
 
         for event in &events {
             match event.token() {
-                POLL_WAYLAND => {
-                    // Flush pending writes
-                    if let Err(e) = display.flush() {
-                        // EWOULDBLOCK here means there're so many to write, retry later
-                        if e.kind() != ErrorKind::WouldBlock {
-                            break 'main Err(e);
-                        }
-                    }
-
-                    // Perform read() only when it's ready, returns None when there're already pending events
-                    if let Some(guard) = event_queue.prepare_read() {
-                        if let Err(e) = guard.read_events() {
-                            // EWOULDBLOCK here means there's no new messages to read
-                            if e.kind() != ErrorKind::WouldBlock {
-                                break 'main Err(e);
-                            }
-                        }
-                    }
-
-                    if let Err(e) = event_queue.dispatch_pending(&mut kime_ctx, |_, _, _| {}) {
-                        break 'main Err(e);
-                    }
-                }
+                POLL_WAYLAND => {}
                 POLL_TIMER => {
-                    // Handle timer event
                     if let Err(e) = kime_ctx.handle_timer_ev() {
                         break 'main Err(e);
                     }
                 }
                 _ => unreachable!(),
+            }
+        }
+
+        // Perform read() only when it's ready, returns None when there're already pending events
+        if let Some(guard) = event_queue.prepare_read() {
+            if let Err(e) = guard.read_events() {
+                // EWOULDBLOCK here means there's no new messages to read
+                if e.kind() != ErrorKind::WouldBlock {
+                    break Err(e);
+                }
+            }
+        }
+
+        if let Err(e) = event_queue.dispatch_pending(&mut kime_ctx, |_, _, _| {}) {
+            break Err(e);
+        }
+
+        // Flush pending writes
+        if let Err(e) = display.flush() {
+            // EWOULDBLOCK here means there're so many to write, retry later
+            if e.kind() != ErrorKind::WouldBlock {
+                break Err(e);
             }
         }
     };

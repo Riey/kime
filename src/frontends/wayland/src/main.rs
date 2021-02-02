@@ -317,10 +317,15 @@ fn main() {
                     continue;
                 }
 
-                if err.kind() != std::io::ErrorKind::Interrupted {
-                    log::error!("IO Error: {}", err);
+                // Should retry on EINTR
+                //
+                // Reference:
+                //   https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
+                if err.kind() == std::io::ErrorKind::Interrupted {
+                    continue;
                 }
 
+                log::error!("IO Error: {}", err);
                 break;
             }
         }

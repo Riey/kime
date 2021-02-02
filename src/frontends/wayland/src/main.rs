@@ -270,7 +270,7 @@ fn main() {
 
     let display = Display::connect_to_env().expect("Failed to connect wayland display");
     let mut event_queue = display.create_event_queue();
-    let attached_display = (*display).clone().attach(event_queue.token());
+    let attached_display = display.attach(event_queue.token());
     let globals = GlobalManager::new(&attached_display);
 
     event_queue.sync_roundtrip(&mut (), |_, _, _| ()).unwrap();

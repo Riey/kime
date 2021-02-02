@@ -3,6 +3,10 @@
 ## Dev
 
 * Fix xim crash when typing fast
+* Key repeat implemented in wayland frontend by **[@simnalamburt]** ([#171])
+
+[@simnalamburt]: https://github.com/simnalamburt
+[#171]: https://github.com/Riey/kime/pull/171
 
 ## 1.0.0-pre1
 

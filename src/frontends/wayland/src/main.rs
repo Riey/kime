@@ -325,7 +325,7 @@ impl KimeContext {
                 }
                 PressState::NotRepeatingYet { key, time } => {
                     // Start repeat
-                    log::info!("Start repeating {}", key);
+                    log::trace!("Start repeating {}", key);
                     let interval = &Duration::from_secs_f64(1.0 / info.rate as f64);
                     self.timer.set_timeout_interval(interval)?;
 
@@ -334,7 +334,7 @@ impl KimeContext {
                     (key, time)
                 }
                 PressState::Repeating { key, time } => {
-                    log::info!("Keep repeating {}", key);
+                    log::trace!("Keep repeating {}", key);
                     (*key, *time)
                 }
             };

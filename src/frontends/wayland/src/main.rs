@@ -344,7 +344,6 @@ impl KimeContext {
                 // initially pressed, or the time of this KeyEvent
                 time,
                 key,
-                // NOTE: KeyState::Repeat is not defined in wayland_client crate.
                 state: KeyState::Pressed,
             };
             self.serial += 1;

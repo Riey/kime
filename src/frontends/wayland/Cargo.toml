@@ -16,3 +16,4 @@ libc = "0.2.82"
 log = "0.4.13"
 pico-args = "0.4.0"
 simplelog = "0.9.0"
+mio = { version = "0.7.7", features = ["os-ext"] }

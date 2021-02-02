@@ -461,9 +461,10 @@ fn main() {
             //
             // Reference:
             //   https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
-            if e.kind() != ErrorKind::Interrupted {
-                break Err(e);
+            if e.kind() == ErrorKind::Interrupted {
+                continue;
             }
+            break Err(e);
         }
 
         for event in &events {

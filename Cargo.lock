@@ -573,6 +573,9 @@ dependencies = [
 [[package]]
 name = "kime-engine-cffi"
 version = "0.8.1"
+dependencies = [
+ "kime-engine-capi",
+]
 
 [[package]]
 name = "kime-engine-core"

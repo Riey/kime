@@ -160,6 +160,7 @@ impl KimeContext {
             KeyEvent::Key {
                 state, key, time, ..
             } => {
+                // NOTE: Never read `serial` of KeyEvent. You should rely on serial of KimeContext
                 if state == KeyState::Pressed {
                     let mut bypass = false;
                     let ret = self

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Dev
+
+* Fix xim crash when typing fast
+
 ## 1.0.0-pre1
 
 * Add more help messages for binary tools

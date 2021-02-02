@@ -138,7 +138,7 @@ impl KimeContext {
                 }
                 self.current_state = std::mem::take(&mut self.pending_state);
             }
-            ImEvent::TextChangeCause { .. } | ImEvent::SurroundingText { .. } | _ => {}
+            _ => {}
         }
     }
 

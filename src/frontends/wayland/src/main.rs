@@ -190,6 +190,7 @@ impl KimeContext {
                     kb.assign(filter.clone());
                     self.grab_kb = Some(kb);
                 } else if !self.current_state.deactivate && self.pending_state.deactivate {
+                    // Focus lost, reset states
                     if let Some(c) = self.engine.reset() {
                         self.commit_ch(c);
                         self.commit();
@@ -197,6 +198,8 @@ impl KimeContext {
                     if let Some(kb) = self.grab_kb.take() {
                         kb.release();
                     }
+                    self.timer.disarm().unwrap(); // TODO: Error handling
+                    self.repeat_state = None
                 }
                 self.current_state = std::mem::take(&mut self.pending_state);
             }

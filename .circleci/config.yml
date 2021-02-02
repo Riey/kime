@@ -27,11 +27,15 @@ jobs:
       - run: cargo fmt -- --check
       - run: cargo xtask build --mode Debug XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
       - run: cargo xtask test
-      - save_cache:
-          paths:
-            - ./target
-            - ~/.cargo
-          key: cargo-{{ .Environment.CARGO_CACHE_VERSION }}-{{ checksum "Cargo.lock" }}
+      - when:
+          condition:
+            equal: [ develop, << pipeline.git.branch >> ]
+          steps:
+            - save_cache:
+                paths:
+                  - ./target
+                  - ~/.cargo
+                key: cargo-{{ .Environment.CARGO_CACHE_VERSION }}-{{ checksum "Cargo.lock" }}
 
   build-release:
     docker:

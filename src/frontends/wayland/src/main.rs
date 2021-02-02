@@ -85,6 +85,16 @@ enum PressState {
     },
 }
 
+impl PressState {
+    fn is_pressing(&self, query_key: u32) -> bool {
+        if let PressState::NotRepeatingYet { key, .. } | PressState::Repeating { key, .. } = self {
+            *key == query_key
+        } else {
+            false
+        }
+    }
+}
+
 struct KimeContext {
     config: Config,
     engine: InputEngine,
@@ -212,13 +222,10 @@ impl KimeContext {
                 if state == KeyState::Pressed {
                     // Start waiting for the key hold timer event
                     if let Some((info, ref mut press_state)) = self.repeat_state {
-                        match press_state {
-                            PressState::Repeating { key: pressed, .. } if *pressed == key => {}
-                            _ => {
-                                let duration = Duration::from_millis(info.delay as u64);
-                                self.timer.set_timeout(&duration).unwrap(); // TODO: Error handling
-                                *press_state = PressState::NotRepeatingYet { key, time };
-                            }
+                        if !press_state.is_pressing(key) {
+                            let duration = Duration::from_millis(info.delay as u64);
+                            self.timer.set_timeout(&duration).unwrap(); // TODO: Error handling
+                            *press_state = PressState::NotRepeatingYet { key, time };
                         }
                     }
 
@@ -263,21 +270,9 @@ impl KimeContext {
                 } else {
                     // If user released the last pressed key, clear the timer and state
                     if let Some((.., ref mut press_state)) = self.repeat_state {
-                        match press_state {
-                            PressState::NotPressing => log::warn!(
-                                "Received released event of unpressed key. (key code: {})",
-                                key
-                            ),
-                            PressState::NotRepeatingYet {
-                                key: pressed_key, ..
-                            }
-                            | PressState::Repeating {
-                                key: pressed_key, ..
-                            } if *pressed_key == key => {
-                                self.timer.disarm().unwrap(); // TODO: Error handling
-                                *press_state = PressState::NotPressing;
-                            }
-                            _ => {}
+                        if press_state.is_pressing(key) {
+                            self.timer.disarm().unwrap(); // TODO: Error handling
+                            *press_state = PressState::NotPressing;
                         }
                     }
 

@@ -198,8 +198,6 @@ impl KimeContext {
                 } else {
                     self.vk.key(time, key, state as _);
                 }
-
-                // TODO: repeat key
             }
             KeyEvent::Modifiers {
                 mods_depressed,

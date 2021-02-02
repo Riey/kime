@@ -4,7 +4,6 @@ use wayland_client::{
     DispatchData, Display, Filter, GlobalManager, Main,
 };
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use zwp_input_method::input_method_unstable_v2::{
     zwp_input_method_keyboard_grab_v2::{Event as KeyEvent, ZwpInputMethodKeyboardGrabV2},
     zwp_input_method_manager_v2::ZwpInputMethodManagerV2,
@@ -242,13 +241,6 @@ fn main() {
         return;
     }
 
-    static STOP: AtomicBool = AtomicBool::new(false);
-
-    ctrlc::set_handler(|| {
-        STOP.store(true, Ordering::Relaxed);
-    })
-    .expect("Set handler");
-
     let mut log_level = if cfg!(debug_assertions) {
         log::LevelFilter::Trace
     } else {
@@ -306,7 +298,7 @@ fn main() {
 
     log::info!("Server init success!");
 
-    while !STOP.load(Ordering::Relaxed) {
+    loop {
         // ignore unfiltered messages
         match event_queue.dispatch(&mut kime_ctx, |_, _, _| ()) {
             Ok(_) => {}

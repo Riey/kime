@@ -12,7 +12,6 @@ wayland-client = { version = "0.28.3" }
 zwp-input-method = { git = "https://github.com/Riey/zwp-input-method" }
 zwp-virtual-keyboard = "0.2.0"
 
-ctrlc = { version = "3.1.7", features = ["termination"] }
 libc = "0.2.82"
 log = "0.4.13"
 pico-args = "0.4.0"

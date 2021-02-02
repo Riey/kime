@@ -19,6 +19,8 @@ use kime_engine_cffi::{
     MODIFIER_SUPER,
 };
 
+use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
+
 event_enum! {
     Events |
     Key => ZwpInputMethodKeyboardGrabV2,
@@ -296,30 +298,71 @@ fn main() {
         .sync_roundtrip(&mut kime_ctx, |_, _, _| ())
         .unwrap();
 
+    // Initialize epoll() object
+    let mut poll = Poll::new().expect("Initialize epoll()");
+
+    const POLL_WAYLAND: Token = Token(0);
+    poll.registry()
+        .register(
+            &mut SourceFd(&display.get_connection_fd()),
+            POLL_WAYLAND,
+            Interest::READABLE | Interest::WRITABLE,
+        )
+        .expect("Register wayland socket to the epoll()");
+
     log::info!("Server init success!");
 
-    loop {
-        // ignore unfiltered messages
-        match event_queue.dispatch(&mut kime_ctx, |_, _, _| ()) {
-            Ok(_) => {}
-            Err(err) => {
-                if err.kind() == std::io::ErrorKind::WouldBlock {
-                    continue;
-                }
+    // Non-blocking event loop
+    //
+    // Reference:
+    //   https://docs.rs/wayland-client/0.28.3/wayland_client/struct.EventQueue.html
+    let mut events = MioEvents::with_capacity(1024);
+    let stop_reason = 'main: loop {
+        use std::io::ErrorKind;
 
-                // Should retry on EINTR
-                //
-                // Reference:
-                //   https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
-                if err.kind() == std::io::ErrorKind::Interrupted {
-                    continue;
-                }
-
-                log::error!("IO Error: {}", err);
-                break;
+        // Sleep until next event
+        if let Err(e) = poll.poll(&mut events, None) {
+            // Should retry on EINTR
+            //
+            // Reference:
+            //   https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
+            if e.kind() != ErrorKind::Interrupted {
+                break Err(e);
             }
         }
-    }
 
-    log::info!("End server...");
+        for event in &events {
+            match event.token() {
+                POLL_WAYLAND => {
+                    // Flush pending writes
+                    if let Err(e) = display.flush() {
+                        // EWOULDBLOCK here means there're so many to write, retry later
+                        if e.kind() != ErrorKind::WouldBlock {
+                            break 'main Err(e);
+                        }
+                    }
+
+                    // Perform read() only when it's ready, returns None when there're already pending events
+                    if let Some(guard) = event_queue.prepare_read() {
+                        if let Err(e) = guard.read_events() {
+                            // EWOULDBLOCK here means there's no new messages to read
+                            if e.kind() != ErrorKind::WouldBlock {
+                                break 'main Err(e);
+                            }
+                        }
+                    }
+
+                    if let Err(e) = event_queue.dispatch_pending(&mut kime_ctx, |_, _, _| {}) {
+                        break 'main Err(e);
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+    };
+
+    match stop_reason {
+        Ok(()) => log::info!("Server finished gracefully"),
+        Err(e) => log::error!("Server aborted due to IO Error: {}", e),
+    }
 }

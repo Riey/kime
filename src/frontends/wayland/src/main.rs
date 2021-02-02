@@ -58,9 +58,31 @@ enum PressState {
     /// long-press.
     NotPressing,
     /// User just started pressing a key. Soon, key repeating will be begin.
-    NotRepeatingYet { key: u32 },
+    NotRepeatingYet {
+        /// Key code used by wayland
+        key: u32,
+        /// Timestamp with millisecond granularity used by wayland. Their base is undefined, so
+        /// they can't be compared against system time (as obtained with clock_gettime or
+        /// gettimeofday). They can be compared with each other though, and for instance be used to
+        /// identify sequences of button presses as double or triple clicks.
+        ///
+        /// #### Reference
+        /// - https://wayland.freedesktop.org/docs/html/ch04.html#sect-Protocol-Input
+        time: u32,
+    },
     /// User have pressed a key for a long enough time. Key repeating is happening right now.
-    Repeating { key: u32 },
+    Repeating {
+        /// Key code used by wayland
+        key: u32,
+        /// Timestamp with millisecond granularity used by wayland. Their base is undefined, so
+        /// they can't be compared against system time (as obtained with clock_gettime or
+        /// gettimeofday). They can be compared with each other though, and for instance be used to
+        /// identify sequences of button presses as double or triple clicks.
+        ///
+        /// #### Reference
+        /// - https://wayland.freedesktop.org/docs/html/ch04.html#sect-Protocol-Input
+        time: u32,
+    },
 }
 
 struct KimeContext {
@@ -191,11 +213,11 @@ impl KimeContext {
                     // Start waiting for the key hold timer event
                     if let Some((info, ref mut press_state)) = self.repeat_state {
                         match press_state {
-                            PressState::Repeating { key: pressed } if *pressed == key => {}
+                            PressState::Repeating { key: pressed, .. } if *pressed == key => {}
                             _ => {
                                 let duration = Duration::from_millis(info.delay as u64);
                                 self.timer.set_timeout(&duration).unwrap(); // TODO: Error handling
-                                *press_state = PressState::NotRepeatingYet { key };
+                                *press_state = PressState::NotRepeatingYet { key, time };
                             }
                         }
                     }
@@ -246,10 +268,12 @@ impl KimeContext {
                                 "Received released event of unpressed key. (key code: {})",
                                 key
                             ),
-                            PressState::NotRepeatingYet { key: pressed_key }
-                            | PressState::Repeating { key: pressed_key }
-                                if *pressed_key == key =>
-                            {
+                            PressState::NotRepeatingYet {
+                                key: pressed_key, ..
+                            }
+                            | PressState::Repeating {
+                                key: pressed_key, ..
+                            } if *pressed_key == key => {
                                 self.timer.disarm().unwrap(); // TODO: Error handling
                                 *press_state = PressState::NotPressing;
                             }
@@ -294,20 +318,39 @@ impl KimeContext {
         self.timer.read()?;
 
         if let Some((info, ref mut press_state)) = self.repeat_state {
-            match press_state {
+            let (key, time) = match press_state {
                 PressState::NotPressing => {
-                    log::warn!("Received timer event while pressing no key.")
+                    log::warn!("Received timer event while pressing no key.");
+                    return Ok(());
                 }
-                PressState::NotRepeatingYet { key } => {
+                PressState::NotRepeatingYet { key, time } => {
+                    // Start repeat
                     log::info!("Start repeating {}", key);
-                    *press_state = PressState::Repeating { key: *key };
-                    // TODO: Emit first key repeat event
+                    let interval = &Duration::from_secs_f64(1.0 / info.rate as f64);
+                    self.timer.set_timeout_interval(interval)?;
+
+                    let (key, time) = (*key, *time);
+                    *press_state = PressState::Repeating { key, time };
+                    (key, time)
                 }
-                PressState::Repeating { key } => {
+                PressState::Repeating { key, time } => {
                     log::info!("Keep repeating {}", key);
-                    // TODO: Emit key repeat event
+                    (*key, *time)
                 }
-            }
+            };
+
+            // Emit key repeat event
+            let ev = KeyEvent::Key {
+                serial: self.serial,
+                // NOTE: Not sure if this time should be the time when the key was
+                // initially pressed, or the time of this KeyEvent
+                time,
+                key,
+                // NOTE: KeyState::Repeat is not defined in wayland_client crate.
+                state: KeyState::Pressed,
+            };
+            self.serial += 1;
+            self.handle_key_ev(ev);
         } else {
             log::warn!("Received timer event when it has never received RepeatInfo.");
         }

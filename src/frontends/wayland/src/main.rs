@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use wayland_client::{
     event_enum,
     protocol::{wl_keyboard::KeyState, wl_seat::WlSeat},
@@ -20,6 +22,7 @@ use kime_engine_cffi::{
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
+use mio_timerfd::{ClockId, TimerFd};
 
 event_enum! {
     Events |
@@ -298,17 +301,26 @@ fn main() {
         .sync_roundtrip(&mut kime_ctx, |_, _, _| ())
         .unwrap();
 
+    // Initialize timer
+    let mut timer = TimerFd::new(ClockId::Monotonic).expect("Initialize timer");
+
     // Initialize epoll() object
     let mut poll = Poll::new().expect("Initialize epoll()");
+    let registry = poll.registry();
 
     const POLL_WAYLAND: Token = Token(0);
-    poll.registry()
+    registry
         .register(
             &mut SourceFd(&display.get_connection_fd()),
             POLL_WAYLAND,
             Interest::READABLE | Interest::WRITABLE,
         )
         .expect("Register wayland socket to the epoll()");
+
+    const POLL_TIMER: Token = Token(1);
+    registry
+        .register(&mut timer, POLL_TIMER, Interest::READABLE)
+        .expect("Register timer to the epoll()");
 
     log::info!("Server init success!");
 
@@ -355,6 +367,15 @@ fn main() {
                     if let Err(e) = event_queue.dispatch_pending(&mut kime_ctx, |_, _, _| {}) {
                         break 'main Err(e);
                     }
+                }
+                POLL_TIMER => {
+                    // Consume timer event
+                    if let Err(e) = timer.read() {
+                        break 'main Err(e);
+                    }
+
+                    // TODO: Do something meaningful
+                    log::info!("Timer!");
                 }
                 _ => unreachable!(),
             }

@@ -599,6 +599,7 @@ dependencies = [
  "libc",
  "log",
  "mio",
+ "mio-timerfd",
  "pico-args",
  "simplelog",
  "wayland-client",
@@ -760,6 +761,16 @@ dependencies = [
  "miow",
  "ntapi",
  "winapi",
+]
+
+[[package]]
+name = "mio-timerfd"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61840339b339e86a6f728531091b7626d16da3256037152ac92c66b8801c365c"
+dependencies = [
+ "libc",
+ "mio",
 ]
 
 [[package]]

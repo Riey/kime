@@ -78,20 +78,20 @@ workflows:
       - markdown-lint
   cd:
     jobs:
-      - build-release:
-          filters:
-            branches:
-              only: /releases.+/
       - require-gh-release:
           filters:
             branches:
               only: /releases.+/
           type: approval
-          requires:
-            - build-release
-      - gh-release:
+      - build-release:
           filters:
             branches:
               only: /releases.+/
           requires:
             - require-gh-release
+      - gh-release:
+          filters:
+            branches:
+              only: /releases.+/
+          requires:
+            - build-release

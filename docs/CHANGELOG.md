@@ -3,6 +3,7 @@
 ## Dev
 
 * Fix xim crash when typing fast
+* Fix xim doesn't work not en_US locale
 * Key repeat implemented in wayland frontend by **[@simnalamburt]** ([#171])
 
 [@simnalamburt]: https://github.com/simnalamburt

@@ -8,7 +8,10 @@
 * Key repeat implemented in wayland frontend by **[@simnalamburt]** ([#171])
 
 [@simnalamburt]: https://github.com/simnalamburt
+[#170]: https://github.com/Riey/kime/issues/171
 [#171]: https://github.com/Riey/kime/pull/171
+[#177]: https://github.com/Riey/kime/issues/177
+[#179]: https://github.com/Riey/kime/issues/179
 
 ## 1.0.0-pre1
 

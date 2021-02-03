@@ -39,7 +39,7 @@ fn main() -> Result<(), ServerError> {
     let config = kime_engine_cffi::Config::new();
 
     let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;
-    let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime")?;
+    let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime", xim::ALL_LOCALES)?;
     let mut connections = XimConnections::new();
     let mut handler = self::handler::KimeHandler::new(screen_num, config);
 

@@ -2,8 +2,9 @@
 
 ## Dev
 
-* Fix xim crash when typing fast
-* Fix xim doesn't work not en_US locale
+* Fix wrong behavior in neovide ([#179])
+* Fix xim crash when typing fast ([#170])
+* Fix xim doesn't work not en_US locale ([#177])
 * Key repeat implemented in wayland frontend by **[@simnalamburt]** ([#171])
 
 [@simnalamburt]: https://github.com/simnalamburt

@@ -29,7 +29,7 @@ jobs:
       - run: cargo xtask test
       - when:
           condition:
-            equal: [ develop, << pipeline.git.branch >> ]
+            equal: [develop, << pipeline.git.branch >>]
           steps:
             - save_cache:
                 paths:
@@ -43,14 +43,33 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
+    working_directory: ~/release
     steps:
       - checkout
       - run: cargo xtask build --mode Release XIM WAYLAND GTK2 GTK3 GTK4 QT5 QT6
-      - run: mkdir -p /tmp/artifacts
-      - run: 7z a /tmp/artifacts/kime-$(git tag --sort=v:refname | tail -1).7z ./build/out/*
-      - run: cargo xtask release-deb /tmp/artifacts 
-      - store_artifacts:
-          path: /tmp/artifacts
+      - run: mkdir -pv ~/release/gh
+      - run: echo $(git tag --sort=v:refname | tail -1) > ~/release/tag
+      - run: 7z a ~/release/gh/kime-$(git tag --sort=v:refname | tail -1).7z ./build/out/*
+      - run: cargo xtask release-deb ~/release/gh
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  gh-release:
+    docker:
+      - image: cibuilds/github:0.13
+
+    working_directory: ~/release
+
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Upload Release
+          command: |
+            TAG=$(cat ./tag)
+            ghr -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${TAG} ./gh/
 
 workflows:
   ci:
@@ -63,3 +82,16 @@ workflows:
           filters:
             branches:
               only: /releases.+/
+      - require-gh-release:
+          filters:
+            branches:
+              only: /releases.+/
+          type: approval
+          requires:
+            - build-release
+      - gh-release:
+          filters:
+            branches:
+              only: /releases.+/
+          requires:
+            - require-gh-release

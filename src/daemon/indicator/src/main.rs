@@ -1,13 +1,10 @@
 use anyhow::Result;
+use gio::{prelude::*, FileExt, FileMonitorEvent};
 use gobject_sys::g_signal_connect_data;
-use kimed_types::{bincode, ClientMessage, GetGlobalHangulStateReply};
 use libappindicator_sys::{AppIndicator, AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE};
 use std::ffi::CString;
-use std::fs::File;
-use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
 use structopt::StructOpt;
 
 macro_rules! cs {
@@ -87,30 +84,6 @@ impl Indicator {
     }
 }
 
-static GLOBAL_HANGUL_STATE: AtomicBool = AtomicBool::new(false);
-
-fn serve_client(mut stream: UnixStream, indicator_tx: glib::SyncSender<bool>) -> Result<()> {
-    loop {
-        match bincode::deserialize_from(&mut stream)? {
-            ClientMessage::GetGlobalHangulState => {
-                bincode::serialize_into(
-                    &mut stream,
-                    &GetGlobalHangulStateReply {
-                        state: GLOBAL_HANGUL_STATE.load(Relaxed),
-                    },
-                )?;
-            }
-            ClientMessage::UpdateHangulState(state) => {
-                GLOBAL_HANGUL_STATE.store(state, Relaxed);
-
-                if indicator_tx.send(state).is_err() {
-                    break Ok(());
-                }
-            }
-        }
-    }
-}
-
 fn daemon_main() -> Result<()> {
     unsafe {
         gtk_sys::gtk_init(ptr::null_mut(), ptr::null_mut());
@@ -128,6 +101,7 @@ fn daemon_main() -> Result<()> {
     assert!(ctx.acquire());
 
     indicator_rx.attach(Some(&ctx), move |msg| {
+        log::trace!("Set indicator {}", msg);
         if msg {
             indicator.enable_hangul();
         } else {
@@ -139,24 +113,43 @@ fn daemon_main() -> Result<()> {
 
     ctx.release();
 
-    std::thread::spawn(move || {
-        let path = std::path::Path::new("/tmp/kimed.sock");
-        if path.exists() {
-            std::fs::remove_file(path).ok();
-        }
+    let cancellable: Option<&gio::Cancellable> = None;
+    let path = Path::new("/tmp/kime_hangul_state");
+    let file = gio::File::new_for_path(path);
+    let stream = file
+        .replace_readwrite(None, false, gio::FileCreateFlags::NONE, cancellable)
+        .unwrap();
+    let out_stream = stream.get_output_stream().unwrap();
+    out_stream.write_all(b"0", cancellable).unwrap();
 
-        let server = UnixListener::bind(path).unwrap();
+    let monitor = file
+        .monitor_file(gio::FileMonitorFlags::WATCH_MOVES, cancellable)
+        .expect("Create Monitor");
 
-        loop {
-            let (stream, _addr) = server.accept().expect("Accept");
-            log::info!("Connect client");
-            let tx = indicator_tx.clone();
-            std::thread::spawn(move || {
-                if let Err(err) = serve_client(stream, tx) {
-                    log::error!("Client Error: {}", err);
+    monitor.connect_changed(move |_m, f, _, e| match e {
+        FileMonitorEvent::Changed => {
+            let mut buf = [0; 20];
+            let read = f.read(cancellable).unwrap();
+            let len = read.read(&mut buf[..], cancellable).unwrap();
+
+            if len == 0 {
+                out_stream.write_all(b"0", cancellable).unwrap();
+            } else {
+                if buf[0] == b'1' {
+                    indicator_tx.send(true).ok();
+                } else {
+                    indicator_tx.send(false).ok();
                 }
-            });
+            }
         }
+        FileMonitorEvent::Deleted
+        | FileMonitorEvent::Unmounted
+        | FileMonitorEvent::MovedOut
+        | FileMonitorEvent::PreUnmount
+        | FileMonitorEvent::Renamed => {
+            unsafe { gtk_sys::gtk_main_quit() };
+        }
+        _ => {}
     });
 
     unsafe {
@@ -167,14 +160,12 @@ fn daemon_main() -> Result<()> {
 }
 
 #[derive(StructOpt)]
-#[structopt(about = "kime daemon")]
+#[structopt(about = "kime-indicator")]
 struct Opts {
-    #[structopt(long, short, help = "Show daemon version")]
+    #[structopt(long, short, help = "Show indicator version")]
     version: bool,
     #[structopt(long, help = "Log more messages")]
     verbose: bool,
-    #[structopt(long, help = "Run as normal process")]
-    not_daemon: bool,
 }
 
 fn main() {
@@ -183,19 +174,6 @@ fn main() {
     if opt.version {
         kime_version::print_version!();
         return;
-    }
-
-    if !opt.not_daemon {
-        let daemonize = daemonize::Daemonize::new()
-            .pid_file("/tmp/kimed.pid")
-            .working_directory("/tmp")
-            .stdout(File::create("/tmp/kimed.out").unwrap())
-            .stderr(File::create("/tmp/kimed.err").unwrap());
-
-        if let Err(err) = daemonize.start() {
-            eprintln!("Daemonize Error: {}", err);
-            return;
-        }
     }
 
     simplelog::SimpleLogger::init(
@@ -207,7 +185,7 @@ fn main() {
         simplelog::ConfigBuilder::new().build(),
     )
     .ok();
-    log::info!("Start daemon");
+    log::info!("Start indicator");
     match daemon_main() {
         Ok(_) => {}
         Err(err) => {

@@ -4,16 +4,15 @@ mod input_result;
 mod keycode;
 mod state;
 
+use std::io::Read;
+
 use self::characters::KeyValue;
 use self::state::CharacterState;
 use ahash::AHashMap;
-use kimed_types::bincode;
 
 pub use self::config::{Config, RawConfig};
 pub use self::input_result::{InputResult, InputResultType};
 pub use self::keycode::{Key, KeyCode, ModifierState};
-
-use std::os::unix::net::UnixStream;
 
 #[derive(Clone, Default)]
 pub struct Layout {
@@ -43,7 +42,6 @@ impl Layout {
 
 pub struct InputEngine {
     state: CharacterState,
-    daemon: Option<UnixStream>,
     enable_hangul: bool,
 }
 
@@ -57,7 +55,6 @@ impl InputEngine {
     pub fn new() -> Self {
         Self {
             state: CharacterState::default(),
-            daemon: UnixStream::connect("/tmp/kimed.sock").ok(),
             enable_hangul: false,
         }
     }
@@ -70,21 +67,17 @@ impl InputEngine {
         self.enable_hangul
     }
 
+    fn read_global_hangul_state(&self) -> std::io::Result<bool> {
+        let mut file = std::fs::File::open("/tmp/kime_hangul_state")?;
+        let mut buf = [0; 1];
+        file.read_exact(&mut buf)?;
+        Ok(buf[0] != b'0')
+    }
+
     fn check_hangul_state(&mut self, config: &Config) -> bool {
         if config.global_hangul_state {
             self.enable_hangul = self
-                .daemon
-                .as_mut()
-                .and_then(|mut d| {
-                    bincode::serialize_into(
-                        &mut d,
-                        &kimed_types::ClientMessage::GetGlobalHangulState,
-                    )
-                    .unwrap();
-                    let reply: kimed_types::GetGlobalHangulStateReply =
-                        bincode::deserialize_from(&mut d).ok()?;
-                    Some(reply.state)
-                })
+                .read_global_hangul_state()
                 .unwrap_or(self.enable_hangul);
         }
 
@@ -92,13 +85,11 @@ impl InputEngine {
     }
 
     pub fn update_hangul_state(&mut self) {
-        if let Some(daemon) = self.daemon.as_mut() {
-            bincode::serialize_into(
-                daemon,
-                &kimed_types::ClientMessage::UpdateHangulState(self.enable_hangul),
-            )
-            .unwrap();
-        }
+        std::fs::write(
+            "/tmp/kime_hangul_state",
+            if self.enable_hangul { "1" } else { "0" },
+        )
+        .ok();
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {

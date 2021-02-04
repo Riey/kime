@@ -101,7 +101,6 @@ fn daemon_main() -> Result<()> {
     assert!(ctx.acquire());
 
     indicator_rx.attach(Some(&ctx), move |msg| {
-        log::trace!("Set indicator {}", msg);
         if msg {
             indicator.enable_hangul();
         } else {
@@ -116,38 +115,23 @@ fn daemon_main() -> Result<()> {
     let cancellable: Option<&gio::Cancellable> = None;
     let path = Path::new("/tmp/kime_hangul_state");
     let file = gio::File::new_for_path(path);
-    let stream = file
-        .replace_readwrite(None, false, gio::FileCreateFlags::NONE, cancellable)
-        .unwrap();
-    let out_stream = stream.get_output_stream().unwrap();
-    out_stream.write_all(b"0", cancellable).unwrap();
-
     let monitor = file
         .monitor_file(gio::FileMonitorFlags::WATCH_MOVES, cancellable)
         .expect("Create Monitor");
 
     monitor.connect_changed(move |_m, f, _, e| match e {
-        FileMonitorEvent::Changed => {
-            let mut buf = [0; 20];
+        FileMonitorEvent::Created | FileMonitorEvent::Changed => {
+            let mut buf = [0; 1];
             let read = f.read(cancellable).unwrap();
             let len = read.read(&mut buf[..], cancellable).unwrap();
 
-            if len == 0 {
-                out_stream.write_all(b"0", cancellable).unwrap();
-            } else {
+            if len > 0 {
                 if buf[0] == b'1' {
                     indicator_tx.send(true).ok();
                 } else {
                     indicator_tx.send(false).ok();
                 }
             }
-        }
-        FileMonitorEvent::Deleted
-        | FileMonitorEvent::Unmounted
-        | FileMonitorEvent::MovedOut
-        | FileMonitorEvent::PreUnmount
-        | FileMonitorEvent::Renamed => {
-            unsafe { gtk_sys::gtk_main_quit() };
         }
         _ => {}
     });

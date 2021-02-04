@@ -2,19 +2,12 @@
 
 ## Dev
 
+## 1.0.0-pre2
+
 * Fix wrong behavior in neovide ([#179])
 * Fix xim crash when typing fast ([#170])
 * Fix xim doesn't work not en_US locale ([#177])
 * Key repeat implemented in wayland frontend by **[@simnalamburt]** ([#171])
-
-[@simnalamburt]: https://github.com/simnalamburt
-[#170]: https://github.com/Riey/kime/issues/171
-[#171]: https://github.com/Riey/kime/pull/171
-[#177]: https://github.com/Riey/kime/issues/177
-[#179]: https://github.com/Riey/kime/issues/179
-
-## 1.0.0-pre1
-
 * Add more help messages for binary tools
 * Show more version info
 * Make CONFIGURATION.md more newbie friendly
@@ -25,6 +18,12 @@
 * Let `kime-wayland` exit when IO Error occured
 * Fix wayland input bug
 * `kime-xtask` now read `KIME_CARGO_ARGS`, `KIME_CMAKE_ARGS`, `KIME_NINJA_ARGS`
+
+[@simnalamburt]: https://github.com/simnalamburt
+[#170]: https://github.com/Riey/kime/issues/171
+[#171]: https://github.com/Riey/kime/pull/171
+[#177]: https://github.com/Riey/kime/issues/177
+[#179]: https://github.com/Riey/kime/issues/179
 
 ## 0.9.1
 

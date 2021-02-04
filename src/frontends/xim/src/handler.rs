@@ -68,6 +68,14 @@ impl KimeHandler {
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
+        if std::env::var("XDG_SESSION_TYPE")
+            .map(|v| v == "wayland")
+            .unwrap_or(false)
+        {
+            // Don't show preedit window on Xwayland see #137
+            return Ok(());
+        }
+
         if let Some(pe) = ic.user_data.pe.as_mut() {
             // draw in server (already have pe_window)
             let pe = self.preedit_windows.get_mut(pe).unwrap();

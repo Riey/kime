@@ -141,6 +141,25 @@ impl KimeHandler {
         server.commit(ic, s)?;
         Ok(())
     }
+
+    fn commit2(
+        &mut self,
+        server: &mut X11rbServer<XCBConnection>,
+        ic: &mut xim::InputContext<KimeData>,
+        ch1: char,
+        ch2: char,
+    ) -> Result<(), xim::ServerError> {
+        let mut buf = [0; 8];
+        let len1 = ch1.len_utf8();
+        let len2 = ch2.len_utf8();
+        ch1.encode_utf8(&mut buf);
+        ch2.encode_utf8(&mut buf[len1..]);
+
+        let s = unsafe { std::str::from_utf8_unchecked(&buf[..len1 + len2]) };
+
+        server.commit(ic, s)?;
+        Ok(())
+    }
 }
 
 impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
@@ -163,6 +182,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NONE,
             // // on-the-spot when enable this java awt doesn't work I don't know why
         ]
+    }
+
+    fn filter_events(&self) -> u32 {
+        1
     }
 
     fn handle_connect(
@@ -197,7 +220,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             input_context.input_style(),
             input_context.preedit_spot()
         );
-        server.set_event_mask(input_context, 1, 1)?;
+        server.set_event_mask(input_context, 1, 0)?;
 
         Ok(())
     }
@@ -278,8 +301,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
                 Ok(true)
             }
             InputResultType::CommitCommit => {
-                self.commit(server, input_context, ret.char1)?;
-                self.commit(server, input_context, ret.char2)?;
+                self.commit2(server, input_context, ret.char1, ret.char2)?;
                 self.clear_preedit(server, input_context)?;
                 Ok(true)
             }

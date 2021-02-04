@@ -175,7 +175,10 @@ impl TaskCommand {
             TaskCommand::Install { target_path } => {
                 let out_path = build_path.join("out");
 
-                install(out_path.join("kimed"), target_path.join("usr/bin/kimed"))?;
+                install(
+                    out_path.join("kime-indicator"),
+                    target_path.join("usr/bin/kime-indicator"),
+                )?;
                 install(
                     out_path.join("kime-xim"),
                     target_path.join("usr/bin/kime-xim"),

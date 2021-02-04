@@ -84,6 +84,8 @@ export XMODIFIERS=@im=kime
 
 만약 X를 사용하신다면 .xprofile에서 실행하실 수 있습니다.
 
+또 언제든 `kime-indicator`를 실행하면 한영 상태를 appindicator에서 볼 수 있습니다.
+
 자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.ko.md)를 참고하세요.
 
 ## 종속성 목록

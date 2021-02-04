@@ -66,11 +66,27 @@ impl KimeHandler {
         }
     }
 
+    fn preedit_draw(
+        &mut self,
+        server: &mut X11rbServer<XCBConnection>,
+        ic: &mut xim::InputContext<KimeData>,
+    ) -> Result<(), xim::ServerError> {
+        let mut buf = [0; 4];
+        let s = ch.encode_utf8(&mut buf);
+        server.preedit_update(ic, s)?;
+        Ok(())
+    }
+
     fn preedit(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
+        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
+            self.preedit_draw(server, ic)?;
+            return Ok(());
+        }
+
         if !user_ic.user_data.show_preedit_window {
             return Ok(());
         }
@@ -123,7 +139,12 @@ impl KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if let Some(pe) = user_ic.user_data.pe.take() {
+        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
+            server.preedit_update(ic, "")?;
+            return Ok(());
+        }
+
+        if let Some(pe) = ic.user_data.pe.take() {
             // off-the-spot draw in server
             if let Some(w) = self.preedit_windows.remove(&pe) {
                 log::trace!("Destory PeWindow: {}", w.window());
@@ -148,7 +169,7 @@ impl KimeHandler {
 }
 
 impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
-    type InputStyleArray = [InputStyle; 3];
+    type InputStyleArray = [InputStyle; 4];
     type InputContextData = KimeData;
 
     fn new_ic_data(
@@ -180,7 +201,8 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             InputStyle::PREEDIT_NOTHING | InputStyle::STATUS_NOTHING,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NONE,
-            // // on-the-spot when enable this java awt doesn't work I don't know why
+            // on-the-spot
+            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NOTHING,
         ]
     }
 

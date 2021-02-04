@@ -85,6 +85,8 @@ and run `kime-xim` or `kime-wayland` binary after session initialized
 
 if you use X it could be done in .xprofile
 
+also run `kime-indicator` when you want show hangul status with appindicator
+
 read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ## Dependencies

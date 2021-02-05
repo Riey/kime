@@ -57,21 +57,13 @@ enum PressState {
     /// User is pressing no key, or user lifted last pressed key. But kime-wayland is ready for key
     /// long-press.
     NotPressing,
-    /// User just started pressing a key. Soon, key repeating will be begin.
-    NotRepeatingYet {
-        /// Key code used by wayland
-        key: u32,
-        /// Timestamp with millisecond granularity used by wayland. Their base is undefined, so
-        /// they can't be compared against system time (as obtained with clock_gettime or
-        /// gettimeofday). They can be compared with each other though, and for instance be used to
-        /// identify sequences of button presses as double or triple clicks.
-        ///
-        /// #### Reference
-        /// - https://wayland.freedesktop.org/docs/html/ch04.html#sect-Protocol-Input
-        time: u32,
-    },
-    /// User have pressed a key for a long enough time. Key repeating is happening right now.
-    Repeating {
+    /// User is pressing a key.
+    Pressing {
+        /// `false` if user just started pressing a key. Soon, key repeating will be begin. `true`
+        /// if user have pressed a key for a long enough time, key repeating is happening right
+        /// now.
+        is_repeating: bool,
+
         /// Key code used by wayland
         key: u32,
         /// Timestamp with millisecond granularity used by wayland. Their base is undefined, so
@@ -87,7 +79,7 @@ enum PressState {
 
 impl PressState {
     fn is_pressing(&self, query_key: u32) -> bool {
-        if let PressState::NotRepeatingYet { key, .. } | PressState::Repeating { key, .. } = self {
+        if let PressState::Pressing { key, .. } = self {
             *key == query_key
         } else {
             false
@@ -110,6 +102,8 @@ struct KimeContext {
 
     // Key repeat contexts
     timer: TimerFd,
+    /// `None` if `KimeContext` have never received a `RepeatInfo`. `Some(..)` if `RepeatInfo` is
+    /// known and kime-wayland started tracking the press state of keys.
     repeat_state: Option<(RepeatInfo, PressState)>,
 }
 
@@ -226,7 +220,11 @@ impl KimeContext {
                         if !press_state.is_pressing(key) {
                             let duration = Duration::from_millis(info.delay as u64);
                             self.timer.set_timeout(&duration).unwrap();
-                            *press_state = PressState::NotRepeatingYet { key, time };
+                            *press_state = PressState::Pressing {
+                                is_repeating: false,
+                                key,
+                                time,
+                            };
                         }
                     }
 
@@ -327,27 +325,22 @@ impl KimeContext {
             log::warn!("Some timer events were not properly handled!");
         }
 
-        if let Some((info, ref mut press_state)) = self.repeat_state {
-            let (key, time) = match press_state {
-                PressState::NotPressing => {
-                    log::warn!("Received timer event while pressing no key.");
-                    return Ok(());
-                }
-                PressState::NotRepeatingYet { key, time } => {
-                    // Start repeat
-                    log::trace!("Start repeating {}", key);
-                    let interval = &Duration::from_secs_f64(1.0 / info.rate as f64);
-                    self.timer.set_timeout_interval(interval)?;
-
-                    let (key, time) = (*key, *time);
-                    *press_state = PressState::Repeating { key, time };
-                    (key, time)
-                }
-                PressState::Repeating { key, time } => {
-                    log::trace!("Keep repeating {}", key);
-                    (*key, *time)
-                }
-            };
+        if let Some((
+            info,
+            PressState::Pressing {
+                ref mut is_repeating,
+                key,
+                time,
+            },
+        )) = self.repeat_state
+        {
+            if !*is_repeating {
+                // Start repeat
+                log::trace!("Start repeating {}", key);
+                let interval = &Duration::from_secs_f64(1.0 / info.rate as f64);
+                self.timer.set_timeout_interval(interval)?;
+                *is_repeating = true;
+            }
 
             // Emit key repeat event
             let ev = KeyEvent::Key {

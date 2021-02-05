@@ -2,6 +2,7 @@
 
 ## Dev
 
+* Change release .tar.xz [#204](https://github.com/Riey/kime/issues/204)
 * Support ALT modifier [#190](https://github.com/Riey/kime/issues/190)
 * Fix wayland doesn't close fd well [#194](https://github.com/Riey/kime/issues/194)
 * Using xim sync mode [49d0ef3e](https://github.com/Riey/kime/commit/49d0ef3e0b473378881a396f394db09bff0d2a81)

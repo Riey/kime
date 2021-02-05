@@ -39,7 +39,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: /tmp/kime/kime.7z
           asset_name: kime-${{ steps.version.outputs.ver }}.7z
-          asset_content_type: application/x-7z-compressed
+          asset_content_type: application/x-xz
 
       - name: Upload deb package
         uses: actions/upload-release-asset@v1

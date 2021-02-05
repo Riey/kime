@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use wayland_client::{
     event_enum,
@@ -59,6 +59,8 @@ enum PressState {
     NotPressing,
     /// User is pressing a key.
     Pressing {
+        /// User started pressing a key at this moment.
+        pressed_at: Instant,
         /// `false` if user just started pressing a key. Soon, key repeating will be begin. `true`
         /// if user have pressed a key for a long enough time, key repeating is happening right
         /// now.
@@ -221,6 +223,7 @@ impl KimeContext {
                             let duration = Duration::from_millis(info.delay as u64);
                             self.timer.set_timeout(&duration).unwrap();
                             *press_state = PressState::Pressing {
+                                pressed_at: Instant::now(),
                                 is_repeating: false,
                                 key,
                                 wayland_time: time,
@@ -328,6 +331,7 @@ impl KimeContext {
         if let Some((
             info,
             PressState::Pressing {
+                pressed_at,
                 ref mut is_repeating,
                 key,
                 wayland_time,
@@ -345,9 +349,7 @@ impl KimeContext {
             // Emit key repeat event
             let ev = KeyEvent::Key {
                 serial: self.serial,
-                // NOTE: Not sure if this time should be the time when the key was
-                // initially pressed, or the time of this KeyEvent
-                time: wayland_time,
+                time: wayland_time + pressed_at.elapsed().as_millis() as u32,
                 key,
                 state: KeyState::Pressed,
             };

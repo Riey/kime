@@ -19,13 +19,15 @@ use kime_engine_cffi::{
 pub struct KimeData {
     engine: InputEngine,
     pe: Option<NonZeroU32>,
+    show_preedit_window: bool,
 }
 
 impl KimeData {
-    pub fn new() -> Self {
+    pub fn new(show_preedit_window: bool) -> Self {
         Self {
             engine: InputEngine::new(),
             pe: None,
+            show_preedit_window,
         }
     }
 }
@@ -69,21 +71,18 @@ impl KimeHandler {
         ic: &mut xim::InputContext<KimeData>,
         ch: char,
     ) -> Result<(), xim::ServerError> {
-        if std::env::var("XDG_SESSION_TYPE")
-            .map(|v| v == "wayland")
-            .unwrap_or(false)
-        {
-            // Don't show preedit window on Xwayland see #137
+        if !ic.user_data.show_preedit_window {
+            // Don't spawn preedit window
             return Ok(());
         }
 
         if let Some(pe) = ic.user_data.pe.as_mut() {
-            // draw in server (already have pe_window)
+            // Draw in server (already have pe_window)
             let pe = self.preedit_windows.get_mut(pe).unwrap();
             pe.set_preedit(ch);
             pe.refresh(server.conn())?;
         } else {
-            // draw in server
+            // Draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
                 self.config.xim_font(),
@@ -173,9 +172,24 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn new_ic_data(
         &mut self,
         _server: &mut X11rbServer<XCBConnection>,
-        _input_style: InputStyle,
+        input_style: InputStyle,
     ) -> Result<Self::InputContextData, xim::ServerError> {
-        Ok(KimeData::new())
+        let mut show_preedit_window = true;
+
+        // Use callback instead
+        if input_style.contains(InputStyle::PREEDIT_CALLBACKS) {
+            show_preedit_window = false;
+        }
+
+        // Don't show preedit window on Xwayland see #137
+        if std::env::var("XDG_SESSION_TYPE")
+            .map(|v| v == "wayland")
+            .unwrap_or(false)
+        {
+            show_preedit_window = false;
+        }
+
+        Ok(KimeData::new(show_preedit_window))
     }
 
     fn input_styles(&self) -> Self::InputStyleArray {

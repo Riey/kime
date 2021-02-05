@@ -4,6 +4,9 @@ version = "0.8.1"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
+links = "kime_engine"
 
 [build-dependencies]
+bindgen = "0.57.0"
+cbindgen = "0.17.0"
 kime-engine-capi = { path = "../capi" }

@@ -1,14 +1,13 @@
 use std::char::from_u32_unchecked;
 use std::mem::MaybeUninit;
 
-#[link(name = "kime_engine")]
-extern "C" {}
-
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
-mod ffi;
+mod ffi {
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
-pub use ffi::{InputResultType, ModifierState};
+pub use ffi::{KimeInputResultType as InputResultType, KimeModifierState as ModifierState};
 
 pub const MODIFIER_CONTROL: ModifierState = 1;
 pub const MODIFIER_SUPER: ModifierState = 2;
@@ -22,7 +21,7 @@ pub struct InputResult {
 }
 
 pub struct InputEngine {
-    engine: *mut ffi::InputEngine,
+    engine: *mut ffi::KimeInputEngine,
 }
 
 impl InputEngine {
@@ -30,10 +29,6 @@ impl InputEngine {
         Self {
             engine: unsafe { ffi::kime_engine_new() },
         }
-    }
-
-    pub fn is_hangul_enabled(&self) -> bool {
-        unsafe { ffi::kime_engine_is_hangul_enabled(self.engine) != 0 }
     }
 
     pub fn update_hangul_state(&self) {
@@ -86,7 +81,7 @@ impl Drop for InputEngine {
 }
 
 pub struct Config {
-    config: *mut ffi::Config,
+    config: *mut ffi::KimeConfig,
 }
 
 impl Config {

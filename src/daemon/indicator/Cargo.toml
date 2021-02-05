@@ -11,7 +11,9 @@ glib = "0.10.3"
 gio = "0.9.1"
 gobject-sys = "0.10.0"
 gtk-sys = "0.10.0"
-libappindicator-sys = "0.5.0"
+# libappindicator-sys = "0.5.0"
+# for bindgen version
+libappindicator-sys = { git = "https://github.com/Riey/libappindicator-sys" }
 xdg = "2.2.0"
 log = "0.4.14"
 anyhow = "1.0.38"

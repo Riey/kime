@@ -7,7 +7,7 @@ class KimeInputContext : public QPlatformInputContext {
   Q_OBJECT
 
 public:
-  KimeInputContext(InputEngine *engine, const Config *config);
+  KimeInputContext(KimeInputEngine *engine, const KimeConfig *config);
   ~KimeInputContext();
 
   bool isValid() const override;
@@ -25,7 +25,7 @@ private:
   void preedit_ch(char32_t ch);
 
   QList<QInputMethodEvent::Attribute> attributes;
-  InputEngine *engine = nullptr;
-  const Config *config = nullptr;
+  KimeInputEngine *engine = nullptr;
+  const KimeConfig *config = nullptr;
   QObject *focus_object = nullptr;
 };

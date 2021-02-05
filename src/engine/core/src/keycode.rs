@@ -12,7 +12,7 @@ bitflags::bitflags! {
         const CONTROL = 0x1;
         const SUPER = 0x2;
         const SHIFT = 0x4;
-        // const ALT = 0x8;
+        const ALT = 0x8;
     }
 }
 
@@ -181,6 +181,10 @@ impl Key {
         Self::new(code, ModifierState::SHIFT)
     }
 
+    pub const fn alt(code: KeyCode) -> Self {
+        Self::new(code, ModifierState::ALT)
+    }
+
     pub const fn ctrl(code: KeyCode) -> Self {
         Self::new(code, ModifierState::CONTROL)
     }
@@ -194,6 +198,10 @@ impl fmt::Display for Key {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.state.contains(ModifierState::SUPER) {
             f.write_str("Super-")?;
+        }
+
+        if self.state.contains(ModifierState::ALT) {
+            f.write_str("M-")?;
         }
 
         if self.state.contains(ModifierState::CONTROL) {
@@ -215,15 +223,21 @@ impl FromStr for Key {
         let mut state = ModifierState::empty();
 
         loop {
-            if let Some(n) = s.strip_prefix("C-") {
-                s = n;
-                state |= ModifierState::CONTROL;
-                continue;
-            }
-
             if let Some(n) = s.strip_prefix("Super-") {
                 s = n;
                 state |= ModifierState::SUPER;
+                continue;
+            }
+
+            if let Some(n) = s.strip_prefix("M-") {
+                s = n;
+                state |= ModifierState::ALT;
+                continue;
+            }
+
+            if let Some(n) = s.strip_prefix("C-") {
+                s = n;
+                state |= ModifierState::CONTROL;
                 continue;
             }
 
@@ -259,4 +273,5 @@ fn key_parse() {
     );
     assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
     assert_eq!("C-Space".parse::<Key>().unwrap(), Key::ctrl(KeyCode::Space));
+    assert_eq!("M-X".parse::<Key>().unwrap(), Key::alt(KeyCode::X));
 }

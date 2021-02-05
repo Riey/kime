@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::{env, path::PathBuf, process::Command};
 
 fn main() {
     println!("cargo:rustc-link-lib=dylib=kime_engine");
@@ -7,9 +7,15 @@ fn main() {
     let header_path = "kime_engine.h";
     let binding_path = out_dir.join("bindings.rs");
 
-    let cbindings = cbindgen::generate("../capi").expect("Unable to generate C bindings");
-
-    cbindings.write_to_file(header_path);
+    assert!(Command::new("cbindgen")
+        .arg("../capi")
+        .arg("--output")
+        .arg(header_path)
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
 
     let bindings = bindgen::Builder::default()
         .header(header_path)

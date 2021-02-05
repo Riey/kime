@@ -8,5 +8,4 @@ links = "kime_engine"
 
 [build-dependencies]
 bindgen = "0.57.0"
-cbindgen = "0.17.0"
 kime-engine-capi = { path = "../capi" }

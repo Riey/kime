@@ -3,6 +3,7 @@
 ## Dev
 
 * Support ALT modifier
+* Fix wayland doesn't close fd well
 
 ## 1.0.0-pre2
 

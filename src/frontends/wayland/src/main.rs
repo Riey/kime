@@ -215,10 +215,11 @@ impl KimeContext {
             KeyEvent::Keymap { fd, format, size } => {
                 if !self.keymap_init {
                     self.vk.keymap(format as _, fd, size);
-                    unsafe {
-                        libc::close(fd);
-                    }
                     self.keymap_init = true;
+                }
+
+                unsafe {
+                    libc::close(fd);
                 }
             }
             KeyEvent::Key {

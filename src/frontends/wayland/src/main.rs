@@ -217,20 +217,6 @@ impl KimeContext {
             } => {
                 // NOTE: Never read `serial` of KeyEvent. You should rely on serial of KimeContext
                 if state == KeyState::Pressed {
-                    // Start waiting for the key hold timer event
-                    if let Some((info, ref mut press_state)) = self.repeat_state {
-                        if !press_state.is_pressing(key) {
-                            let duration = Duration::from_millis(info.delay as u64);
-                            self.timer.set_timeout(&duration).unwrap();
-                            *press_state = PressState::Pressing {
-                                pressed_at: Instant::now(),
-                                is_repeating: false,
-                                key,
-                                wayland_time: time,
-                            };
-                        }
-                    }
-
                     let mut bypass = false;
                     let ret = self
                         .engine
@@ -267,7 +253,27 @@ impl KimeContext {
                     self.commit();
 
                     if bypass {
+                        // Bypassed key's repeat will be handled by the clients.
+                        //
+                        // Reference:
+                        //   https://github.com/swaywm/sway/pull/4932#issuecomment-774113129
                         self.vk.key(time, key, state as _);
+                    } else {
+                        // If the key was not bypassed by IME, key repeat should be handled by the
+                        // IME. Start waiting for the key hold timer event.
+                        match self.repeat_state {
+                            Some((info, ref mut press_state)) if !press_state.is_pressing(key) => {
+                                let duration = Duration::from_millis(info.delay as u64);
+                                self.timer.set_timeout(&duration).unwrap();
+                                *press_state = PressState::Pressing {
+                                    pressed_at: Instant::now(),
+                                    is_repeating: false,
+                                    key,
+                                    wayland_time: time,
+                                };
+                            }
+                            _ => {}
+                        }
                     }
                 } else {
                     // If user released the last pressed key, clear the timer and state

@@ -191,13 +191,7 @@ impl KimeContext {
                     self.grab_kb = Some(kb);
                 } else if !self.current_state.deactivate && self.pending_state.deactivate {
                     // Focus lost, reset states
-                    match self.engine.reset() {
-                        '\0' => {}
-                        c => {
-                            self.commit_ch(c);
-                            self.commit();
-                        }
-                    }
+                    self.engine.reset();
                     if let Some(kb) = self.grab_kb.take() {
                         kb.release();
                     }

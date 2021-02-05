@@ -4,6 +4,9 @@
 
 * Support ALT modifier
 * Fix wayland doesn't close fd well
+* Handle disabled key repeat properly by **[@simnalamburt]** ([#188])
+
+[#188]: https://github.com/Riey/kime/pull/188
 
 ## 1.0.0-pre2
 

@@ -2,8 +2,11 @@ autogen_warning = "/* DO NOT MODIFY THIS MANUALLY */"
 documentation = true
 pragma_once = true
 include_version = true
+line_length = 100
+tab_width = 2
 braces = "SameLine"
 language = "C"
+style = "both"
 no_includes = true
 sys_includes = ["stdint.h", "stddef.h"]
 
@@ -13,3 +16,6 @@ bitflags = true
 [parse]
 parse_deps = true
 include = ["kime-engine-core"]
+
+[export]
+prefix = "Kime"

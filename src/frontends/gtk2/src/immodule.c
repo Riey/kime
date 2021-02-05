@@ -15,7 +15,6 @@ typedef GdkWindow ClientType;
 typedef GdkEventKey EventType;
 #endif
 
-static const guint SKIP_MASK = GDK_ALT_MASK;
 static const guint NOT_ENGLISH_MASK =
     GDK_ALT_MASK | GDK_CONTROL_MASK | GDK_SUPER_MASK;
 
@@ -29,16 +28,16 @@ typedef struct KimeSignals {
 typedef struct KimeImContextClass {
   GtkIMContextClass parent;
   KimeSignals signals;
-  Config *config;
+  KimeConfig *config;
 } KimeImContextClass;
 
 typedef struct KimeImContext {
   GtkIMContext parent;
   ClientType *client;
   KimeSignals signals;
-  InputEngine *engine;
+  KimeInputEngine *engine;
   gboolean preedit_visible;
-  Config *config;
+  KimeConfig *config;
 } KimeImContext;
 
 #define KIME_IM_CONTEXT(var)                                                   \
@@ -151,24 +150,26 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   if (state & FORWARDED_MASK) {
     debug("Forwarded: %u", keyval);
     return commit_event(ctx, state, keyval);
-  } else if (state & SKIP_MASK) {
-    return bypass(ctx, key);
   } else {
-    ModifierState kime_state = 0;
+    KimeModifierState kime_state = 0;
 
     if (state & GDK_SHIFT_MASK) {
-      kime_state |= ModifierState_SHIFT;
+      kime_state |= KimeModifierState_SHIFT;
+    }
+
+    if (state & GDK_ALT_MASK) {
+      kime_state |= KimeModifierState_ALT;
     }
 
     if (state & GDK_CONTROL_MASK) {
-      kime_state |= ModifierState_CONTROL;
+      kime_state |= KimeModifierState_CONTROL;
     }
 
     if (state & GDK_SUPER_MASK) {
-      kime_state |= ModifierState_SUPER;
+      kime_state |= KimeModifierState_SUPER;
     }
 
-    InputResult ret =
+    KimeInputResult ret =
         kime_engine_press_key(ctx->engine, ctx->config, code, kime_state);
 
     switch (ret.ty) {

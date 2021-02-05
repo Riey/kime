@@ -12,7 +12,8 @@ use xim::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, MODIFIER_CONTROL, MODIFIER_SHIFT, MODIFIER_SUPER,
+    Config, InputEngine, InputResultType, MODIFIER_ALT, MODIFIER_CONTROL, MODIFIER_SHIFT,
+    MODIFIER_SUPER,
 };
 
 pub struct KimeData {
@@ -106,9 +107,12 @@ impl KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         ic: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if let Some(c) = ic.user_data.engine.reset() {
-            self.clear_preedit(server, ic)?;
-            self.commit(server, ic, c)?;
+        match ic.user_data.engine.reset() {
+            '\0' => {}
+            c => {
+                self.clear_preedit(server, ic)?;
+                self.commit(server, ic, c)?;
+            }
         }
 
         Ok(())
@@ -206,9 +210,12 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     ) -> Result<(), xim::ServerError> {
         log::trace!("spot: {:?}", input_context.preedit_spot());
 
-        if let Some(preedit) = input_context.user_data.engine.preedit_char() {
-            self.clear_preedit(server, input_context)?;
-            self.preedit(server, input_context, preedit)?;
+        match input_context.user_data.engine.preedit_char() {
+            '\0' => {}
+            preedit => {
+                self.clear_preedit(server, input_context)?;
+                self.preedit(server, input_context, preedit)?;
+            }
         }
 
         Ok(())
@@ -235,12 +242,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     ) -> Result<String, xim::ServerError> {
         log::trace!("reset_ic");
 
-        Ok(input_context
-            .user_data
-            .engine
-            .reset()
-            .map(Into::into)
-            .unwrap_or_default())
+        match input_context.user_data.engine.reset() {
+            '\0' => Ok(String::new()),
+            c => Ok(c.to_string()),
+        }
     }
 
     fn handle_forward_event(
@@ -256,12 +261,6 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
         log::trace!("{:?}", xev);
 
-        // other modifiers then shift or lock or control or numlock or super
-        if xev.state & !(0x1 | 0x2 | 0x4 | 0x10 | 0x40) != 0 {
-            self.reset(server, input_context)?;
-            return Ok(false);
-        }
-
         let mut state = 0;
 
         if xev.state & 0x1 != 0 {
@@ -270,6 +269,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
         if xev.state & 0x4 != 0 {
             state |= MODIFIER_CONTROL;
+        }
+
+        if xev.state & 0x8 != 0 {
+            state |= MODIFIER_ALT;
         }
 
         if xev.state & 0x40 != 0 {

@@ -10,8 +10,8 @@ class KimePlatformInputContextPlugin : public QPlatformInputContextPlugin {
                     "kime.json")
 
 private:
-  InputEngine *engine = nullptr;
-  Config *config = nullptr;
+  KimeInputEngine *engine = nullptr;
+  KimeConfig *config = nullptr;
 
 public:
   KimePlatformInputContextPlugin();

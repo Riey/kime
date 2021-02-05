@@ -17,8 +17,8 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, ModifierState, MODIFIER_CONTROL, MODIFIER_SHIFT,
-    MODIFIER_SUPER,
+    Config, InputEngine, InputResultType, ModifierState, MODIFIER_ALT, MODIFIER_CONTROL,
+    MODIFIER_SHIFT, MODIFIER_SUPER,
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
@@ -191,9 +191,12 @@ impl KimeContext {
                     self.grab_kb = Some(kb);
                 } else if !self.current_state.deactivate && self.pending_state.deactivate {
                     // Focus lost, reset states
-                    if let Some(c) = self.engine.reset() {
-                        self.commit_ch(c);
-                        self.commit();
+                    match self.engine.reset() {
+                        '\0' => {}
+                        c => {
+                            self.commit_ch(c);
+                            self.commit();
+                        }
                     }
                     if let Some(kb) = self.grab_kb.take() {
                         kb.release();
@@ -295,6 +298,9 @@ impl KimeContext {
                 }
                 if mods_depressed & 0x4 != 0 {
                     self.mod_state |= MODIFIER_CONTROL;
+                }
+                if mods_depressed & 0x8 != 0 {
+                    self.mod_state |= MODIFIER_ALT;
                 }
                 if mods_depressed & 0x40 != 0 {
                     self.mod_state |= MODIFIER_SUPER;

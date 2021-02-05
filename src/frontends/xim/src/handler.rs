@@ -188,6 +188,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         1
     }
 
+    fn sync_mode(&self) -> bool {
+        true
+    }
+
     fn handle_connect(
         &mut self,
         _server: &mut X11rbServer<XCBConnection>,
@@ -212,7 +216,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_create_ic(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        _server: &mut X11rbServer<XCBConnection>,
         input_context: &mut xim::InputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         log::info!(
@@ -220,7 +224,6 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             input_context.input_style(),
             input_context.preedit_spot()
         );
-        server.set_event_mask(input_context, 1, 0)?;
 
         Ok(())
     }

@@ -2,6 +2,8 @@
 
 ## Dev
 
+* Support ALT modifier
+
 ## 1.0.0-pre2
 
 * Fix wrong behavior in neovide ([#179])

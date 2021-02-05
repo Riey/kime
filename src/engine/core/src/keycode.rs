@@ -11,7 +11,8 @@ bitflags::bitflags! {
     pub struct ModifierState: u32 {
         const CONTROL = 0x1;
         const SUPER = 0x2;
-        const SHIFT= 0x4;
+        const SHIFT = 0x4;
+        // const ALT = 0x8;
     }
 }
 

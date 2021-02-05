@@ -73,7 +73,7 @@ enum PressState {
         ///
         /// #### Reference
         /// - https://wayland.freedesktop.org/docs/html/ch04.html#sect-Protocol-Input
-        time: u32,
+        wayland_time: u32,
     },
 }
 
@@ -223,7 +223,7 @@ impl KimeContext {
                             *press_state = PressState::Pressing {
                                 is_repeating: false,
                                 key,
-                                time,
+                                wayland_time: time,
                             };
                         }
                     }
@@ -330,7 +330,7 @@ impl KimeContext {
             PressState::Pressing {
                 ref mut is_repeating,
                 key,
-                time,
+                wayland_time,
             },
         )) = self.repeat_state
         {
@@ -347,7 +347,7 @@ impl KimeContext {
                 serial: self.serial,
                 // NOTE: Not sure if this time should be the time when the key was
                 // initially pressed, or the time of this KeyEvent
-                time,
+                time: wayland_time,
                 key,
                 state: KeyState::Pressed,
             };

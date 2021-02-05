@@ -309,9 +309,17 @@ impl KimeContext {
                     .modifiers(mods_depressed, mods_latched, mods_locked, group);
             }
             KeyEvent::RepeatInfo { rate, delay } => {
-                let info = RepeatInfo { rate, delay };
-                let press_state = self.repeat_state.map(|pair| pair.1);
-                self.repeat_state = Some((info, press_state.unwrap_or(PressState::NotPressing)));
+                self.repeat_state = if rate == 0 {
+                    // Zero rate means disabled repeat
+                    //
+                    // Reference:
+                    //   https://github.com/swaywm/wlroots/blob/3d46d3f7/protocol/input-method-unstable-v2.xml#L444-L455
+                    None
+                } else {
+                    let info = RepeatInfo { rate, delay };
+                    let press_state = self.repeat_state.map(|pair| pair.1);
+                    Some((info, press_state.unwrap_or(PressState::NotPressing)))
+                }
             }
             _ => {}
         }

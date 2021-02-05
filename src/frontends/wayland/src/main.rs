@@ -322,7 +322,10 @@ impl KimeContext {
 
     pub fn handle_timer_ev(&mut self) -> std::io::Result<()> {
         // Read timer, this MUST be called or timer will be broken
-        self.timer.read()?;
+        let overrun_count = self.timer.read()?;
+        if overrun_count != 1 {
+            log::warn!("Some timer events were not properly handled!");
+        }
 
         if let Some((info, ref mut press_state)) = self.repeat_state {
             let (key, time) = match press_state {

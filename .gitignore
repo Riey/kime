@@ -1,4 +1,5 @@
-/src/frontends/engine/cffi/kime_engine.h
+kime_engine.h
+
 /target
 /build
 /cmake_build

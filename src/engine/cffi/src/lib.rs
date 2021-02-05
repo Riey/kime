@@ -12,6 +12,7 @@ pub use ffi::{KimeInputResultType as InputResultType, KimeModifierState as Modif
 pub const MODIFIER_CONTROL: ModifierState = 1;
 pub const MODIFIER_SUPER: ModifierState = 2;
 pub const MODIFIER_SHIFT: ModifierState = 4;
+pub const MODIFIER_ALT: ModifierState = 8;
 
 #[derive(Clone, Copy, Debug)]
 pub struct InputResult {
@@ -53,22 +54,14 @@ impl InputEngine {
         }
     }
 
-    pub fn preedit_char(&self) -> Option<char> {
-        unsafe {
-            match ffi::kime_engine_preedit_char(self.engine) {
-                0 => None,
-                n => Some(from_u32_unchecked(n)),
-            }
-        }
+    /// `NULL` mean empty
+    pub fn preedit_char(&self) -> char {
+        unsafe { from_u32_unchecked(ffi::kime_engine_preedit_char(self.engine)) }
     }
 
-    pub fn reset(&mut self) -> Option<char> {
-        unsafe {
-            match ffi::kime_engine_reset(self.engine) {
-                0 => None,
-                n => Some(from_u32_unchecked(n)),
-            }
-        }
+    /// `NULL` mean empty
+    pub fn reset(&mut self) -> char {
+        unsafe { from_u32_unchecked(ffi::kime_engine_reset(self.engine)) }
     }
 }
 

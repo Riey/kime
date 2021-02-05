@@ -100,8 +100,6 @@ impl Frontend {
 #[derive(StructOpt)]
 #[structopt(about = "Tool for build, test, deploy kime")]
 enum TaskCommand {
-    #[structopt(about = "Test kime")]
-    Test,
     #[structopt(about = "Build kime with given frontends")]
     Build {
         #[structopt(
@@ -221,13 +219,6 @@ impl TaskCommand {
                     out_path.join("kime-han-64x64.png"),
                     target_path.join("usr/share/kime/kime-han-64x64.png"),
                 )?;
-            }
-            TaskCommand::Test => {
-                Command::new("cargo")
-                    .args(&["test", "-p=kime-engine-core"])
-                    .spawn()?
-                    .wait()?
-                    .assert_success();
             }
             TaskCommand::Build { frontends, mode } => {
                 let cargo_args = env::var("KIME_CARGO_ARGS")

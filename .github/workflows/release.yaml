@@ -37,8 +37,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /tmp/kime/kime.7z
-          asset_name: kime-${{ steps.version.outputs.ver }}.7z
+          asset_path: /tmp/kime/kime.tar.xz
+          asset_name: kime-${{ steps.version.outputs.ver }}.tar.xz
           asset_content_type: application/x-xz
 
       - name: Upload deb package

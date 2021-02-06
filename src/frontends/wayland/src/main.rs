@@ -105,8 +105,9 @@ struct KimeContext {
 
     // Key repeat contexts
     timer: TimerFd,
-    /// `None` if `KimeContext` have never received a `RepeatInfo`. `Some(..)` if `RepeatInfo` is
-    /// known and kime-wayland started tracking the press state of keys.
+    /// `None` if `KimeContext` have never received a `RepeatInfo` or repeat is disabled (i.e. rate
+    /// is zero). `Some(..)` if `RepeatInfo` is known and kime-wayland started tracking the press
+    /// state of keys.
     repeat_state: Option<(RepeatInfo, PressState)>,
 }
 
@@ -191,8 +192,12 @@ impl KimeContext {
                     // Focus lost, reset states
                     self.engine.reset();
                     self.grab_activate = false;
+
+                    // Input deactivated, stop repeating
                     self.timer.disarm().unwrap();
-                    self.repeat_state = None
+                    if let Some((_, ref mut press_state)) = self.repeat_state {
+                        *press_state = PressState::NotPressing
+                    }
                 }
                 self.current_state = std::mem::take(&mut self.pending_state);
             }

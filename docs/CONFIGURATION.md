@@ -29,8 +29,8 @@ structure of keyboard layout file.
 
 Set hangul state globally
 
-| 기본값 |`false`|
-|--------|-------|
+| default |`false`|
+|---------|-------|
 
 ## esc_turn_off
 

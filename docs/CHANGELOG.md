@@ -13,6 +13,7 @@
 * Handle disabled key repeat properly by **[@simnalamburt]** ([#188](https://github.com/Riey/kime/issues/188))
 * Fix unwanted key repeat bug on wayland by **[@simnalamburt]** ([#206](https://github.com/Riey/kime/issues/206))
 * Fix preedit string sended to wrong client by **[@simnalamburt]** ([#205](https://github.com/Riey/kime/issues/205))
+* Fix the key repeat regression by **[@simnalamburt]** ([#215](https://github.com/Riey/kime/issues/215))
 
 ## 1.0.0-pre2
 

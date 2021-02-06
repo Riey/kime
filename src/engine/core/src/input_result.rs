@@ -21,6 +21,16 @@ pub struct InputResult {
     pub char2: u32,
 }
 
+impl Default for InputResult {
+    fn default() -> Self {
+        Self {
+            ty: InputResultType::Bypass,
+            char1: 0,
+            char2: 0,
+        }
+    }
+}
+
 impl fmt::Debug for InputResult {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("InputResult")

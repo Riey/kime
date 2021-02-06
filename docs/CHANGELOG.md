@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Dev
+## 1.0.0-pre3
 
 * Change release .tar.xz [#203](https://github.com/Riey/kime/issues/203)
 * Make engine capi no panic [#201](https://github.com/Riey/kime/issues/201)
@@ -14,9 +14,6 @@
 * Fix unwanted key repeat bug on wayland by **[@simnalamburt]** ([#206](https://github.com/Riey/kime/issues/206))
 * Fix preedit string sended to wrong client by **[@simnalamburt]** ([#205](https://github.com/Riey/kime/issues/205))
 * Fix the key repeat regression by **[@simnalamburt]** ([#215](https://github.com/Riey/kime/issues/215))
-
-## 1.0.0-pre2
-
 * Fix wrong behavior in neovide ([#179](https://github.com/Riey/kime/issues/179))
 * Fix xim crash when typing fast ([#170](https://github.com/Riey/kime/issues/170))
 * Fix xim doesn't work not en_US locale ([#177](https://github.com/Riey/kime/issues/177))

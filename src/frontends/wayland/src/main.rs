@@ -97,8 +97,9 @@ struct KimeContext {
     pending_state: InputMethodState,
     vk: Main<ZwpVirtualKeyboardV1>,
     im: Main<ZwpInputMethodV2>,
-    grab_kb: Option<Main<ZwpInputMethodKeyboardGrabV2>>,
+    grab: Main<ZwpInputMethodKeyboardGrabV2>,
     keymap_init: bool,
+    grab_activate: bool,
     serial: u32,
     // Have to consern Multi seats?
 
@@ -111,16 +112,19 @@ struct KimeContext {
 
 impl Drop for KimeContext {
     fn drop(&mut self) {
+        self.grab.release();
         self.vk.destroy();
         self.im.destroy();
-        if let Some(kb) = self.grab_kb.take() {
-            kb.release();
-        }
     }
 }
 
 impl KimeContext {
-    pub fn new(vk: Main<ZwpVirtualKeyboardV1>, im: Main<ZwpInputMethodV2>, timer: TimerFd) -> Self {
+    pub fn new(
+        vk: Main<ZwpVirtualKeyboardV1>,
+        im: Main<ZwpInputMethodV2>,
+        grab: Main<ZwpInputMethodKeyboardGrabV2>,
+        timer: TimerFd,
+    ) -> Self {
         Self {
             config: Config::new(),
             engine: InputEngine::new(),
@@ -129,10 +133,10 @@ impl KimeContext {
             pending_state: InputMethodState::default(),
             serial: 0,
             keymap_init: false,
+            grab_activate: false,
             vk,
             im,
-            grab_kb: None,
-
+            grab,
             timer,
             repeat_state: None,
         }
@@ -167,7 +171,7 @@ impl KimeContext {
             .set_preedit_string(ch.to_string(), 0, ch.len_utf8() as _);
     }
 
-    pub fn handle_im_ev(&mut self, ev: ImEvent, filter: &Filter<Events>) {
+    pub fn handle_im_ev(&mut self, ev: ImEvent) {
         match ev {
             ImEvent::Activate => {
                 self.pending_state.activate = true;
@@ -182,15 +186,11 @@ impl KimeContext {
             ImEvent::Done => {
                 if !self.current_state.activate && self.pending_state.activate {
                     self.engine.update_hangul_state();
-                    let kb = self.im.grab_keyboard();
-                    kb.assign(filter.clone());
-                    self.grab_kb = Some(kb);
+                    self.grab_activate = true;
                 } else if !self.current_state.deactivate && self.pending_state.deactivate {
                     // Focus lost, reset states
                     self.engine.reset();
-                    if let Some(kb) = self.grab_kb.take() {
-                        kb.release();
-                    }
+                    self.grab_activate = false;
                     self.timer.disarm().unwrap();
                     self.repeat_state = None
                 }
@@ -207,7 +207,6 @@ impl KimeContext {
                     self.vk.keymap(format as _, fd, size);
                     self.keymap_init = true;
                 }
-
                 unsafe {
                     libc::close(fd);
                 }
@@ -217,63 +216,70 @@ impl KimeContext {
             } => {
                 // NOTE: Never read `serial` of KeyEvent. You should rely on serial of KimeContext
                 if state == KeyState::Pressed {
-                    let mut bypass = false;
-                    let ret = self
-                        .engine
-                        .press_key(&self.config, (key + 8) as u16, self.mod_state);
-                    log::trace!("ret: {:#?}", ret);
+                    if self.grab_activate {
+                        let mut bypass = false;
+                        let ret =
+                            self.engine
+                                .press_key(&self.config, (key + 8) as u16, self.mod_state);
+                        log::trace!("ret: {:#?}", ret);
 
-                    match ret.ty {
-                        InputResultType::ToggleHangul => {
-                            self.engine.update_hangul_state();
-                        }
-                        InputResultType::Bypass => bypass = true,
-                        InputResultType::CommitBypass => {
-                            self.commit_ch(ret.char1);
-                            bypass = true;
-                        }
-                        InputResultType::Commit => {
-                            self.commit_ch(ret.char1);
-                        }
-                        InputResultType::Preedit => {
-                            self.preedit_ch(ret.char1);
-                        }
-                        InputResultType::CommitPreedit => {
-                            self.commit_ch(ret.char1);
-                            self.preedit_ch(ret.char2);
-                        }
-                        InputResultType::CommitCommit => {
-                            self.commit_ch2(ret.char1, ret.char2);
-                        }
-                        InputResultType::ClearPreedit => {
-                            self.clear_preedit();
-                        }
-                    }
-
-                    self.commit();
-
-                    if bypass {
-                        // Bypassed key's repeat will be handled by the clients.
-                        //
-                        // Reference:
-                        //   https://github.com/swaywm/sway/pull/4932#issuecomment-774113129
-                        self.vk.key(time, key, state as _);
-                    } else {
-                        // If the key was not bypassed by IME, key repeat should be handled by the
-                        // IME. Start waiting for the key hold timer event.
-                        match self.repeat_state {
-                            Some((info, ref mut press_state)) if !press_state.is_pressing(key) => {
-                                let duration = Duration::from_millis(info.delay as u64);
-                                self.timer.set_timeout(&duration).unwrap();
-                                *press_state = PressState::Pressing {
-                                    pressed_at: Instant::now(),
-                                    is_repeating: false,
-                                    key,
-                                    wayland_time: time,
-                                };
+                        match ret.ty {
+                            InputResultType::ToggleHangul => {
+                                self.engine.update_hangul_state();
                             }
-                            _ => {}
+                            InputResultType::Bypass => bypass = true,
+                            InputResultType::CommitBypass => {
+                                self.commit_ch(ret.char1);
+                                bypass = true;
+                            }
+                            InputResultType::Commit => {
+                                self.commit_ch(ret.char1);
+                            }
+                            InputResultType::Preedit => {
+                                self.preedit_ch(ret.char1);
+                            }
+                            InputResultType::CommitPreedit => {
+                                self.commit_ch(ret.char1);
+                                self.preedit_ch(ret.char2);
+                            }
+                            InputResultType::CommitCommit => {
+                                self.commit_ch2(ret.char1, ret.char2);
+                            }
+                            InputResultType::ClearPreedit => {
+                                self.clear_preedit();
+                            }
                         }
+
+                        self.commit();
+
+                        if bypass {
+                            // Bypassed key's repeat will be handled by the clients.
+                            //
+                            // Reference:
+                            //   https://github.com/swaywm/sway/pull/4932#issuecomment-774113129
+                            self.vk.key(time, key, state as _);
+                        } else {
+                            // If the key was not bypassed by IME, key repeat should be handled by the
+                            // IME. Start waiting for the key hold timer event.
+                            match self.repeat_state {
+                                Some((info, ref mut press_state))
+                                    if !press_state.is_pressing(key) =>
+                                {
+                                    let duration = Duration::from_millis(info.delay as u64);
+                                    self.timer.set_timeout(&duration).unwrap();
+                                    *press_state = PressState::Pressing {
+                                        pressed_at: Instant::now(),
+                                        is_repeating: false,
+                                        key,
+                                        wayland_time: time,
+                                    };
+                                }
+                                _ => {}
+                            }
+                        }
+                    } else {
+                        // not activated so just skip
+                        self.vk.key(time, key, state as _);
                     }
                 } else {
                     // If user released the last pressed key, clear the timer and state
@@ -416,7 +422,7 @@ fn main() {
         .instantiate_exact::<ZwpVirtualKeyboardManagerV1>(1)
         .expect("Load VirtualKeyboardManager");
 
-    let filter = Filter::new(|ev, filter, mut data| {
+    let filter = Filter::new(|ev, _filter, mut data| {
         let ctx = KimeContext::new_data(&mut data);
 
         match ev {
@@ -424,13 +430,15 @@ fn main() {
                 ctx.handle_key_ev(event);
             }
             Events::Im { event, .. } => {
-                ctx.handle_im_ev(event, filter);
+                ctx.handle_im_ev(event);
             }
         }
     });
 
     let vk = vk_manager.create_virtual_keyboard(&seat);
     let im = im_manager.get_input_method(&seat);
+    let grab = im.grab_keyboard();
+    grab.assign(filter.clone());
     im.assign(filter);
 
     // Initialize timer
@@ -455,7 +463,7 @@ fn main() {
         .expect("Register timer to the epoll()");
 
     // Initialize kime context
-    let mut kime_ctx = KimeContext::new(vk, im, timer);
+    let mut kime_ctx = KimeContext::new(vk, im, grab, timer);
     event_queue
         .sync_roundtrip(&mut kime_ctx, |_, _, _| ())
         .unwrap();

@@ -2,12 +2,16 @@
 
 ## Dev
 
-* Change release .tar.xz [#204](https://github.com/Riey/kime/issues/204)
+* Change release .tar.xz [#203](https://github.com/Riey/kime/issues/203)
+* Make engine capi no panic [#201](https://github.com/Riey/kime/issues/201)
 * Support ALT modifier [#190](https://github.com/Riey/kime/issues/190)
 * Fix wayland doesn't close fd well [#194](https://github.com/Riey/kime/issues/194)
 * Using xim sync mode [49d0ef3e](https://github.com/Riey/kime/commit/49d0ef3e0b473378881a396f394db09bff0d2a81)
 * Improve indicator [#186](https://github.com/Riey/kime/issues/186)
+* Workaround patch with xwayland input focus bug ([#137](https://github.com/Riey/kime/issues/137))
 * Handle disabled key repeat properly by **[@simnalamburt]** ([#188](https://github.com/Riey/kime/issues/188))
+* Fix unwanted key repeat bug on wayland by **[@simnalamburt]** ([#206](https://github.com/Riey/kime/issues/206))
+* Fix preedit string sended to wrong client by **[@simnalamburt]** ([#205](https://github.com/Riey/kime/issues/205))
 
 ## 1.0.0-pre2
 

@@ -6,6 +6,10 @@ edition = "2018"
 license = "GPL-3.0"
 links = "kime_engine"
 
-[build-dependencies]
-bindgen = "0.57.0"
+[dependencies]
+# this will cause warning unless https://github.com/rust-lang/cargo/issues/9096 get implemented
 kime-engine-capi = { path = "../capi" }
+
+[build-dependencies]
+bindgen = { version = "0.57.0", default-features = false }
+cbindgen = { version = "0.17.0", default-features = false }

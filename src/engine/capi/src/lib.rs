@@ -2,6 +2,26 @@
 
 pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState};
 
+// panic-safe version of ptr to ref
+
+macro_rules! to_mut {
+    ($val:ident) => {
+        let $val = match $val.as_mut() {
+            Some(r) => r,
+            None => return Default::default(),
+        };
+    };
+}
+
+macro_rules! to_ref {
+    ($val:ident) => {
+        let $val = match $val.as_ref() {
+            Some(r) => r,
+            None => return Default::default(),
+        };
+    };
+}
+
 /// Create new engine
 #[no_mangle]
 pub extern "C" fn kime_engine_new() -> *mut InputEngine {
@@ -9,6 +29,10 @@ pub extern "C" fn kime_engine_new() -> *mut InputEngine {
 }
 
 /// Delete engine
+///
+/// # Safety
+///
+/// engine must be created by `kime_engine_new` and never call delete more than once
 #[no_mangle]
 pub unsafe extern "C" fn kime_engine_delete(engine: *mut InputEngine) {
     drop(Box::from_raw(engine));
@@ -17,8 +41,7 @@ pub unsafe extern "C" fn kime_engine_delete(engine: *mut InputEngine) {
 /// Update hangul state
 #[no_mangle]
 pub unsafe extern "C" fn kime_engine_update_hangul_state(engine: *mut InputEngine) {
-    let engine = engine.as_mut().unwrap();
-
+    to_mut!(engine);
     engine.update_hangul_state();
 }
 
@@ -29,8 +52,7 @@ pub unsafe extern "C" fn kime_engine_update_hangul_state(engine: *mut InputEngin
 /// valid ucs4 char NULL to represent empty
 #[no_mangle]
 pub unsafe extern "C" fn kime_engine_preedit_char(engine: *const InputEngine) -> u32 {
-    let engine = engine.as_ref().unwrap();
-
+    to_ref!(engine);
     engine.preedit_char() as u32
 }
 
@@ -41,7 +63,7 @@ pub unsafe extern "C" fn kime_engine_preedit_char(engine: *const InputEngine) ->
 /// valid ucs4 char NULL to represent empty
 #[no_mangle]
 pub unsafe extern "C" fn kime_engine_reset(engine: *mut InputEngine) -> u32 {
-    let engine = engine.as_mut().unwrap();
+    to_mut!(engine);
     engine.reset() as u32
 }
 
@@ -57,8 +79,8 @@ pub unsafe extern "C" fn kime_engine_press_key(
     hardware_code: u16,
     state: ModifierState,
 ) -> InputResult {
-    let engine = engine.as_mut().unwrap();
-    let config = config.as_ref().unwrap();
+    to_mut!(engine);
+    to_ref!(config);
 
     engine.press_key_code(hardware_code, state, config)
 }
@@ -88,7 +110,8 @@ pub unsafe extern "C" fn kime_config_xim_preedit_font(
     len: *mut usize,
     font_size: *mut f64,
 ) {
-    let (ref font, size) = config.as_ref().unwrap().xim_preedit_font;
+    to_ref!(config);
+    let (ref font, size) = config.xim_preedit_font;
     name.write(font.as_ptr());
     len.write(font.len());
     font_size.write(size);

@@ -59,7 +59,7 @@ impl InputEngine {
         }
     }
 
-    pub fn set_enable_hangul(&mut self, enable: bool) {
+    pub fn set_hangul_enable(&mut self, enable: bool) {
         self.enable_hangul = enable;
     }
 

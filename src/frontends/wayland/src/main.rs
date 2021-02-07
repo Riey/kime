@@ -127,7 +127,7 @@ impl KimeContext {
         timer: TimerFd,
     ) -> Self {
         Self {
-            config: Config::new(),
+            config: Config::load(),
             engine: InputEngine::new(),
             mod_state: 0,
             current_state: InputMethodState::default(),

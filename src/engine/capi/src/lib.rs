@@ -28,6 +28,13 @@ pub extern "C" fn kime_engine_new() -> *mut InputEngine {
     Box::into_raw(Box::new(InputEngine::new()))
 }
 
+/// Set hangul enable state
+#[no_mangle]
+pub unsafe extern "C" fn kime_engine_set_hangul_enable(engine: *mut InputEngine, mode: bool) {
+    to_mut!(engine);
+    engine.set_hangul_enable(mode);
+}
+
 /// Delete engine
 ///
 /// # Safety
@@ -89,6 +96,12 @@ pub unsafe extern "C" fn kime_engine_press_key(
 #[no_mangle]
 pub extern "C" fn kime_config_load() -> *mut Config {
     Box::into_raw(Box::new(Config::load_from_config_dir().unwrap_or_default()))
+}
+
+/// Create default config note that this function will not read config file
+#[no_mangle]
+pub extern "C" fn kime_config_default() -> *mut Config {
+    Box::into_raw(Box::new(Config::default()))
 }
 
 /// Delete config

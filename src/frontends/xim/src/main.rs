@@ -36,7 +36,7 @@ fn main() -> Result<(), ServerError> {
 
     log::info!("Start xim server version: {}", env!("CARGO_PKG_VERSION"));
 
-    let config = kime_engine_cffi::Config::new();
+    let config = kime_engine_cffi::Config::load();
 
     let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;
     let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime", xim::ALL_LOCALES)?;

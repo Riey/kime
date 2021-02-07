@@ -36,6 +36,10 @@ impl InputEngine {
         unsafe { ffi::kime_engine_update_hangul_state(self.engine) }
     }
 
+    pub fn set_hangul_enable(&mut self, mode: bool) {
+        unsafe { ffi::kime_engine_set_hangul_enable(self.engine, mode) };
+    }
+
     pub fn press_key(
         &mut self,
         config: &Config,
@@ -77,8 +81,16 @@ pub struct Config {
     config: *mut ffi::KimeConfig,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            config: unsafe { ffi::kime_config_default() },
+        }
+    }
+}
+
 impl Config {
-    pub fn new() -> Self {
+    pub fn load() -> Self {
         Self {
             config: unsafe { ffi::kime_config_load() },
         }

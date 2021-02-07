@@ -71,7 +71,7 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self::new(Layout::default(), RawConfig::default())
+        Self::from_raw_config(RawConfig::default(), None)
     }
 }
 

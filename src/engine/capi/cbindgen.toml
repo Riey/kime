@@ -7,8 +7,6 @@ tab_width = 2
 braces = "SameLine"
 language = "C"
 style = "both"
-no_includes = true
-sys_includes = ["stdint.h", "stddef.h"]
 
 [macro_expansion]
 bitflags = true

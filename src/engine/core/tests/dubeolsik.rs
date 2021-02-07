@@ -12,7 +12,7 @@ fn test_input(inputs: &[(Key, InputResult)]) {
 
     let mut engine = InputEngine::new();
 
-    engine.set_enable_hangul(true);
+    engine.set_hangul_enable(true);
 
     for (key, expect_result) in inputs.iter().copied() {
         assert_eq!(

@@ -3,8 +3,10 @@ use std::mem::MaybeUninit;
 
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
-mod ffi {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+mod ffi;
+
+#[link(name = "kime_engine", kine = "dylib")]
+extern "C" {
 }
 
 pub use ffi::{KimeInputResultType as InputResultType, KimeModifierState as ModifierState};

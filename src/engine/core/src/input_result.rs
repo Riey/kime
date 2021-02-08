@@ -4,7 +4,7 @@ use std::fmt;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InputResultType {
     Bypass,
-    ToggleHangul,
+    Consume,
     ClearPreedit,
     Preedit,
     Commit,
@@ -62,9 +62,9 @@ impl InputResult {
         }
     }
 
-    pub const fn toggle_hangul() -> Self {
+    pub const fn consume() -> Self {
         Self {
-            ty: InputResultType::ToggleHangul,
+            ty: InputResultType::Consume,
             char1: 0,
             char2: 0,
         }

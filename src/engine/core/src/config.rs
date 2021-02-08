@@ -33,12 +33,33 @@ pub enum HotkeyBehavior {
     ToEnglish,
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy)]
+pub enum HotkeyResult {
+    Consume,
+    Bypass,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy)]
+pub struct Hotkey {
+    behavior: HotkeyBehavior,
+    result: HotkeyResult,
+}
+
+impl Hotkey {
+    pub const fn new(behavior: HotkeyBehavior, result: HotkeyResult) -> Self {
+        Self { behavior, result }
+    }
+
+    pub const fn behavior(self) -> HotkeyBehavior { self.behavior}
+    pub const fn result(self) -> HotkeyResult { self.result}
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct RawConfig {
     pub layout: String,
     pub global_hangul_state: bool,
-    pub hotkeys: AHashMap<Key, HotkeyBehavior>,
+    pub hotkeys: AHashMap<Key, Hotkey>,
     pub xim_preedit_font: (String, f64),
     pub compose: ComposeConfig,
 }
@@ -49,11 +70,26 @@ impl Default for RawConfig {
             layout: "dubeolsik".to_string(),
             global_hangul_state: false,
             hotkeys: [
-                (Key::normal(KeyCode::Esc), HotkeyBehavior::ToEnglish),
-                (Key::normal(KeyCode::AltR), HotkeyBehavior::ToggleHangul),
-                (Key::normal(KeyCode::Muhenkan), HotkeyBehavior::ToggleHangul),
-                (Key::normal(KeyCode::Hangul), HotkeyBehavior::ToggleHangul),
-                (Key::super_(KeyCode::Space), HotkeyBehavior::ToggleHangul),
+                (
+                    Key::normal(KeyCode::Esc),
+                    Hotkey::new(HotkeyBehavior::ToEnglish, HotkeyResult::Bypass),
+                ),
+                (
+                    Key::normal(KeyCode::AltR),
+                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                ),
+                (
+                    Key::normal(KeyCode::Muhenkan),
+                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                ),
+                (
+                    Key::normal(KeyCode::Hangul),
+                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                ),
+                (
+                    Key::super_(KeyCode::Space),
+                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                ),
             ]
             .iter()
             .copied()
@@ -67,7 +103,7 @@ impl Default for RawConfig {
 pub struct Config {
     pub(crate) layout: Layout,
     pub(crate) global_hangul_state: bool,
-    pub(crate) hotkeys: AHashMap<Key, HotkeyBehavior>,
+    pub(crate) hotkeys: AHashMap<Key, Hotkey>,
     pub(crate) compose: ComposeConfig,
     pub xim_preedit_font: (String, f64),
 }

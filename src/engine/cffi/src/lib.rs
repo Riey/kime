@@ -6,8 +6,7 @@ use std::mem::MaybeUninit;
 mod ffi;
 
 #[link(name = "kime_engine", kine = "dylib")]
-extern "C" {
-}
+extern "C" {}
 
 pub use ffi::{KimeInputResultType as InputResultType, KimeModifierState as ModifierState};
 

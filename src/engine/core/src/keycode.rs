@@ -2,7 +2,7 @@ use std::{fmt, str::FromStr};
 
 use serde::{
     de::{Error, Unexpected},
-    Deserialize,
+    Deserialize, Serialize,
 };
 use strum_macros::{Display, EnumString};
 
@@ -251,6 +251,16 @@ impl FromStr for Key {
         }
 
         Ok(Self::new(s.parse()?, state))
+    }
+}
+
+impl Serialize for Key {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let s = self.to_string();
+        serializer.serialize_str(&s)
     }
 }
 

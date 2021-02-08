@@ -1,5 +1,5 @@
 use crate::{keycode::Key, KeyCode, Layout};
-use ahash::AHashSet;
+use ahash::AHashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -26,34 +26,38 @@ impl Default for ComposeConfig {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy)]
+pub enum HotkeyBehavior {
+    ToggleHangul,
+    ToHangul,
+    ToEnglish,
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct RawConfig {
     pub layout: String,
     pub global_hangul_state: bool,
-    pub esc_turn_off: bool,
-    pub hangul_keys: Vec<String>,
+    pub hotkeys: AHashMap<Key, HotkeyBehavior>,
     pub xim_preedit_font: (String, f64),
     pub compose: ComposeConfig,
 }
 
 impl Default for RawConfig {
     fn default() -> Self {
-        const DEFAULT_HANGUL_KEYS: &[Key] = &[
-            Key::normal(KeyCode::AltR),
-            Key::normal(KeyCode::Muhenkan),
-            Key::normal(KeyCode::Hangul),
-            Key::super_(KeyCode::Space),
-        ];
-
         Self {
             layout: "dubeolsik".to_string(),
             global_hangul_state: false,
-            esc_turn_off: true,
-            hangul_keys: DEFAULT_HANGUL_KEYS
-                .iter()
-                .map(ToString::to_string)
-                .collect(),
+            hotkeys: [
+                (Key::normal(KeyCode::Esc), HotkeyBehavior::ToEnglish),
+                (Key::normal(KeyCode::AltR), HotkeyBehavior::ToggleHangul),
+                (Key::normal(KeyCode::Muhenkan), HotkeyBehavior::ToggleHangul),
+                (Key::normal(KeyCode::Hangul), HotkeyBehavior::ToggleHangul),
+                (Key::super_(KeyCode::Space), HotkeyBehavior::ToggleHangul),
+            ]
+            .iter()
+            .copied()
+            .collect(),
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
             compose: ComposeConfig::default(),
         }
@@ -63,8 +67,7 @@ impl Default for RawConfig {
 pub struct Config {
     pub(crate) layout: Layout,
     pub(crate) global_hangul_state: bool,
-    pub(crate) esc_turn_off: bool,
-    pub(crate) hangul_keys: AHashSet<Key>,
+    pub(crate) hotkeys: AHashMap<Key, HotkeyBehavior>,
     pub(crate) compose: ComposeConfig,
     pub xim_preedit_font: (String, f64),
 }
@@ -80,13 +83,8 @@ impl Config {
         Self {
             layout,
             global_hangul_state: raw.global_hangul_state,
-            esc_turn_off: raw.esc_turn_off,
             compose: raw.compose,
-            hangul_keys: raw
-                .hangul_keys
-                .iter()
-                .filter_map(|s| s.parse().ok())
-                .collect(),
+            hotkeys: raw.hotkeys,
             xim_preedit_font: raw.xim_preedit_font,
         }
     }

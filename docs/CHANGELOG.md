@@ -3,6 +3,7 @@
 ## Dev
 
 * Using C++ header for engine cffi [#229](https://github.com/Riey/kime/issues/229)
+* Implement engine hotkeys [#223](https://github.com/Riey/kime/issues/223)
 
 ## 1.0.0-pre3
 

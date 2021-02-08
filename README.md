@@ -16,6 +16,7 @@ Korean IME
 ## Why kime
 
 * Well tested input engine
+* Very [fast](https://github.com/Riey/kime/wiki/Performance)
 * Low memory footprint
 * Write in mostly Rust no segfaults
 * Allow custom layouts

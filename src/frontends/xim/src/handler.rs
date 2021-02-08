@@ -300,6 +300,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
         log::trace!("{:?}", ret);
 
+        if ret.hangul_changed {
+            input_context.user_data.engine.update_hangul_state();
+        }
+
         match ret.ty {
             InputResultType::Bypass => Ok(false),
             InputResultType::Consume => Ok(true),

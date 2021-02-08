@@ -16,6 +16,7 @@
 ## kime을 써야 하는 이유?
 
 * 잘 테스트된 입력 엔진
+* 빠른 [속도](https://github.com/Riey/kime/wiki/Performance)
 * 적은 메모리 사용량
 * 대부분의 코드가 세그멘테이션 오류가 없는 Rust로 작성됨
 * 사용자 설정 자판 지원

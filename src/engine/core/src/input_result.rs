@@ -17,6 +17,7 @@ pub enum InputResultType {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct InputResult {
     pub ty: InputResultType,
+    pub hangul_changed: bool,
     pub char1: u32,
     pub char2: u32,
 }
@@ -25,6 +26,7 @@ impl Default for InputResult {
     fn default() -> Self {
         Self {
             ty: InputResultType::Bypass,
+            hangul_changed: false,
             char1: 0,
             char2: 0,
         }
@@ -49,6 +51,7 @@ impl InputResult {
     pub const fn clear_preedit() -> Self {
         Self {
             ty: InputResultType::ClearPreedit,
+            hangul_changed: false,
             char1: 0,
             char2: 0,
         }
@@ -57,6 +60,7 @@ impl InputResult {
     pub const fn bypass() -> Self {
         Self {
             ty: InputResultType::Bypass,
+            hangul_changed: false,
             char1: 0,
             char2: 0,
         }
@@ -65,6 +69,7 @@ impl InputResult {
     pub const fn consume() -> Self {
         Self {
             ty: InputResultType::Consume,
+            hangul_changed: false,
             char1: 0,
             char2: 0,
         }
@@ -73,6 +78,7 @@ impl InputResult {
     pub const fn preedit(c: char) -> Self {
         Self {
             ty: InputResultType::Preedit,
+            hangul_changed: false,
             char1: c as u32,
             char2: 0,
         }
@@ -81,6 +87,7 @@ impl InputResult {
     pub const fn commit(c: char) -> Self {
         Self {
             ty: InputResultType::Commit,
+            hangul_changed: false,
             char1: c as u32,
             char2: 0,
         }
@@ -89,6 +96,7 @@ impl InputResult {
     pub const fn commit_bypass(c: char) -> Self {
         Self {
             ty: InputResultType::CommitBypass,
+            hangul_changed: false,
             char1: c as u32,
             char2: 0,
         }
@@ -97,16 +105,23 @@ impl InputResult {
     pub const fn commit_preedit(c: char, p: char) -> Self {
         Self {
             ty: InputResultType::CommitPreedit,
+            hangul_changed: false,
             char1: c as u32,
             char2: p as u32,
         }
     }
 
-    pub fn commit2(c1: char, c2: char) -> Self {
+    pub const fn commit2(c1: char, c2: char) -> Self {
         Self {
             ty: InputResultType::CommitCommit,
+            hangul_changed: false,
             char1: c1 as u32,
             char2: c2 as u32,
         }
+    }
+
+    pub const fn hangul_changed(mut self) -> Self {
+        self.hangul_changed = true;
+        self
     }
 }

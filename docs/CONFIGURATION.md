@@ -34,30 +34,52 @@ Set hangul state globally
 
 ## hotkeys
 
-Set engine hotkeys format is `Key: Behavior`
+Set engine hotkey format is `Key: Content`
 
-### Behavior
+### content
 
-#### ToggleHangul
+#### behavior
 
-Switch hangul mode
+##### ToggleHangul
 
-#### ToEnglish
+Toggle hangul mode
 
-To English mode
+##### ToEnglish
 
-#### ToHangul
+Set english mode
 
-To Hangul mode
+##### ToHangul
+
+Set hangul mode
+
+#### result
+
+##### Bypass
+
+Bypass key to continue key process
+
+##### Consume
+
+Consume key to end key process
 
 ### default
 
 ```txt
-  Esc: ToEnglish
-  Muhenkan: ToggleHangul
-  Hangul: ToggleHangul
-  AltR: ToggleHangul
-  Super-Space: ToggleHangul
+  Esc:
+    behavior: ToEnglish
+    result: Bypass
+  AltR:
+    behavior: ToggleHangul
+    result: Consume
+  Muhenkan:
+    behavior: ToggleHangul
+    result: Consume
+  Hangul:
+    behavior: ToggleHangul
+    result: Consume
+  Super-Space:
+    behavior: ToggleHangul
+    result: Consume
 ```
 
 ## xim_preedit_font

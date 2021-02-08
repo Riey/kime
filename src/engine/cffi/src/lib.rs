@@ -17,6 +17,7 @@ pub use ffi::{
 #[derive(Clone, Copy, Debug)]
 pub struct InputResult {
     pub ty: InputResultType,
+    pub hangul_changed: bool,
     pub char1: char,
     pub char2: char,
 }
@@ -52,6 +53,7 @@ impl InputEngine {
         unsafe {
             InputResult {
                 ty: ret.ty,
+                hangul_changed: ret.hangul_changed,
                 char1: from_u32_unchecked(ret.char1),
                 char2: from_u32_unchecked(ret.char2),
             }

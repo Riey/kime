@@ -79,6 +79,10 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   kime::InputResult ret = kime_engine_press_key(
       this->engine, this->config, (uint16_t)keyevent->nativeScanCode(), state);
 
+  if (ret.hangul_changed) {
+    kime::kime_engine_update_hangul_state(this->engine);
+  }
+
 #ifdef DEBUG
   KIME_DEBUG << "ty: " << (uint32_t) ret.ty << "char1: " << (QChar)ret.char1
              << "char2: " << (QChar)ret.char2 << "\n";
@@ -87,8 +91,7 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   switch (ret.ty) {
   case kime::InputResultType::Bypass:
     return false;
-  case kime::InputResultType::ToggleHangul:
-    kime_engine_update_hangul_state(this->engine);
+  case kime::InputResultType::Consume:
     return true;
   case kime::InputResultType::ClearPreedit:
     commit_ch(U'\0');

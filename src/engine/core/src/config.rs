@@ -50,8 +50,12 @@ impl Hotkey {
         Self { behavior, result }
     }
 
-    pub const fn behavior(self) -> HotkeyBehavior { self.behavior}
-    pub const fn result(self) -> HotkeyResult { self.result}
+    pub const fn behavior(self) -> HotkeyBehavior {
+        self.behavior
+    }
+    pub const fn result(self) -> HotkeyResult {
+        self.result
+    }
 }
 
 #[derive(Serialize, Deserialize)]

@@ -95,6 +95,8 @@ impl InputEngine {
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         if let Some(hotkey) = config.hotkeys.get(&key) {
+            let first = self.enable_hangul;
+
             match hotkey.behavior() {
                 HotkeyBehavior::ToEnglish => {
                     self.enable_hangul = false;
@@ -107,10 +109,16 @@ impl InputEngine {
                 }
             }
 
-            match hotkey.result() {
+            let changed = self.enable_hangul != first;
+
+            let mut ret = match hotkey.result() {
                 HotkeyResult::Bypass => self.bypass(),
                 HotkeyResult::Consume => InputResult::consume(),
-            }
+            };
+
+            ret.hangul_changed = changed;
+
+            ret
         } else if key.code == KeyCode::Shift {
             // Don't reset state
             InputResult::bypass()

@@ -2,11 +2,21 @@
 layout: dubeolsik
 global_hangul_state: false
 hotkeys:
-  Esc: ToEnglish
-  Muhenkan: ToggleHangul
-  Hangul: ToggleHangul
-  AltR: ToggleHangul
-  Super-Space: ToggleHangul
+  Esc:
+    behavior: ToEnglish
+    result: Bypass
+  AltR:
+    behavior: ToggleHangul
+    result: Consume
+  Muhenkan:
+    behavior: ToggleHangul
+    result: Consume
+  Hangul:
+    behavior: ToggleHangul
+    result: Consume
+  Super-Space:
+    behavior: ToggleHangul
+    result: Consume
 xim_preedit_font:
   - D2Coding
   - 15.0

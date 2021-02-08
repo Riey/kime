@@ -229,9 +229,7 @@ impl KimeContext {
                         log::trace!("ret: {:#?}", ret);
 
                         match ret.ty {
-                            InputResultType::ToggleHangul => {
-                                self.engine.update_hangul_state();
-                            }
+                            InputResultType::Consume => {}
                             InputResultType::Bypass => bypass = true,
                             InputResultType::CommitBypass => {
                                 self.commit_ch(ret.char1);

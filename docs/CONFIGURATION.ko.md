@@ -26,30 +26,52 @@
 
 ## hotkeys
 
-엔진의 단축키를 설정합니다 형식은 `키: 행동` 입니다
+엔진의 단축키를 설정합니다 형식은 `키: 내용` 입니다
 
-### 행동
+### 내용
 
-#### ToggleHangul
+#### behavior
+
+##### ToggleHangul
 
 한영상태를 바꿉니다
 
-#### ToEnglish
+##### ToEnglish
 
 영문모드로 바꿉니다
 
-#### ToHangul
+##### ToHangul
 
 한글모드로 바꿉니다
+
+#### result
+
+##### Bypass
+
+키를 계속 처리합니다
+
+##### Consume
+
+키 처리를 종료합니다
 
 ### 기본값
 
 ```txt
-  Esc: ToEnglish
-  Muhenkan: ToggleHangul
-  Hangul: ToggleHangul
-  AltR: ToggleHangul
-  Super-Space: ToggleHangul
+  Esc:
+    behavior: ToEnglish
+    result: Bypass
+  AltR:
+    behavior: ToggleHangul
+    result: Consume
+  Muhenkan:
+    behavior: ToggleHangul
+    result: Consume
+  Hangul:
+    behavior: ToggleHangul
+    result: Consume
+  Super-Space:
+    behavior: ToggleHangul
+    result: Consume
 ```
 
 ## xim_preedit_font

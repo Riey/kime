@@ -4,8 +4,8 @@
 
 /* DO NOT MODIFY THIS MANUALLY */
 
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 namespace kime {
 

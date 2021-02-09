@@ -7,10 +7,10 @@ tab_width = 2
 braces = "SameLine"
 language = "C++"
 namespace = "kime"
-style = "tag"
+style = "both"
 
 no_includes = true
-sys_includes = ["cstdint", "cstddef"]
+sys_includes = ["stdint.h", "stddef.h"]
 
 [macro_expansion]
 bitflags = true

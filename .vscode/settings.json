@@ -15,7 +15,10 @@
         "vector": "cpp",
         "system_error": "cpp",
         "cstdarg": "cpp",
-        "cstdlib": "cpp"
+        "cstdlib": "cpp",
+        "cstdint": "cpp",
+        "stdio.h": "c",
+        "immodule.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src",

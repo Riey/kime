@@ -1,6 +1,7 @@
 #!/bin/sh
 
-cbindgen -o kime_engine.hpp ../capi
+cbindgen -o kime_engine.h -c ../capi/cbindgen-c.toml ../capi
+cbindgen -o kime_engine.hpp  -c ../capi/cbindgen-cpp.toml ../capi
 
 bindgen \
     --disable-name-namespacing \

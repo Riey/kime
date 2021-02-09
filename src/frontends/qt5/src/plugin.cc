@@ -4,11 +4,11 @@
 #include <QDebug>
 
 KimePlatformInputContextPlugin::KimePlatformInputContextPlugin()
-    : engine(kime_engine_new()), config(kime_config_load()) {}
+    : engine(kime::kime_engine_new()), config(kime::kime_config_load()) {}
 
 KimePlatformInputContextPlugin::~KimePlatformInputContextPlugin() {
-  kime_engine_delete(this->engine);
-  kime_config_delete(this->config);
+  kime::kime_engine_delete(this->engine);
+  kime::kime_config_delete(this->config);
 }
 
 QPlatformInputContext *

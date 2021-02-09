@@ -32,19 +32,55 @@ Set hangul state globally
 | default |`false`|
 |---------|-------|
 
-## esc_turn_off
+## hotkeys
 
-Turn off hangul mode when esc is pressed especially for VIM users
+Set engine hotkey format is `Key: Content`
 
-| default |`true`|
-|---------|------|
+### content
 
-## hangul_keys
+#### behavior
 
-Keycodes for switch hangul mode
+##### ToggleHangul
 
-| default |`[Hangul, Muhenkan, AltR, Super-Space]`|
-|---------|---------------------------------------|
+Toggle hangul mode
+
+##### ToEnglish
+
+Set english mode
+
+##### ToHangul
+
+Set hangul mode
+
+#### result
+
+##### Bypass
+
+Bypass key to continue key process
+
+##### Consume
+
+Consume key to end key process
+
+### default
+
+```txt
+  Esc:
+    behavior: ToEnglish
+    result: Bypass
+  AltR:
+    behavior: ToggleHangul
+    result: Consume
+  Muhenkan:
+    behavior: ToggleHangul
+    result: Consume
+  Hangul:
+    behavior: ToggleHangul
+    result: Consume
+  Super-Space:
+    behavior: ToggleHangul
+    result: Consume
+```
 
 ## xim_preedit_font
 

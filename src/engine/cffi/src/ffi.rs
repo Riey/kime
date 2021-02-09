@@ -3,11 +3,11 @@
 pub type __uint8_t = ::std::os::raw::c_uchar;
 pub type __uint16_t = ::std::os::raw::c_ushort;
 pub type __uint32_t = ::std::os::raw::c_uint;
-#[repr(i32)]
+#[repr(u16)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum InputResultType {
     Bypass = 0,
-    ToggleHangul = 1,
+    Consume = 1,
     ClearPreedit = 2,
     Preedit = 3,
     Commit = 4,
@@ -29,6 +29,7 @@ pub struct InputEngine {
 #[derive(Debug, Copy, Clone)]
 pub struct InputResult {
     pub ty: InputResultType,
+    pub hangul_changed: bool,
     pub char1: u32,
     pub char2: u32,
 }
@@ -52,6 +53,16 @@ fn bindgen_test_layout_InputResult() {
             stringify!(InputResult),
             "::",
             stringify!(ty)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<InputResult>())).hangul_changed as *const _ as usize },
+        2usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(InputResult),
+            "::",
+            stringify!(hangul_changed)
         )
     );
     assert_eq!(

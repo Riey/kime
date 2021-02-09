@@ -300,12 +300,13 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
         log::trace!("{:?}", ret);
 
+        if ret.hangul_changed {
+            input_context.user_data.engine.update_hangul_state();
+        }
+
         match ret.ty {
             InputResultType::Bypass => Ok(false),
-            InputResultType::ToggleHangul => {
-                input_context.user_data.engine.update_hangul_state();
-                Ok(true)
-            }
+            InputResultType::Consume => Ok(true),
             InputResultType::ClearPreedit => {
                 self.clear_preedit(server, input_context)?;
                 Ok(true)

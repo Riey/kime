@@ -228,10 +228,12 @@ impl KimeContext {
                                 .press_key(&self.config, (key + 8) as u16, self.mod_state);
                         log::trace!("ret: {:#?}", ret);
 
+                        if ret.hangul_changed {
+                            self.engine.update_hangul_state();
+                        }
+
                         match ret.ty {
-                            InputResultType::ToggleHangul => {
-                                self.engine.update_hangul_state();
-                            }
+                            InputResultType::Consume => {}
                             InputResultType::Bypass => bypass = true,
                             InputResultType::CommitBypass => {
                                 self.commit_ch(ret.char1);

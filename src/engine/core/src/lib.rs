@@ -7,6 +7,7 @@ mod state;
 use std::io::Read;
 
 use self::characters::KeyValue;
+use self::config::{HotkeyBehavior, HotkeyResult};
 use self::state::CharacterState;
 use ahash::AHashMap;
 
@@ -93,15 +94,34 @@ impl InputEngine {
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
-        if config.hangul_keys.contains(&key) {
-            self.enable_hangul = !self.enable_hangul;
-            InputResult::toggle_hangul()
+        if let Some(hotkey) = config.hotkeys.get(&key) {
+            let first = self.enable_hangul;
+
+            match hotkey.behavior() {
+                HotkeyBehavior::ToEnglish => {
+                    self.enable_hangul = false;
+                }
+                HotkeyBehavior::ToHangul => {
+                    self.enable_hangul = true;
+                }
+                HotkeyBehavior::ToggleHangul => {
+                    self.enable_hangul = !self.enable_hangul;
+                }
+            }
+
+            let changed = self.enable_hangul != first;
+
+            let mut ret = match hotkey.result() {
+                HotkeyResult::Bypass => self.bypass(),
+                HotkeyResult::Consume => InputResult::consume(),
+            };
+
+            ret.hangul_changed = changed;
+
+            ret
         } else if key.code == KeyCode::Shift {
             // Don't reset state
             InputResult::bypass()
-        } else if key.code == KeyCode::Esc && config.esc_turn_off {
-            self.enable_hangul = false;
-            self.bypass()
         } else if self.check_hangul_state(config) {
             if key.code == KeyCode::Backspace {
                 self.state.backspace(config)

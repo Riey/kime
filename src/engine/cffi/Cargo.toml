@@ -5,6 +5,5 @@ authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
 
-[dependencies]
-# this will cause warning unless https://github.com/rust-lang/cargo/issues/9096 get implemented
-# kime-engine-capi = { path = "../capi" }
+[features]
+nightly = []

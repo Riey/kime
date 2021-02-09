@@ -28,7 +28,10 @@ fn test_input(inputs: &[(Key, InputResult)]) {
 fn esc() {
     test_input(&[
         (Key::normal(R), InputResult::preedit('ㄱ')),
-        (Key::normal(Esc), InputResult::commit_bypass('ㄱ')),
+        (
+            Key::normal(Esc),
+            InputResult::commit_bypass('ㄱ').hangul_changed(),
+        ),
         (Key::normal(R), InputResult::bypass()),
     ]);
 }

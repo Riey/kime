@@ -172,6 +172,10 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     KimeInputResult ret =
         kime_engine_press_key(ctx->engine, ctx->config, code, kime_state);
 
+    if (ret.hangul_changed) {
+      kime_engine_update_hangul_state(ctx->engine);
+    }
+
     switch (ret.ty) {
     case Commit:
       update_preedit(ctx, FALSE);
@@ -198,8 +202,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     case ClearPreedit:
       update_preedit(ctx, FALSE);
       return TRUE;
-    case ToggleHangul:
-      kime_engine_update_hangul_state(ctx->engine);
+    case Consume:
       return TRUE;
     case Bypass:
     default:

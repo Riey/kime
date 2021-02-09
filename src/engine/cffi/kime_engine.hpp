@@ -9,9 +9,9 @@
 
 namespace kime {
 
-enum class InputResultType {
+enum class InputResultType : uint16_t {
   Bypass,
-  ToggleHangul,
+  Consume,
   ClearPreedit,
   Preedit,
   Commit,
@@ -26,6 +26,7 @@ struct InputEngine;
 
 struct InputResult {
   InputResultType ty;
+  bool hangul_changed;
   uint32_t char1;
   uint32_t char2;
 };

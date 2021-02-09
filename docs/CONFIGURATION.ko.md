@@ -24,19 +24,55 @@
 | 기본값 |`false`|
 |--------|-------|
 
-## esc_turn_off
+## hotkeys
 
-`ESC` 버튼을 누르면 영문 모드로 전환됩니다. vim을 쓸 때 유용한 기능입니다.
+엔진의 단축키를 설정합니다 형식은 `키: 내용` 입니다
 
-| 기본값 |`true`|
-|--------|------|
+### 내용
 
-## hangul_keys
+#### behavior
 
-한/영 모드를 전환하는 데 사용할 키들입니다.
+##### ToggleHangul
 
-| 기본값 |`[Hangul, Muhenkan, AltR, Super-Space]`|
-|--------|---------------------------------------|
+한영상태를 바꿉니다
+
+##### ToEnglish
+
+영문모드로 바꿉니다
+
+##### ToHangul
+
+한글모드로 바꿉니다
+
+#### result
+
+##### Bypass
+
+키를 계속 처리합니다
+
+##### Consume
+
+키 처리를 종료합니다
+
+### 기본값
+
+```txt
+  Esc:
+    behavior: ToEnglish
+    result: Bypass
+  AltR:
+    behavior: ToggleHangul
+    result: Consume
+  Muhenkan:
+    behavior: ToggleHangul
+    result: Consume
+  Hangul:
+    behavior: ToggleHangul
+    result: Consume
+  Super-Space:
+    behavior: ToggleHangul
+    result: Consume
+```
 
 ## xim_preedit_font
 

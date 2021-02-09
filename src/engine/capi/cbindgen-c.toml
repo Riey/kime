@@ -17,3 +17,9 @@ include = ["kime-engine-core"]
 
 [export]
 prefix = "Kime"
+
+[enum]
+enum_class = true
+
+[const]
+allow_static_const = true

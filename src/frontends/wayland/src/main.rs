@@ -17,8 +17,8 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, ModifierState, MODIFIER_ALT, MODIFIER_CONTROL,
-    MODIFIER_SHIFT, MODIFIER_SUPER,
+    Config, InputEngine, InputResultType, ModifierState, ModifierState_ALT, ModifierState_CONTROL,
+    ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
@@ -307,16 +307,16 @@ impl KimeContext {
             } => {
                 self.mod_state = 0;
                 if mods_depressed & 0x1 != 0 {
-                    self.mod_state |= MODIFIER_SHIFT;
+                    self.mod_state |= ModifierState_SHIFT;
                 }
                 if mods_depressed & 0x4 != 0 {
-                    self.mod_state |= MODIFIER_CONTROL;
+                    self.mod_state |= ModifierState_CONTROL;
                 }
                 if mods_depressed & 0x8 != 0 {
-                    self.mod_state |= MODIFIER_ALT;
+                    self.mod_state |= ModifierState_ALT;
                 }
                 if mods_depressed & 0x40 != 0 {
-                    self.mod_state |= MODIFIER_SUPER;
+                    self.mod_state |= ModifierState_SUPER;
                 }
                 self.vk
                     .modifiers(mods_depressed, mods_latched, mods_locked, group);

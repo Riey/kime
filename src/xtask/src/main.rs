@@ -208,6 +208,10 @@ impl TaskCommand {
                     target_path.join("usr/include/kime_engine.h"),
                 )?;
                 install(
+                    out_path.join("kime_engine.hpp"),
+                    target_path.join("usr/include/kime_engine.hpp"),
+                )?;
+                install(
                     out_path.join("default_config.yaml"),
                     target_path.join("etc/kime/config.yaml"),
                 )?;
@@ -323,6 +327,12 @@ impl TaskCommand {
                 fs::copy(
                     src_path.join("engine").join("cffi").join("kime_engine.h"),
                     out_path.join("kime_engine.h"),
+                )
+                .context("Copy engine header file")?;
+
+                fs::copy(
+                    src_path.join("engine").join("cffi").join("kime_engine.hpp"),
+                    out_path.join("kime_engine.hpp"),
                 )
                 .context("Copy engine header file")?;
 

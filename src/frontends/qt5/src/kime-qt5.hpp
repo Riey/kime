@@ -5,6 +5,4 @@
 #define KIME_DEBUG QTextStream(stderr, QIODevice::WriteOnly)
 #endif
 
-extern "C" {
-#include <kime_engine.h>
-}
+#include <kime_engine.hpp>

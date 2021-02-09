@@ -3,17 +3,16 @@ use std::mem::MaybeUninit;
 
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
+#[allow(non_upper_case_globals)]
 mod ffi;
 
 #[link(name = "kime_engine", kind = "dylib")]
 extern "C" {}
 
-pub use ffi::{KimeInputResultType as InputResultType, KimeModifierState as ModifierState};
-
-pub const MODIFIER_CONTROL: ModifierState = 1;
-pub const MODIFIER_SUPER: ModifierState = 2;
-pub const MODIFIER_SHIFT: ModifierState = 4;
-pub const MODIFIER_ALT: ModifierState = 8;
+pub use ffi::{
+    InputResultType, ModifierState, ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT,
+    ModifierState_SUPER,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct InputResult {
@@ -23,7 +22,7 @@ pub struct InputResult {
 }
 
 pub struct InputEngine {
-    engine: *mut ffi::KimeInputEngine,
+    engine: *mut ffi::InputEngine,
 }
 
 impl InputEngine {
@@ -79,7 +78,7 @@ impl Drop for InputEngine {
 }
 
 pub struct Config {
-    config: *mut ffi::KimeConfig,
+    config: *mut ffi::Config,
 }
 
 impl Default for Config {

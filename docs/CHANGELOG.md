@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Dev
+
+* Using C++ header for engine cffi [#229](https://github.com/Riey/kime/issues/229)
+
 ## 1.0.0-pre3
 
 * Change release .tar.xz [#203](https://github.com/Riey/kime/issues/203)

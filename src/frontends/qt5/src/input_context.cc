@@ -3,8 +3,8 @@
 #include <QtCore/QCoreApplication>
 #include <QtGui/QKeyEvent>
 
-KimeInputContext::KimeInputContext(KimeInputEngine *engine,
-                                   const KimeConfig *config)
+KimeInputContext::KimeInputContext(kime::InputEngine *engine,
+                                   const kime::Config *config)
     : engine(engine), config(config) {}
 
 KimeInputContext::~KimeInputContext() {}
@@ -58,56 +58,56 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   auto keyevent = static_cast<const QKeyEvent *>(event);
   auto modifiers = keyevent->modifiers();
 
-  KimeModifierState state = 0;
+  kime::ModifierState state = 0;
 
   if (modifiers.testFlag(Qt::KeyboardModifier::ControlModifier)) {
-    state |= KimeModifierState_CONTROL;
+    state |= kime::ModifierState_CONTROL;
   }
 
   if (modifiers.testFlag(Qt::KeyboardModifier::ShiftModifier)) {
-    state |= KimeModifierState_SHIFT;
+    state |= kime::ModifierState_SHIFT;
   }
 
   if (modifiers.testFlag(Qt::KeyboardModifier::AltModifier)) {
-    state |= KimeModifierState_ALT;
+    state |= kime::ModifierState_ALT;
   }
 
   if (modifiers.testFlag(Qt::KeyboardModifier::MetaModifier)) {
-    state |= KimeModifierState_SUPER;
+    state |= kime::ModifierState_SUPER;
   }
 
-  KimeInputResult ret = kime_engine_press_key(
+  kime::InputResult ret = kime_engine_press_key(
       this->engine, this->config, (uint16_t)keyevent->nativeScanCode(), state);
 
 #ifdef DEBUG
-  KIME_DEBUG << "ty: " << ret.ty << "char1: " << (QChar)ret.char1
+  KIME_DEBUG << "ty: " << (uint32_t) ret.ty << "char1: " << (QChar)ret.char1
              << "char2: " << (QChar)ret.char2 << "\n";
 #endif
 
   switch (ret.ty) {
-  case KimeInputResultType::Bypass:
+  case kime::InputResultType::Bypass:
     return false;
-  case KimeInputResultType::ToggleHangul:
+  case kime::InputResultType::ToggleHangul:
     kime_engine_update_hangul_state(this->engine);
     return true;
-  case KimeInputResultType::ClearPreedit:
+  case kime::InputResultType::ClearPreedit:
     commit_ch(U'\0');
     return true;
-  case KimeInputResultType::Commit:
+  case kime::InputResultType::Commit:
     commit_ch(ret.char1);
     return true;
-  case KimeInputResultType::CommitPreedit:
+  case kime::InputResultType::CommitPreedit:
     commit_ch(ret.char1);
     preedit_ch(ret.char2);
     return true;
-  case KimeInputResultType::Preedit:
+  case kime::InputResultType::Preedit:
     preedit_ch(ret.char1);
     return true;
-  case KimeInputResultType::CommitCommit:
+  case kime::InputResultType::CommitCommit:
     commit_ch(ret.char1);
     commit_ch(ret.char2);
     return true;
-  case KimeInputResultType::CommitBypass:
+  case kime::InputResultType::CommitBypass:
     commit_ch(ret.char1);
     return false;
 

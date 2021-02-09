@@ -9,7 +9,7 @@
 
 namespace kime {
 
-enum class InputResultType {
+enum class InputResultType : uint16_t {
   Bypass,
   Consume,
   ClearPreedit,

@@ -3,7 +3,7 @@
 pub type __uint8_t = ::std::os::raw::c_uchar;
 pub type __uint16_t = ::std::os::raw::c_ushort;
 pub type __uint32_t = ::std::os::raw::c_uint;
-#[repr(i32)]
+#[repr(u16)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum InputResultType {
     Bypass = 0,
@@ -37,7 +37,7 @@ pub struct InputResult {
 fn bindgen_test_layout_InputResult() {
     assert_eq!(
         ::std::mem::size_of::<InputResult>(),
-        16usize,
+        12usize,
         concat!("Size of: ", stringify!(InputResult))
     );
     assert_eq!(
@@ -57,7 +57,7 @@ fn bindgen_test_layout_InputResult() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<InputResult>())).hangul_changed as *const _ as usize },
-        4usize,
+        2usize,
         concat!(
             "Offset of field: ",
             stringify!(InputResult),
@@ -67,7 +67,7 @@ fn bindgen_test_layout_InputResult() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<InputResult>())).char1 as *const _ as usize },
-        8usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(InputResult),
@@ -77,7 +77,7 @@ fn bindgen_test_layout_InputResult() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<InputResult>())).char2 as *const _ as usize },
-        12usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(InputResult),

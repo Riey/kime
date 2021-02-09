@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef enum KimeInputResultType {
+enum KimeInputResultType {
   Bypass,
   Consume,
   ClearPreedit,
@@ -18,14 +18,15 @@ typedef enum KimeInputResultType {
   CommitBypass,
   CommitPreedit,
   CommitCommit,
-} KimeInputResultType;
+};
+typedef uint16_t KimeInputResultType;
 
 typedef struct KimeConfig KimeConfig;
 
 typedef struct KimeInputEngine KimeInputEngine;
 
 typedef struct KimeInputResult {
-  enum KimeInputResultType ty;
+  KimeInputResultType ty;
   bool hangul_changed;
   uint32_t char1;
   uint32_t char2;

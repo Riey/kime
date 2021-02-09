@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[repr(C)]
+#[repr(u16)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InputResultType {
     Bypass,

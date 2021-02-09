@@ -3,9 +3,9 @@
 pub type __uint8_t = ::std::os::raw::c_uchar;
 pub type __uint16_t = ::std::os::raw::c_ushort;
 pub type __uint32_t = ::std::os::raw::c_uint;
-#[repr(u32)]
+#[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum KimeInputResultType {
+pub enum InputResultType {
     Bypass = 0,
     ToggleHangul = 1,
     ClearPreedit = 2,
@@ -17,72 +17,76 @@ pub enum KimeInputResultType {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct KimeConfig {
+pub struct Config {
     _unused: [u8; 0],
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct KimeInputEngine {
+pub struct InputEngine {
     _unused: [u8; 0],
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct KimeInputResult {
-    pub ty: KimeInputResultType,
+pub struct InputResult {
+    pub ty: InputResultType,
     pub char1: u32,
     pub char2: u32,
 }
 #[test]
-fn bindgen_test_layout_KimeInputResult() {
+fn bindgen_test_layout_InputResult() {
     assert_eq!(
-        ::std::mem::size_of::<KimeInputResult>(),
+        ::std::mem::size_of::<InputResult>(),
         12usize,
-        concat!("Size of: ", stringify!(KimeInputResult))
+        concat!("Size of: ", stringify!(InputResult))
     );
     assert_eq!(
-        ::std::mem::align_of::<KimeInputResult>(),
+        ::std::mem::align_of::<InputResult>(),
         4usize,
-        concat!("Alignment of ", stringify!(KimeInputResult))
+        concat!("Alignment of ", stringify!(InputResult))
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<KimeInputResult>())).ty as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<InputResult>())).ty as *const _ as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(KimeInputResult),
+            stringify!(InputResult),
             "::",
             stringify!(ty)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<KimeInputResult>())).char1 as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<InputResult>())).char1 as *const _ as usize },
         4usize,
         concat!(
             "Offset of field: ",
-            stringify!(KimeInputResult),
+            stringify!(InputResult),
             "::",
             stringify!(char1)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<KimeInputResult>())).char2 as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<InputResult>())).char2 as *const _ as usize },
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(KimeInputResult),
+            stringify!(InputResult),
             "::",
             stringify!(char2)
         )
     );
 }
-pub type KimeModifierState = u32;
+pub type ModifierState = u32;
+pub const ModifierState_CONTROL: ModifierState = 1;
+pub const ModifierState_SUPER: ModifierState = 2;
+pub const ModifierState_SHIFT: ModifierState = 4;
+pub const ModifierState_ALT: ModifierState = 8;
 extern "C" {
     #[doc = " Create new engine"]
-    pub fn kime_engine_new() -> *mut KimeInputEngine;
+    pub fn kime_engine_new() -> *mut InputEngine;
 }
 extern "C" {
     #[doc = " Set hangul enable state"]
-    pub fn kime_engine_set_hangul_enable(engine: *mut KimeInputEngine, mode: bool);
+    pub fn kime_engine_set_hangul_enable(engine: *mut InputEngine, mode: bool);
 }
 extern "C" {
     #[doc = " Delete engine"]
@@ -90,11 +94,11 @@ extern "C" {
     #[doc = " # Safety"]
     #[doc = ""]
     #[doc = " engine must be created by `kime_engine_new` and never call delete more than once"]
-    pub fn kime_engine_delete(engine: *mut KimeInputEngine);
+    pub fn kime_engine_delete(engine: *mut InputEngine);
 }
 extern "C" {
     #[doc = " Update hangul state"]
-    pub fn kime_engine_update_hangul_state(engine: *mut KimeInputEngine);
+    pub fn kime_engine_update_hangul_state(engine: *mut InputEngine);
 }
 extern "C" {
     #[doc = " Get preedit_char of engine"]
@@ -102,7 +106,7 @@ extern "C" {
     #[doc = " ## Return"]
     #[doc = ""]
     #[doc = " valid ucs4 char NULL to represent empty"]
-    pub fn kime_engine_preedit_char(engine: *const KimeInputEngine) -> u32;
+    pub fn kime_engine_preedit_char(engine: *const InputEngine) -> u32;
 }
 extern "C" {
     #[doc = " Reset preedit state then returm commit char"]
@@ -110,7 +114,7 @@ extern "C" {
     #[doc = " ## Return"]
     #[doc = ""]
     #[doc = " valid ucs4 char NULL to represent empty"]
-    pub fn kime_engine_reset(engine: *mut KimeInputEngine) -> u32;
+    pub fn kime_engine_reset(engine: *mut InputEngine) -> u32;
 }
 extern "C" {
     #[doc = " Press key when modifier state"]
@@ -119,23 +123,23 @@ extern "C" {
     #[doc = ""]
     #[doc = " input result"]
     pub fn kime_engine_press_key(
-        engine: *mut KimeInputEngine,
-        config: *const KimeConfig,
+        engine: *mut InputEngine,
+        config: *const Config,
         hardware_code: u16,
-        state: KimeModifierState,
-    ) -> KimeInputResult;
+        state: ModifierState,
+    ) -> InputResult;
 }
 extern "C" {
     #[doc = " Load config from local file"]
-    pub fn kime_config_load() -> *mut KimeConfig;
+    pub fn kime_config_load() -> *mut Config;
 }
 extern "C" {
     #[doc = " Create default config note that this function will not read config file"]
-    pub fn kime_config_default() -> *mut KimeConfig;
+    pub fn kime_config_default() -> *mut Config;
 }
 extern "C" {
     #[doc = " Delete config"]
-    pub fn kime_config_delete(config: *mut KimeConfig);
+    pub fn kime_config_delete(config: *mut Config);
 }
 extern "C" {
     #[doc = " Get xim_preedit_font config"]
@@ -145,7 +149,7 @@ extern "C" {
     #[doc = ""]
     #[doc = " utf-8 string when len"]
     pub fn kime_config_xim_preedit_font(
-        config: *const KimeConfig,
+        config: *const Config,
         name: *mut *const u8,
         len: *mut usize,
         font_size: *mut f64,

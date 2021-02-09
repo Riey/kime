@@ -12,8 +12,8 @@ use xim::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, MODIFIER_ALT, MODIFIER_CONTROL, MODIFIER_SHIFT,
-    MODIFIER_SUPER,
+    Config, InputEngine, InputResultType, ModifierState_ALT, ModifierState_CONTROL,
+    ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub struct KimeData {
@@ -278,19 +278,19 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         let mut state = 0;
 
         if xev.state & 0x1 != 0 {
-            state |= MODIFIER_SHIFT;
+            state |= ModifierState_SHIFT;
         }
 
         if xev.state & 0x4 != 0 {
-            state |= MODIFIER_CONTROL;
+            state |= ModifierState_CONTROL;
         }
 
         if xev.state & 0x8 != 0 {
-            state |= MODIFIER_ALT;
+            state |= ModifierState_ALT;
         }
 
         if xev.state & 0x40 != 0 {
-            state |= MODIFIER_SUPER;
+            state |= ModifierState_SUPER;
         }
 
         let ret = input_context

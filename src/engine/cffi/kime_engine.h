@@ -11,7 +11,7 @@
 
 typedef enum KimeInputResultType {
   Bypass,
-  ToggleHangul,
+  Consume,
   ClearPreedit,
   Preedit,
   Commit,
@@ -26,6 +26,7 @@ typedef struct KimeInputEngine KimeInputEngine;
 
 typedef struct KimeInputResult {
   enum KimeInputResultType ty;
+  bool hangul_changed;
   uint32_t char1;
   uint32_t char2;
 } KimeInputResult;

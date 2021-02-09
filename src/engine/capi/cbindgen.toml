@@ -5,8 +5,12 @@ include_version = true
 line_length = 100
 tab_width = 2
 braces = "SameLine"
-language = "C"
-style = "both"
+language = "C++"
+namespace = "kime"
+style = "tag"
+
+no_includes = true
+sys_includes = ["cstdint", "cstddef"]
 
 [macro_expansion]
 bitflags = true
@@ -15,5 +19,9 @@ bitflags = true
 parse_deps = true
 include = ["kime-engine-core"]
 
+[const]
+allow_static_const = true
+allow_constexpr = true
+
 [export]
-prefix = "Kime"
+# prefix = "Kime"

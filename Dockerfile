@@ -12,6 +12,5 @@ COPY src ./src
 COPY Cargo.toml .
 COPY Cargo.lock .
 COPY LICENSE .
-COPY .cargo ./.cargo
 
 ENTRYPOINT [ "ci/build_release.sh" ]

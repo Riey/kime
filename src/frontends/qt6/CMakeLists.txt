@@ -6,6 +6,10 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 6.0.0 COMPONENTS Gui REQUIRED)
 
+if(NOT ${Qt6_FOUND})
+    return()
+endif()
+
 add_library(kime-qt6 SHARED ../qt5/src/plugin.cc ../qt5/src/input_context.cc)
 
 target_include_directories(kime-qt6 PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${KIME_INCLUDE})

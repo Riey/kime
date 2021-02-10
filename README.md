@@ -50,16 +50,14 @@ make sure **cargo** and other dependencies listed below are installed before bui
 git clone https://github.com/Riey/kime
 cd kime
 
-cargo xtask build XIM GTK3 QT5
-
-# You can now install files from build/out
-# or use install task
-# cargo xtask install <target-path>
-# or you are debian user, use release-deb
-# cargo xtask release-deb <deb-out-path>
+scripts/build.sh -ar
 ```
 
-See `cargo xtask --help` for more detail
+Now all files are in build/out if you want manual install go ahead
+
+you can also use `scripts/install.sh <install-prefix>` useful script for packaging
+
+and there is `scripts/release-deb.sh <deb-out-path>` it make `deb` file.
 
 #### GTK
 
@@ -92,10 +90,14 @@ read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ## Dependencies
 
+Note that you only need deps what you need
+for example, if you don't use qt6 it won't required.
+
+* gtk2
 * gtk3
-* libappindicator
-
-### XIM
-
-* libxcb
-* cairo
+* gtk4
+* qt5
+* qt6
+* libappindicator-gtk3 (indicator)
+* libxcb (xim)
+* cairo (xim)

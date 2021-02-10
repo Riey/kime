@@ -1,5 +1,9 @@
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK4 REQUIRED gtk4)
+pkg_check_modules(GTK4 gtk4)
+
+if(${GTK4_FOUND} STREQUAL "0")
+    return()
+endif()
 
 add_library(kime-gtk4 SHARED src/gtk4.c ../gtk2/src/immodule.c)
 

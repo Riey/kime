@@ -49,16 +49,14 @@
 git clone https://github.com/Riey/kime
 cd kime
 
-cargo xtask build XIM GTK3 QT5
-
-# 이제 build/out에서 파일을 설치할 수 있습니다.
-# 아니면 install을 사용하세요.
-# cargo xtask install <target-path>
-# 또는 데비안 유저이면, release-deb를 사용할 수 있습니다.
-# cargo xtask release-deb <deb-out-path>
+scripts/build.sh -ar
 ```
 
-자세한 내용은 `cargo xtask --help`를 참고하세요.
+이제 모든 파일들은 build/out 경로에 있습니다 만약 수동설치를 원하시면 쓰시면 됩니다
+
+`scripts/install.sh <install-prefix>` 스크립트를 쓸 수도 있습니다 패키징할때 유용합니다
+
+`scripts/release-deb.sh <deb-out-path>` 스크립트를 사용하시면 `deb` 파일을 생성합니다.
 
 #### GTK
 
@@ -91,10 +89,14 @@ export XMODIFIERS=@im=kime
 
 ## 종속성 목록
 
+참고로 필요하신 종속성만 있으면 됩니다
+예를들어 qt6를 사용하지 않으신다면 필요하지 않습니다.
+
+* gtk2
 * gtk3
-* libappindicator
-
-### XIM
-
-* libxcb
-* cairo
+* gtk4
+* qt5
+* qt6
+* libappindicator-gtk3 (indicator)
+* libxcb (xim)
+* cairo (xim)

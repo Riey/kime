@@ -8,8 +8,6 @@ members = [
 
     "src/frontends/wayland",
     "src/frontends/xim",
-
-    "src/xtask",
 ]
 
 [profile.release]

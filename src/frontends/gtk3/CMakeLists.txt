@@ -1,5 +1,9 @@
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+pkg_check_modules(GTK3 gtk+-3.0)
+
+if(${GTK3_FOUND} STREQUAL "0")
+    return()
+endif()
 
 add_library(kime-gtk3 SHARED ../gtk2/src/gtk.c ../gtk2/src/immodule.c)
 

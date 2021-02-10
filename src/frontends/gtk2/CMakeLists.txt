@@ -1,5 +1,9 @@
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
+pkg_check_modules(GTK2 gtk+-2.0)
+
+if(${GTK2_FOUND} STREQUAL "0")
+    return()
+endif()
 
 add_library(kime-gtk2 SHARED src/gtk.c src/immodule.c)
 

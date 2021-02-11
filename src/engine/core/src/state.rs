@@ -61,19 +61,19 @@ impl CharacterState {
 
     pub fn backspace(&mut self, config: &Config) -> InputResult {
         if let Some(jong) = self.jong.as_mut() {
-            if let Some(new_jong) = jong.backspace(&config.compose) {
+            if let Some(new_jong) = jong.backspace(config) {
                 *jong = new_jong;
             } else {
                 self.jong = None;
             }
         } else if let Some(jung) = self.jung.as_mut() {
-            if let Some(new_jung) = jung.backspace(&config.compose) {
+            if let Some(new_jung) = jung.backspace(config) {
                 *jung = new_jung;
             } else {
                 self.jung = None;
             }
         } else if let Some(cho) = self.cho.as_mut() {
-            if let Some(new_cho) = cho.backspace(&config.compose) {
+            if let Some(new_cho) = cho.backspace(config) {
                 *cho = new_cho;
             } else {
                 self.cho = None;
@@ -149,7 +149,7 @@ impl CharacterState {
 
     pub fn cho(&mut self, cho: Choseong, config: &Config) -> InputResult {
         if let Some(prev_cho) = self.cho {
-            match prev_cho.try_add(cho, &config.compose) {
+            match prev_cho.try_add(cho, config) {
                 Some(new) => {
                     self.cho = Some(new);
                     InputResult::preedit(self.to_char())
@@ -171,7 +171,7 @@ impl CharacterState {
                 // has choseong move jongseong to next choseong
                 let new;
 
-                match jong.to_cho(&config.compose) {
+                match jong.to_cho(config) {
                     JongToCho::Direct(cho) => {
                         self.jong = None;
                         new = Self {
@@ -202,7 +202,7 @@ impl CharacterState {
         }
 
         if let Some(prev_jung) = self.jung {
-            match prev_jung.try_add(jung, &config.compose) {
+            match prev_jung.try_add(jung, config) {
                 Some(new) => {
                     self.jung = Some(new);
                     InputResult::preedit(self.to_char())
@@ -211,7 +211,7 @@ impl CharacterState {
                     let new;
 
                     if let Some(jong) = self.jong {
-                        match jong.to_cho(&config.compose) {
+                        match jong.to_cho(config) {
                             JongToCho::Direct(cho) => {
                                 self.jong = None;
                                 new = Self {
@@ -247,7 +247,7 @@ impl CharacterState {
 
     pub fn jong(&mut self, jong: Jongseong, config: &Config) -> InputResult {
         if let Some(prev_jong) = self.jong {
-            match prev_jong.try_add(jong, &config.compose) {
+            match prev_jong.try_add(jong, config) {
                 Some(new) => {
                     self.jong = Some(new);
                     InputResult::preedit(self.to_char())
@@ -255,7 +255,7 @@ impl CharacterState {
                 None => {
                     let new;
 
-                    match jong.to_cho(&config.compose) {
+                    match jong.to_cho(config) {
                         JongToCho::Direct(cho) => {
                             new = Self {
                                 cho: Some(cho),

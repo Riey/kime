@@ -79,6 +79,6 @@ make $KIME_MAKE_ARGS
 cp lib/* $KIME_OUT
 
 if [ $NEED_STRIP -eq "1" ]; then
-    strip -s $KIME_OUT/*
+    strip -s $KIME_OUT/* 2&>/dev/null || true
 fi
 

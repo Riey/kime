@@ -28,6 +28,26 @@
 
 엔진의 단축키를 설정합니다 형식은 `키: 내용` 입니다
 
+### 기본값
+
+```yaml
+Esc:
+  behavior: ToEnglish
+  result: Bypass
+AltR:
+  behavior: ToggleHangul
+  result: Consume
+Muhenkan:
+  behavior: ToggleHangul
+  result: Consume
+Hangul:
+  behavior: ToggleHangul
+  result: Consume
+Super-Space:
+  behavior: ToggleHangul
+  result: Consume
+```
+
 ### 내용
 
 #### behavior
@@ -54,26 +74,6 @@
 
 키 처리를 종료합니다
 
-### 기본값
-
-```txt
-  Esc:
-    behavior: ToEnglish
-    result: Bypass
-  AltR:
-    behavior: ToggleHangul
-    result: Consume
-  Muhenkan:
-    behavior: ToggleHangul
-    result: Consume
-  Hangul:
-    behavior: ToggleHangul
-    result: Consume
-  Super-Space:
-    behavior: ToggleHangul
-    result: Consume
-```
-
 ## xim_preedit_font
 
 XIM에서 쓸 편집창 글꼴과 크기입니다.
@@ -85,7 +85,18 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 
 자판의 추가 기능을 설정 합니다
 
-### ComposeChoseongSsang
+형식은 `자판이름: [Addon]` 입니다 `all`은 모든 자판에 적용됩니다.
+
+### 기본값
+
+```yaml
+all:
+  - ComposeChoseongSsang
+```
+
+### Addons
+
+#### ComposeChoseongSsang
 
 같은 자음을 두 번 누를 때 쌍자음을 합성합니다.
 
@@ -100,39 +111,27 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 | 기본값 |`true`|
 |--------|------|
 
-### DecomposeChoseongSsang
+#### DecomposeChoseongSsang
 
 쌍자음에 백스페이스를 누를 때 쌍자음을 분해시킵니다. (e.g. ㄲ -> ㄱ)
 
 | 기본값 |`false`|
 |--------|-------|
 
-### ComposeJungseongSsang
+#### ComposeJungseongSsang
 
 ```txt
 ㅑ + ㅣ = ㅒ
 ㅕ + ㅣ = ㅖ
 ```
 
-| 기본값 |`false`|
-|--------|-------|
+#### DecomposeJungseongSsang
 
-### DecomposeJungseongSsang
-
-| 기본값 |`false`|
-|--------|-------|
-
-### ComposeJongseongSsang
+#### ComposeJongseongSsang
 
 ```txt
 ㄱ + ㄱ = ㄲ
 ㅅ + ㅅ = ㅆ
 ```
 
-| 기본값 |`false`|
-|--------|-------|
-
-### DecomposeJongseongSsang
-
-| 기본값 |`false`|
-|--------|-------|
+#### DecomposeJongseongSsang

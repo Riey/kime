@@ -64,22 +64,22 @@ Consume key to end key process
 
 ### default
 
-```txt
-  Esc:
-    behavior: ToEnglish
-    result: Bypass
-  AltR:
-    behavior: ToggleHangul
-    result: Consume
-  Muhenkan:
-    behavior: ToggleHangul
-    result: Consume
-  Hangul:
-    behavior: ToggleHangul
-    result: Consume
-  Super-Space:
-    behavior: ToggleHangul
-    result: Consume
+```yaml
+Esc:
+  behavior: ToEnglish
+  result: Bypass
+AltR:
+  behavior: ToggleHangul
+  result: Consume
+Muhenkan:
+  behavior: ToggleHangul
+  result: Consume
+Hangul:
+  behavior: ToggleHangul
+  result: Consume
+Super-Space:
+  behavior: ToggleHangul
+  result: Consume
 ```
 
 ## xim_preedit_font
@@ -93,6 +93,15 @@ Preedit window font name and size for XIM
 
 Adjust layout addons
 
+format is `layout_name: [Addon]`, `all` applys all layouts
+
+### default
+
+```yaml
+all:
+  - ComposeChoseongSsang
+```
+
 ### ComposeChoseongSsang
 
 When you press same choseong it will be ssangjaum
@@ -105,15 +114,9 @@ When you press same choseong it will be ssangjaum
 ㅈ + ㅈ = ㅉ
 ```
 
-| default |`true`|
-|---------|------|
-
 ### DecomposeChoseongSsang
 
 Same as above but work on backspace(e.g. ㄲ -> ㄱ)
-
-| default |`false`|
-|---------|-------|
 
 ### ComposeJungseongSsang
 
@@ -122,13 +125,7 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 ㅕ + ㅣ = ㅖ
 ```
 
-| default |`false`|
-|---------|-------|
-
 ### DecomposeJungseongSsang
-
-| default |`false`|
-|---------|-------|
 
 ### ComposeJongseongSsang
 
@@ -137,10 +134,4 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 ㅅ + ㅅ = ㅆ
 ```
 
-| default |`false`|
-|---------|-------|
-
 ### DecomposeJongseongSsang
-
-| default |`false`|
-|---------|-------|

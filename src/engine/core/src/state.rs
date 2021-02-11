@@ -92,6 +92,24 @@ impl CharacterState {
         }
     }
 
+    // 신세벌식용
+    pub fn jung_cho(&mut self, jung: Jungseong, cho: Choseong, config: &Config) -> InputResult {
+        if self.cho.is_none() {
+            self.cho(cho, config)
+        } else {
+            self.jung(jung, config)
+        }
+    }
+
+    pub fn jung_jong(&mut self, jung: Jungseong, jong: Jongseong, config: &Config) -> InputResult {
+        // 아 + ㅖ$ㄴ = 안
+        if self.jung.is_some() {
+            self.jong(jong, config)
+        } else {
+            self.jung(jung, config)
+        }
+    }
+
     // 두벌식용
     pub fn cho_jong(&mut self, cho: Choseong, jong: Jongseong, config: &Config) -> InputResult {
         if self.cho.is_none() || self.jung.is_none() {

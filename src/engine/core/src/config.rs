@@ -157,6 +157,10 @@ impl Config {
                         Layout::load_from(include_str!("../data/sebeolsik-391.yaml"))
                             .expect("Load sebeolsik-391 layout")
                     }
+                    "sebeolsik-sin1995" => {
+                        Layout::load_from(include_str!("../data/sebeolsik-sin1995.yaml"))
+                            .expect("Load sebeolsik-sin1995 layout")
+                    }
                     // custom layout
                     other => {
                         eprintln!("Can't find layout {}", other);

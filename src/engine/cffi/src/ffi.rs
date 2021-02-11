@@ -8,12 +8,11 @@ pub type __uint32_t = ::std::os::raw::c_uint;
 pub enum InputResultType {
     Bypass = 0,
     Consume = 1,
-    ClearPreedit = 2,
-    Preedit = 3,
-    Commit = 4,
-    CommitBypass = 5,
-    CommitPreedit = 6,
-    CommitCommit = 7,
+    Preedit = 2,
+    Commit = 3,
+    CommitBypass = 4,
+    CommitPreedit = 5,
+    CommitCommit = 6,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

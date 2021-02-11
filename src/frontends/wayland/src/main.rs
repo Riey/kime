@@ -168,8 +168,12 @@ impl KimeContext {
     }
 
     fn preedit_ch(&mut self, ch: char) {
-        self.im
-            .set_preedit_string(ch.to_string(), 0, ch.len_utf8() as _);
+        if ch == '\0' {
+            self.clear_preedit();
+        } else {
+            self.im
+                .set_preedit_string(ch.to_string(), 0, ch.len_utf8() as _);
+        }
     }
 
     pub fn handle_im_ev(&mut self, ev: ImEvent) {
@@ -251,9 +255,6 @@ impl KimeContext {
                             }
                             InputResultType::CommitCommit => {
                                 self.commit_ch2(ret.char1, ret.char2);
-                            }
-                            InputResultType::ClearPreedit => {
-                                self.clear_preedit();
                             }
                         }
 

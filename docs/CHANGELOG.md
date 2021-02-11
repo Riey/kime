@@ -7,7 +7,8 @@
 * Implement engine hotkeys [#223](https://github.com/Riey/kime/issues/223)
 * Implement sebeolsik-sin1995 [#235](https://github.com/Riey/kime/issues/235)
 * Implement layout_addons [#239](https://github.com/Riey/kime/issues/239)
-* Fix gtk reset doesn't commit preedit char
+* Fix gtk reset doesn't commit preedit char [#240](https://github.com/Riey/kime/issues/240)]
+* Compile C/C++ with `-fvisibility=hidden`
 
 ## 1.0.0-pre3
 

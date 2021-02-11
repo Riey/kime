@@ -92,30 +92,58 @@ impl CharacterState {
         }
     }
 
-    // 신세벌식용
-    pub fn jung_cho(&mut self, jung: Jungseong, cho: Choseong, config: &Config) -> InputResult {
-        if self.cho.is_none() {
-            self.cho(cho, config)
-        } else {
-            self.jung(jung, config)
-        }
-    }
-
-    pub fn jung_jong(&mut self, jung: Jungseong, jong: Jongseong, config: &Config) -> InputResult {
-        // 아 + ㅖ$ㄴ = 안
-        if self.jung.is_some() {
-            self.jong(jong, config)
-        } else {
-            self.jung(jung, config)
-        }
-    }
-
-    // 두벌식용
-    pub fn cho_jong(&mut self, cho: Choseong, jong: Jongseong, config: &Config) -> InputResult {
+    pub fn cho_jong(
+        &mut self,
+        cho: Choseong,
+        jong: Jongseong,
+        first: bool,
+        config: &Config,
+    ) -> InputResult {
         if self.cho.is_none() || self.jung.is_none() {
             self.cho(cho, config)
+        } else if self.jung.is_some() {
+            self.jong(jong, config)
+        } else if first {
+            self.cho(cho, config)
         } else {
             self.jong(jong, config)
+        }
+    }
+
+    pub fn cho_jung(
+        &mut self,
+        cho: Choseong,
+        jung: Jungseong,
+        first: bool,
+        config: &Config,
+    ) -> InputResult {
+        if self.cho.is_none() || self.jung.is_some() {
+            self.cho(cho, config)
+        } else if self.cho.is_some() {
+            self.jung(jung, config)
+        } else if first {
+            self.cho(cho, config)
+        } else {
+            self.jung(jung, config)
+        }
+    }
+
+    pub fn jung_jong(
+        &mut self,
+        jung: Jungseong,
+        jong: Jongseong,
+        first: bool,
+        config: &Config,
+    ) -> InputResult {
+        // 아 + $ㄴㅖ = 안
+        if self.jung.is_some() {
+            self.jong(jong, config)
+        } else if self.cho.is_some() {
+            self.jung(jung, config)
+        } else if first {
+            self.jong(jong, config)
+        } else {
+            self.jung(jung, config)
         }
     }
 
@@ -263,7 +291,7 @@ mod tests {
 
         assert_eq!(
             InputResult::preedit('ㅇ'),
-            state.cho_jong(Choseong::Ieung, Jongseong::Ieung, &config)
+            state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &config)
         );
         assert_eq!(
             InputResult::preedit('아'),
@@ -271,7 +299,7 @@ mod tests {
         );
         assert_eq!(
             InputResult::preedit('앙'),
-            state.cho_jong(Choseong::Ieung, Jongseong::Ieung, &config)
+            state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &config)
         );
         assert_eq!(
             InputResult::commit_preedit('아', '아'),

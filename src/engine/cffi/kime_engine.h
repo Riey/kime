@@ -12,7 +12,6 @@
 enum KimeInputResultType {
   Bypass,
   Consume,
-  ClearPreedit,
   Preedit,
   Commit,
   CommitBypass,

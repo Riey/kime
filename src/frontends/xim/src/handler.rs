@@ -76,6 +76,10 @@ impl KimeHandler {
             return Ok(());
         }
 
+        if ch == '\0' {
+            return self.clear_preedit(server, ic);
+        }
+
         if let Some(pe) = ic.user_data.pe.as_mut() {
             // Draw in server (already have pe_window)
             let pe = self.preedit_windows.get_mut(pe).unwrap();
@@ -307,10 +311,6 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         match ret.ty {
             InputResultType::Bypass => Ok(false),
             InputResultType::Consume => Ok(true),
-            InputResultType::ClearPreedit => {
-                self.clear_preedit(server, input_context)?;
-                Ok(true)
-            }
             InputResultType::CommitBypass => {
                 self.commit(server, input_context, ret.char1)?;
                 self.clear_preedit(server, input_context)?;

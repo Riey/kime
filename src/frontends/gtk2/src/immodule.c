@@ -196,11 +196,10 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
       return TRUE;
     case CommitPreedit:
       commit(ctx, ret.char1);
-    case Preedit:
-      update_preedit(ctx, TRUE);
+      update_preedit(ctx, ret.char2 != 0);
       return TRUE;
-    case ClearPreedit:
-      update_preedit(ctx, FALSE);
+    case Preedit:
+      update_preedit(ctx, ret.char1 != 0);
       return TRUE;
     case Consume:
       return TRUE;

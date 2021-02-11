@@ -89,11 +89,13 @@ Preedit window font name and size for XIM
 | default |`[D2Coding, 15.0]`|
 |---------|------------------|
 
-## compose
+## layout_addons
 
-Adjust compose, decompose jamo
+Adjust layout addons
 
-### compose_choseong_ssang
+### ComposeChoseongSsang
+
+When you press same choseong it will be ssangjaum
 
 ```txt
 ㄱ + ㄱ = ㄲ
@@ -106,14 +108,14 @@ Adjust compose, decompose jamo
 | default |`true`|
 |---------|------|
 
-### decompose_choseong_ssang
+### DecomposeChoseongSsang
 
 Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 
 | default |`false`|
 |---------|-------|
 
-### compose_jungseong_ssang
+### ComposeJungseongSsang
 
 ```txt
 ㅑ + ㅣ = ㅒ
@@ -123,12 +125,12 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 | default |`false`|
 |---------|-------|
 
-### decompose_jungseong_ssang
+### DecomposeJungseongSsang
 
 | default |`false`|
 |---------|-------|
 
-### compose_jongseong_ssang
+### ComposeJongseongSsang
 
 ```txt
 ㄱ + ㄱ = ㄲ
@@ -138,7 +140,7 @@ Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 | default |`false`|
 |---------|-------|
 
-### decompose_jongseong_ssang
+### DecomposeJongseongSsang
 
 | default |`false`|
 |---------|-------|

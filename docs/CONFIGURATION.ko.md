@@ -81,11 +81,11 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 | 기본값 |`[D2Coding, 15.0]`|
 |--------|------------------|
 
-## compose
+## layout_addons
 
-자모 합성/분해 방식을 조정합니다.
+자판의 추가 기능을 설정 합니다
 
-### compose_choseong_ssang
+### ComposeChoseongSsang
 
 같은 자음을 두 번 누를 때 쌍자음을 합성합니다.
 
@@ -100,14 +100,14 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 | 기본값 |`true`|
 |--------|------|
 
-### decompose_choseong_ssang
+### DecomposeChoseongSsang
 
 쌍자음에 백스페이스를 누를 때 쌍자음을 분해시킵니다. (e.g. ㄲ -> ㄱ)
 
 | 기본값 |`false`|
 |--------|-------|
 
-### compose_jungseong_ssang
+### ComposeJungseongSsang
 
 ```txt
 ㅑ + ㅣ = ㅒ
@@ -117,12 +117,12 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 | 기본값 |`false`|
 |--------|-------|
 
-### decompose_jungseong_ssang
+### DecomposeJungseongSsang
 
 | 기본값 |`false`|
 |--------|-------|
 
-### compose_jongseong_ssang
+### ComposeJongseongSsang
 
 ```txt
 ㄱ + ㄱ = ㄲ
@@ -132,7 +132,7 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 | 기본값 |`false`|
 |--------|-------|
 
-### decompose_jongseong_ssang
+### DecomposeJongseongSsang
 
 | 기본값 |`false`|
 |--------|-------|

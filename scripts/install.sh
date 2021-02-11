@@ -13,6 +13,14 @@ if [ -z "$KIME_BIN_DIR" ]; then
     KIME_BIN_DIR=usr/bin
 fi
 
+if [ -z "$KIME_CONFIG_DIR" ]; then
+    KIME_CONFIG_DIR=etc/kime
+fi
+
+if [ -z "$KIME_DATA_DIR" ]; then
+    KIME_DATA_DIR=usr/share/kime
+fi
+
 if [ -z "$KIME_LIB_DIR" ]; then
     KIME_LIB_DIR=usr/lib
 fi
@@ -45,6 +53,8 @@ install_bin kime-indicator
 install_bin kime-xim
 install_bin kime-wayland
 
+install -Dm644 $KIME_OUT/default_config.yaml -T "$PREFIX/etc/kime/config.yaml"
+install -Dm644 $KIME_OUT/icons/* -t "$PREFIX/$KIME_DATA_DIR/icons"
 install -Dm755 $KIME_OUT/libkime_engine.so -t "$PREFIX/$KIME_LIB_DIR"
 install -Dm755 $KIME_OUT/libkime-gtk2.so -T "$PREFIX/$KIME_GTK2_DIR/im-kime.so"
 install -Dm755 $KIME_OUT/libkime-gtk3.so -T "$PREFIX/$KIME_GTK3_DIR/im-kime.so"

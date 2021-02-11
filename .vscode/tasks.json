@@ -3,7 +3,7 @@
         {
             "type": "shell",
             "command": [
-                "cargo xtask build --mode Debug GTK3 QT5"
+                "scripts/build.sh -ad"
             ],
             "problemMatcher": [
                 "$rustc"

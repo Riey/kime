@@ -1,13 +1,13 @@
-use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, Layout, RawConfig};
+use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
 #[track_caller]
 fn test_input(inputs: &[(Key, InputResult)]) {
-    let config = Config::new(
-        Layout::load_from(include_str!("../data/sebeolsik-sin1995.yaml")).unwrap(),
+    let config = Config::from_raw_config(
         RawConfig {
             layout: "sebeolsik-sin1995".into(),
             ..Default::default()
         },
+        None,
     );
 
     let mut engine = InputEngine::new();

@@ -145,28 +145,21 @@ impl Config {
                     })
             })
             .unwrap_or_else(|| {
-                // User layout not exists fallback to embeded layouts
-                match raw.layout.as_str() {
-                    "dubeolsik" => Layout::load_from(include_str!("../data/dubeolsik.yaml"))
-                        .expect("Load dubeolsik layout"),
-                    "sebeolsik-390" => {
-                        Layout::load_from(include_str!("../data/sebeolsik-390.yaml"))
-                            .expect("Load sebeolsik-390 layout")
-                    }
-                    "sebeolsik-391" => {
-                        Layout::load_from(include_str!("../data/sebeolsik-391.yaml"))
-                            .expect("Load sebeolsik-391 layout")
-                    }
-                    "sebeolsik-sin1995" => {
-                        Layout::load_from(include_str!("../data/sebeolsik-sin1995.yaml"))
-                            .expect("Load sebeolsik-sin1995 layout")
-                    }
-                    // custom layout
-                    other => {
-                        eprintln!("Can't find layout {}", other);
-                        Layout::default()
+                macro_rules! load_builtin_layout {
+                    ($($name:expr),+) => {
+                        match raw.layout.as_str() {
+                            $(
+                                $name => Layout::load_from(include_str!(concat!(concat!("../data/", $name), ".yaml"))).expect("Load builtin layout"),
+                            )+
+                            other => {
+                                eprintln!("Can't find layout {}", other);
+                                Layout::default()
+                            }
+                        }
                     }
                 }
+
+                load_builtin_layout!("dubeolsik", "sebeolsik-390", "sebeolsik-391", "sebeolsik-sin1995")
             });
 
         Self::new(layout, raw)

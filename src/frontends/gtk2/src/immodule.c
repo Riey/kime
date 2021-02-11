@@ -73,20 +73,28 @@ void commit(KimeImContext *ctx, uint32_t ch) {
 void focus_in(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
+  debug("focus_in");
+
   kime_engine_update_hangul_state(ctx->engine);
 }
 
 void reset(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
-  debug("reset");
-
   uint32_t c = kime_engine_reset(ctx->engine);
 
-  if (!c) {
+  debug("reset %u", c);
+
+  if (c) {
     update_preedit(ctx, FALSE);
     commit(ctx, c);
   }
+}
+
+void focus_out(GtkIMContext *im) {
+  debug("focus_out");
+
+  reset(im);
 }
 
 void put_event(KimeImContext *ctx, EventType *key) {
@@ -301,7 +309,7 @@ void im_context_class_init(KimeImContextClass *klass, gpointer _data) {
   klass->parent.filter_keypress = filter_keypress;
   klass->parent.get_preedit_string = get_preedit_string;
   klass->parent.focus_in = focus_in;
-  klass->parent.focus_out = reset;
+  klass->parent.focus_out = focus_out;
 
   GObjectClass *parent_class = G_OBJECT_CLASS(klass);
   parent_class->finalize = im_context_finalize;

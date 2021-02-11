@@ -31,8 +31,11 @@
             "cargo": {
                 "args": [
                     "build",
-                    "-p=kime-xim"
+                    "-p=kime-wayland"
                 ]
+            },
+            "env": {
+                "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug"
             },
             "program": "${cargo:program}",
             "args": []
@@ -44,7 +47,9 @@
             "preLaunchTask": "build all",
             "env": {
                 "GTK_IM_MODULE": "kime",
-                "GTK_IM_MODULE_FILE": "${workspaceFolder}/.vscode/immodules.cache"
+                "GTK_IM_MODULE_FILE": "${workspaceFolder}/.vscode/immodules.cache",
+                "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug",
+                "G_MESSAGES_DEBUG": "kime"
             },
             "program": "/usr/lib/firefox/firefox",
             "args": ["-g"]
@@ -56,7 +61,9 @@
             "preLaunchTask": "build all",
             "env": {
                 "GTK_IM_MODULE": "kime",
-                "GTK_IM_MODULE_FILE": "${workspaceFolder}/.vscode/immodules.cache"
+                "GTK_IM_MODULE_FILE": "${workspaceFolder}/.vscode/immodules.cache",
+                "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug",
+                "G_MESSAGES_DEBUG": "kime"
             },
             "program": "gedit",
             "args": []

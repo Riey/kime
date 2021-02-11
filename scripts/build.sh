@@ -62,6 +62,9 @@ cp $TARGET_DIR/kime-xim $KIME_OUT
 cp $TARGET_DIR/kime-wayland $KIME_OUT
 cp $TARGET_DIR/kime-indicator $KIME_OUT
 cp $TARGET_DIR/libkime_engine.so $KIME_OUT
+cp LICENSE $KIME_OUT
+cp res/default_config.yaml $KIME_OUT
+cp -R res/icons $KIME_OUT
 
 mkdir -pv build/cmake
 

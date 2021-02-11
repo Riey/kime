@@ -131,6 +131,8 @@ impl InputEngine {
                         '\0' => InputResult::commit(pass),
                         commit => InputResult::commit2(commit, pass),
                     },
+                    KeyValue::JungCho(jung, cho) => self.state.jung_cho(jung, cho, config),
+                    KeyValue::JungJong(jung, jong) => self.state.jung_jong(jung, jong, config),
                     KeyValue::ChoJong(cho, jong) => self.state.cho_jong(cho, jong, config),
                     KeyValue::Jungseong(jung) => self.state.jung(jung, config),
                     KeyValue::Choseong(cho) => self.state.cho(cho, config),

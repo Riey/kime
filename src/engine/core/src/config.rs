@@ -1,29 +1,18 @@
 use crate::{keycode::Key, KeyCode, Layout};
 use ahash::AHashMap;
+use enumset::{EnumSet, EnumSetType};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
-#[derive(Serialize, Deserialize)]
-#[serde(default)]
-pub struct ComposeConfig {
-    pub compose_choseong_ssang: bool,
-    pub decompose_choseong_ssang: bool,
-    pub compose_jungseong_ssang: bool,
-    pub decompose_jungseong_ssang: bool,
-    pub compose_jongseong_ssang: bool,
-    pub decompose_jongseong_ssang: bool,
-}
-
-impl Default for ComposeConfig {
-    fn default() -> Self {
-        Self {
-            compose_choseong_ssang: true,
-            decompose_choseong_ssang: false,
-            compose_jungseong_ssang: false,
-            decompose_jungseong_ssang: false,
-            compose_jongseong_ssang: false,
-            decompose_jongseong_ssang: false,
-        }
-    }
+#[derive(Hash, Serialize, Deserialize, EnumSetType)]
+#[enumset(serialize_as_list)]
+pub enum Addon {
+    ComposeChoseongSsang,
+    ComposeJungseongSsang,
+    ComposeJongseongSsang,
+    DecomposeChoseongSsang,
+    DecomposeJungseongSsang,
+    DecomposeJongseongSsang,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
@@ -63,9 +52,9 @@ impl Hotkey {
 pub struct RawConfig {
     pub layout: String,
     pub global_hangul_state: bool,
-    pub hotkeys: AHashMap<Key, Hotkey>,
+    pub hotkeys: BTreeMap<Key, Hotkey>,
+    pub layout_addons: BTreeMap<String, EnumSet<Addon>>,
     pub xim_preedit_font: (String, f64),
-    pub compose: ComposeConfig,
 }
 
 impl Default for RawConfig {
@@ -98,8 +87,12 @@ impl Default for RawConfig {
             .iter()
             .copied()
             .collect(),
+            layout_addons: std::iter::once((
+                "all".into(),
+                EnumSet::only(Addon::ComposeChoseongSsang),
+            ))
+            .collect(),
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
-            compose: ComposeConfig::default(),
         }
     }
 }
@@ -108,7 +101,7 @@ pub struct Config {
     pub(crate) layout: Layout,
     pub(crate) global_hangul_state: bool,
     pub(crate) hotkeys: AHashMap<Key, Hotkey>,
-    pub(crate) compose: ComposeConfig,
+    layout_addons: EnumSet<Addon>,
     pub xim_preedit_font: (String, f64),
 }
 
@@ -123,8 +116,18 @@ impl Config {
         Self {
             layout,
             global_hangul_state: raw.global_hangul_state,
-            compose: raw.compose,
-            hotkeys: raw.hotkeys,
+            layout_addons: raw
+                .layout_addons
+                .get("all")
+                .copied()
+                .unwrap_or_default()
+                .union(
+                    raw.layout_addons
+                        .get(&raw.layout)
+                        .copied()
+                        .unwrap_or_default(),
+                ),
+            hotkeys: raw.hotkeys.into_iter().collect(),
             xim_preedit_font: raw.xim_preedit_font,
         }
     }
@@ -174,5 +177,9 @@ impl Config {
             .unwrap_or_default();
 
         Some(Self::from_raw_config(raw, Some(dir)))
+    }
+
+    pub fn check_addon(&self, addon: Addon) -> bool {
+        self.layout_addons.contains(addon)
     }
 }

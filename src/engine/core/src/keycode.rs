@@ -18,7 +18,7 @@ bitflags::bitflags! {
 
 // TODO: complete
 #[repr(u32)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumString, Display)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, Display)]
 pub enum KeyCode {
     #[strum(to_string = "1")]
     One,
@@ -162,7 +162,7 @@ impl KeyCode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Key {
     pub code: KeyCode,
     pub state: ModifierState,

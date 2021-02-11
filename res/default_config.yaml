@@ -2,29 +2,25 @@
 layout: dubeolsik
 global_hangul_state: false
 hotkeys:
+  Super-Space:
+    behavior: ToggleHangul
+    result: Consume
   Esc:
     behavior: ToEnglish
     result: Bypass
-  AltR:
+  Muhenkan:
     behavior: ToggleHangul
     result: Consume
-  Muhenkan:
+  AltR:
     behavior: ToggleHangul
     result: Consume
   Hangul:
     behavior: ToggleHangul
     result: Consume
-  Super-Space:
-    behavior: ToggleHangul
-    result: Consume
+layout_addons:
+  all:
+    - ComposeChoseongSsang
 xim_preedit_font:
   - D2Coding
   - 15.0
-compose:
-  compose_choseong_ssang: true
-  decompose_choseong_ssang: false
-  compose_jungseong_ssang: false
-  decompose_jungseong_ssang: false
-  compose_jongseong_ssang: false
-  decompose_jongseong_ssang: false
 

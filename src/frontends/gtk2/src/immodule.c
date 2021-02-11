@@ -123,19 +123,6 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
   return FALSE;
 }
 
-gboolean bypass(KimeImContext *ctx, EventType *key) {
-  uint32_t c = kime_engine_reset(ctx->engine);
-
-  if (!c) {
-    update_preedit(ctx, FALSE);
-    commit(ctx, c);
-    put_event(ctx, key);
-    return TRUE;
-  } else {
-    return FALSE;
-  }
-}
-
 gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   KIME_IM_CONTEXT(im);
 #if GTK_CHECK_VERSION(3, 98, 4)
@@ -156,7 +143,6 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   debug("code %u, state %u", code, state);
 
   if (state & FORWARDED_MASK) {
-    debug("Forwarded: %u", keyval);
     return commit_event(ctx, state, keyval);
   } else {
     KimeModifierState kime_state = 0;

@@ -93,18 +93,21 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
     return false;
   case kime::InputResultType::Consume:
     return true;
-  case kime::InputResultType::ClearPreedit:
-    commit_ch(U'\0');
-    return true;
   case kime::InputResultType::Commit:
     commit_ch(ret.char1);
     return true;
   case kime::InputResultType::CommitPreedit:
     commit_ch(ret.char1);
-    preedit_ch(ret.char2);
+    if (ret.char2) {
+      preedit_ch(ret.char2);
+    }
     return true;
   case kime::InputResultType::Preedit:
-    preedit_ch(ret.char1);
+    if (ret.char1) {
+      preedit_ch(ret.char1);
+    } else {
+      commit_ch(U'\0');
+    }
     return true;
   case kime::InputResultType::CommitCommit:
     commit_ch(ret.char1);
@@ -120,7 +123,6 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
 }
 
 void KimeInputContext::preedit_ch(char32_t ch) {
-  assert(ch != U'\0');
   QInputMethodEvent e(QString::fromUcs4(&ch, 1), this->attributes);
   QCoreApplication::sendEvent(this->focus_object, &e);
 }

@@ -5,7 +5,6 @@ use std::fmt;
 pub enum InputResultType {
     Bypass,
     Consume,
-    ClearPreedit,
     Preedit,
     Commit,
     CommitBypass,
@@ -50,7 +49,7 @@ impl fmt::Debug for InputResult {
 impl InputResult {
     pub const fn clear_preedit() -> Self {
         Self {
-            ty: InputResultType::ClearPreedit,
+            ty: InputResultType::Preedit,
             hangul_changed: false,
             char1: 0,
             char2: 0,

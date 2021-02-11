@@ -12,7 +12,6 @@ namespace kime {
 enum class InputResultType : uint16_t {
   Bypass,
   Consume,
-  ClearPreedit,
   Preedit,
   Commit,
   CommitBypass,

@@ -438,6 +438,10 @@ pub enum KeyValue {
     // 두벌식용
     ChoJong(Choseong, Jongseong),
 
+    // 신세벌식용
+    JungJong(Jungseong, Jongseong),
+    JungCho(Jungseong, Choseong),
+
     Jungseong(Jungseong),
 
     // 한글이 아닌 문자
@@ -472,7 +476,14 @@ impl FromStr for KeyValue {
                 Ok(Self::Choseong(cho))
             }
         } else if let Some(jung) = Jungseong::from_jamo(first) {
-            Ok(Self::Jungseong(jung))
+            match chars.next() {
+                Some('$') => Ok(Self::JungJong(
+                    jung,
+                    Jongseong::from_jamo(chars.next().ok_or(())?).ok_or(())?,
+                )),
+                Some(c) => Ok(Self::JungCho(jung, Choseong::from_jamo(c).ok_or(())?)),
+                None => Ok(Self::Jungseong(jung)),
+            }
         } else if let Some(jong) = Jongseong::from_jamo(first) {
             Ok(Self::Jongseong(jong))
         } else {
@@ -504,5 +515,9 @@ fn parse_keyvalue() {
     assert_eq!(
         "ㅏ".parse::<KeyValue>().unwrap(),
         KeyValue::Jungseong(Jungseong::A)
+    );
+    assert_eq!(
+        "ㅢ$ㅅ".parse::<KeyValue>().unwrap(),
+        KeyValue::JungJong(Jungseong::YI, Jongseong::Siot),
     );
 }

@@ -5,6 +5,7 @@
 * Use shell script for Build [#231](https://github.com/Riey/kime/issues/231)
 * Using C++ header for engine cffi [#229](https://github.com/Riey/kime/issues/229)
 * Implement engine hotkeys [#223](https://github.com/Riey/kime/issues/223)
+* Implement sebeolsik-sin1995 [#235](https://github.com/Riey/kime/issues/235)
 
 ## 1.0.0-pre3
 

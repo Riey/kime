@@ -1,7 +1,7 @@
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK4 gtk4)
+pkg_check_modules(GTK4 QUIET gtk4)
 
-if(${GTK4_FOUND} STREQUAL "0")
+if(NOT DEFINED ${GTK4_FOUND})
     return()
 endif()
 

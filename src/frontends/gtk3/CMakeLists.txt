@@ -1,7 +1,7 @@
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 gtk+-3.0)
 
-if(${GTK3_FOUND} STREQUAL "0")
+if(NOT DEFINED ${GTK3_FOUND})
     return()
 endif()
 

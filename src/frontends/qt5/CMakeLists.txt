@@ -4,9 +4,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt5 5.1.0 COMPONENTS Gui REQUIRED)
+find_package(Qt5 5.1.0 QUIET COMPONENTS Gui QUIET)
 
-if(NOT ${Qt5_FOUND})
+if(NOT Qt5_FOUND)
     return()
 endif()
 

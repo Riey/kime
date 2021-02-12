@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  DOCKER_BUILDKIT: 1
+
 jobs:
   packaging:
     runs-on: ubuntu-20.04

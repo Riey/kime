@@ -2,5 +2,4 @@
 
 scripts/build.sh -ar
 tar cvf - -C ./build/out . | xz -9 -T0 -c - > /opt/kime-out/kime.tar.xz
-scripts/release-deb.sh /opt/kime-out
 

@@ -1,7 +1,7 @@
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK2 gtk+-2.0)
 
-if(${GTK2_FOUND} STREQUAL "0")
+if(NOT DEFINED ${GTK2_FOUND})
     return()
 endif()
 

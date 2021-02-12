@@ -26,23 +26,23 @@ if [ -z "$KIME_LIB_DIR" ]; then
 fi
 
 if [ -z "$KIME_GTK2_DIR" ]; then
-    KIME_GTK2_DIR="usr/lib/gtk-2.0/2.10.0/immodules"
+    KIME_GTK2_DIR="$KIME_LIB_DIR/gtk-2.0/2.10.0/immodules"
 fi
 
 if [ -z "$KIME_GTK3_DIR" ]; then
-    KIME_GTK3_DIR="usr/lib/gtk-3.0/3.0.0/immodules"
+    KIME_GTK3_DIR="$KIME_LIB_DIR/gtk-3.0/3.0.0/immodules"
 fi
 
 if [ -z "$KIME_GTK4_DIR" ]; then
-    KIME_GTK4_DIR="usr/lib/gtk-4.0/4.0.0/immodules"
+    KIME_GTK4_DIR="$KIME_LIB_DIR/gtk-4.0/4.0.0/immodules"
 fi
 
 if [ -z "$KIME_QT5_DIR" ]; then
-    KIME_QT5_DIR="usr/lib/qt"
+    KIME_QT5_DIR="$KIME_LIB_DIR/qt"
 fi
 
 if [ -z "$KIME_QT6_DIR" ]; then
-    KIME_QT6_DIR="usr/lib/qt6"
+    KIME_QT6_DIR="$KIME_LIB_DIR/qt6"
 fi
 
 install_bin() {

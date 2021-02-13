@@ -16,8 +16,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run docker
         run: |
-          docker build --file build-docker/arch/Dockerfile --tag kime-build:arch .
-          docker run --name kime-arch kime-build:arch
+          docker build --file build-docker/arch/Dockerfile --tag riey/kime-build:arch .
+          docker run --name kime-arch riey/kime-build:arch
           mkdir /tmp/out
           docker cp kime-arch:/opt/kime-out/kime.tar.xz /tmp/out/
 

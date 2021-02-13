@@ -61,6 +61,10 @@ and there is `scripts/release-deb.sh <deb-out-path>` it make `deb` file.
 
 #### GTK
 
+you may don't need to do this when you install with package
+
+because most distros doing this themselves.
+
 ```sh
 # If you install gtk2
 sudo gtk-query-immodules-2.0 --update-cache
@@ -72,7 +76,13 @@ sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 
 ## Configuration
 
-add the following to your init script
+### Debian-like
+
+Set input method `kime` in language setting
+
+### Other
+
+Add the following to your init script
 
 ```sh
 export GTK_IM_MODULE=kime

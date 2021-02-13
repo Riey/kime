@@ -60,6 +60,10 @@ scripts/build.sh -ar
 
 #### GTK
 
+대부분 배포판들은 이걸 자동으로 해주므로
+
+패키지로 설치 하실 경우에는 필요 없을수도 있습니다.
+
 ```sh
 # GTK2 설치 시
 sudo gtk-query-immodules-2.0 --update-cache
@@ -70,6 +74,12 @@ sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
 
 ## 설정
+
+### 데비안계열
+
+언어 설정에서 입력기 `kime`를 선택해주세요
+
+### 그외
 
 init 스크립트에 다음을 추가하세요.
 

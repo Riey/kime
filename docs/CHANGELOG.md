@@ -2,17 +2,16 @@
 
 ## Dev
 
+## 1.0.0
+
 * Fix debian packaging [#140](https://github.com/Riey/kime/issues/140)
 * Use shell script for Build [#231](https://github.com/Riey/kime/issues/231)
 * Using C++ header for engine cffi [#229](https://github.com/Riey/kime/issues/229)
 * Implement engine hotkeys [#223](https://github.com/Riey/kime/issues/223)
 * Implement sebeolsik-sin1995 [#235](https://github.com/Riey/kime/issues/235)
 * Implement layout_addons [#239](https://github.com/Riey/kime/issues/239)
-* Fix gtk reset doesn't commit preedit char [#240](https://github.com/Riey/kime/issues/240)]
-* Compile C/C++ with `-fvisibility=hidden`
-
-## 1.0.0-pre3
-
+* Fix gtk reset doesn't commit preedit char [#240](https://github.com/Riey/kime/issues/240)
+* Compile C/C++ with `-fvisibility=hidden` [#241](https://github.com/Riey/kime/issues/241)
 * Change release .tar.xz [#203](https://github.com/Riey/kime/issues/203)
 * Make engine capi no panic [#201](https://github.com/Riey/kime/issues/201)
 * Fix wayland focus change repeat bug [#207](https://github.com/Riey/kime/issues/207)

@@ -1,0 +1,11 @@
+if [ "$IM_CONFIG_PHASE" = 2 ]; then
+    kime-xim &
+fi
+
+if [ "$IM_CONFIG_PHASE" = 1 ]; then
+    XMODIFIERS="@im=kime"
+    GTK_IM_MODULE=kime
+    QT4_IM_MODULE=xim
+    QT_IM_MODULE=kime
+    CLUTTER_IM_MODULE=xim
+fi

@@ -25,5 +25,4 @@ KIME_QT5_DIR=usr/lib/x86_64-linux-gnu/qt5 \
 KIME_QT6_DIR=usr/lib/x86_64-linux-gnu/qt6 \
 scripts/install.sh $TMP_PATH
 
-dpkg-deb --build $TMP_PATH "${TARGET_PATH}/kime_${VER}_amd64.deb"
-
+dpkg-deb --build $TMP_PATH "${TARGET_PATH}/kime_amd64.deb"

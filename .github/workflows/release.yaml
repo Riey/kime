@@ -9,20 +9,63 @@ env:
   DOCKER_BUILDKIT: 1
 
 jobs:
-  packaging:
+  build-arch:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run docker
+        run: |
+          docker build --file build-docker/arch/Dockerfile --tag kime-build:arch .
+          docker run --name kime-arch kime-build:arch
+          mkdir /tmp/out
+          docker cp kime-arch:/opt/kime-out/kime.tar.xz /tmp/out/
+
+      - name: Upload tar.xz
+        uses: actions/upload-artifact@v2
+        with:
+          name: arch
+          path: /tmp/out/kime.tar.xz
+  
+  # ubuntu build is run on native
+  build-ubuntu:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build deb
+        run: |
+          apt-get update
+          apt-get install -y build-essential git gcc clang llvm cmake extra-cmake-modules cargo pkg-config
+          apt-get install -y libpango1.0-dev libcairo2-dev libgtk2.0-dev libgtk-3-dev libglib2.0 libxcb1 libappindicator3-dev
+          apt-get install -y qt5-default qtbase5-dev qtbase5-private-dev libqt5gui5
+          mkdir /tmp/out
+          ci/build_deb.sh /tmp/out
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu
+          path: /tmp/out/kime_amd64.deb
+
+  upload:
+    needs:
+      - build-arch
+      - build-ubuntu
+
     runs-on: ubuntu-20.04
     
     steps:
-      - uses: actions/checkout@v2
-      - name: Set VER
-        id: version
-        run: echo "::set-output name=ver::$(grep '^version =' src/xtask/Cargo.toml|head -n1|cut -d\" -f2)"
-      - name: Make temp dir
-        run: mkdir /tmp/kime
-      - name: Build image
-        run: docker build --tag riey/kime --network=host .
-      - name: Run image
-        run: docker run -e "TERM=xterm-256color" -e "CARGO_TERM_COLOR=always" --network=host -v /tmp/kime:/opt/kime-out riey/kime release
+      - name: Checkout workdir
+        run: mkdir /tmp/work && cd /tmp/work
+      - name: Download arch artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: arch
+      - name: Download ubuntu artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ubuntu
       - name: Create draft release
         id: create_release
         uses: actions/create-release@v1
@@ -40,8 +83,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /tmp/kime/kime.tar.xz
-          asset_name: kime-${{ steps.version.outputs.ver }}.tar.xz
+          asset_path: ./kime.tar.xz
+          asset_name: kime-${{ github.ref }}.tar.xz
           asset_content_type: application/x-xz
 
       - name: Upload deb package
@@ -50,6 +93,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /tmp/kime/kime_${{ steps.version.outputs.ver }}_amd64.deb
-          asset_name: kime_${{ steps.version.outputs.ver }}_amd64.deb
+          asset_path: ./kime_amd64.deb
+          asset_name: kime_${{ github.ref }}_amd64.deb
           asset_content_type: application/x-xz

@@ -2,6 +2,8 @@
 
 ## Dev
 
+* Fix xim freeze when typing fast [#251](https://github.com/Riey/kime/issues/251)
+
 ## 1.0.1
 
 * Fix xim doesn't work [#246](https://github.com/Riey/kime/issues/246)

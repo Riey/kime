@@ -46,8 +46,9 @@ if [ -z "$KIME_QT6_DIR" ]; then
 fi
 
 install_if () {
-    test -f $KIME_OUT/$1 &&
+    if [ -f $KIME_OUT/$1 ]; then
         install -Dm$2 $KIME_OUT/$1 $3 "$PREFIX/$4"
+    fi
 }
 
 install_bin () {

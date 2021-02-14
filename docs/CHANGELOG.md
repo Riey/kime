@@ -3,6 +3,7 @@
 ## Dev
 
 * Fix xim freeze when typing fast [#251](https://github.com/Riey/kime/issues/251)
+* Fix global config path [#252](https://github.com/Riey/kime/issues/252)
 
 ## 1.0.1
 

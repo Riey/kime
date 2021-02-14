@@ -2,6 +2,10 @@
 
 ## Dev
 
+## 1.0.1
+
+* Fix xim doesn't work [#246](https://github.com/Riey/kime/issues/246)
+
 ## 1.0.0
 
 * Fix debian packaging [#140](https://github.com/Riey/kime/issues/140)

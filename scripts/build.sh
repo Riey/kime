@@ -61,6 +61,8 @@ cargo_build -p kime-xim -p kime-wayland -p kime-indicator
 cp $TARGET_DIR/kime-xim $KIME_OUT
 cp $TARGET_DIR/kime-wayland $KIME_OUT
 cp $TARGET_DIR/kime-indicator $KIME_OUT
+cp src/engine/cffi/kime_engine.h $KIME_OUT
+cp src/engine/cffi/kime_engine.hpp $KIME_OUT
 cp $TARGET_DIR/libkime_engine.so $KIME_OUT
 cp LICENSE $KIME_OUT
 cp res/default_config.yaml $KIME_OUT

@@ -9,6 +9,8 @@ RUN patched_glibc=glibc-linux4-2.33-4-x86_64.pkg.tar.zst && \
     curl -LO "https://repo.archlinuxcn.org/x86_64/$patched_glibc" && \
     bsdtar -C / -xvf "$patched_glibc"
 
+RUN mkdir -pv /var/lib/pacman
+
 RUN pacman -Syu --noconfirm
 RUN pacman -S --noconfirm --needed rust cmake clang llvm libxcb cairo
 RUN pacman -S --noconfirm --needed gtk2 gtk3 gtk4

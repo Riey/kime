@@ -1,4 +1,4 @@
-[<img src="./docs/assets/kime-roundy-default.png" height="75">](https://github.com/Riey/kime)
+[<img src="./docs/assets/kime-roundy-default.png" height="100">](https://github.com/Riey/kime)
 
 # kime
 

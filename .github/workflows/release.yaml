@@ -9,23 +9,24 @@ env:
   DOCKER_BUILDKIT: 1
 
 jobs:
-  build-arch:
-    runs-on: ubuntu-20.04
+  # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
+  # build-arch:
+  #   runs-on: ubuntu-20.04
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run docker
-        run: |
-          docker build --file build-docker/arch/Dockerfile --tag riey/kime-build:arch .
-          docker run --name kime-arch riey/kime-build:arch
-          mkdir /tmp/out
-          docker cp kime-arch:/opt/kime-out/kime.tar.xz /tmp/out/
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Run docker
+  #       run: |
+  #         docker build --file build-docker/arch/Dockerfile --tag riey/kime-build:arch .
+  #         docker run --name kime-arch riey/kime-build:arch
+  #         mkdir /tmp/out
+  #         docker cp kime-arch:/opt/kime-out/kime.tar.xz /tmp/out/
 
-      - name: Upload tar.xz
-        uses: actions/upload-artifact@v2
-        with:
-          name: arch
-          path: /tmp/out/kime.tar.xz
+  #     - name: Upload tar.xz
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: arch
+  #         path: /tmp/out/kime.tar.xz
   
   # ubuntu build is run on native
   build-ubuntu:
@@ -42,15 +43,16 @@ jobs:
           mkdir -pv /opt/kime-out
           ci/build_deb.sh
 
-      - name: Upload deb
+      - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ubuntu
-          path: /opt/kime-out/kime_amd64.deb
+          path: /opt/kime-out/*
 
   upload:
     needs:
-      - build-arch
+      # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
+      # - build-arch
       - build-ubuntu
 
     runs-on: ubuntu-20.04
@@ -58,14 +60,17 @@ jobs:
     steps:
       - name: Checkout workdir
         run: mkdir /tmp/work && cd /tmp/work
-      - name: Download arch artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: arch
+      # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
+      # - name: Download arch artifact
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: arch
+      #     path: arch
       - name: Download ubuntu artifact
         uses: actions/download-artifact@v2
         with:
           name: ubuntu
+          path: ubuntu
       - name: Create draft release
         id: create_release
         uses: actions/create-release@v1
@@ -77,14 +82,25 @@ jobs:
           draft: true
           prerelease: false
 
+      # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
+      # - name: Upload archive
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./kime.tar.xz
+      #     asset_name: kime-arch-${{ github.ref }}.tar.xz
+      #     asset_content_type: application/x-xz
+
       - name: Upload archive
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./kime.tar.xz
-          asset_name: kime-${{ github.ref }}.tar.xz
+          asset_path: ./ubuntu/kime.tar.xz
+          asset_name: kime-ubuntu-${{ github.ref }}.tar.xz
           asset_content_type: application/x-xz
 
       - name: Upload deb package
@@ -93,6 +109,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./kime_amd64.deb
+          asset_path: ./ubuntu/kime_amd64.deb
           asset_name: kime_${{ github.ref }}_amd64.deb
           asset_content_type: application/x-xz

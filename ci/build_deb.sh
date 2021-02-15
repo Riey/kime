@@ -1,4 +1,4 @@
 #!/bin/bash
 
-scripts/build.sh -ar
+ci/build_xz.sh
 scripts/release-deb.sh /opt/kime-out

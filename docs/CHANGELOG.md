@@ -2,6 +2,10 @@
 
 ## Dev
 
+## 1.0.3
+
+* Rollback #247
+
 ## 1.0.2
 
 * Fix xim freeze when typing fast [#251](https://github.com/Riey/kime/issues/251)

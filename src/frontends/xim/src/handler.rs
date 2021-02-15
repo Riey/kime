@@ -207,7 +207,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     }
 
     fn filter_events(&self) -> u32 {
-        2
+        x11rb::protocol::xproto::EventMask::KEY_PRESS.into()
     }
 
     fn sync_mode(&self) -> bool {

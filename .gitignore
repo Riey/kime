@@ -4,3 +4,5 @@
 /cargo-timing*
 /.idea
 /.ccls-cache
+
+.DS_Store

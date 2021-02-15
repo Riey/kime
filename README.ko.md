@@ -1,5 +1,7 @@
 # kime
 
+[<img src="./docs/assets/kime-roundy-default-without-text-bluegrey.png" height="100">](https://github.com/Riey/kime)
+
 한글 입력기
 
 [English](./README.md), [한국어](./README.ko.md)

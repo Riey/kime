@@ -4,7 +4,7 @@
 
 ## 1.0.3
 
-* Rollback #247
+* Rollback [#247](https://github.com/Riey/kime/issues/247)
 
 ## 1.0.2
 

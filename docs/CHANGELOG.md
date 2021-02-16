@@ -9,6 +9,8 @@
 
 ### Improve
 
+* Fix choseong compose bug [#263](https://github.com/Riey/kime/issues/263)
+
 ## 1.0.3
 
 * Rollback [#247](https://github.com/Riey/kime/issues/247)

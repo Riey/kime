@@ -1,11 +1,7 @@
 use ansi_term::Color;
+use kime_engine_cffi::{Config, InputEngine, InputResultType};
 use std::env;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
-use kime_engine_cffi::{
-    InputEngine,
-    Config,
-    InputResultType,
-};
 
 #[derive(Clone, PartialEq, Eq, IntoStaticStr)]
 enum CondResult {
@@ -38,6 +34,8 @@ impl CondResult {
 enum Check {
     #[strum(message = "Engine api version")]
     ApiVersion,
+    #[strum(message = "Check icons exists")]
+    Icons,
     #[strum(message = "Config file")]
     Config,
     #[strum(message = "Engine works")]
@@ -60,17 +58,35 @@ impl Check {
                     CondResult::Fail("Install correct kime engine".into())
                 }
             }
+            Check::Icons => {
+                let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
+
+                let icons = &["kime-han-64x64.png", "kime-eng-64x64.png"];
+
+                for icon in icons {
+                    match dirs.find_data_file(format!("icons/{}", icon)) {
+                        Some(path) => println!("Found icon: {}", path.display()),
+                        _ => return CondResult::Fail(format!("Can't find icon {}", icon)),
+                    }
+                }
+
+                CondResult::Ok
+            }
             Check::EngineWorks => {
                 let mut engine = kime_engine_cffi::InputEngine::new();
                 let config = kime_engine_cffi::Config::default();
 
                 engine.set_hangul_enable(true);
-                check_input(&mut engine, &config, &[
-                    (27, InputResultType::Preedit, 'ㄱ', '\0'),
-                    (45, InputResultType::Preedit, '가', '\0'),
-                    (39, InputResultType::Preedit, '간', '\0'),
-                    (45, InputResultType::CommitPreedit, '가', '나'),
-                ])
+                check_input(
+                    &mut engine,
+                    &config,
+                    &[
+                        (27, InputResultType::Preedit, 'ㄱ', '\0'),
+                        (45, InputResultType::Preedit, '가', '\0'),
+                        (39, InputResultType::Preedit, '간', '\0'),
+                        (45, InputResultType::CommitPreedit, '가', '나'),
+                    ],
+                )
             }
             Check::Config => {
                 let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
@@ -81,9 +97,13 @@ impl Check {
 
                 println!("Loading config path: {}", config_path.display());
 
-                let _config: kime_engine_core::RawConfig = match serde_yaml::from_str(&std::fs::read_to_string(config_path).expect("Read config file")) {
+                let _config: kime_engine_core::RawConfig = match serde_yaml::from_str(
+                    &std::fs::read_to_string(config_path).expect("Read config file"),
+                ) {
                     Ok(config) => config,
-                    Err(err) => return CondResult::Fail(format!("Can't parse config.yaml: {}", err))
+                    Err(err) => {
+                        return CondResult::Fail(format!("Can't parse config.yaml: {}", err))
+                    }
                 };
 
                 // TODO: check layout
@@ -100,7 +120,11 @@ impl Check {
     }
 }
 
-fn check_input(engine: &mut InputEngine, config: &Config, tests: &[(u16, InputResultType, char, char)]) -> CondResult {
+fn check_input(
+    engine: &mut InputEngine,
+    config: &Config,
+    tests: &[(u16, InputResultType, char, char)],
+) -> CondResult {
     for (code, ty, char1, char2) in tests.iter().copied() {
         let ret = engine.press_key(config, code, 0);
 

@@ -28,7 +28,11 @@ macro_rules! cli_boilerplate {
 
         kime_log::enable_logger(level);
 
-        log::info!("Start {}: {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        log::info!(
+            "Start {}: {}",
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION")
+        );
     };
 }
 

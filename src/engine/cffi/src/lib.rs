@@ -10,8 +10,8 @@ mod ffi;
 extern "C" {}
 
 pub use ffi::{
-    InputResultType, ModifierState, ModifierState_ALT, ModifierState_CONTROL,
-    ModifierState_SHIFT, ModifierState_SUPER,
+    InputResultType, ModifierState, ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT,
+    ModifierState_SUPER,
 };
 
 pub fn check_api_version() -> bool {

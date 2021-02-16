@@ -8,4 +8,6 @@ edition = "2018"
 ansi_term = "0.12.1"
 kime-engine-cffi = { path = "../../engine/cffi" }
 kime-engine-core = { path = "../../engine/core" }
+serde_yaml = "0.8.17"
 strum = { version = "0.20.0", features = ["derive"] }
+xdg = "2.2.0"

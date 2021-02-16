@@ -9,8 +9,6 @@ KimePlatformInputContextPlugin::KimePlatformInputContextPlugin()
         QTextStream(stderr, QIODevice::WriteOnly) << "Kime Engine version is mismatched!\n";
         return;
       }
-
-      kime::kime_enable_logger_with_env();
     }
 
 KimePlatformInputContextPlugin::~KimePlatformInputContextPlugin() {

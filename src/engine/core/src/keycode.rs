@@ -4,7 +4,7 @@ use serde::{
     de::{Error, Unexpected},
     Deserialize, Serialize,
 };
-use strum_macros::{Display, EnumString};
+use strum::{Display, EnumString};
 
 bitflags::bitflags! {
     #[repr(transparent)]

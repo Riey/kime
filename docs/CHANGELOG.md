@@ -2,6 +2,13 @@
 
 ## Dev
 
+### Breaking
+
+* All log argument is removed use `KIME_LOG` environment for set log level it can be `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE` other variables equal to empty which means `OFF`
+* Now frontends check engine's version if it failed, must cause hard error
+
+### Improve
+
 ## 1.0.3
 
 * Rollback [#247](https://github.com/Riey/kime/issues/247)

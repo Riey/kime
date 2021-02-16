@@ -59,6 +59,7 @@ install_bin () {
     install_if $1 755 -t "$KIME_BIN_DIR"
 }
 
+install_bin kime-check
 install_bin kime-indicator
 install_bin kime-xim
 install_bin kime-wayland

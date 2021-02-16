@@ -22,8 +22,6 @@ G_MODULE_EXPORT void im_module_exit(void) {}
 G_MODULE_EXPORT void im_module_init(GTypeModule *type_module) {
   g_type_module_use(type_module);
   register_module(type_module);
-
-  kime_enable_logger_with_env();
 }
 
 G_MODULE_EXPORT void im_module_list(const GtkIMContextInfo ***contexts,

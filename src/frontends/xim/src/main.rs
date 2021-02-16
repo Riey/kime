@@ -7,29 +7,7 @@ use xim::{x11rb::HasConnection, ServerError, XimConnections};
 mod handler;
 mod pe_window;
 
-fn main() -> Result<(), ServerError> {
-    let mut args = pico_args::Arguments::from_env();
-
-    if args.contains(["-h", "--help"]) {
-        println!("-h or --help: show help");
-        println!("-v or --version: show version");
-        return Ok(());
-    }
-
-    if args.contains(["-v", "--version"]) {
-        kime_version::print_version!();
-        return Ok(());
-    }
-
-    assert!(
-        kime_engine_cffi::check_api_version(),
-        "Engine version mismatched"
-    );
-    kime_log::enable_logger_with_env();
-    kime_engine_cffi::enable_logger_with_env();
-
-    log::info!("Start xim server version: {}", env!("CARGO_PKG_VERSION"));
-
+fn main_inner() -> Result<(), ServerError> {
     let config = kime_engine_cffi::Config::load();
 
     let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;
@@ -60,6 +38,22 @@ fn main() -> Result<(), ServerError> {
                     log::trace!("Unfiltered event: {:?}", e);
                 }
             }
+        }
+    }
+}
+
+fn main() {
+    kime_version::cli_boilerplate!();
+
+    assert!(
+        kime_engine_cffi::check_api_version(),
+        "Engine version mismatched"
+    );
+
+    match main_inner() {
+        Ok(_) => {}
+        Err(err) => {
+            log::error!("Server error: {}", err);
         }
     }
 }

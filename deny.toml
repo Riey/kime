@@ -76,7 +76,6 @@ allow = [
     "Apache-2.0 WITH LLVM-exception",
     "LGPL-3.0",
     "GPL-3.0",
-    "ISC",
 ]
 # List of explictly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
@@ -174,16 +173,14 @@ deny = [
 skip = [
     { name = "strum_macros", version = "=0.18.0" },
     { name = "strum", version = "=0.18.0" },
-    { name = "strsim", version = "=0.8.0" }
-    #{ name = "ansi_term", version = "=0.11.0" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate 
 # detection. Unlike skip, it also includes the entire tree of transitive 
 # dependencies starting at the specified crate, up to a certain depth, which is
 # by default infinite
 skip-tree = [
+    # wait for new release
     { name = "wayland-client", version = "=0.28.3" },
-    #{ name = "ansi_term", version = "=0.11.0", depth = 20 },
 ]
 
 # This section is considered when running `cargo deny check sources`.

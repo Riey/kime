@@ -1,0 +1,14 @@
+[package]
+name = "kime-check"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+ansi_term = "0.12.1"
+kime-engine-cffi = { path = "../../engine/cffi" }
+kime-engine-core = { path = "../../engine/core" }
+serde_yaml = "0.8.17"
+strum = { version = "0.20.0", features = ["derive"] }
+xdg = "2.2.0"

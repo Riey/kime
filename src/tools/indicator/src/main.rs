@@ -5,7 +5,6 @@ use libappindicator_sys::{AppIndicator, AppIndicatorStatus_APP_INDICATOR_STATUS_
 use std::ffi::CString;
 use std::path::Path;
 use std::ptr;
-use structopt::StructOpt;
 
 macro_rules! cs {
     ($ex:expr) => {
@@ -147,23 +146,9 @@ fn daemon_main() -> Result<()> {
     Ok(())
 }
 
-#[derive(StructOpt)]
-#[structopt(about = "kime-indicator")]
-struct Opts {
-    #[structopt(long, short, help = "Show indicator version")]
-    version: bool,
-}
-
 fn main() {
-    let opt = Opts::from_args();
+    kime_version::cli_boilerplate!();
 
-    if opt.version {
-        kime_version::print_version!();
-        return;
-    }
-
-    kime_log::enable_logger_with_env();
-    log::info!("Start indicator");
     match daemon_main() {
         Ok(_) => {}
         Err(err) => {

@@ -34,10 +34,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      # Remove apt repos that are known to break from time to time 
+      # See https://github.com/actions/virtual-environments/issues/323  
+      - name: Remove broken apt repos [Ubuntu]
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
       - name: Build deb
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git gcc clang llvm cmake extra-cmake-modules cargo pkg-config
+          sudo apt-get install -y build-essential git gcc libclang-10-dev llvm cmake extra-cmake-modules cargo pkg-config
           sudo apt-get install -y libpango1.0-dev libcairo2-dev libgtk2.0-dev libgtk-3-dev libglib2.0 libxcb1 libappindicator3-dev
           sudo apt-get install -y qt5-default qtbase5-dev qtbase5-private-dev libqt5gui5
           mkdir -pv /opt/kime-out

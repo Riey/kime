@@ -384,29 +384,11 @@ impl KimeContext {
 }
 
 fn main() {
-    let mut args = pico_args::Arguments::from_env();
-
-    if args.contains(["-h", "--help"]) {
-        println!("-h or --help: show help");
-        println!("-v or --version: show version");
-        return;
-    }
-
-    if args.contains(["-v", "--version"]) {
-        kime_version::print_version!();
-        return;
-    }
+    kime_version::cli_boilerplate!();
 
     assert!(
         kime_engine_cffi::check_api_version(),
         "Engine version mismatched"
-    );
-    kime_log::enable_logger_with_env();
-    kime_engine_cffi::enable_logger_with_env();
-
-    log::info!(
-        "Start wayland im server version: {}",
-        env!("CARGO_PKG_VERSION")
     );
 
     let display = Display::connect_to_env().expect("Failed to connect wayland display");

@@ -138,7 +138,6 @@ impl Config {
                 dir.list_config_files("layouts")
                     .into_iter()
                     .find_map(|layout| {
-                        log::info!("Try Read custom layout: {}...", layout.display());
                         if layout.file_stem()?.to_str()? == raw.layout {
                             Some(Layout::from_items(
                                 serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
@@ -154,12 +153,10 @@ impl Config {
                         match raw.layout.as_str() {
                             $(
                                 $name => Layout::load_from(include_str!(concat!(concat!("../data/", $name), ".yaml"))).unwrap_or_else(|_| {
-                                    log::error!("Can't load builtin layout {} fallback to empty layout", $name);
                                     Layout::default()
                                 }),
                             )+
-                            other => {
-                                log::error!("Can't find layout {} fallback to empty layout", other);
+                            _ => {
                                 Layout::default()
                             }
                         }
@@ -177,16 +174,7 @@ impl Config {
 
         let raw = dir
             .find_config_file("config.yaml")
-            .and_then(|config| {
-                log::info!("Found config file: {}", config.display());
-                match serde_yaml::from_reader(std::fs::File::open(config).ok()?) {
-                    Ok(config) => Some(config),
-                    Err(err) => {
-                        log::error!("Read config error: {}", err);
-                        None
-                    }
-                }
-            })
+            .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
             .unwrap_or_default();
 
         Some(Self::from_raw_config(raw, Some(dir)))

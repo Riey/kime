@@ -10,21 +10,12 @@ mod ffi;
 extern "C" {}
 
 pub use ffi::{
-    InputResultType, LogLevel, LogLevel_Debug, LogLevel_Error, LogLevel_Info, LogLevel_Off,
-    LogLevel_Trace, LogLevel_Warn, ModifierState, ModifierState_ALT, ModifierState_CONTROL,
-    ModifierState_SHIFT, ModifierState_SUPER,
+    InputResultType, ModifierState, ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT,
+    ModifierState_SUPER,
 };
 
 pub fn check_api_version() -> bool {
     unsafe { ffi::kime_api_version() == 1 }
-}
-
-pub fn enable_logger(level: LogLevel) -> bool {
-    unsafe { ffi::kime_enable_logger(level) }
-}
-
-pub fn enable_logger_with_env() -> bool {
-    unsafe { ffi::kime_enable_logger_with_env() }
 }
 
 #[derive(Clone, Copy, Debug)]

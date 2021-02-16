@@ -43,7 +43,7 @@ impl Indicator {
                 0,
             );
             gtk_sys::gtk_menu_shell_append(m.cast(), mi.cast());
-            let icon_dirs = xdg::BaseDirectories::with_profile("kime", "icons").unwrap();
+            let icon_dirs = xdg::BaseDirectories::with_prefix("kime/icons").unwrap();
             let indicator = libappindicator_sys::app_indicator_new(
                 cs!("kime"),
                 cs!(""),
@@ -52,7 +52,11 @@ impl Indicator {
             let han = icon_dirs.find_data_file(HAN_ICON).unwrap();
             let eng = icon_dirs.find_data_file(ENG_ICON).unwrap();
             set_icon_path(indicator, han.parent().unwrap());
-            set_icon_path(indicator, eng.parent().unwrap());
+
+            if han != eng {
+                set_icon_path(indicator, eng.parent().unwrap());
+            }
+
             libappindicator_sys::app_indicator_set_status(
                 indicator,
                 AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE,

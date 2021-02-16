@@ -10,6 +10,7 @@
 
 ### Improve
 
+* Fix indicator can't load icon data [#260](https://github.com/Riey/kime/issues/260)
 * Fix choseong compose bug [#263](https://github.com/Riey/kime/issues/263)
 
 ## 1.0.3

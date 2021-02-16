@@ -13,18 +13,13 @@ pub enum LogLevel {
 
 fn config() -> Config {
     ConfigBuilder::new()
-        .set_level_color(Level::Error, Color::Red)
-        .set_level_color(Level::Warn, Color::Yellow)
-        .set_level_color(Level::Info, Color::Green)
-        .set_level_color(Level::Debug, Color::Blue)
-        .set_level_color(Level::Trace, Color::Black)
         .set_level_padding(LevelPadding::Left)
         .set_time_level(LevelFilter::Trace)
         .build()
 }
 
 pub fn enable_logger(level: LogLevel) -> bool {
-    SimpleLogger::init(
+    TermLogger::init(
         match level {
             LogLevel::Trace => LevelFilter::Trace,
             LogLevel::Debug => LevelFilter::Debug,
@@ -34,6 +29,7 @@ pub fn enable_logger(level: LogLevel) -> bool {
             LogLevel::Off => LevelFilter::Off,
         },
         config(),
+        TerminalMode::Stderr,
     )
     .is_ok()
 }

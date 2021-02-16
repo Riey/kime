@@ -20,16 +20,6 @@ enum KimeInputResultType {
 };
 typedef uint16_t KimeInputResultType;
 
-enum KimeLogLevel {
-  Off,
-  Error,
-  Warn,
-  Info,
-  Debug,
-  Trace,
-};
-typedef uint32_t KimeLogLevel;
-
 typedef struct KimeConfig KimeConfig;
 
 typedef struct KimeInputEngine KimeInputEngine;
@@ -51,20 +41,6 @@ typedef uint32_t KimeModifierState;
  * Return API version
  */
 uintptr_t kime_api_version(void);
-
-/**
- * Enable logger for given level
- * # Return
- * `true` when logger enable success
- */
-bool kime_enable_logger(KimeLogLevel level);
-
-/**
- * Enabler logger with environment variable
- * # Return
- * `true` when logger enable success
- */
-bool kime_enable_logger_with_env(void);
 
 /**
  * Create new engine

@@ -14,13 +14,6 @@ pub enum InputResultType {
     CommitPreedit = 5,
     CommitCommit = 6,
 }
-pub const LogLevel_Off: LogLevel = 0;
-pub const LogLevel_Error: LogLevel = 1;
-pub const LogLevel_Warn: LogLevel = 2;
-pub const LogLevel_Info: LogLevel = 3;
-pub const LogLevel_Debug: LogLevel = 4;
-pub const LogLevel_Trace: LogLevel = 5;
-pub type LogLevel = u32;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Config {
@@ -100,18 +93,6 @@ pub const ModifierState_ALT: ModifierState = 8;
 extern "C" {
     #[doc = " Return API version"]
     pub fn kime_api_version() -> usize;
-}
-extern "C" {
-    #[doc = " Enable logger for given level"]
-    #[doc = " # Return"]
-    #[doc = " `true` when logger enable success"]
-    pub fn kime_enable_logger(level: LogLevel) -> bool;
-}
-extern "C" {
-    #[doc = " Enabler logger with environment variable"]
-    #[doc = " # Return"]
-    #[doc = " `true` when logger enable success"]
-    pub fn kime_enable_logger_with_env() -> bool;
 }
 extern "C" {
     #[doc = " Create new engine"]

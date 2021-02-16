@@ -19,15 +19,6 @@ enum class InputResultType : uint16_t {
   CommitCommit,
 };
 
-enum class LogLevel : uint32_t {
-  Off,
-  Error,
-  Warn,
-  Info,
-  Debug,
-  Trace,
-};
-
 struct Config;
 
 struct InputEngine;
@@ -49,16 +40,6 @@ extern "C" {
 
 /// Return API version
 uintptr_t kime_api_version();
-
-/// Enable logger for given level
-/// # Return
-/// `true` when logger enable success
-bool kime_enable_logger(LogLevel level);
-
-/// Enabler logger with environment variable
-/// # Return
-/// `true` when logger enable success
-bool kime_enable_logger_with_env();
 
 /// Create new engine
 InputEngine *kime_engine_new();

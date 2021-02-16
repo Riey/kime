@@ -6,6 +6,7 @@
 
 * All log argument is removed use `KIME_LOG` environment for set log level it can be `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE` other variables equal to empty which means `OFF`
 * Now frontends check engine's version if it failed, must cause hard error
+* Use xim async only it will break some apps like neovide but fix many wrong bevaivors and performance
 
 ### Improve
 

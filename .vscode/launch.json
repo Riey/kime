@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "lldb",
             "request": "attach",
@@ -19,6 +20,19 @@
                     "test",
                     "--no-run",
                     "--lib"
+                ]
+            },
+            "program": "${cargo:program}",
+            "args": []
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch indicator",
+            "cargo": {
+                "args": [
+                    "build",
+                    "-p=kime-indicator"
                 ]
             },
             "program": "${cargo:program}",

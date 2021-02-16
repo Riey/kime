@@ -149,15 +149,22 @@ impl CharacterState {
 
     pub fn cho(&mut self, cho: Choseong, config: &Config) -> InputResult {
         if let Some(prev_cho) = self.cho {
-            match prev_cho.try_add(cho, config) {
-                Some(new) => {
-                    self.cho = Some(new);
-                    InputResult::preedit(self.to_char())
-                }
-                None => self.replace(Self {
+            if self.jong.is_some() {
+                self.replace(Self {
                     cho: Some(cho),
                     ..Default::default()
-                }),
+                })
+            } else {
+                match prev_cho.try_add(cho, config) {
+                    Some(new) => {
+                        self.cho = Some(new);
+                        InputResult::preedit(self.to_char())
+                    }
+                    None => self.replace(Self {
+                        cho: Some(cho),
+                        ..Default::default()
+                    }),
+                }
             }
         } else {
             self.cho = Some(cho);

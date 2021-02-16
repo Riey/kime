@@ -54,10 +54,11 @@ echo Build core...
 
 cargo_build -p kime-engine-capi
 
-echo Build xim wayland indicator...
+echo Build xim wayland indicator check...
 
-cargo_build -p kime-xim -p kime-wayland -p kime-indicator
+cargo_build -p kime-check -p kime-xim -p kime-wayland -p kime-indicator
 
+cp $TARGET_DIR/kime-check $KIME_OUT
 cp $TARGET_DIR/kime-xim $KIME_OUT
 cp $TARGET_DIR/kime-wayland $KIME_OUT
 cp $TARGET_DIR/kime-indicator $KIME_OUT
@@ -83,4 +84,3 @@ cp lib/* $KIME_OUT
 if [ $NEED_STRIP -eq "1" ]; then
     strip -s $KIME_OUT/* 2&>/dev/null || true
 fi
-

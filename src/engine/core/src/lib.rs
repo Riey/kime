@@ -94,9 +94,7 @@ impl InputEngine {
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
-        log::debug!("Key: {} pressed", key);
         if let Some(hotkey) = config.hotkeys.get(&key) {
-            log::debug!("Hotkey: {:?} triggered", hotkey);
             let first = self.enable_hangul;
 
             match hotkey.behavior() {

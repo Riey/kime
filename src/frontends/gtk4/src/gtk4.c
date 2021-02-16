@@ -8,6 +8,7 @@ G_MODULE_EXPORT void g_io_module_load(GIOModule *module) {
     register_module(type_module);
     g_io_extension_point_implement(GTK_IM_MODULE_EXTENSION_POINT_NAME,
                                    get_kime_ty(), "kime", 50);
+    kime_enable_logger_with_env();
   }
 }
 

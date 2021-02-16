@@ -39,6 +39,12 @@ enum Check {
     #[strum(message = "XMODIFIERS env")]
     #[strum(props(fail = "Set XMODIFIERS=@im=kime", ignore = "Session is not x11"))]
     XModifier,
+    #[strum(message = "GTK_IM_MODULE env")]
+    #[strum(props(fail = "Set GTK_IM_MODUILE=kime"))]
+    GtkImModule,
+    #[strum(message = "QT_IM_MODULE env")]
+    #[strum(props(fail = "Set QT_IM_MODULE=kime"))]
+    QtImModule,
 }
 
 impl Check {
@@ -49,12 +55,22 @@ impl Check {
             }
             Check::XModifier => {
                 match env::var("XDG_SESSION_TYPE").unwrap().as_str() {
-                    "x11" => env::var("XMODIFIERS").map_or(CondResult::Fail, |v| v.contains("@im=kime").into()),
+                    "x11" => check_var("XMODIFIERS", "@im=kime"),
                     _ => CondResult::Ignore,
                 }
             }
+            Check::GtkImModule => {
+                check_var("GTK_IM_MODULE", "kime")
+            }
+            Check::QtImModule => {
+                check_var("QT_IM_MODULE", "kime")
+            }
         }
     }
+}
+
+fn check_var(name: &str, value: &str) -> CondResult {
+    env::var(name).map_or(false, |v| v.contains(value)).into()
 }
 
 fn main() {
@@ -62,7 +78,7 @@ fn main() {
         let ret = check.cond();
         let c = ret.color();
 
-        print!("{} {}", c.paint(<&str>::from(ret)), check.get_message().unwrap());
+        print!("{} {:<30}", c.paint(<&str>::from(ret)), check.get_message().unwrap());
 
         match ret {
             CondResult::Ok => println!(),

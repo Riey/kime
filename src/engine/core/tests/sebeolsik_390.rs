@@ -31,6 +31,18 @@ fn hello() {
     ]);
 }
 
+// issue #263
+#[test]
+fn compose_choseong_ssang() {
+    test_input(&[
+        (Key::normal(K), InputResult::preedit('ㄱ')),
+        (Key::normal(F), InputResult::preedit('가')),
+        (Key::normal(X), InputResult::preedit('각')),
+        (Key::normal(K), InputResult::commit_preedit('각', 'ㄱ')),
+        (Key::normal(D), InputResult::preedit('기')),
+    ])
+}
+
 #[test]
 fn switch_next() {
     test_input(&[

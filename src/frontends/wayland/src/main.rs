@@ -389,7 +389,6 @@ fn main() {
     if args.contains(["-h", "--help"]) {
         println!("-h or --help: show help");
         println!("-v or --version: show version");
-        println!("--verbose: more verbose log");
         return;
     }
 
@@ -398,17 +397,12 @@ fn main() {
         return;
     }
 
-    let mut log_level = if cfg!(debug_assertions) {
-        log::LevelFilter::Trace
-    } else {
-        log::LevelFilter::Info
-    };
-
-    if args.contains("--verbose") {
-        log_level = log::LevelFilter::Trace;
-    }
-
-    simplelog::SimpleLogger::init(log_level, simplelog::ConfigBuilder::new().build()).ok();
+    assert!(
+        kime_engine_cffi::check_api_version(),
+        "Engine version mismatched"
+    );
+    kime_log::enable_logger_with_env();
+    kime_engine_cffi::enable_logger_with_env();
 
     log::info!(
         "Start wayland im server version: {}",

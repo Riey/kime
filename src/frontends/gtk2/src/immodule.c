@@ -1,6 +1,5 @@
 #include "immodule.h"
 
-#include <kime_engine.h>
 #include <stdio.h>
 
 static GType KIME_TYPE_IM_CONTEXT = 0;

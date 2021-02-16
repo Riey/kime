@@ -4,7 +4,11 @@
 #include <QDebug>
 
 KimePlatformInputContextPlugin::KimePlatformInputContextPlugin()
-    : engine(kime::kime_engine_new()), config(kime::kime_config_load()) {}
+    : engine(kime::kime_engine_new()), config(kime::kime_config_load()) {
+      if (kime::kime_api_version() != 1) {
+        QTextStream(stderr, QIODevice::WriteOnly) << "Kime Engine version is mismatched!\n";
+      }
+    }
 
 KimePlatformInputContextPlugin::~KimePlatformInputContextPlugin() {
   kime::kime_engine_delete(this->engine);

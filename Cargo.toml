@@ -2,6 +2,9 @@
 members = [
     "src/daemon/indicator",
 
+    "src/log",
+    "src/version",
+
     "src/engine/core",
     "src/engine/capi",
     "src/engine/cffi",

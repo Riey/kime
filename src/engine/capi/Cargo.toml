@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 kime-engine-core = { path = "../core" }
+kime-log = { path = "../../log" }

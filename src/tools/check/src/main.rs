@@ -1,6 +1,11 @@
 use ansi_term::Color;
 use std::env;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
+use kime_engine_cffi::{
+    InputEngine,
+    Config,
+    InputResultType,
+};
 
 #[derive(Clone, PartialEq, Eq, IntoStaticStr)]
 enum CondResult {
@@ -35,6 +40,8 @@ enum Check {
     ApiVersion,
     #[strum(message = "Config file")]
     Config,
+    #[strum(message = "Engine works")]
+    EngineWorks,
     #[strum(message = "XMODIFIERS env")]
     XModifier,
     #[strum(message = "GTK_IM_MODULE env")]
@@ -52,6 +59,18 @@ impl Check {
                 } else {
                     CondResult::Fail("Install correct kime engine".into())
                 }
+            }
+            Check::EngineWorks => {
+                let mut engine = kime_engine_cffi::InputEngine::new();
+                let config = kime_engine_cffi::Config::default();
+
+                engine.set_hangul_enable(true);
+                check_input(&mut engine, &config, &[
+                    (27, InputResultType::Preedit, 'ㄱ', '\0'),
+                    (45, InputResultType::Preedit, '가', '\0'),
+                    (39, InputResultType::Preedit, '간', '\0'),
+                    (45, InputResultType::CommitPreedit, '가', '나'),
+                ])
             }
             Check::Config => {
                 let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
@@ -79,6 +98,18 @@ impl Check {
             Check::QtImModule => check_var("QT_IM_MODULE", "kime", "set QT_IM_MODULE=kime"),
         }
     }
+}
+
+fn check_input(engine: &mut InputEngine, config: &Config, tests: &[(u16, InputResultType, char, char)]) -> CondResult {
+    for (code, ty, char1, char2) in tests.iter().copied() {
+        let ret = engine.press_key(config, code, 0);
+
+        if ret.ty != ty || ret.char1 != char1 || ret.char2 != char2 {
+            return CondResult::Fail("InputResult is invalid".into());
+        }
+    }
+
+    CondResult::Ok
 }
 
 fn check_var(name: &str, value: &str, reason: &str) -> CondResult {

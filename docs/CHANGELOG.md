@@ -10,6 +10,7 @@
 
 ### Improve
 
+* Correct invalid sebolsik-390 builtin layout [#261](https://github.com/Riey/kime/issues/261)
 * Fix indicator can't load icon data [#260](https://github.com/Riey/kime/issues/260)
 * Fix choseong compose bug [#263](https://github.com/Riey/kime/issues/263)
 

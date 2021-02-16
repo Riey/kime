@@ -7,7 +7,10 @@ KimePlatformInputContextPlugin::KimePlatformInputContextPlugin()
     : engine(kime::kime_engine_new()), config(kime::kime_config_load()) {
       if (kime::kime_api_version() != 1) {
         QTextStream(stderr, QIODevice::WriteOnly) << "Kime Engine version is mismatched!\n";
+        return;
       }
+
+      kime::kime_enable_logger_with_env();
     }
 
 KimePlatformInputContextPlugin::~KimePlatformInputContextPlugin() {

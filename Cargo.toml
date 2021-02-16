@@ -1,16 +1,15 @@
 [workspace]
 members = [
-    "src/daemon/indicator",
-
-    "src/log",
-    "src/version",
-
     "src/engine/core",
     "src/engine/capi",
     "src/engine/cffi",
 
     "src/frontends/wayland",
     "src/frontends/xim",
+
+    "src/tools/indicator",
+    "src/tools/log",
+    "src/tools/version",
 ]
 
 [profile.release]

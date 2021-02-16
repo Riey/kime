@@ -7,8 +7,8 @@ license = "GPL-3.0"
 
 [dependencies]
 kime-engine-cffi = { path = "../../engine/cffi" }
-kime-version = { path = "../../version" }
-kime-log = { path = "../../log" }
+kime-version = { path = "../../tools/version" }
+kime-log = { path = "../../tools/log" }
 
 wayland-client = { version = "0.28.3" }
 zwp-input-method = { git = "https://github.com/Riey/zwp-input-method" }

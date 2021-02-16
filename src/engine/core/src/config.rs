@@ -135,11 +135,10 @@ impl Config {
     pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {
         let layout = dir
             .and_then(|dir| {
-                log::info!("Try loading custom layout from xdg config dir");
                 dir.list_config_files("layouts")
                     .into_iter()
                     .find_map(|layout| {
-                        log::info!("Try Read {}...", layout.display());
+                        log::info!("Try Read custom layout: {}...", layout.display());
                         if layout.file_stem()?.to_str()? == raw.layout {
                             Some(Layout::from_items(
                                 serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
@@ -167,8 +166,6 @@ impl Config {
                     }
                 }
 
-                log::info!("Can't find custom layout try loading builtin layouts");
-
                 load_builtin_layout!("dubeolsik", "sebeolsik-390", "sebeolsik-391", "sebeolsik-sin1995")
             });
 
@@ -182,7 +179,13 @@ impl Config {
             .find_config_file("config.yaml")
             .and_then(|config| {
                 log::info!("Found config file: {}", config.display());
-                serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok()
+                match serde_yaml::from_reader(std::fs::File::open(config).ok()?) {
+                    Ok(config) => Some(config),
+                    Err(err) => {
+                        log::error!("Read config error: {}", err);
+                        None
+                    }
+                }
             })
             .unwrap_or_default();
 

@@ -30,7 +30,6 @@ impl Layout {
                 Err(_) => continue,
             };
 
-            log::trace!("Load layout key: {}, value: {:?}", key, value);
             keymap.insert(key, value);
         }
 

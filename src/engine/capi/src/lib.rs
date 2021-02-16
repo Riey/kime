@@ -2,6 +2,8 @@
 
 pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState};
 
+pub use kime_log::LogLevel;
+
 // panic-safe version of ptr to ref
 
 macro_rules! to_mut {
@@ -20,6 +22,28 @@ macro_rules! to_ref {
             None => return Default::default(),
         };
     };
+}
+
+/// Return API version
+#[no_mangle]
+pub extern "C" fn kime_api_version() -> usize {
+    1
+}
+
+/// Enable logger for given level
+/// # Return
+/// `true` when logger enable success
+#[no_mangle]
+pub unsafe extern "C" fn kime_enable_logger(level: LogLevel) -> bool {
+    kime_log::enable_logger(level)
+}
+
+/// Enabler logger with environment variable
+/// # Return
+/// `true` when logger enable success
+#[no_mangle]
+pub unsafe extern "C" fn kime_enable_logger_with_env() -> bool {
+    kime_log::enable_logger_with_env()
 }
 
 /// Create new engine

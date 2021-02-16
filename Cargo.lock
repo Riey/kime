@@ -635,6 +635,7 @@ name = "kime-engine-capi"
 version = "0.8.1"
 dependencies = [
  "kime-engine-core",
+ "kime-log",
 ]
 
 [[package]]
@@ -648,10 +649,12 @@ dependencies = [
  "ahash",
  "bitflags",
  "enumset",
+ "log",
  "num-derive",
  "num-traits",
  "serde",
  "serde_yaml",
+ "simplelog",
  "strum 0.20.0",
  "strum_macros 0.20.1",
  "xdg",
@@ -675,6 +678,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "kime-log"
+version = "0.1.0"
+dependencies = [
+ "simplelog",
+]
+
+[[package]]
 name = "kime-version"
 version = "0.1.0"
 dependencies = [
@@ -686,6 +696,7 @@ name = "kime-wayland"
 version = "0.1.0"
 dependencies = [
  "kime-engine-cffi",
+ "kime-log",
  "kime-version",
  "libc",
  "log",
@@ -705,10 +716,10 @@ dependencies = [
  "ahash",
  "cairo-rs",
  "kime-engine-cffi",
+ "kime-log",
  "kime-version",
  "log",
  "pico-args",
- "simplelog",
  "x11rb",
  "xim",
 ]

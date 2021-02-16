@@ -15,20 +15,20 @@ pub enum Addon {
     DecomposeJongseongSsang,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum HotkeyBehavior {
     ToggleHangul,
     ToHangul,
     ToEnglish,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum HotkeyResult {
     Consume,
     Bypass,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct Hotkey {
     behavior: HotkeyBehavior,
     result: HotkeyResult,
@@ -135,9 +135,11 @@ impl Config {
     pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {
         let layout = dir
             .and_then(|dir| {
+                log::info!("Try loading custom layout from xdg config dir");
                 dir.list_config_files("layouts")
                     .into_iter()
                     .find_map(|layout| {
+                        log::info!("Try Read {}...", layout.display());
                         if layout.file_stem()?.to_str()? == raw.layout {
                             Some(Layout::from_items(
                                 serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
@@ -152,15 +154,20 @@ impl Config {
                     ($($name:expr),+) => {
                         match raw.layout.as_str() {
                             $(
-                                $name => Layout::load_from(include_str!(concat!(concat!("../data/", $name), ".yaml"))).expect("Load builtin layout"),
+                                $name => Layout::load_from(include_str!(concat!(concat!("../data/", $name), ".yaml"))).unwrap_or_else(|_| {
+                                    log::error!("Can't load builtin layout {} fallback to empty layout", $name);
+                                    Layout::default()
+                                }),
                             )+
                             other => {
-                                eprintln!("Can't find layout {}", other);
+                                log::error!("Can't find layout {} fallback to empty layout", other);
                                 Layout::default()
                             }
                         }
                     }
                 }
+
+                log::info!("Can't find custom layout try loading builtin layouts");
 
                 load_builtin_layout!("dubeolsik", "sebeolsik-390", "sebeolsik-391", "sebeolsik-sin1995")
             });
@@ -173,7 +180,10 @@ impl Config {
 
         let raw = dir
             .find_config_file("config.yaml")
-            .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
+            .and_then(|config| {
+                log::info!("Found config file: {}", config.display());
+                serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok()
+            })
             .unwrap_or_default();
 
         Some(Self::from_raw_config(raw, Some(dir)))

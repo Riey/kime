@@ -4,12 +4,12 @@ mod input_result;
 mod keycode;
 mod state;
 
+use ahash::AHashMap;
 use std::io::Read;
 
 use self::characters::KeyValue;
 use self::config::{HotkeyBehavior, HotkeyResult};
 use self::state::CharacterState;
-use ahash::AHashMap;
 
 pub use self::config::{Config, RawConfig};
 pub use self::input_result::{InputResult, InputResultType};
@@ -30,6 +30,7 @@ impl Layout {
                 Err(_) => continue,
             };
 
+            log::trace!("Load layout key: {}, value: {:?}", key, value);
             keymap.insert(key, value);
         }
 
@@ -94,7 +95,9 @@ impl InputEngine {
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
+        log::debug!("Key: {} pressed", key);
         if let Some(hotkey) = config.hotkeys.get(&key) {
+            log::debug!("Hotkey: {:?} triggered", hotkey);
             let first = self.enable_hangul;
 
             match hotkey.behavior() {

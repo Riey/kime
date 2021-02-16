@@ -148,8 +148,6 @@ fn daemon_main() -> Result<()> {
 struct Opts {
     #[structopt(long, short, help = "Show indicator version")]
     version: bool,
-    #[structopt(long, help = "Log more messages")]
-    verbose: bool,
 }
 
 fn main() {
@@ -160,15 +158,7 @@ fn main() {
         return;
     }
 
-    simplelog::SimpleLogger::init(
-        if cfg!(debug_assertions) || opt.verbose {
-            log::LevelFilter::Trace
-        } else {
-            log::LevelFilter::Info
-        },
-        simplelog::ConfigBuilder::new().build(),
-    )
-    .ok();
+    kime_log::enable_logger_with_env();
     log::info!("Start indicator");
     match daemon_main() {
         Ok(_) => {}

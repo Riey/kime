@@ -669,6 +669,7 @@ dependencies = [
  "glib",
  "gobject-sys",
  "gtk-sys",
+ "kime-log",
  "kime-version",
  "libappindicator-sys",
  "log",

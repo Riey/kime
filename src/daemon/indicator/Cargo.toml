@@ -7,6 +7,7 @@ license = "GPL-3.0"
 
 [dependencies]
 kime-version = { path = "../../version" }
+kime-log = { path = "../../log" }
 
 glib = "0.10.3"
 gio = "0.9.1"

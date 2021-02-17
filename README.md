@@ -4,7 +4,7 @@
 
 Korean IME
 
-[English](./README.md), [한국어](./README.ko.md)
+[**English**](./README.md), [**한국어**](./README.ko.md)
 
 [<img alt="build" src="https://img.shields.io/github/workflow/status/Riey/kime/CI?style=for-the-badge" height="25">](https://github.com/Riey/kime/actions?query=workflow%3ACI)
 [<img alt="discord" src="https://img.shields.io/discord/801107569505992705.svg?style=for-the-badge" height="25">](https://discord.gg/YPnEfZqC6y)
@@ -40,11 +40,28 @@ Korean IME
 you can install from AUR package [kime](https://aur.archlinux.org/packages/kime) for latest release
 or [kime-git](https://aur.archlinux.org/packages/kime-git) if you want to build from source.
 
-### Debian
+### Debian, Ubuntu
 
 you can install from .deb file at [releases](https://github.com/Riey/kime/releases) tab.
 
 ### Build from source
+
+#### Docker
+
+It's convenient because you don't need install other dependencies
+
+```sh
+git clone https://github.com/riey/kime
+cd kime
+
+docker build --file build-docker/<distro path>/Dockerfile --tag kime-build:git .
+docker run --name kime kime-build:git
+docker cp kime:/opt/kime-out/kime.tar.xz .
+# if you want deb file try this command instead
+# docker cp kime:/opt/kime-out/kime_amd64.deb .
+```
+
+#### Manually build
 
 make sure **cargo** and other dependencies listed below are installed before build.
 

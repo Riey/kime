@@ -14,7 +14,7 @@ kime-log = { path = "../../tools/log" }
 xim = { git = "https://github.com/Riey/xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 # xim = { path = "../../../../xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 
-ahash = "0.6.2"
+ahash = "0.7.0"
 cairo-rs = { version = "0.9.1", features = ["xcb"] }
 log = "0.4.11"
 x11rb = { version = "0.8.0", features = ["render"] }

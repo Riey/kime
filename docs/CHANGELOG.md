@@ -9,7 +9,7 @@
 
 ### Improve
 
-* Add debian-buster docker
+* Add debian-buster, ubuntu-18.04 docker
 * New tool `kime-check` for diagnostic kime [#270](https://github.com/Riey/kime/issues/270)
 * Correct invalid sebolsik-390 builtin layout [#261](https://github.com/Riey/kime/issues/261)
 * Fix indicator can't load icon data [#260](https://github.com/Riey/kime/issues/260)

@@ -4,7 +4,7 @@
 
 한글 입력기
 
-[English](./README.md), [한국어](./README.ko.md)
+[**English**](./README.md), [**한국어**](./README.ko.md)
 
 [<img alt="build" src="https://img.shields.io/github/workflow/status/Riey/kime/CI?style=for-the-badge" height="25">](https://github.com/Riey/kime/actions?query=workflow%3ACI)
 [<img alt="discord" src="https://img.shields.io/discord/801107569505992705.svg?style=for-the-badge" height="25">](https://discord.gg/YPnEfZqC6y)
@@ -39,16 +39,33 @@
 
 최신 릴리스는 [kime](https://aur.archlinux.org/packages/kime) 만약 소스에서 빌드하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치할 수 있습니다.
 
-### 데비안
+### 데비안, 우분투
 
 [releases](https://github.com/Riey/kime/releases) 탭에 있는 .deb 파일을 설치할 수 있습니다.
 
 ### 소스에서 빌드하기
 
+### 도커
+
+도커를 쓰시는 경우엔 따로 의존성을 설치하지 않아도 되어서 편리합니다.
+
+```sh
+git clone https://github.com/riey/kime
+cd kime
+
+docker build --file build-docker/<배포판 경로>/Dockerfile --tag kime-build:git .
+docker run --name kime kime-build:git
+docker cp kime:/opt/kime-out/kime.tar.xz .
+# deb 파일을 얻으시려면 대신 이 명령어를 실행하세요
+# docker cp kime:/opt/kime-out/kime_amd64.deb .
+```
+
+### 직접 빌드
+
 빌드하기 전에 **cargo** 및 아래 나열되어 있는 기타 종속성이 설치되어 있는지 확인하세요.
 
 ```sh
-git clone https://github.com/Riey/kime
+git clone https://github.com/riey/kime
 cd kime
 
 scripts/build.sh -ar

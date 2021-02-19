@@ -123,8 +123,6 @@ jobs:
           - 5.15.2
 
     steps:
-      - uses: actions/checkout@v2
-
       - name: Download engine
         uses: actions/download-artifact@v2
         with:
@@ -138,16 +136,19 @@ jobs:
         id: cache-qt
         uses: actions/cache@v2
         with:
-          path: ../Qt
+          path: /opt/Qt
           key: ${{ runner.os }}-QtCache-${{ matrix.qt5 }}
 
       - name: Install Qt-${{ matrix.qt5 }}
         uses: jurplel/install-qt-action@v2
         with:
+          dir: /opt
           version: ${{ matrix.qt5 }}
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
           aqtversion: ==1.1.1
           py7zrversion: ==0.13.0
+
+      - uses: actions/checkout@v2
 
       - name: Build Qt-${{ matrix.qt5 }}
         run: |

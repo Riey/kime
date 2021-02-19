@@ -9,20 +9,6 @@ env:
   DOCKER_BUILDKIT: 1
 
 jobs:
-  set-qt-matrix:
-    runs-on: ubuntu-20.04
-
-    outputs:
-      matrix: ${{ steps.qt-matrix.matrix }}
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Print qt matrix
-        id: qt-matrix
-        run: |
-          QT_VERSIONS=$(echo $(cat .github/workflows/qt_versions.json) | sed 's/ //g')
-          echo '::set-output name=matrix::$QT_VERSIONS'
-
   create-release:
     runs-on: ubuntu-20.04
 
@@ -123,7 +109,6 @@ jobs:
   build-qt:
     needs:
       - build-engine
-      - set-qt-matrix
       - create-release
 
     runs-on: ubuntu-18.04
@@ -131,7 +116,11 @@ jobs:
     strategy:
       matrix:
         qt5:
-          - ${{ fromJson(needs.set-qt-matrix.outputs.matrix) }}
+          - 5.9.5
+          - 5.11.3
+          - 5.12.8
+          - 5.14.2
+          - 5.15.2
 
     steps:
       - uses: actions/checkout@v2
@@ -184,7 +173,6 @@ jobs:
     needs:
       - build-other
       - build-qt
-      - set-qt-matrix
       - create-release
 
     runs-on: ubuntu-20.04
@@ -193,7 +181,11 @@ jobs:
       fail-fast: false
       matrix:
         qt5:
-          - ${{ fromJson(needs.set-qt-matrix.outputs.matrix) }}
+          - 5.9.5
+          - 5.11.3
+          - 5.12.8
+          - 5.14.2
+          - 5.15.2
 
         pkg:
           - zst
@@ -207,9 +199,6 @@ jobs:
           - latest
 
         include:
-          - qt5: 5.11.3
-            pkg: deb
-            name: debian-buster
           - qt5: 5.9.5
             pkg: deb
             name: ubuntu-18.04
@@ -219,6 +208,9 @@ jobs:
           - qt5: 5.14.2
             pkg: deb
             name: ubuntu-20.10
+          - qt5: 5.11.3
+            pkg: deb
+            name: debian-buster
           - qt5: 5.15.2
             pkg: zst
             name: latest

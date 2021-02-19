@@ -146,6 +146,8 @@ jobs:
         with:
           version: ${{ matrix.qt5 }}
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
+          aqtversion: ==1.1.1
+          py7zrversion: ==0.13.0
 
       - name: Build Qt-${{ matrix.qt5 }}
         run: |

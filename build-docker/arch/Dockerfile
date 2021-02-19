@@ -10,10 +10,6 @@ RUN pacman -S --noconfirm --needed libappindicator-gtk3
 RUN pacman -S --noconfirm --needed git
 RUN mkdir -pv /opt/kime-out
 
-COPY ci ./ci
-COPY docs ./docs
-COPY scripts ./scripts
-COPY res ./res
 COPY src ./src
 COPY .git ./.git
 
@@ -22,5 +18,10 @@ COPY Cargo.lock .
 COPY LICENSE .
 
 RUN cargo fetch
+
+COPY res ./res
+COPY ci ./ci
+COPY docs ./docs
+COPY scripts ./scripts
 
 ENTRYPOINT [ "ci/build_xz.sh" ]

@@ -60,12 +60,14 @@ if [ "$KIME_SKIP_ENGINE" -eq "1" ]; then
 else
     LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PWD}/${TARGET_DIR}"
     echo Build core...
-    cargo_build -p kime-engine-capi -p kime-check
+    cargo_build -p kime-engine-capi
+    echo Build check...
+    cargo_build -p kime-check
     cp $TARGET_DIR/libkime_engine.so $KIME_OUT
     cp $TARGET_DIR/kime-check $KIME_OUT
 fi
 
-echo Build xim wayland indicator check...
+echo Build xim wayland indicator...
 
 cargo_build -p kime-xim -p kime-wayland -p kime-indicator
 

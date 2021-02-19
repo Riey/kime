@@ -8,6 +8,10 @@ if [ -z "$KIME_MAKE_ARGS" ]; then
     KIME_MAKE_ARGS="-j4"
 fi
 
+if [ -z "$KIME_SKIP_ENGINE" ]; then
+    KIME_SKIP_CORE=0
+fi
+
 set_release() {
     NEED_STRIP=1
     TARGET_DIR=./target/release
@@ -31,6 +35,8 @@ set_release
 while getopts hrda opt; do
     case $opt in
         h)
+            echo "build.sh"
+            echo "-h: help"
             echo "-r: release mode(default)"
             echo "-d: debug mode"
             echo "-a: all immodules"
@@ -48,11 +54,14 @@ while getopts hrda opt; do
     esac
 done
 
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/$TARGET_DIR
-
-echo Build core...
-
-cargo_build -p kime-engine-capi
+if [ "$KIME_SKIP_ENGINE" -eq "1" ]; then
+    _KIME_CMAKE_ARGS="${_KIME_CMAKE_ARGS} -DUSE_SYSTEM_ENGINE=ON"
+    echo Use system engine
+else
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PWD}/${TARGET_DIR}"
+    echo Build core...
+    cargo_build -p kime-engine-capi
+fi
 
 echo Build xim wayland indicator check...
 

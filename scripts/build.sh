@@ -9,7 +9,7 @@ if [ -z "$KIME_MAKE_ARGS" ]; then
 fi
 
 if [ -z "$KIME_SKIP_ENGINE" ]; then
-    KIME_SKIP_CORE=0
+    KIME_SKIP_ENGINE=0
 fi
 
 set_release() {

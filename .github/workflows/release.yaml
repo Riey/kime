@@ -206,7 +206,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Create out folder
-        run: mkdir ./build/out
+        run: mkdir -pv ./build/out
 
       - name: Download qt artifact
         uses: actions/download-artifact@v2

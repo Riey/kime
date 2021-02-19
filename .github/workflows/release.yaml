@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build engine
-        run: cargo build --release -p kime-engine-capi
+        run: cargo build --release -p kime-engine-capi && strip -s ./target/release/libkime_engine.so
       - name: Upload engine
         uses: actions/upload-artifact@v2
         with:

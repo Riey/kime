@@ -12,10 +12,6 @@ RUN apt-get install -y wget
 RUN mkdir /tmp/cmake && cd /tmp/cmake && wget https://github.com/Kitware/CMake/releases/download/v3.19.5/cmake-3.19.5-Linux-x86_64.sh && sh cmake-3.19.5-Linux-x86_64.sh --skip-license --prefix=/usr
 RUN mkdir -pv /opt/kime-out
 
-COPY ci ./ci
-COPY docs ./docs
-COPY scripts ./scripts
-COPY res ./res
 COPY src ./src
 COPY .git ./.git
 
@@ -24,5 +20,10 @@ COPY Cargo.lock .
 COPY LICENSE .
 
 RUN cargo fetch
+
+COPY res ./res
+COPY ci ./ci
+COPY docs ./docs
+COPY scripts ./scripts
 
 ENTRYPOINT [ "ci/build_deb.sh" ]

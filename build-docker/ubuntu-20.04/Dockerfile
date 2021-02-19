@@ -10,10 +10,6 @@ RUN apt-get install -y libpango1.0-dev libcairo2-dev libgtk2.0-dev libgtk-3-dev 
 RUN apt-get install -y qt5-default qtbase5-dev qtbase5-private-dev libqt5gui5
 RUN mkdir -pv /opt/kime-out
 
-COPY ci ./ci
-COPY docs ./docs
-COPY scripts ./scripts
-COPY res ./res
 COPY src ./src
 COPY .git ./.git
 
@@ -22,5 +18,10 @@ COPY Cargo.lock .
 COPY LICENSE .
 
 RUN cargo fetch
+
+COPY res ./res
+COPY ci ./ci
+COPY docs ./docs
+COPY scripts ./scripts
 
 ENTRYPOINT [ "ci/build_deb.sh" ]

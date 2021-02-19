@@ -165,6 +165,8 @@ jobs:
 
       - name: Upload Qt-${{ matrix.qt5 }} file
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
           asset_path: build/lib/libkime-qt5.so

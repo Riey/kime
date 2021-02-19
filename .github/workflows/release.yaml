@@ -3,79 +3,33 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 env:
   DOCKER_BUILDKIT: 1
 
 jobs:
-  # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
-  # build-arch:
-  #   runs-on: ubuntu-20.04
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Run docker
-  #       run: |
-  #         docker build --file build-docker/arch/Dockerfile --tag riey/kime-build:arch .
-  #         docker run --name kime-arch riey/kime-build:arch
-  #         mkdir /tmp/out
-  #         docker cp kime-arch:/opt/kime-out/kime.tar.xz /tmp/out/
-
-  #     - name: Upload tar.xz
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: arch
-  #         path: /tmp/out/kime.tar.xz
-  
-  # ubuntu build is run on native
-  build-ubuntu:
+  set-qt-matrix:
     runs-on: ubuntu-20.04
 
+    outputs:
+      matrix: ${{ steps.qt-matrix.matrix }}
+
     steps:
-      - uses: actions/checkout@v2
-      # Remove apt repos that are known to break from time to time 
-      # See https://github.com/actions/virtual-environments/issues/323  
-      - name: Remove broken apt repos [Ubuntu]
+      - run: actions/checkout@v2
+      - name: Print qt matrix
+        id: qt-matrix
         run: |
-          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
-      - name: Build deb
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git gcc libclang-10-dev llvm cmake extra-cmake-modules cargo pkg-config
-          sudo apt-get install -y libpango1.0-dev libcairo2-dev libgtk2.0-dev libgtk-3-dev libglib2.0 libxcb1 libappindicator3-dev
-          sudo apt-get install -y qt5-default qtbase5-dev qtbase5-private-dev libqt5gui5
-          mkdir -pv /opt/kime-out
-          ci/build_deb.sh
+          QT_VERSIONS=$(echo $(cat .github/workflows/qt_versions.json) | sed 's/ //g')
+          echo '::set-output name=matrix::$QT_VERSIONS'
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: ubuntu
-          path: /opt/kime-out/*
-
-  upload:
-    needs:
-      # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
-      # - build-arch
-      - build-ubuntu
-
+  create-release:
     runs-on: ubuntu-20.04
-    
+
+    outputs:
+      url: ${{ steps.create_release.outputs.upload_url }}
+
     steps:
-      - name: Checkout workdir
-        run: mkdir /tmp/work && cd /tmp/work
-      # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
-      # - name: Download arch artifact
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: arch
-      #     path: arch
-      - name: Download ubuntu artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: ubuntu
-          path: ubuntu
       - name: Create draft release
         id: create_release
         uses: actions/create-release@v1
@@ -87,33 +41,209 @@ jobs:
           draft: true
           prerelease: false
 
-      # Disable until https://github.com/actions/virtual-environments/issues/2658 fixed
-      # - name: Upload archive
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./kime.tar.xz
-      #     asset_name: kime-arch-${{ github.ref }}.tar.xz
-      #     asset_content_type: application/x-xz
+  build-engine:
+    runs-on: ubuntu-18.04
 
-      - name: Upload archive
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build engine
+        run: cargo build --release -p kime-engine-capi
+      - name: Upload engine
+        uses: actions/upload-artifact@v2
+        with:
+          name: engine
+          path: ./target/release/libkime_engine.so
+
+  build-other:
+    needs:
+      - build-engine
+      - create-release
+
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Remove broken apt repos [Ubuntu]
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git gcc libclang-10-dev llvm cargo pkg-config
+          sudo apt-get install -y libpango1.0-dev libcairo2-dev libgtk2.0-dev libgtk-3-dev libglib2.0 libxcb1 libappindicator3-dev
+          wget https://github.com/Kitware/CMake/releases/download/v3.19.5/cmake-3.19.5-Linux-x86_64.sh && sh cmake-3.19.5-Linux-x86_64.sh --skip-license --prefix=/usr
+
+      - name: Download engine
+        uses: actions/download-artifact@v2
+        with:
+          name: engine
+          path: /usr/lib
+
+      - name: Build
+        run: |
+          KIME_SKIP_ENGINE=1 ci/build_xz.sh
+          cp /usr/lib/libkime_engine.so ./build/out
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: other
+          path: ./build/out/*
+
+      - name: Upload xz
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ubuntu/kime.tar.xz
-          asset_name: kime-ubuntu-${{ github.ref }}.tar.xz
+          upload_url: ${{ needs.create-release.outputs.url }}
+          asset_path: /opt/kime-out/kime.tar.xz
+          asset_name: kime-${{ github.ref }}.tar.xz
           asset_content_type: application/x-xz
 
-      - name: Upload deb package
+  build-qt:
+    needs:
+      - build-engine
+      - set-qt-matrix
+      - create-release
+
+    runs-on: ubuntu-18.04
+
+    strategy:
+      matrix:
+        qt5:
+          - ${{fromJson(needs.set-qt-matrix.matrix)}}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download engine
+        uses: actions/download-artifact@v2
+        with:
+          name: engine
+          path: target/release
+
+      - name: Cache Qt-${{ matrix.qt5 }}
+        id: cache-qt
+        uses: actions/cache@v2
+        with:
+          path: ../Qt
+          key: ${{ runner.os }}-QtCache-${{ matrix.qt5 }}
+
+      - name: Install Qt-${{ matrix.qt5 }}
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: ${{ matrix.qt5 }}
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+
+      - name: Build Qt-${{ matrix.qt5 }}
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_QT5=ON ../src
+          make -j$(nproc --all)
+
+      - name: Upload Qt-${{ matrix.qt5 }} artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: qt-${{matrix.qt5}}
+          path: ./lib/libkime-qt5.so
+
+      - name: Upload Qt-${{ matrix.qt5 }} file
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.url }}
+          asset_path: ./lib/libkime-qt5.so
+          asset_name: libkime-qt5-${{ matrix.qt5 }}.so
+          asset_content_type: application/x-sharedlib
+
+  package-arch:
+    needs:
+      - build-other
+      - build-qt
+      - set-qt-matrix
+      - create-release
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        qt5:
+          - ${{fromJson(needs.set-qt-matrix.matrix)}}
+
+        pkg:
+          - xz
+          - deb
+
+        name:
+          - debian-buster
+          - ubuntu-18.04
+          - ubuntu-20.04
+          - ubuntu-20.10
+          - latest
+
+        include:
+          - qt5: 5.11.3
+            pkg: deb
+            name: debian-buster
+          - qt5: 5.9.5
+            pkg: deb
+            name: ubuntu-18.04
+          - qt5: 5.12.8
+            pkg: deb
+            name: ubuntu-20.04
+          - qt5: 5.14.2
+            pkg: deb
+            name: ubuntu-20.10
+          - qt5: 5.15.2
+            pkg: xz
+            name: latest
+
+    steps:
+      - run: actions/checkout@v2
+
+      - name: Create out folder
+        run: mkdir ./build/out
+
+      - name: Download qt artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: qt-${{ matrix.qt5 }}
+          path: ./build/out
+
+      - name: Download other artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: other
+          path: ./build/out
+
+      - name: Create deb
+        if: ${{ matrix.pkg == 'deb' }}
+        run: scripts/release-deb.sh .
+
+      - name: Upload deb
+        if: ${{ matrix.pkg == 'deb' }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ubuntu/kime_amd64.deb
-          asset_name: kime_${{ github.ref }}_amd64.deb
+          upload_url: ${{ needs.create-release.outputs.url }}
+          asset_path: ./kime_amd64.deb
+          asset_name: kime_${{ matrix.name }}_${{ github.ref }}_amd64.deb
+          asset_content_type: application/x-xz
+
+      - name: Create xz
+        if: ${{ matrix.pkg == 'xz' }}
+        run: tar cvf - -C ./build/out . | xz -9 -T0 -c - > ./kime.tar.xz
+
+      - name: Upload xz
+        if: ${{ matrix.pkg == 'xz' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.url }}
+          asset_path: ./kime.tar.xz
+          asset_name: kime_${{ matrix.name }}_${{ github.ref }}.tar.xz
           asset_content_type: application/x-xz

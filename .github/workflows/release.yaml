@@ -185,24 +185,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        qt5:
-          - 5.9.5
-          - 5.11.3
-          - 5.12.8
-          - 5.14.2
-          - 5.15.2
-
-        pkg:
-          - zst
-          - deb
-
-        name:
-          - debian-buster
-          - ubuntu-18.04
-          - ubuntu-20.04
-          - ubuntu-20.10
-          - latest
-
         include:
           - qt5: 5.9.5
             pkg: deb

@@ -23,8 +23,7 @@ jobs:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-v1-${{ hashFiles('**/Cargo.lock') }}
     # Remove apt repos that are known to break from time to time 
     # See https://github.com/actions/virtual-environments/issues/323  
     - name: Remove broken apt repos [Ubuntu]

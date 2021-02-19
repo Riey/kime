@@ -8,6 +8,10 @@ if [ -z "$KIME_MAKE_ARGS" ]; then
     KIME_MAKE_ARGS="-j4"
 fi
 
+if [ -z "$KIME_SKIP_ENGINE" ]; then
+    KIME_SKIP_ENGINE=0
+fi
+
 set_release() {
     NEED_STRIP=1
     TARGET_DIR=./target/release
@@ -31,6 +35,8 @@ set_release
 while getopts hrda opt; do
     case $opt in
         h)
+            echo "build.sh"
+            echo "-h: help"
             echo "-r: release mode(default)"
             echo "-d: debug mode"
             echo "-a: all immodules"
@@ -48,23 +54,28 @@ while getopts hrda opt; do
     esac
 done
 
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/$TARGET_DIR
+if [ "$KIME_SKIP_ENGINE" -eq "1" ]; then
+    _KIME_CMAKE_ARGS="${_KIME_CMAKE_ARGS} -DUSE_SYSTEM_ENGINE=ON"
+    echo Use system engine
+else
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PWD}/${TARGET_DIR}"
+    echo Build core...
+    cargo_build -p kime-engine-capi
+    echo Build check...
+    cargo_build -p kime-check
+    cp $TARGET_DIR/libkime_engine.so $KIME_OUT
+    cp $TARGET_DIR/kime-check $KIME_OUT
+fi
 
-echo Build core...
+echo Build xim wayland indicator...
 
-cargo_build -p kime-engine-capi
+cargo_build -p kime-xim -p kime-wayland -p kime-indicator
 
-echo Build xim wayland indicator check...
-
-cargo_build -p kime-check -p kime-xim -p kime-wayland -p kime-indicator
-
-cp $TARGET_DIR/kime-check $KIME_OUT
 cp $TARGET_DIR/kime-xim $KIME_OUT
 cp $TARGET_DIR/kime-wayland $KIME_OUT
 cp $TARGET_DIR/kime-indicator $KIME_OUT
 cp src/engine/cffi/kime_engine.h $KIME_OUT
 cp src/engine/cffi/kime_engine.hpp $KIME_OUT
-cp $TARGET_DIR/libkime_engine.so $KIME_OUT
 cp LICENSE $KIME_OUT
 cp res/default_config.yaml $KIME_OUT
 cp -R res/icons $KIME_OUT

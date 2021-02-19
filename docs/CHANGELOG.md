@@ -9,6 +9,7 @@
 
 ### Improve
 
+* Now release debian, ubuntu, arch binary package and many variants of qt module
 * Add debian-buster, ubuntu-18.04 docker
 * New tool `kime-check` for diagnostic kime [#270](https://github.com/Riey/kime/issues/270)
 * Correct invalid sebolsik-390 builtin layout [#261](https://github.com/Riey/kime/issues/261)

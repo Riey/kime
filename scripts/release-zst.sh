@@ -7,4 +7,4 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-tar --zstd -cvf "${1}/kime.tar.zst" -C ./build/out .
+tar -cvf - -C ./build/out . | zstd -T0 -15 -o "${1}/kime.tar.zst"

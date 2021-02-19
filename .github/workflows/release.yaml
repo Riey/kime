@@ -221,7 +221,7 @@ jobs:
             name: latest
 
     steps:
-      - run: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Create out folder
         run: mkdir ./build/out

@@ -2,6 +2,8 @@
 
 ## Dev
 
+## 1.1.0
+
 ### Breaking
 
 * Now frontends check engine's version if it failed, must cause hard error

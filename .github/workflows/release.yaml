@@ -161,13 +161,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: qt-${{matrix.qt5}}
-          path: ./lib/libkime-qt5.so
+          path: build/lib/libkime-qt5.so
 
       - name: Upload Qt-${{ matrix.qt5 }} file
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: ./lib/libkime-qt5.so
+          asset_path: build/lib/libkime-qt5.so
           asset_name: libkime-qt5-${{ matrix.qt5 }}.so
           asset_content_type: application/x-sharedlib
 

@@ -47,12 +47,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build engine
-        run: cargo build --release -p kime-engine-capi && strip -s ./target/release/libkime_engine.so
+        run: |
+          cargo build --release -p kime-engine-capi -p kime-check
+          strip -s ./target/release/libkime_engine.so
+          strip -s ./target/release/kime-check
       - name: Upload engine
         uses: actions/upload-artifact@v2
         with:
           name: engine
           path: ./target/release/libkime_engine.so
+      - name: Upload check
+        uses: actions/upload-artifact@v2
+        with:
+          name: check
+          path: ./target/release/kime-check
 
   build-other:
     needs:
@@ -79,15 +87,22 @@ jobs:
         with:
           name: engine
           path: .
-          
+
+      - name: Download check
+        uses: actions/download-artifact@v2
+        with:
+          name: check
+          path: .
+
       - name: Install engine
-        run: sudo cp ./libkime_engine.so /usr/lib
+        run: sudo mv ./libkime_engine.so /usr/lib
 
       - name: Build
         run: |
-          mkdir /opt/kime-out
-          KIME_SKIP_ENGINE=1 ci/build_xz.sh
+          KIME_SKIP_ENGINE=1 scripts/build.sh -ar
           cp /usr/lib/libkime_engine.so ./build/out
+          mv ./kime-check ./build/out
+          scripts/release-zst.sh .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
@@ -95,15 +110,15 @@ jobs:
           name: other
           path: ./build/out/*
 
-      - name: Upload xz
+      - name: Upload zst
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: /opt/kime-out/kime.tar.xz
-          asset_name: kime-${{ github.ref }}.tar.xz
-          asset_content_type: application/x-xz
+          asset_path: /opt/kime-out/kime.tar.zst
+          asset_name: kime-${{ github.ref }}.tar.zst
+          asset_content_type: application/zstd
 
   build-qt:
     needs:
@@ -126,7 +141,7 @@ jobs:
         with:
           name: engine
           path: .
-          
+
       - name: Install engine
         run: sudo cp ./libkime_engine.so /usr/lib
 
@@ -181,7 +196,7 @@ jobs:
           - ${{ fromJson(needs.set-qt-matrix.outputs.matrix) }}
 
         pkg:
-          - xz
+          - zst
           - deb
 
         name:
@@ -205,7 +220,7 @@ jobs:
             pkg: deb
             name: ubuntu-20.10
           - qt5: 5.15.2
-            pkg: xz
+            pkg: zst
             name: latest
 
     steps:
@@ -242,16 +257,16 @@ jobs:
           asset_content_type: application/x-xz
 
       - name: Create xz
-        if: ${{ matrix.pkg == 'xz' }}
-        run: tar cvf - -C ./build/out . | xz -9 -T0 -c - > ./kime.tar.xz
+        if: ${{ matrix.pkg == 'zst' }}
+        run: scripts/release-zst.sh .
 
       - name: Upload xz
-        if: ${{ matrix.pkg == 'xz' }}
+        if: ${{ matrix.pkg == 'zst' }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: ./kime.tar.xz
-          asset_name: kime_${{ matrix.name }}_${{ github.ref }}.tar.xz
-          asset_content_type: application/x-xz
+          asset_path: ./kime.tar.zst
+          asset_name: kime_${{ matrix.name }}_${{ github.ref }}.tar.zst
+          asset_content_type: application/zstd

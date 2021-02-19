@@ -5,7 +5,7 @@ KIME_PREFIX=51_kime
 source $(dirname $0)/tool.sh
 
 if [ -z "$1" ]; then
-    echo "Usage: <release-deb.sh> <install-prefix>"
+    echo "Usage: <release-deb.sh> <out-path>"
     exit 1
 fi
 

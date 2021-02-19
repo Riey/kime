@@ -85,6 +85,7 @@ jobs:
 
       - name: Build
         run: |
+          mkdir /opt/kime-out
           KIME_SKIP_ENGINE=1 ci/build_xz.sh
           cp /usr/lib/libkime_engine.so ./build/out
 

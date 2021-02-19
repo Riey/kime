@@ -78,7 +78,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: engine
-          path: /usr/lib
+          path: .
+          
+      - name: Install engine
+        run: sudo cp ./libkime_engine.so /usr/lib
 
       - name: Build
         run: |
@@ -121,7 +124,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: engine
-          path: target/release
+          path: .
+          
+      - name: Install engine
+        run: sudo cp ./libkime_engine.so /usr/lib
 
       - name: Cache Qt-${{ matrix.qt5 }}
         id: cache-qt

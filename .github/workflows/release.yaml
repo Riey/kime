@@ -16,7 +16,7 @@ jobs:
       matrix: ${{ steps.qt-matrix.matrix }}
 
     steps:
-      - run: actions/checkout@v2
+      - uses: actions/checkout@v2
       - name: Print qt matrix
         id: qt-matrix
         run: |

@@ -7,6 +7,7 @@
 ### Improve
 
 * Correct xim set_event_mask [#283](https://github.com/Riey/kime/issues/283)
+* Detect mouse click event on gtk, qt [#282](https://github.com/Riey/kime/issues/282) [#280](https://github.com/Riey/kime/issues/280)
 
 ## 1.1.0
 

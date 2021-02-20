@@ -246,7 +246,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             input_context.preedit_spot()
         );
 
-        server.set_event_mask(input_context, 1, 1)?;
+        server.set_event_mask(input_context, 1, 0)?;
 
         Ok(())
     }

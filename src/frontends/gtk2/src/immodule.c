@@ -271,6 +271,10 @@ void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
 
 void im_context_finalize(GObject *obj) {
   KIME_IM_CONTEXT(obj);
+  if (ctx->client) {
+    g_object_unref(ctx->client);
+    ctx->client = NULL;
+  }
   kime_engine_delete(ctx->engine);
 }
 

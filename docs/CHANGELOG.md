@@ -2,6 +2,12 @@
 
 ## Dev
 
+### Breaking
+
+### Improve
+
+* Correct xim set_event_mask [#283](https://github.com/Riey/kime/issues/283)
+
 ## 1.1.0
 
 ### Breaking

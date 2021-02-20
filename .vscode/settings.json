@@ -18,7 +18,11 @@
         "cstdlib": "cpp",
         "cstdint": "cpp",
         "stdio.h": "c",
-        "immodule.h": "c"
+        "immodule.h": "c",
+        "gtkimmodule.h": "c",
+        "gtkx.h": "c",
+        "kime_engine.h": "c",
+        "eventi.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src",

@@ -35,6 +35,7 @@ typedef struct KimeImContext {
   ClientType *client;
   KimeSignals signals;
   KimeInputEngine *engine;
+  gboolean focus;
   gboolean preedit_visible;
   KimeConfig *config;
 } KimeImContext;
@@ -74,15 +75,12 @@ void focus_in(GtkIMContext *im) {
 
   debug("focus_in");
 
+  ctx->focus = TRUE;
   kime_engine_update_hangul_state(ctx->engine);
 }
 
-void reset(GtkIMContext *im) {
-  KIME_IM_CONTEXT(im);
-
+void kime_reset(KimeImContext *ctx) {
   uint32_t c = kime_engine_reset(ctx->engine);
-
-  debug("reset %u", c);
 
   if (c) {
     update_preedit(ctx, FALSE);
@@ -90,10 +88,21 @@ void reset(GtkIMContext *im) {
   }
 }
 
-void focus_out(GtkIMContext *im) {
-  debug("focus_out");
+void reset(GtkIMContext *im) {
+  KIME_IM_CONTEXT(im);
 
-  reset(im);
+  debug("reset");
+
+  kime_reset(ctx);
+}
+
+void focus_out(GtkIMContext *im) {
+  KIME_IM_CONTEXT(im);
+
+  debug("focus_out");
+  ctx->focus = FALSE;
+
+  kime_reset(ctx);
 }
 
 void put_event(KimeImContext *ctx, EventType *key) {
@@ -122,6 +131,48 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
   return FALSE;
 }
 
+gboolean on_key_input(KimeImContext *ctx, guint16 code,
+                      KimeModifierState state) {
+  KimeInputResult ret =
+      kime_engine_press_key(ctx->engine, ctx->config, code, state);
+
+  if (ret.hangul_changed) {
+    kime_engine_update_hangul_state(ctx->engine);
+  }
+
+  switch (ret.ty) {
+  case Commit:
+    update_preedit(ctx, FALSE);
+    commit(ctx, ret.char1);
+    return TRUE;
+  case CommitCommit:
+    update_preedit(ctx, FALSE);
+    commit(ctx, ret.char1);
+    commit(ctx, ret.char2);
+    return TRUE;
+  case CommitBypass:
+    update_preedit(ctx, FALSE);
+    commit(ctx, ret.char1);
+    // // try commit english first
+    // if (!commit_event(ctx, state, keyval)) {
+    //   put_event(ctx, key);
+    // }
+    return FALSE;
+  case CommitPreedit:
+    commit(ctx, ret.char1);
+    update_preedit(ctx, ret.char2 != 0);
+    return TRUE;
+  case Preedit:
+    update_preedit(ctx, ret.char1 != 0);
+    return TRUE;
+  case Consume:
+    return TRUE;
+  case Bypass:
+  default:
+    return FALSE;
+  }
+}
+
 gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   KIME_IM_CONTEXT(im);
 #if GTK_CHECK_VERSION(3, 98, 4)
@@ -139,68 +190,27 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint keyval = key->keyval;
   GdkModifierType state = key->state;
 #endif
-  debug("code %u, state %u", code, state);
 
-  if (state & FORWARDED_MASK) {
-    return commit_event(ctx, state, keyval);
-  } else {
-    KimeModifierState kime_state = 0;
+  KimeModifierState kime_state = 0;
 
-    if (state & GDK_SHIFT_MASK) {
-      kime_state |= KimeModifierState_SHIFT;
-    }
-
-    if (state & GDK_ALT_MASK) {
-      kime_state |= KimeModifierState_ALT;
-    }
-
-    if (state & GDK_CONTROL_MASK) {
-      kime_state |= KimeModifierState_CONTROL;
-    }
-
-    if (state & GDK_SUPER_MASK) {
-      kime_state |= KimeModifierState_SUPER;
-    }
-
-    KimeInputResult ret =
-        kime_engine_press_key(ctx->engine, ctx->config, code, kime_state);
-
-    if (ret.hangul_changed) {
-      kime_engine_update_hangul_state(ctx->engine);
-    }
-
-    switch (ret.ty) {
-    case Commit:
-      update_preedit(ctx, FALSE);
-      commit(ctx, ret.char1);
-      return TRUE;
-    case CommitCommit:
-      update_preedit(ctx, FALSE);
-      commit(ctx, ret.char1);
-      commit(ctx, ret.char2);
-      return TRUE;
-    case CommitBypass:
-      update_preedit(ctx, FALSE);
-      commit(ctx, ret.char1);
-      // try commit english first
-      if (!commit_event(ctx, state, keyval)) {
-        put_event(ctx, key);
-      }
-      return TRUE;
-    case CommitPreedit:
-      commit(ctx, ret.char1);
-      update_preedit(ctx, ret.char2 != 0);
-      return TRUE;
-    case Preedit:
-      update_preedit(ctx, ret.char1 != 0);
-      return TRUE;
-    case Consume:
-      return TRUE;
-    case Bypass:
-    default:
-      return commit_event(ctx, state, keyval);
-    }
+  if (state & GDK_SHIFT_MASK) {
+    kime_state |= KimeModifierState_SHIFT;
   }
+
+  if (state & GDK_ALT_MASK) {
+    kime_state |= KimeModifierState_ALT;
+  }
+
+  if (state & GDK_CONTROL_MASK) {
+    kime_state |= KimeModifierState_CONTROL;
+  }
+
+  if (state & GDK_SUPER_MASK) {
+    kime_state |= KimeModifierState_SUPER;
+  }
+
+  return on_key_input(ctx, code, kime_state) ||
+         commit_event(ctx, state, keyval);
 }
 
 void set_client(GtkIMContext *im, ClientType *client) {
@@ -252,11 +262,53 @@ void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
       attr->start_index = 0;
       attr->end_index = str_len;
       pango_attr_list_insert(*attrs, attr);
-
-      // TODO: color
     }
   }
 }
+
+#if !GTK_CHECK_VERSION(3, 98, 4)
+// workaround click bug perhaps not occured in gtk4 see #282
+GdkFilterReturn global_filter_event(GdkXEvent *xevent, GdkEvent *event,
+                                    gpointer data) {
+  KimeImContext *ctx = (KimeImContext *)data;
+  XEvent *native_event = (XEvent *)xevent;
+
+  if (!ctx->focus || !ctx->client) {
+    return GDK_FILTER_CONTINUE;
+  }
+
+  if (native_event->type == ButtonPress) {
+    debug("global click");
+    kime_reset(ctx);
+  } else if (native_event->type == KeyPress) {
+    debug("global key");
+    XKeyPressedEvent *kev = (XKeyPressedEvent *)xevent;
+    KimeModifierState state = 0;
+
+    if (kev->state & 0x1) {
+      state |= KimeModifierState_SHIFT;
+    }
+
+    if (kev->state & 0x4) {
+      state |= KimeModifierState_CONTROL;
+    }
+
+    if (kev->state & 0x8) {
+      state |= KimeModifierState_ALT;
+    }
+
+    if (kev->state & 0x40) {
+      state |= KimeModifierState_SUPER;
+    }
+
+    if (on_key_input(ctx, (guint16)kev->keycode, state)) {
+      // handled
+      return GDK_FILTER_REMOVE;
+    }
+  }
+  return GDK_FILTER_CONTINUE;
+}
+#endif
 
 void im_context_class_finalize(KimeImContextClass *klass, gpointer _data) {
   kime_config_delete(klass->config);
@@ -264,14 +316,27 @@ void im_context_class_finalize(KimeImContextClass *klass, gpointer _data) {
 
 void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->client = NULL;
+  ctx->focus = FALSE;
   ctx->signals = klass->signals;
   ctx->engine = kime_engine_new();
   ctx->config = klass->config;
+
+#if !GTK_CHECK_VERSION(3, 98, 4)
+  gdk_window_add_filter(NULL, global_filter_event, ctx);
+#endif
 }
 
 void im_context_finalize(GObject *obj) {
   KIME_IM_CONTEXT(obj);
+  if (ctx->client) {
+    g_object_unref(ctx->client);
+    ctx->client = NULL;
+  }
   kime_engine_delete(ctx->engine);
+
+#if !GTK_CHECK_VERSION(3, 98, 4)
+  gdk_window_remove_filter(NULL, global_filter_event, ctx);
+#endif
 }
 
 void im_context_class_init(KimeImContextClass *klass, gpointer _data) {

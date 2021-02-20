@@ -48,6 +48,8 @@ void KimeInputContext::invokeAction(QInputMethod::Action action,
 #ifdef DEBUG
   KIME_DEBUG << "invokeAction: " << action << ", " << cursorPosition << "\n";
 #endif
+
+  this->reset();
 }
 
 bool KimeInputContext::filterEvent(const QEvent *event) {

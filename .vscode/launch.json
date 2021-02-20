@@ -63,10 +63,10 @@
                 "GTK_IM_MODULE": "kime",
                 "GTK_IM_MODULE_FILE": "${workspaceFolder}/.vscode/immodules.cache",
                 "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug",
-                "G_MESSAGES_DEBUG": "kime"
+                "G_MESSAGES_DEBUG": "kime",
             },
             "program": "/usr/lib/firefox/firefox",
-            "args": ["-g"]
+            "args": ["-g", "-new-instance", "-P", "kime-debug", "-new-window", "https://codepen.io/hpop/pen/drLiH"]
         },
         {
             "type": "lldb",

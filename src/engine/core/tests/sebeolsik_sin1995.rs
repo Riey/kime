@@ -42,18 +42,12 @@ fn test_input(keys: &[(Key, &str, &str)]) {
 
 #[test]
 fn simple() {
-    test_input(&[
-        (Key::normal(U), "ㄷ", ""),
-        (Key::normal(Q), "듸", ""),
-    ]);
+    test_input(&[(Key::normal(U), "ㄷ", ""), (Key::normal(Q), "듸", "")]);
 }
 
 #[test]
 fn mu() {
-    test_input(&[
-        (Key::normal(I), "ㅁ", ""),
-        (Key::normal(I), "무", ""),
-    ]);
+    test_input(&[(Key::normal(I), "ㅁ", ""), (Key::normal(I), "무", "")]);
 }
 
 #[test]

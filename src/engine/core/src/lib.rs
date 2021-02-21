@@ -85,6 +85,11 @@ impl InputEngine {
         self.enable_hangul
     }
 
+    fn bypass(&mut self) -> InputResult {
+        self.clear_preedit();
+        InputResult::empty()
+    }
+
     pub fn update_hangul_state(&mut self) {
         std::fs::write(
             "/tmp/kime_hangul_state",
@@ -110,10 +115,7 @@ impl InputEngine {
             }
 
             let mut ret = match hotkey.result() {
-                HotkeyResult::Bypass => {
-                    self.state.clear_preedit();
-                    InputResult::NEED_RESET
-                }
+                HotkeyResult::Bypass => self.bypass(),
                 HotkeyResult::Consume => InputResult::CONSUMED,
             };
 
@@ -148,12 +150,10 @@ impl InputEngine {
                     KeyValue::Jongseong(jong) => self.state.jong(jong, config),
                 }
             } else {
-                self.state.clear_preedit();
-                InputResult::NEED_RESET
+                self.bypass()
             }
         } else {
-            self.state.clear_preedit();
-            InputResult::NEED_RESET
+            self.bypass()
         }
     }
 
@@ -165,8 +165,13 @@ impl InputEngine {
     ) -> InputResult {
         match KeyCode::from_hardward_code(hardware_code) {
             Some(code) => self.press_key(Key::new(code, state), config),
-            None => InputResult::NEED_RESET,
+            None => self.bypass(),
         }
+    }
+
+    #[inline]
+    pub fn clear_preedit(&mut self) {
+        self.state.clear_preedit();
     }
 
     #[inline]

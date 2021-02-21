@@ -51,6 +51,7 @@ impl HangulState {
 
     pub fn clear_preedit(&mut self) {
         self.state.write(&mut self.characters);
+        self.state.reset();
     }
 
     pub fn flush(&mut self) {

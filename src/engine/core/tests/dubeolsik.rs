@@ -1,6 +1,6 @@
 use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
-fn test_input(keys: &[(Key, &str, &str)]) {
+fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
     let config = Config::from_raw_config(
         RawConfig {
             layout: "dubeolsik".into(),
@@ -9,14 +9,16 @@ fn test_input(keys: &[(Key, &str, &str)]) {
         None,
     );
 
-    let mut engine = InputEngine::new(false);
+    let mut engine = InputEngine::new(word_commit);
 
-    engine.set_hangul_enable(true);
+    engine.set_hangul_enable(word_commit);
 
     for (key, preedit, commit) in keys.iter().copied() {
         eprintln!("Key: {:?}", key);
 
         let ret = engine.press_key(key, &config);
+
+        dbg!(ret);
 
         if ret.contains(InputResult::HAS_PREEDIT) {
             assert_eq!(preedit, engine.preedit_str());
@@ -38,6 +40,27 @@ fn test_input(keys: &[(Key, &str, &str)]) {
             engine.flush();
         }
     }
+}
+
+fn test_input(keys: &[(Key, &str, &str)]) {
+    test_input_impl(false, keys)
+}
+
+fn test_word_input(keys: &[(Key, &str, &str)]) {
+    test_input_impl(true, keys)
+}
+
+#[test]
+fn word_hello() {
+    test_word_input(&[
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(K), "아", ""),
+        (Key::normal(S), "안", ""),
+        (Key::normal(S), "안ㄴ", ""),
+        (Key::normal(U), "안녀", ""),
+        (Key::normal(D), "안녕", ""),
+        (Key::normal(Esc), "", "안녕PASS"),
+    ])
 }
 
 #[test]

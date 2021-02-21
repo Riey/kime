@@ -1,5 +1,6 @@
 use ansi_term::Color;
-use kime_engine_cffi::{Config, InputEngine, InputResultType};
+use kime_engine_cffi::{Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET};
+use kime_engine_core::{Key, KeyCode::{*, self}};
 use std::env;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
 
@@ -73,18 +74,18 @@ impl Check {
                 CondResult::Ok
             }
             Check::EngineWorks => {
-                let mut engine = kime_engine_cffi::InputEngine::new();
                 let config = kime_engine_cffi::Config::default();
+                let mut engine = kime_engine_cffi::InputEngine::new(&config);
 
                 engine.set_hangul_enable(true);
                 check_input(
                     &mut engine,
                     &config,
                     &[
-                        (27, InputResultType::Preedit, 'ㄱ', '\0'),
-                        (45, InputResultType::Preedit, '가', '\0'),
-                        (39, InputResultType::Preedit, '간', '\0'),
-                        (45, InputResultType::CommitPreedit, '가', '나'),
+                        (Key::normal(R), "ㄱ", ""),
+                        (Key::normal(K), "가", ""),
+                        (Key::normal(S), "간", ""),
+                        (Key::normal(K), "가", "나"),
                     ],
                 )
             }
@@ -123,7 +124,7 @@ impl Check {
 fn check_input(
     engine: &mut InputEngine,
     config: &Config,
-    tests: &[(u16, InputResultType, char, char)],
+    tests: &[(Key, &str, &str)],
 ) -> CondResult {
     for (code, ty, char1, char2) in tests.iter().copied() {
         let ret = engine.press_key(config, code, 0);

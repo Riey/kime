@@ -11,7 +11,7 @@ fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
 
     let mut engine = InputEngine::new(word_commit);
 
-    engine.set_hangul_enable(word_commit);
+    engine.set_hangul_enable(true);
 
     for (key, preedit, commit) in keys.iter().copied() {
         eprintln!("Key: {:?}", key);

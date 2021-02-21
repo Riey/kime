@@ -17,8 +17,9 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, ModifierState, ModifierState_ALT, ModifierState_CONTROL,
-    ModifierState_SHIFT, ModifierState_SUPER,
+    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
+    InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET, ModifierState,
+    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
@@ -126,9 +127,10 @@ impl KimeContext {
         grab: Main<ZwpInputMethodKeyboardGrabV2>,
         timer: TimerFd,
     ) -> Self {
+        let config = Config::load();
         Self {
-            config: Config::load(),
-            engine: InputEngine::new(),
+            engine: InputEngine::new(&config),
+            config,
             mod_state: 0,
             current_state: InputMethodState::default(),
             pending_state: InputMethodState::default(),
@@ -152,28 +154,17 @@ impl KimeContext {
         self.serial += 1;
     }
 
-    fn commit_ch(&mut self, ch: char) {
-        self.im.commit_string(ch.to_string());
-    }
-
-    fn commit_ch2(&mut self, ch1: char, ch2: char) {
-        let mut buf = String::with_capacity(ch1.len_utf8() + ch2.len_utf8());
-        buf.push(ch1);
-        buf.push(ch2);
-        self.im.commit_string(buf);
+    fn commit_string(&mut self, s: String) {
+        self.im.commit_string(s);
     }
 
     fn clear_preedit(&mut self) {
         self.im.set_preedit_string(String::new(), -1, -1);
     }
 
-    fn preedit_ch(&mut self, ch: char) {
-        if ch == '\0' {
-            self.clear_preedit();
-        } else {
-            self.im
-                .set_preedit_string(ch.to_string(), 0, ch.len_utf8() as _);
-        }
+    fn preedit(&mut self, s: String) {
+        let len = s.len();
+        self.im.set_preedit_string(s, 0, len as _);
     }
 
     pub fn handle_im_ev(&mut self, ev: ImEvent) {
@@ -226,36 +217,28 @@ impl KimeContext {
                 // NOTE: Never read `serial` of KeyEvent. You should rely on serial of KimeContext
                 if state == KeyState::Pressed {
                     if self.grab_activate {
-                        let mut bypass = false;
                         let ret =
                             self.engine
                                 .press_key(&self.config, (key + 8) as u16, self.mod_state);
-                        log::trace!("ret: {:#?}", ret);
 
-                        if ret.hangul_changed {
+                        if ret & InputResult_LANGUAGE_CHANGED != 0 {
                             self.engine.update_hangul_state();
                         }
 
-                        match ret.ty {
-                            InputResultType::Consume => {}
-                            InputResultType::Bypass => bypass = true,
-                            InputResultType::CommitBypass => {
-                                self.commit_ch(ret.char1);
-                                bypass = true;
-                            }
-                            InputResultType::Commit => {
-                                self.commit_ch(ret.char1);
-                            }
-                            InputResultType::Preedit => {
-                                self.preedit_ch(ret.char1);
-                            }
-                            InputResultType::CommitPreedit => {
-                                self.commit_ch(ret.char1);
-                                self.preedit_ch(ret.char2);
-                            }
-                            InputResultType::CommitCommit => {
-                                self.commit_ch2(ret.char1, ret.char2);
-                            }
+                        let bypass = ret & InputResult_CONSUMED == 0;
+
+                        if ret & InputResult_HAS_PREEDIT != 0 {
+                            self.preedit(self.engine.preedit_str().into());
+                        } else {
+                            self.clear_preedit();
+                        }
+
+                        if ret & InputResult_NEED_RESET != 0 {
+                            self.commit_string(self.engine.commit_str().into());
+                            self.engine.reset();
+                        } else if ret & InputResult_NEED_FLUSH != 0 {
+                            self.commit_string(self.engine.commit_str().into());
+                            self.engine.flush();
                         }
 
                         self.commit();

@@ -1,6 +1,3 @@
-use std::char::from_u32_unchecked;
-use std::mem::MaybeUninit;
-
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 #[allow(non_upper_case_globals)]
@@ -10,20 +7,13 @@ mod ffi;
 extern "C" {}
 
 pub use ffi::{
-    InputResultType, ModifierState, ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT,
-    ModifierState_SUPER,
+    InputResult, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED,
+    InputResult_NEED_FLUSH, InputResult_NEED_RESET, ModifierState, ModifierState_ALT,
+    ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub fn check_api_version() -> bool {
-    unsafe { ffi::kime_api_version() == 1 }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct InputResult {
-    pub ty: InputResultType,
-    pub hangul_changed: bool,
-    pub char1: char,
-    pub char2: char,
+    unsafe { ffi::kime_api_version() == ffi::KIME_API_VERSION }
 }
 
 pub struct InputEngine {
@@ -31,9 +21,9 @@ pub struct InputEngine {
 }
 
 impl InputEngine {
-    pub fn new() -> Self {
+    pub fn new(config: &Config) -> Self {
         Self {
-            engine: unsafe { ffi::kime_engine_new() },
+            engine: unsafe { ffi::kime_engine_new(config.config) },
         }
     }
 
@@ -51,27 +41,39 @@ impl InputEngine {
         hardware_code: u16,
         state: ModifierState,
     ) -> InputResult {
-        let ret =
-            unsafe { ffi::kime_engine_press_key(self.engine, config.config, hardware_code, state) };
+        unsafe { ffi::kime_engine_press_key(self.engine, config.config, hardware_code, state) }
+    }
 
+    pub fn preedit_str(&self) -> &str {
         unsafe {
-            InputResult {
-                ty: ret.ty,
-                hangul_changed: ret.hangul_changed,
-                char1: from_u32_unchecked(ret.char1),
-                char2: from_u32_unchecked(ret.char2),
-            }
+            let s = ffi::kime_engine_preedit_str(self.engine);
+            std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.ptr, s.len))
         }
     }
 
-    /// `NULL` mean empty
-    pub fn preedit_char(&self) -> char {
-        unsafe { from_u32_unchecked(ffi::kime_engine_preedit_char(self.engine)) }
+    pub fn commit_str(&self) -> &str {
+        unsafe {
+            let s = ffi::kime_engine_commit_str(self.engine);
+            std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.ptr, s.len))
+        }
     }
 
-    /// `NULL` mean empty
-    pub fn reset(&mut self) -> char {
-        unsafe { from_u32_unchecked(ffi::kime_engine_reset(self.engine)) }
+    pub fn clear_preedit(&mut self) {
+        unsafe {
+            ffi::kime_engine_clear_preedit(self.engine);
+        }
+    }
+
+    pub fn flush(&mut self) {
+        unsafe {
+            ffi::kime_engine_flush(self.engine);
+        }
+    }
+
+    pub fn reset(&mut self) {
+        unsafe {
+            ffi::kime_engine_reset(self.engine);
+        }
     }
 }
 
@@ -104,22 +106,14 @@ impl Config {
 
     pub fn xim_font(&self) -> (&str, f64) {
         unsafe {
-            let mut ptr = MaybeUninit::uninit();
-            let mut len = MaybeUninit::uninit();
-            let mut size = MaybeUninit::uninit();
-            ffi::kime_config_xim_preedit_font(
-                self.config,
-                ptr.as_mut_ptr(),
-                len.as_mut_ptr(),
-                size.as_mut_ptr(),
-            );
+            let font = ffi::kime_config_xim_preedit_font(self.config);
 
             (
                 std::str::from_utf8_unchecked(std::slice::from_raw_parts(
-                    ptr.assume_init(),
-                    len.assume_init(),
+                    font.name.ptr,
+                    font.name.len,
                 )),
-                size.assume_init(),
+                font.size,
             )
         }
     }

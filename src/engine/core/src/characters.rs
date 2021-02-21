@@ -267,6 +267,22 @@ impl Choseong {
         }
     }
 
+    pub fn decompose(ch: char) -> Option<(Self, Jungseong, Option<Jongseong>)> {
+        let n = ch as u32;
+        let offset = n.checked_sub(0xAC00)?;
+        let cho = FromPrimitive::from_u32(offset / 588)?;
+        let offset = offset % 588;
+        let jung = FromPrimitive::from_u32(offset / 28)?;
+        let offset = offset % 28;
+
+        let jong = match offset.checked_sub(1) {
+            Some(offset) => Some(FromPrimitive::from_u32(offset)?),
+            None => None,
+        };
+
+        Some((cho, jung, jong))
+    }
+
     pub fn try_add(self, other: Self, config: &Config) -> Option<Self> {
         let compose_choseong_ssang = config.check_addon(Addon::ComposeChoseongSsang);
         match (self, other) {
@@ -432,7 +448,7 @@ pub enum JongToCho {
     Compose(Jongseong, Choseong),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyValue {
     Choseong(Choseong),
     Jongseong(Jongseong),
@@ -442,7 +458,7 @@ pub enum KeyValue {
     ChoJung(Choseong, Jungseong, bool),
     JungJong(Jungseong, Jongseong, bool),
 
-    Pass(char),
+    Pass(String),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -476,7 +492,7 @@ impl FromStr for KeyValue {
         let mut next = move || KeyValuePart::parse(&mut chars);
 
         match next() {
-            None => Ok(Self::Pass(s.chars().next().ok_or(())?)),
+            None => Ok(Self::Pass(s.into())),
             Some(first) => match first {
                 KeyValuePart::Cho(cho) => match next() {
                     Some(KeyValuePart::Cho(_)) => Err(()),
@@ -509,6 +525,12 @@ fn compose() {
         Choseong::Ieung.compose(Jungseong::A, Some(Jongseong::Ieung))
     );
     assert_eq!('아', Choseong::Ieung.compose(Jungseong::A, None));
+}
+
+#[test]
+fn decompose() {
+    let (cho, jung, jong) = Choseong::decompose('앙').unwrap();
+    assert_eq!('앙', cho.compose(jung, jong));
 }
 
 #[test]

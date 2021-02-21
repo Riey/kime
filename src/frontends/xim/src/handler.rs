@@ -12,8 +12,9 @@ use xim::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResultType, ModifierState_ALT, ModifierState_CONTROL,
-    ModifierState_SHIFT, ModifierState_SUPER,
+    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
+    InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET,
+    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub struct KimeData {
@@ -23,9 +24,9 @@ pub struct KimeData {
 }
 
 impl KimeData {
-    pub fn new(show_preedit_window: bool) -> Self {
+    pub fn new(config: &Config, show_preedit_window: bool) -> Self {
         Self {
-            engine: InputEngine::new(),
+            engine: InputEngine::new(config),
             pe: None,
             show_preedit_window,
         }
@@ -68,36 +69,29 @@ impl KimeHandler {
     fn preedit(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        ic: &mut xim::InputContext<KimeData>,
-        ch: char,
+        user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if !ic.user_data.show_preedit_window {
-            // Don't spawn preedit window
+        if !user_ic.user_data.show_preedit_window {
             return Ok(());
         }
 
-        if ch == '\0' {
-            return self.clear_preedit(server, ic);
-        }
-
-        if let Some(pe) = ic.user_data.pe.as_mut() {
+        if let Some(pe) = user_ic.user_data.pe.as_mut() {
             // Draw in server (already have pe_window)
             let pe = self.preedit_windows.get_mut(pe).unwrap();
-            pe.set_preedit(ch);
+            pe.set_preedit(user_ic.user_data.engine.preedit_str());
             pe.refresh(server.conn())?;
         } else {
             // Draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
                 self.config.xim_font(),
-                ic.app_win(),
-                ic.preedit_spot(),
+                user_ic.ic.app_win(),
+                user_ic.ic.preedit_spot(),
                 self.screen_num,
             )?;
 
-            pe.set_preedit(ch);
-
-            ic.user_data.pe = Some(pe.window());
+            pe.set_preedit(user_ic.user_data.engine.preedit_str());
+            user_ic.user_data.pe = Some(pe.window());
 
             self.preedit_windows.insert(pe.window(), pe);
         }
@@ -108,15 +102,14 @@ impl KimeHandler {
     fn reset(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        ic: &mut xim::InputContext<KimeData>,
+        user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        match ic.user_data.engine.reset() {
-            '\0' => {}
-            c => {
-                self.clear_preedit(server, ic)?;
-                self.commit(server, ic, c)?;
-            }
-        }
+        user_ic.user_data.engine.clear_preedit();
+
+        self.clear_preedit(server, user_ic)?;
+        self.commit(server, user_ic)?;
+
+        user_ic.user_data.engine.reset();
 
         Ok(())
     }
@@ -124,9 +117,9 @@ impl KimeHandler {
     fn clear_preedit(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        ic: &mut xim::InputContext<KimeData>,
+        user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if let Some(pe) = ic.user_data.pe.take() {
+        if let Some(pe) = user_ic.user_data.pe.take() {
             // off-the-spot draw in server
             if let Some(w) = self.preedit_windows.remove(&pe) {
                 log::trace!("Destory PeWindow: {}", w.window());
@@ -140,31 +133,12 @@ impl KimeHandler {
     fn commit(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        ic: &mut xim::InputContext<KimeData>,
-        ch: char,
+        user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        let mut buf = [0; 4];
-        let s = ch.encode_utf8(&mut buf);
-        server.commit(ic, s)?;
-        Ok(())
-    }
-
-    fn commit2(
-        &mut self,
-        server: &mut X11rbServer<XCBConnection>,
-        ic: &mut xim::InputContext<KimeData>,
-        ch1: char,
-        ch2: char,
-    ) -> Result<(), xim::ServerError> {
-        let mut buf = [0; 8];
-        let len1 = ch1.len_utf8();
-        let len2 = ch2.len_utf8();
-        ch1.encode_utf8(&mut buf);
-        ch2.encode_utf8(&mut buf[len1..]);
-
-        let s = unsafe { std::str::from_utf8_unchecked(&buf[..len1 + len2]) };
-
-        server.commit(ic, s)?;
+        let s = user_ic.user_data.engine.commit_str();
+        if !s.is_empty() {
+            server.commit(&user_ic.ic, s)?;
+        }
         Ok(())
     }
 }
@@ -193,7 +167,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             show_preedit_window = false;
         }
 
-        Ok(KimeData::new(show_preedit_window))
+        Ok(KimeData::new(&self.config, show_preedit_window))
     }
 
     fn input_styles(&self) -> Self::InputStyleArray {
@@ -220,17 +194,12 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn handle_set_ic_values(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        input_context: &mut xim::InputContext<KimeData>,
+        user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        log::trace!("spot: {:?}", input_context.preedit_spot());
+        log::trace!("spot: {:?}", user_ic.ic.preedit_spot());
 
-        match input_context.user_data.engine.preedit_char() {
-            '\0' => {}
-            preedit => {
-                self.clear_preedit(server, input_context)?;
-                self.preedit(server, input_context, preedit)?;
-            }
-        }
+        self.clear_preedit(server, user_ic)?;
+        self.preedit(server, user_ic)?;
 
         Ok(())
     }
@@ -238,36 +207,32 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn handle_create_ic(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        input_context: &mut xim::InputContext<KimeData>,
+        user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         log::info!(
             "IC created style: {:?}, spot_location: {:?}",
-            input_context.input_style(),
-            input_context.preedit_spot()
+            user_ic.ic.input_style(),
+            user_ic.ic.preedit_spot()
         );
 
-        server.set_event_mask(input_context, 1, 0)?;
+        server.set_event_mask(&user_ic.ic, 1, 0)?;
 
         Ok(())
     }
 
     fn handle_reset_ic(
         &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
-        input_context: &mut xim::InputContext<Self::InputContextData>,
+        server: &mut X11rbServer<XCBConnection>,
+        user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<String, xim::ServerError> {
         log::trace!("reset_ic");
-
-        match input_context.user_data.engine.reset() {
-            '\0' => Ok(String::new()),
-            c => Ok(c.to_string()),
-        }
+        self.reset(server, user_ic).map(|_| String::new())
     }
 
     fn handle_forward_event(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        input_context: &mut xim::InputContext<Self::InputContextData>,
+        user_ic: &mut xim::UserInputContext<Self::InputContextData>,
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
         // skip release
@@ -295,55 +260,45 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             state |= ModifierState_SUPER;
         }
 
-        let ret = input_context
+        let ret = user_ic
             .user_data
             .engine
             .press_key(&self.config, xev.detail as u16, state);
 
         log::trace!("{:?}", ret);
 
-        if ret.hangul_changed {
-            input_context.user_data.engine.update_hangul_state();
+        if ret & InputResult_LANGUAGE_CHANGED != 0 {
+            user_ic.user_data.engine.update_hangul_state();
         }
 
-        match ret.ty {
-            InputResultType::Bypass => Ok(false),
-            InputResultType::Consume => Ok(true),
-            InputResultType::CommitBypass => {
-                self.commit(server, input_context, ret.char1)?;
-                self.clear_preedit(server, input_context)?;
-                Ok(false)
-            }
-            InputResultType::Commit => {
-                self.commit(server, input_context, ret.char1)?;
-                self.clear_preedit(server, input_context)?;
-                Ok(true)
-            }
-            InputResultType::CommitCommit => {
-                self.commit2(server, input_context, ret.char1, ret.char2)?;
-                self.clear_preedit(server, input_context)?;
-                Ok(true)
-            }
-            InputResultType::CommitPreedit => {
-                self.commit(server, input_context, ret.char1)?;
-                self.preedit(server, input_context, ret.char2)?;
-                Ok(true)
-            }
-            InputResultType::Preedit => {
-                self.preedit(server, input_context, ret.char1)?;
-                Ok(true)
-            }
+        if ret & InputResult_HAS_PREEDIT != 0 {
+            self.preedit(server, user_ic)?;
+        } else {
+            self.clear_preedit(server, user_ic)?;
         }
+
+        if ret & InputResult_NEED_FLUSH != 0 {
+            user_ic.user_data.engine.flush();
+        }
+
+        if ret & InputResult_NEED_RESET != 0 {
+            self.commit(server, user_ic)?;
+            user_ic.user_data.engine.reset();
+        }
+
+        let bypass = ret & InputResult_CONSUMED == 0;
+
+        Ok(!bypass)
     }
 
     fn handle_destory_ic(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        input_context: xim::InputContext<Self::InputContextData>,
+        user_ic: xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         log::info!("destroy_ic");
 
-        if let Some(pe) = input_context.user_data.pe {
+        if let Some(pe) = user_ic.user_data.pe {
             self.preedit_windows.remove(&pe).unwrap().clean(&*server)?;
         }
 
@@ -353,7 +308,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn handle_preedit_start(
         &mut self,
         _server: &mut X11rbServer<XCBConnection>,
-        _input_context: &mut xim::InputContext<Self::InputContextData>,
+        _user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         Ok(())
     }
@@ -361,7 +316,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn handle_caret(
         &mut self,
         _server: &mut X11rbServer<XCBConnection>,
-        _input_context: &mut xim::InputContext<Self::InputContextData>,
+        _user_ic: &mut xim::UserInputContext<Self::InputContextData>,
         _position: i32,
     ) -> Result<(), xim::ServerError> {
         Ok(())
@@ -370,17 +325,17 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     fn handle_set_focus(
         &mut self,
         _server: &mut X11rbServer<XCBConnection>,
-        input_context: &mut xim::InputContext<Self::InputContextData>,
+        user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        input_context.user_data.engine.update_hangul_state();
+        user_ic.user_data.engine.update_hangul_state();
         Ok(())
     }
 
     fn handle_unset_focus(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        input_context: &mut xim::InputContext<Self::InputContextData>,
+        user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        self.reset(server, input_context)
+        self.reset(server, user_ic)
     }
 }

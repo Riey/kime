@@ -1,6 +1,10 @@
 #include "../../gtk2/src/immodule.h"
 
 G_MODULE_EXPORT void g_io_module_load(GIOModule *module) {
+  if (kime_api_version() != KimeKIME_API_VERSION) {
+    return;
+  }
+
   GTypeModule *type_module = G_TYPE_MODULE(module);
   g_type_module_use(type_module);
 

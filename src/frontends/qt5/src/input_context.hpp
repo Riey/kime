@@ -21,8 +21,8 @@ public:
   void setFocusObject(QObject *object) override;
 
 private:
-  void commit_ch(char32_t ch);
-  void preedit_ch(char32_t ch);
+  void commit_str(kime::RustStr s);
+  void preedit_str(kime::RustStr s);
 
   QList<QInputMethodEvent::Attribute> attributes;
   kime::InputEngine *engine = nullptr;

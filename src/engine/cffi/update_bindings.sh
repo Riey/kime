@@ -8,6 +8,6 @@ bindgen \
     --whitelist-var 'kime::.+' \
     --whitelist-type 'kime::.+' \
     --whitelist-function 'kime::.+' \
-    --rustified-enum 'kime::InputResultType' \
+    --rustified-enum 'kime::InputResult' \
     -o src/ffi.rs \
     ./kime_engine.hpp

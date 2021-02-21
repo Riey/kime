@@ -22,7 +22,8 @@
         "gtkimmodule.h": "c",
         "gtkx.h": "c",
         "kime_engine.h": "c",
-        "eventi.h": "c"
+        "eventi.h": "c",
+        "str_buf.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src",

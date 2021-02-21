@@ -41,7 +41,23 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Cargo launch",
+            "name": "Launch wayland",
+            "cargo": {
+                "args": [
+                    "build",
+                    "-p=kime-wayland"
+                ]
+            },
+            "env": {
+                "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug"
+            },
+            "program": "${cargo:program}",
+            "args": ["--verbose"]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch xim",
             "cargo": {
                 "args": [
                     "build",
@@ -52,7 +68,7 @@
                 "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug"
             },
             "program": "${cargo:program}",
-            "args": []
+            "args": ["--verbose"]
         },
         {
             "type": "lldb",

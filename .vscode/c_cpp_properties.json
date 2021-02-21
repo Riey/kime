@@ -5,6 +5,7 @@
             "intelliSenseMode": "linux-clang-x64",
             "includePath": [
                 "${workspaceFolder}",
+                "${workspaceFolder}/src/engine/cffi",
                 "/usr/include/gtk-3.0",
                 "/usr/include/at-spi2-atk/2.0",
                 "/usr/include/at-spi-2.0",

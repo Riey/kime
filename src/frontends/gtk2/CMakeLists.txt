@@ -2,7 +2,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK2 gtk+-2.0)
 
 if(GTK2_FOUND)
-    add_library(kime-gtk2 SHARED src/gtk.c src/immodule.c)
+    add_library(kime-gtk2 SHARED src/gtk.c src/immodule.c src/str_buf.c)
 
     target_compile_definitions(kime-gtk2 PRIVATE GTK_DISABLE_DEPRECATED)
     target_include_directories(kime-gtk2 PRIVATE ${GTK2_INCLUDE_DIRS} ${KIME_INCLUDE})

@@ -32,6 +32,13 @@ Set hangul state globally
 | default |`false`|
 |---------|-------|
 
+## word_commit
+
+Let commit by word
+
+| default |`false`|
+|---------|-------|
+
 ## hotkeys
 
 Set engine hotkey format is `Key: Content`

@@ -161,9 +161,9 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_QT5=ON ../src
+          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_QT${{ matrix.ver }}=ON ../src
           make -j$(nproc --all)
-          strip -s ./lib/libkime-qt5.so
+          strip -s ./lib/libkime-qt${{ matrix.ver }}.so
 
       - name: Upload Qt-${{ matrix.qt }} artifact
         uses: actions/upload-artifact@v2

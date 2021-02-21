@@ -52,6 +52,7 @@ impl Hotkey {
 pub struct RawConfig {
     pub layout: String,
     pub global_hangul_state: bool,
+    pub word_commit: bool,
     pub hotkeys: BTreeMap<Key, Hotkey>,
     pub layout_addons: BTreeMap<String, EnumSet<Addon>>,
     pub xim_preedit_font: (String, f64),
@@ -62,6 +63,7 @@ impl Default for RawConfig {
         Self {
             layout: "dubeolsik".to_string(),
             global_hangul_state: false,
+            word_commit: false,
             hotkeys: [
                 (
                     Key::normal(KeyCode::Esc),
@@ -102,6 +104,7 @@ pub struct Config {
     pub(crate) global_hangul_state: bool,
     pub(crate) hotkeys: AHashMap<Key, Hotkey>,
     layout_addons: EnumSet<Addon>,
+    word_commit: bool,
     pub xim_preedit_font: (String, f64),
 }
 
@@ -116,6 +119,7 @@ impl Config {
         Self {
             layout,
             global_hangul_state: raw.global_hangul_state,
+            word_commit: raw.word_commit,
             layout_addons: raw
                 .layout_addons
                 .get("all")
@@ -178,6 +182,10 @@ impl Config {
             .unwrap_or_default();
 
         Some(Self::from_raw_config(raw, Some(dir)))
+    }
+
+    pub fn word_commit(&self) -> bool {
+        self.word_commit
     }
 
     pub fn check_addon(&self, addon: Addon) -> bool {

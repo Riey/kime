@@ -9,10 +9,10 @@ use std::io::Read;
 
 use self::characters::KeyValue;
 use self::config::{HotkeyBehavior, HotkeyResult};
-use self::state::CharacterState;
+use self::state::HangulState;
 
 pub use self::config::{Config, RawConfig};
-pub use self::input_result::{InputResult, InputResultType};
+pub use self::input_result::InputResult;
 pub use self::keycode::{Key, KeyCode, ModifierState};
 
 #[derive(Clone, Default)]
@@ -42,20 +42,20 @@ impl Layout {
 }
 
 pub struct InputEngine {
-    state: CharacterState,
+    state: HangulState,
     enable_hangul: bool,
 }
 
 impl Default for InputEngine {
     fn default() -> Self {
-        Self::new()
+        Self::new(true)
     }
 }
 
 impl InputEngine {
-    pub fn new() -> Self {
+    pub fn new(word_commit: bool) -> Self {
         Self {
-            state: CharacterState::default(),
+            state: HangulState::new(word_commit),
             enable_hangul: false,
         }
     }
@@ -109,28 +109,31 @@ impl InputEngine {
                 }
             }
 
-            let changed = self.enable_hangul != first;
-
             let mut ret = match hotkey.result() {
-                HotkeyResult::Bypass => self.bypass(),
-                HotkeyResult::Consume => InputResult::consume(),
+                HotkeyResult::Bypass => {
+                    self.state.clear_preedit();
+                    InputResult::NEED_RESET
+                }
+                HotkeyResult::Consume => InputResult::CONSUMED,
             };
 
-            ret.hangul_changed = changed;
+            if self.enable_hangul != first {
+                ret.insert(InputResult::LANGUAGE_CHANGED);
+            }
 
             ret
         } else if key.code == KeyCode::Shift {
             // Don't reset state
-            InputResult::bypass()
+            InputResult::empty()
         } else if self.check_hangul_state(config) {
             if key.code == KeyCode::Backspace {
                 self.state.backspace(config)
             } else if let Some(v) = config.layout.keymap.get(&key) {
                 match *v {
-                    KeyValue::Pass(pass) => match self.state.reset() {
-                        '\0' => InputResult::commit(pass),
-                        commit => InputResult::commit2(commit, pass),
-                    },
+                    KeyValue::Pass(ref pass) => {
+                        self.state.pass(pass);
+                        InputResult::NEED_RESET | InputResult::CONSUMED
+                    }
                     KeyValue::ChoJong(cho, jong, first) => {
                         self.state.cho_jong(cho, jong, first, config)
                     }
@@ -145,10 +148,12 @@ impl InputEngine {
                     KeyValue::Jongseong(jong) => self.state.jong(jong, config),
                 }
             } else {
-                self.bypass()
+                self.state.clear_preedit();
+                InputResult::NEED_RESET
             }
         } else {
-            self.bypass()
+            self.state.clear_preedit();
+            InputResult::NEED_RESET
         }
     }
 
@@ -160,24 +165,27 @@ impl InputEngine {
     ) -> InputResult {
         match KeyCode::from_hardward_code(hardware_code) {
             Some(code) => self.press_key(Key::new(code, state), config),
-            None => self.bypass(),
-        }
-    }
-
-    fn bypass(&mut self) -> InputResult {
-        match self.state.reset() {
-            '\0' => InputResult::bypass(),
-            c => InputResult::commit_bypass(c),
+            None => InputResult::NEED_RESET,
         }
     }
 
     #[inline]
-    pub fn preedit_char(&self) -> char {
-        self.state.to_char()
+    pub fn preedit_str(&mut self) -> &str {
+        self.state.preedit_str()
     }
 
     #[inline]
-    pub fn reset(&mut self) -> char {
-        self.state.reset()
+    pub fn commit_str(&mut self) -> &str {
+        self.state.commit_str()
+    }
+
+    #[inline]
+    pub fn flush(&mut self) {
+        self.state.flush();
+    }
+
+    #[inline]
+    pub fn reset(&mut self) {
+        self.state.reset();
     }
 }

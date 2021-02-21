@@ -9,26 +9,21 @@
 
 namespace kime {
 
-enum class InputResultType : uint16_t {
-  Bypass,
-  Consume,
-  Preedit,
-  Commit,
-  CommitBypass,
-  CommitPreedit,
-  CommitCommit,
-};
-
 struct Config;
 
 struct InputEngine;
 
-struct InputResult {
-  InputResultType ty;
-  bool hangul_changed;
-  uint32_t char1;
-  uint32_t char2;
+struct RustStr {
+  const uint8_t *ptr;
+  uintptr_t len;
 };
+
+using InputResult = uint32_t;
+static const InputResult InputResult_CONSUMED = (uint32_t)1;
+static const InputResult InputResult_LANGUAGE_CHANGED = (uint32_t)2;
+static const InputResult InputResult_HAS_PREEDIT = (uint32_t)4;
+static const InputResult InputResult_NEED_RESET = (uint32_t)8;
+static const InputResult InputResult_NEED_FLUSH = (uint32_t)16;
 
 using ModifierState = uint32_t;
 static const ModifierState ModifierState_CONTROL = (uint32_t)1;
@@ -36,13 +31,18 @@ static const ModifierState ModifierState_SUPER = (uint32_t)2;
 static const ModifierState ModifierState_SHIFT = (uint32_t)4;
 static const ModifierState ModifierState_ALT = (uint32_t)8;
 
+struct XimPreeditFont {
+  RustStr name;
+  double size;
+};
+
 extern "C" {
 
 /// Return API version
 uintptr_t kime_api_version();
 
 /// Create new engine
-InputEngine *kime_engine_new();
+InputEngine *kime_engine_new(const Config *config);
 
 /// Set hangul enable state
 void kime_engine_set_hangul_enable(InputEngine *engine, bool mode);
@@ -57,19 +57,24 @@ void kime_engine_delete(InputEngine *engine);
 /// Update hangul state
 void kime_engine_update_hangul_state(InputEngine *engine);
 
-/// Get preedit_char of engine
+/// Get commit string of engine
 ///
 /// ## Return
 ///
-/// valid ucs4 char NULL to represent empty
-uint32_t kime_engine_preedit_char(const InputEngine *engine);
+/// valid utf8 string
+RustStr kime_engine_commit_str(InputEngine *engine);
+
+/// Get preedit string of engine
+///
+/// ## Return
+///
+/// valid utf8 string
+RustStr kime_engine_preedit_str(InputEngine *engine);
+
+void kime_engine_flush(InputEngine *engine);
 
 /// Reset preedit state then returm commit char
-///
-/// ## Return
-///
-/// valid ucs4 char NULL to represent empty
-uint32_t kime_engine_reset(InputEngine *engine);
+void kime_engine_reset(InputEngine *engine);
 
 /// Press key when modifier state
 ///
@@ -96,10 +101,7 @@ void kime_config_delete(Config *config);
 /// ## Return
 ///
 /// utf-8 string when len
-void kime_config_xim_preedit_font(const Config *config,
-                                  const uint8_t **name,
-                                  uintptr_t *len,
-                                  double *font_size);
+XimPreeditFont kime_config_xim_preedit_font(const Config *config);
 
 } // extern "C"
 

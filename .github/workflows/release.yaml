@@ -171,7 +171,7 @@ jobs:
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
           asset_path: build/lib/libkime-qt5.so
-          asset_name: libkime-qt5-${{ matrix.qt5 }}.so
+          asset_name: libkime-qt-${{ matrix.qt5 }}.so
           asset_content_type: application/x-sharedlib
 
   build-qt6:
@@ -235,7 +235,7 @@ jobs:
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
           asset_path: build/lib/libkime-qt6.so
-          asset_name: libkime-qt5-${{ matrix.qt6 }}.so
+          asset_name: libkime-qt-${{ matrix.qt6 }}.so
           asset_content_type: application/x-sharedlib
 
   package-arch:
@@ -309,11 +309,11 @@ jobs:
           asset_name: kime_${{ matrix.name }}_${{ github.ref }}_amd64.deb
           asset_content_type: application/x-xz
 
-      - name: Create xz
+      - name: Create zst
         if: ${{ matrix.pkg == 'zst' }}
         run: scripts/release-zst.sh .
 
-      - name: Upload xz
+      - name: Upload zst
         if: ${{ matrix.pkg == 'zst' }}
         uses: actions/upload-release-asset@v1
         env:

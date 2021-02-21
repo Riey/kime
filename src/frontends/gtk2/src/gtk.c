@@ -10,7 +10,7 @@ static const GtkIMContextInfo INFO = {
 static const GtkIMContextInfo *INFOS[] = {&INFO};
 
 G_MODULE_EXPORT const gchar *g_module_check_init(GModule *module) {
-  if (kime_api_version() == 1) {
+  if (kime_api_version() == KimeKIME_API_VERSION) {
     return NULL;
   } else {
     return "Engine version mismatched";

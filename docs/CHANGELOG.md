@@ -6,6 +6,9 @@
 
 ### Improve
 
+* Support word commit [#288](https://github.com/Riey/kime/issues/288)
+* Make qt preedit string have underline style
+
 ## 1.1.1
 
 ### Improve

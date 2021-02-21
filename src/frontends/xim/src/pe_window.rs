@@ -179,9 +179,9 @@ impl PeWindow {
         Ok(())
     }
 
-    pub fn set_preedit(&mut self, ch: char) {
+    pub fn set_preedit(&mut self, s: &str) {
         self.preedit.clear();
-        self.preedit.push(ch);
+        self.preedit.push_str(s);
     }
 }
 

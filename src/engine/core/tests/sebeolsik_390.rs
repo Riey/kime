@@ -1,7 +1,6 @@
 use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
-#[track_caller]
-fn test_input(inputs: &[(Key, InputResult)]) {
+fn test_input(keys: &[(Key, &str, &str)]) {
     let config = Config::from_raw_config(
         RawConfig {
             layout: "sebeolsik-390".into(),
@@ -10,24 +9,46 @@ fn test_input(inputs: &[(Key, InputResult)]) {
         None,
     );
 
-    let mut engine = InputEngine::new();
+    let mut engine = InputEngine::new(false);
 
     engine.set_hangul_enable(true);
 
-    for (key, expect_result) in inputs.iter().copied() {
-        assert_eq!(engine.press_key(key, &config), expect_result);
+    for (key, preedit, commit) in keys.iter().copied() {
+        eprintln!("Key: {:?}", key);
+
+        let ret = engine.press_key(key, &config);
+
+        if ret.contains(InputResult::HAS_PREEDIT) {
+            assert_eq!(preedit, engine.preedit_str());
+        } else {
+            assert!(preedit.is_empty());
+        }
+
+        if !ret.contains(InputResult::CONSUMED) {
+            assert_eq!(commit, format!("{}PASS", engine.commit_str()));
+        } else if ret.intersects(InputResult::NEED_RESET | InputResult::NEED_FLUSH) {
+            assert_eq!(commit, engine.commit_str());
+        } else {
+            assert!(commit.is_empty());
+        }
+
+        if ret.contains(InputResult::NEED_RESET) {
+            engine.reset();
+        } else if ret.contains(InputResult::NEED_FLUSH) {
+            engine.flush();
+        }
     }
 }
 
 #[test]
 fn hello() {
     test_input(&[
-        (Key::normal(J), InputResult::preedit('ㅇ')),
-        (Key::normal(F), InputResult::preedit('아')),
-        (Key::normal(S), InputResult::preedit('안')),
-        (Key::normal(H), InputResult::commit_preedit('안', 'ㄴ')),
-        (Key::normal(E), InputResult::preedit('녀')),
-        (Key::normal(A), InputResult::preedit('녕')),
+        (Key::normal(J), "ㅇ", ""),
+        (Key::normal(F), "아", ""),
+        (Key::normal(S), "안", ""),
+        (Key::normal(H), "ㄴ", "안"),
+        (Key::normal(E), "녀", ""),
+        (Key::normal(A), "녕", ""),
     ]);
 }
 
@@ -35,39 +56,39 @@ fn hello() {
 #[test]
 fn compose_choseong_ssang() {
     test_input(&[
-        (Key::normal(K), InputResult::preedit('ㄱ')),
-        (Key::normal(F), InputResult::preedit('가')),
-        (Key::normal(X), InputResult::preedit('각')),
-        (Key::normal(K), InputResult::commit_preedit('각', 'ㄱ')),
-        (Key::normal(D), InputResult::preedit('기')),
+        (Key::normal(K), "ㄱ", ""),
+        (Key::normal(F), "가", ""),
+        (Key::normal(X), "각", ""),
+        (Key::normal(K), "ㄱ", "각"),
+        (Key::normal(D), "기", ""),
     ])
 }
 
 #[test]
 fn switch_next() {
     test_input(&[
-        (Key::normal(S), InputResult::preedit('ㄴ')),
-        (Key::normal(F), InputResult::commit_preedit('ㄴ', 'ㅏ')),
-        (Key::normal(J), InputResult::preedit('아')),
+        (Key::normal(S), "ㄴ", ""),
+        (Key::normal(F), "ㅏ", "ㄴ"),
+        (Key::normal(J), "아", ""),
     ]);
 }
 
 #[test]
 fn s_number() {
     test_input(&[
-        (Key::shift(Two), InputResult::commit('@')),
-        (Key::shift(Three), InputResult::commit('#')),
-        (Key::shift(Four), InputResult::commit('$')),
-        (Key::shift(Five), InputResult::commit('%')),
-        (Key::shift(Six), InputResult::commit('^')),
-        (Key::shift(Seven), InputResult::commit('&')),
-        (Key::shift(Eight), InputResult::commit('*')),
-        (Key::shift(Nine), InputResult::commit('(')),
-        (Key::shift(Zero), InputResult::commit(')')),
+        (Key::shift(Two), "", "@"),
+        (Key::shift(Three), "", "#"),
+        (Key::shift(Four), "", "$"),
+        (Key::shift(Five), "", "%"),
+        (Key::shift(Six), "", "^"),
+        (Key::shift(Seven), "", "&"),
+        (Key::shift(Eight), "", "*"),
+        (Key::shift(Nine), "", "("),
+        (Key::shift(Zero), "", ")"),
     ])
 }
 
 #[test]
 fn colon() {
-    test_input(&[(Key::shift(SemiColon), InputResult::commit(':'))]);
+    test_input(&[(Key::shift(SemiColon), "", ":")]);
 }

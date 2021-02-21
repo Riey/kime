@@ -1,4 +1,5 @@
 #include "immodule.h"
+#include "str_buf.h"
 
 #include <stdio.h>
 
@@ -32,6 +33,7 @@ typedef struct KimeImContextClass {
 
 typedef struct KimeImContext {
   GtkIMContext parent;
+  StrBuf buf;
   ClientType *client;
   KimeSignals signals;
   KimeInputEngine *engine;
@@ -62,12 +64,10 @@ void update_preedit(KimeImContext *ctx, gboolean visible) {
   }
 }
 
-void commit(KimeImContext *ctx, uint32_t ch) {
-  debug("commit: %u", ch);
+void commit(KimeImContext *ctx) {
+  debug("commit: %s", ctx->buf.ptr);
 
-  gchar buf[8] = {0};
-  g_unichar_to_utf8(ch, buf);
-  g_signal_emit(ctx, ctx->signals.commit, 0, &buf[0]);
+  g_signal_emit(ctx, ctx->signals.commit, 0, ctx->buf.ptr);
 }
 
 void focus_in(GtkIMContext *im) {
@@ -80,12 +80,11 @@ void focus_in(GtkIMContext *im) {
 }
 
 void kime_reset(KimeImContext *ctx) {
-  uint32_t c = kime_engine_reset(ctx->engine);
-
-  if (c) {
-    update_preedit(ctx, FALSE);
-    commit(ctx, c);
-  }
+  update_preedit(ctx, FALSE);
+  kime_engine_clear_preedit(ctx->engine);
+  str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
+  commit(ctx);
+  kime_engine_reset(ctx->engine);
 }
 
 void reset(GtkIMContext *im) {
@@ -123,7 +122,8 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
     uint32_t c = gdk_keyval_to_unicode(keyval);
 
     if (!g_unichar_iscntrl(c)) {
-      commit(ctx, c);
+      str_buf_set_ch(&ctx->buf, c);
+      commit(ctx);
       return TRUE;
     }
   }
@@ -136,41 +136,24 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
 
-  if (ret.hangul_changed) {
+  if (ret & KimeInputResult_LANGUAGE_CHANGED) {
     kime_engine_update_hangul_state(ctx->engine);
   }
 
-  switch (ret.ty) {
-  case Commit:
-    update_preedit(ctx, FALSE);
-    commit(ctx, ret.char1);
-    return TRUE;
-  case CommitCommit:
-    update_preedit(ctx, FALSE);
-    commit(ctx, ret.char1);
-    commit(ctx, ret.char2);
-    return TRUE;
-  case CommitBypass:
-    update_preedit(ctx, FALSE);
-    commit(ctx, ret.char1);
-    // // try commit english first
-    // if (!commit_event(ctx, state, keyval)) {
-    //   put_event(ctx, key);
-    // }
-    return FALSE;
-  case CommitPreedit:
-    commit(ctx, ret.char1);
-    update_preedit(ctx, ret.char2 != 0);
-    return TRUE;
-  case Preedit:
-    update_preedit(ctx, ret.char1 != 0);
-    return TRUE;
-  case Consume:
-    return TRUE;
-  case Bypass:
-  default:
-    return FALSE;
+  if (ret & (KimeInputResult_NEED_RESET | KimeInputResult_NEED_FLUSH)) {
+    str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
+    commit(ctx);
+
+    if (ret & KimeInputResult_NEED_RESET) {
+      kime_engine_reset(ctx->engine);
+    } else {
+      kime_engine_flush(ctx->engine);
+    }
   }
+
+  update_preedit(ctx, (ret & KimeInputResult_HAS_PREEDIT) != 0);
+
+  return (ret & KimeInputResult_CONSUMED) != 0;
 }
 
 gboolean filter_keypress(GtkIMContext *im, EventType *key) {
@@ -230,37 +213,34 @@ void set_client(GtkIMContext *im, ClientType *client) {
 void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
                         int *cursor_pos) {
   KIME_IM_CONTEXT(im);
-  uint32_t c = 0;
-  size_t str_len = 0;
+  KimeRustStr s = kime_engine_preedit_str(ctx->engine);
 
   if (out) {
-    c = kime_engine_preedit_char(ctx->engine);
-
-    if (!c) {
+    if (s.len == 0 || !ctx->preedit_visible) {
       // Nothing to display
       if (cursor_pos) {
         *cursor_pos = 0;
       }
       *out = g_strdup("");
     } else {
+      gchar *g_s = g_malloc0(s.len + 1);
+      g_s[s.len] = '\0';
+      memcpy(g_s, s.ptr, s.len);
+
       if (cursor_pos) {
-        *cursor_pos = 1;
+        *cursor_pos = g_utf8_strlen(g_s, -1);
       }
-      gchar *s = g_malloc0(8);
-      memset(s, 0, 8);
-      g_unichar_to_utf8(c, s);
-      str_len = strlen(s);
-      *out = s;
+      *out = g_s;
     }
   }
 
   if (attrs) {
     *attrs = pango_attr_list_new();
 
-    if (out && c) {
+    if (out && ctx->preedit_visible && s.len) {
       PangoAttribute *attr = pango_attr_underline_new(PANGO_UNDERLINE_SINGLE);
       attr->start_index = 0;
-      attr->end_index = str_len;
+      attr->end_index = s.len;
       pango_attr_list_insert(*attrs, attr);
     }
   }
@@ -278,10 +258,8 @@ GdkFilterReturn global_filter_event(GdkXEvent *xevent, GdkEvent *event,
   }
 
   if (native_event->type == ButtonPress) {
-    debug("global click");
     kime_reset(ctx);
   } else if (native_event->type == KeyPress) {
-    debug("global key");
     XKeyPressedEvent *kev = (XKeyPressedEvent *)xevent;
     KimeModifierState state = 0;
 
@@ -315,10 +293,11 @@ void im_context_class_finalize(KimeImContextClass *klass, gpointer _data) {
 }
 
 void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
+  ctx->buf = str_buf_new();
   ctx->client = NULL;
   ctx->focus = FALSE;
   ctx->signals = klass->signals;
-  ctx->engine = kime_engine_new();
+  ctx->engine = kime_engine_new(klass->config);
   ctx->config = klass->config;
 
 #if !GTK_CHECK_VERSION(3, 98, 4)
@@ -328,6 +307,7 @@ void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
 
 void im_context_finalize(GObject *obj) {
   KIME_IM_CONTEXT(obj);
+  str_buf_delete(&ctx->buf);
   if (ctx->client) {
     g_object_unref(ctx->client);
     ctx->client = NULL;

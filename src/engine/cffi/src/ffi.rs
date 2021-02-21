@@ -3,17 +3,7 @@
 pub type __uint8_t = ::std::os::raw::c_uchar;
 pub type __uint16_t = ::std::os::raw::c_ushort;
 pub type __uint32_t = ::std::os::raw::c_uint;
-#[repr(u16)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum InputResultType {
-    Bypass = 0,
-    Consume = 1,
-    Preedit = 2,
-    Commit = 3,
-    CommitBypass = 4,
-    CommitPreedit = 5,
-    CommitCommit = 6,
-}
+pub const KIME_API_VERSION: usize = 2;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Config {
@@ -26,77 +16,100 @@ pub struct InputEngine {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct InputResult {
-    pub ty: InputResultType,
-    pub hangul_changed: bool,
-    pub char1: u32,
-    pub char2: u32,
+pub struct RustStr {
+    pub ptr: *const u8,
+    pub len: usize,
 }
 #[test]
-fn bindgen_test_layout_InputResult() {
+fn bindgen_test_layout_RustStr() {
     assert_eq!(
-        ::std::mem::size_of::<InputResult>(),
-        12usize,
-        concat!("Size of: ", stringify!(InputResult))
+        ::std::mem::size_of::<RustStr>(),
+        16usize,
+        concat!("Size of: ", stringify!(RustStr))
     );
     assert_eq!(
-        ::std::mem::align_of::<InputResult>(),
-        4usize,
-        concat!("Alignment of ", stringify!(InputResult))
+        ::std::mem::align_of::<RustStr>(),
+        8usize,
+        concat!("Alignment of ", stringify!(RustStr))
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<InputResult>())).ty as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<RustStr>())).ptr as *const _ as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(InputResult),
+            stringify!(RustStr),
             "::",
-            stringify!(ty)
+            stringify!(ptr)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<InputResult>())).hangul_changed as *const _ as usize },
-        2usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(InputResult),
-            "::",
-            stringify!(hangul_changed)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<InputResult>())).char1 as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(InputResult),
-            "::",
-            stringify!(char1)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<InputResult>())).char2 as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<RustStr>())).len as *const _ as usize },
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(InputResult),
+            stringify!(RustStr),
             "::",
-            stringify!(char2)
+            stringify!(len)
         )
     );
 }
+pub type InputResult = u32;
+pub const InputResult_CONSUMED: InputResult = 1;
+pub const InputResult_LANGUAGE_CHANGED: InputResult = 2;
+pub const InputResult_HAS_PREEDIT: InputResult = 4;
+pub const InputResult_NEED_RESET: InputResult = 8;
+pub const InputResult_NEED_FLUSH: InputResult = 16;
 pub type ModifierState = u32;
 pub const ModifierState_CONTROL: ModifierState = 1;
 pub const ModifierState_SUPER: ModifierState = 2;
 pub const ModifierState_SHIFT: ModifierState = 4;
 pub const ModifierState_ALT: ModifierState = 8;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct XimPreeditFont {
+    pub name: RustStr,
+    pub size: f64,
+}
+#[test]
+fn bindgen_test_layout_XimPreeditFont() {
+    assert_eq!(
+        ::std::mem::size_of::<XimPreeditFont>(),
+        24usize,
+        concat!("Size of: ", stringify!(XimPreeditFont))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<XimPreeditFont>(),
+        8usize,
+        concat!("Alignment of ", stringify!(XimPreeditFont))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<XimPreeditFont>())).name as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(XimPreeditFont),
+            "::",
+            stringify!(name)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<XimPreeditFont>())).size as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(XimPreeditFont),
+            "::",
+            stringify!(size)
+        )
+    );
+}
 extern "C" {
     #[doc = " Return API version"]
     pub fn kime_api_version() -> usize;
 }
 extern "C" {
     #[doc = " Create new engine"]
-    pub fn kime_engine_new() -> *mut InputEngine;
+    pub fn kime_engine_new(config: *const Config) -> *mut InputEngine;
 }
 extern "C" {
     #[doc = " Set hangul enable state"]
@@ -115,20 +128,32 @@ extern "C" {
     pub fn kime_engine_update_hangul_state(engine: *mut InputEngine);
 }
 extern "C" {
-    #[doc = " Get preedit_char of engine"]
+    #[doc = " Get commit string of engine"]
     #[doc = ""]
     #[doc = " ## Return"]
     #[doc = ""]
-    #[doc = " valid ucs4 char NULL to represent empty"]
-    pub fn kime_engine_preedit_char(engine: *const InputEngine) -> u32;
+    #[doc = " valid utf8 string"]
+    pub fn kime_engine_commit_str(engine: *mut InputEngine) -> RustStr;
+}
+extern "C" {
+    #[doc = " Get preedit string of engine"]
+    #[doc = ""]
+    #[doc = " ## Return"]
+    #[doc = ""]
+    #[doc = " valid utf8 string"]
+    pub fn kime_engine_preedit_str(engine: *mut InputEngine) -> RustStr;
+}
+extern "C" {
+    #[doc = " Flush commit_str"]
+    pub fn kime_engine_flush(engine: *mut InputEngine);
+}
+extern "C" {
+    #[doc = " Clear preedit state and append to commit_str"]
+    pub fn kime_engine_clear_preedit(engine: *mut InputEngine);
 }
 extern "C" {
     #[doc = " Reset preedit state then returm commit char"]
-    #[doc = ""]
-    #[doc = " ## Return"]
-    #[doc = ""]
-    #[doc = " valid ucs4 char NULL to represent empty"]
-    pub fn kime_engine_reset(engine: *mut InputEngine) -> u32;
+    pub fn kime_engine_reset(engine: *mut InputEngine);
 }
 extern "C" {
     #[doc = " Press key when modifier state"]
@@ -162,10 +187,5 @@ extern "C" {
     #[doc = " ## Return"]
     #[doc = ""]
     #[doc = " utf-8 string when len"]
-    pub fn kime_config_xim_preedit_font(
-        config: *const Config,
-        name: *mut *const u8,
-        len: *mut usize,
-        font_size: *mut f64,
-    );
+    pub fn kime_config_xim_preedit_font(config: *const Config) -> XimPreeditFont;
 }

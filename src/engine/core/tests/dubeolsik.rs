@@ -1,7 +1,6 @@
 use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
-#[track_caller]
-fn test_input(inputs: &[(Key, InputResult)]) {
+fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
     let config = Config::from_raw_config(
         RawConfig {
             layout: "dubeolsik".into(),
@@ -10,155 +9,186 @@ fn test_input(inputs: &[(Key, InputResult)]) {
         None,
     );
 
-    let mut engine = InputEngine::new();
+    let mut engine = InputEngine::new(word_commit);
 
     engine.set_hangul_enable(true);
 
-    for (key, expect_result) in inputs.iter().copied() {
-        assert_eq!(
-            expect_result,
-            engine.press_key(key, &config),
-            "key: {}",
-            key
-        );
+    for (key, preedit, commit) in keys.iter().copied() {
+        eprintln!("Key: {:?}", key);
+
+        let ret = engine.press_key(key, &config);
+
+        dbg!(ret);
+
+        if ret.contains(InputResult::HAS_PREEDIT) {
+            assert_eq!(preedit, engine.preedit_str());
+        } else {
+            assert!(preedit.is_empty());
+        }
+
+        if !ret.contains(InputResult::CONSUMED) {
+            assert_eq!(commit, format!("{}PASS", engine.commit_str()));
+        } else if ret.intersects(InputResult::NEED_RESET | InputResult::NEED_FLUSH) {
+            assert_eq!(commit, engine.commit_str());
+        } else {
+            assert!(commit.is_empty());
+        }
+
+        if ret.contains(InputResult::NEED_RESET) {
+            engine.reset();
+        } else if ret.contains(InputResult::NEED_FLUSH) {
+            engine.flush();
+        }
     }
+}
+
+fn test_input(keys: &[(Key, &str, &str)]) {
+    test_input_impl(false, keys)
+}
+
+fn test_word_input(keys: &[(Key, &str, &str)]) {
+    test_input_impl(true, keys)
+}
+
+#[test]
+fn word_hello() {
+    test_word_input(&[
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(K), "아", ""),
+        (Key::normal(S), "안", ""),
+        (Key::normal(S), "안ㄴ", ""),
+        (Key::normal(U), "안녀", ""),
+        (Key::normal(D), "안녕", ""),
+        (Key::normal(Esc), "", "안녕PASS"),
+    ])
 }
 
 #[test]
 fn esc() {
     test_input(&[
-        (Key::normal(R), InputResult::preedit('ㄱ')),
-        (
-            Key::normal(Esc),
-            InputResult::commit_bypass('ㄱ').hangul_changed(),
-        ),
-        (Key::normal(R), InputResult::bypass()),
+        (Key::normal(R), "ㄱ", ""),
+        (Key::normal(Esc), "", "ㄱPASS"),
+        (Key::normal(R), "", "PASS"),
     ]);
 }
 
 #[test]
 fn issue_28() {
-    test_input(&[
-        (Key::normal(K), InputResult::preedit('ㅏ')),
-        (Key::normal(R), InputResult::preedit('가')),
-    ])
+    test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "가", "")])
 }
 
 #[test]
 fn next_jaum() {
     test_input(&[
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(K), InputResult::preedit('아')),
-        (Key::normal(D), InputResult::preedit('앙')),
-        (Key::normal(E), InputResult::commit_preedit('앙', 'ㄷ')),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(K), "아", ""),
+        (Key::normal(D), "앙", ""),
+        (Key::normal(E), "ㄷ", "앙"),
     ])
 }
 
 #[test]
 fn next_ssangjaum() {
     test_input(&[
-        (Key::normal(A), InputResult::preedit('ㅁ')),
-        (Key::normal(K), InputResult::preedit('마')),
-        (Key::shift(T), InputResult::preedit('맜')),
-        (Key::normal(K), InputResult::commit_preedit('마', '싸')),
+        (Key::normal(A), "ㅁ", ""),
+        (Key::normal(K), "마", ""),
+        (Key::shift(T), "맜", ""),
+        (Key::normal(K), "싸", "마"),
     ])
 }
 
 #[test]
 fn not_com_moum_when_continue() {
     test_input(&[
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(H), InputResult::preedit('오')),
-        (Key::normal(D), InputResult::preedit('옹')),
-        (Key::normal(K), InputResult::commit_preedit('오', '아')),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(H), "오", ""),
+        (Key::normal(D), "옹", ""),
+        (Key::normal(K), "아", "오"),
     ]);
 }
 
 #[test]
 fn com_moum() {
     test_input(&[
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(H), InputResult::preedit('오')),
-        (Key::normal(L), InputResult::preedit('외')),
-        (Key::normal(D), InputResult::preedit('욍')),
-        (Key::normal(D), InputResult::commit_preedit('욍', 'ㅇ')),
-        (Key::normal(K), InputResult::preedit('아')),
-        (Key::normal(S), InputResult::preedit('안')),
-        (Key::normal(G), InputResult::preedit('않')),
-        (Key::normal(E), InputResult::commit_preedit('않', 'ㄷ')),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(H), "오", ""),
+        (Key::normal(L), "외", ""),
+        (Key::normal(D), "욍", ""),
+        (Key::normal(D), "ㅇ", "욍"),
+        (Key::normal(K), "아", ""),
+        (Key::normal(S), "안", ""),
+        (Key::normal(G), "않", ""),
+        (Key::normal(E), "ㄷ", "않"),
     ]);
 }
 
 #[test]
 fn number() {
     test_input(&[
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(H), InputResult::preedit('오')),
-        (Key::normal(L), InputResult::preedit('외')),
-        (Key::normal(D), InputResult::preedit('욍')),
-        (Key::normal(D), InputResult::commit_preedit('욍', 'ㅇ')),
-        (Key::normal(K), InputResult::preedit('아')),
-        (Key::normal(S), InputResult::preedit('안')),
-        (Key::normal(G), InputResult::preedit('않')),
-        (Key::normal(E), InputResult::commit_preedit('않', 'ㄷ')),
-        (Key::normal(One), InputResult::commit2('ㄷ', '1')),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(H), "오", ""),
+        (Key::normal(L), "외", ""),
+        (Key::normal(D), "욍", ""),
+        (Key::normal(D), "ㅇ", "욍"),
+        (Key::normal(K), "아", ""),
+        (Key::normal(S), "안", ""),
+        (Key::normal(G), "않", ""),
+        (Key::normal(E), "ㄷ", "않"),
+        (Key::normal(One), "", "ㄷ1"),
     ]);
 }
 
 #[test]
 fn exclamation_mark() {
-    test_input(&[
-        (Key::shift(R), InputResult::preedit('ㄲ')),
-        (Key::shift(One), InputResult::commit2('ㄲ', '!')),
-    ]);
+    test_input(&[(Key::shift(R), "ㄲ", ""), (Key::shift(One), "", "ㄲ!")]);
 }
 
 #[test]
 fn backspace() {
     test_input(&[
-        (Key::normal(R), InputResult::preedit('ㄱ')),
-        (Key::normal(K), InputResult::preedit('가')),
-        (Key::normal(D), InputResult::preedit('강')),
-        (Key::normal(Backspace), InputResult::preedit('가')),
-        (Key::normal(Q), InputResult::preedit('갑')),
-        (Key::normal(T), InputResult::preedit('값')),
-        (Key::normal(Backspace), InputResult::preedit('갑')),
-        (Key::normal(Backspace), InputResult::preedit('가')),
-        (Key::normal(Backspace), InputResult::preedit('ㄱ')),
-        (Key::normal(Backspace), InputResult::clear_preedit()),
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(H), InputResult::preedit('오')),
-        (Key::normal(L), InputResult::preedit('외')),
-        (Key::normal(Backspace), InputResult::preedit('오')),
-        (Key::normal(Backspace), InputResult::preedit('ㅇ')),
-        (Key::normal(Backspace), InputResult::clear_preedit()),
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(H), InputResult::preedit('오')),
-        (Key::normal(K), InputResult::preedit('와')),
-        (Key::normal(Backspace), InputResult::preedit('오')),
-        (Key::normal(Backspace), InputResult::preedit('ㅇ')),
-        (Key::normal(Backspace), InputResult::clear_preedit()),
-        (Key::normal(R), InputResult::preedit('ㄱ')),
+        (Key::normal(R), "ㄱ", ""),
+        (Key::normal(K), "가", ""),
+        (Key::normal(D), "강", ""),
+        (Key::normal(Backspace), "가", ""),
+        (Key::normal(Q), "갑", ""),
+        (Key::normal(T), "값", ""),
+        (Key::normal(Backspace), "갑", ""),
+        (Key::normal(Backspace), "가", ""),
+        (Key::normal(Backspace), "ㄱ", ""),
+        (Key::normal(Backspace), "", ""),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(H), "오", ""),
+        (Key::normal(L), "외", ""),
+        (Key::normal(Backspace), "오", ""),
+        (Key::normal(Backspace), "ㅇ", ""),
+        (Key::normal(Backspace), "", ""),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(H), "오", ""),
+        (Key::normal(K), "와", ""),
+        (Key::normal(Backspace), "오", ""),
+        (Key::normal(Backspace), "ㅇ", ""),
+        (Key::normal(Backspace), "", ""),
+        (Key::normal(R), "ㄱ", ""),
     ])
 }
 
 #[test]
 fn compose_jong() {
     test_input(&[
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(J), InputResult::preedit('어')),
-        (Key::normal(Q), InputResult::preedit('업')),
-        (Key::normal(T), InputResult::preedit('없')),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(J), "어", ""),
+        (Key::normal(Q), "업", ""),
+        (Key::normal(T), "없", ""),
     ])
 }
 
 #[test]
 fn backspace_moum_compose() {
     test_input(&[
-        (Key::normal(D), InputResult::preedit('ㅇ')),
-        (Key::normal(H), InputResult::preedit('오')),
-        (Key::normal(K), InputResult::preedit('와')),
-        (Key::normal(Backspace), InputResult::preedit('오')),
-        (Key::normal(Backspace), InputResult::preedit('ㅇ')),
+        (Key::normal(D), "ㅇ", ""),
+        (Key::normal(H), "오", ""),
+        (Key::normal(K), "와", ""),
+        (Key::normal(Backspace), "오", ""),
+        (Key::normal(Backspace), "ㅇ", ""),
     ])
 }

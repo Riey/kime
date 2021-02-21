@@ -1,5 +1,9 @@
 use ansi_term::Color;
-use kime_engine_cffi::{Config, InputEngine, InputResultType};
+use kime_engine_cffi::{
+    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_NEED_FLUSH,
+    InputResult_NEED_RESET,
+};
+use kime_engine_core::{Key, KeyCode::*};
 use std::env;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
 
@@ -73,18 +77,17 @@ impl Check {
                 CondResult::Ok
             }
             Check::EngineWorks => {
-                let mut engine = kime_engine_cffi::InputEngine::new();
                 let config = kime_engine_cffi::Config::default();
+                let mut engine = kime_engine_cffi::InputEngine::new(&config);
 
-                engine.set_hangul_enable(true);
                 check_input(
                     &mut engine,
                     &config,
                     &[
-                        (27, InputResultType::Preedit, 'ㄱ', '\0'),
-                        (45, InputResultType::Preedit, '가', '\0'),
-                        (39, InputResultType::Preedit, '간', '\0'),
-                        (45, InputResultType::CommitPreedit, '가', '나'),
+                        (Key::normal(R), "ㄱ", ""),
+                        (Key::normal(K), "가", ""),
+                        (Key::normal(S), "간", ""),
+                        (Key::normal(K), "가", "나"),
                     ],
                 )
             }
@@ -123,13 +126,44 @@ impl Check {
 fn check_input(
     engine: &mut InputEngine,
     config: &Config,
-    tests: &[(u16, InputResultType, char, char)],
+    tests: &[(Key, &str, &str)],
 ) -> CondResult {
-    for (code, ty, char1, char2) in tests.iter().copied() {
-        let ret = engine.press_key(config, code, 0);
+    engine.set_hangul_enable(true);
 
-        if ret.ty != ty || ret.char1 != char1 || ret.char2 != char2 {
-            return CondResult::Fail("InputResult is invalid".into());
+    for (key, preedit, commit) in tests.iter().copied() {
+        let ret = engine.press_key(config, key.code as _, key.state.bits());
+
+        let preedit_ret;
+        let commit_ret;
+
+        if ret & InputResult_HAS_PREEDIT != 0 {
+            preedit_ret = preedit == engine.preedit_str();
+        } else {
+            preedit_ret = preedit.is_empty();
+        }
+
+        if ret & InputResult_CONSUMED != 0 {
+            commit_ret = commit == format!("{}PASS", engine.commit_str());
+        } else if ret & (InputResult_NEED_RESET | InputResult_NEED_FLUSH) != 0 {
+            commit_ret = commit == engine.commit_str();
+        } else {
+            commit_ret = commit.is_empty();
+        }
+
+        if !preedit_ret {
+            return CondResult::Fail("Preedit result failed".into());
+        }
+
+        if !commit_ret {
+            return CondResult::Fail("Commit result failed".into());
+        }
+
+        if ret & InputResult_NEED_FLUSH != 0 {
+            engine.flush();
+        }
+
+        if ret & InputResult_NEED_RESET != 0 {
+            engine.reset();
         }
     }
 

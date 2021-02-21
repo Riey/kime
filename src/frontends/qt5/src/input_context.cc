@@ -2,6 +2,7 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtGui/QKeyEvent>
+#include <QtGui/QTextCharFormat>
 
 KimeInputContext::KimeInputContext(kime::InputEngine *engine,
                                    const kime::Config *config)
@@ -18,21 +19,16 @@ void KimeInputContext::reset() {
   KIME_DEBUG << "reset"
              << "\n";
 #endif
-  kime_engine_clear_preedit(this->engine);
-  commit_str(kime_engine_commit_str(this->engine));
-  kime_engine_reset(this->engine);
+  kime::kime_engine_clear_preedit(this->engine);
+  commit_str(kime::kime_engine_commit_str(this->engine));
+  kime::kime_engine_reset(this->engine);
 }
 
 void KimeInputContext::setFocusObject(QObject *object) {
   if (object) {
-    // set focus
-    kime_engine_update_hangul_state(this->engine);
-    this->focus_object = object;
-  } else {
-    // unset focus
-    this->focus_object = object;
-    this->reset();
+    kime::kime_engine_update_hangul_state(this->engine);
   }
+  this->focus_object = object;
 }
 
 bool KimeInputContext::isValid() const { return true; }
@@ -83,15 +79,6 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
     kime::kime_engine_update_hangul_state(this->engine);
   }
 
-  if (ret & kime::InputResult_HAS_PREEDIT) {
-    preedit_str(kime::kime_engine_preedit_str(this->engine));
-  } else {
-    kime::RustStr null_s;
-    null_s.ptr = nullptr;
-    null_s.len = 0;
-    commit_str(null_s);
-  }
-
   if (ret & (kime::InputResult_NEED_FLUSH | kime::InputResult_NEED_RESET)) {
     commit_str(kime::kime_engine_commit_str(this->engine));
 
@@ -100,6 +87,15 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
     } else {
       kime::kime_engine_reset(this->engine);
     }
+  }
+
+  if (ret & kime::InputResult_HAS_PREEDIT) {
+    preedit_str(kime::kime_engine_preedit_str(this->engine));
+  } else {
+    kime::RustStr null_s;
+    null_s.ptr = nullptr;
+    null_s.len = 0;
+    commit_str(null_s);
   }
 
   return !!(ret & kime::InputResult_CONSUMED);

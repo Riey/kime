@@ -1,15 +1,14 @@
 #include "plugin.hpp"
 #include "input_context.hpp"
 
-#include <QDebug>
+KimePlatformInputContextPlugin::KimePlatformInputContextPlugin() {
+  if (kime::kime_api_version() != 1) {
+    throw "Kime Engine version is mismatched!\n";
+  }
 
-KimePlatformInputContextPlugin::KimePlatformInputContextPlugin()
-    : engine(kime::kime_engine_new()), config(kime::kime_config_load()) {
-      if (kime::kime_api_version() != 1) {
-        QTextStream(stderr, QIODevice::WriteOnly) << "Kime Engine version is mismatched!\n";
-        return;
-      }
-    }
+  this->config = kime::kime_config_load();
+  this->engine = kime::kime_engine_new(this->config);
+}
 
 KimePlatformInputContextPlugin::~KimePlatformInputContextPlugin() {
   kime::kime_engine_delete(this->engine);

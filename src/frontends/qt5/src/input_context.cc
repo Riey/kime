@@ -18,11 +18,9 @@ void KimeInputContext::reset() {
   KIME_DEBUG << "reset"
              << "\n";
 #endif
-  auto ch = static_cast<char32_t>(kime_engine_reset(this->engine));
-
-  if (ch) {
-    commit_ch(ch);
-  }
+  kime_engine_clear_preedit(this->engine);
+  commit_str(kime_engine_commit_str(this->engine));
+  kime_engine_reset(this->engine);
 }
 
 void KimeInputContext::setFocusObject(QObject *object) {
@@ -81,58 +79,42 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   kime::InputResult ret = kime_engine_press_key(
       this->engine, this->config, (uint16_t)keyevent->nativeScanCode(), state);
 
-  if (ret.hangul_changed) {
+  if (ret & kime::InputResult_LANGUAGE_CHANGED) {
     kime::kime_engine_update_hangul_state(this->engine);
   }
 
-#ifdef DEBUG
-  KIME_DEBUG << "ty: " << (uint32_t) ret.ty << "char1: " << (QChar)ret.char1
-             << "char2: " << (QChar)ret.char2 << "\n";
-#endif
-
-  switch (ret.ty) {
-  case kime::InputResultType::Bypass:
-    return false;
-  case kime::InputResultType::Consume:
-    return true;
-  case kime::InputResultType::Commit:
-    commit_ch(ret.char1);
-    return true;
-  case kime::InputResultType::CommitPreedit:
-    commit_ch(ret.char1);
-    if (ret.char2) {
-      preedit_ch(ret.char2);
-    }
-    return true;
-  case kime::InputResultType::Preedit:
-    if (ret.char1) {
-      preedit_ch(ret.char1);
-    } else {
-      commit_ch(U'\0');
-    }
-    return true;
-  case kime::InputResultType::CommitCommit:
-    commit_ch(ret.char1);
-    commit_ch(ret.char2);
-    return true;
-  case kime::InputResultType::CommitBypass:
-    commit_ch(ret.char1);
-    return false;
-
-  default:
-    return false;
+  if (ret & kime::InputResult_HAS_PREEDIT) {
+    preedit_str(kime::kime_engine_preedit_str(this->engine));
+  } else {
+    kime::RustStr null_s;
+    null_s.ptr = nullptr;
+    null_s.len = 0;
+    commit_str(null_s);
   }
+
+  if (ret & (kime::InputResult_NEED_FLUSH | kime::InputResult_NEED_RESET)) {
+    commit_str(kime::kime_engine_commit_str(this->engine));
+
+    if (ret & kime::InputResult_NEED_FLUSH) {
+      kime::kime_engine_flush(this->engine);
+    } else {
+      kime::kime_engine_reset(this->engine);
+    }
+  }
+
+  return !!(ret & kime::InputResult_CONSUMED);
 }
 
-void KimeInputContext::preedit_ch(char32_t ch) {
-  QInputMethodEvent e(QString::fromUcs4(&ch, 1), this->attributes);
+void KimeInputContext::preedit_str(kime::RustStr s) {
+  QInputMethodEvent e(QString::fromUtf8((const char *)(s.ptr), s.len),
+                      this->attributes);
   QCoreApplication::sendEvent(this->focus_object, &e);
 }
 
-void KimeInputContext::commit_ch(char32_t ch) {
+void KimeInputContext::commit_str(kime::RustStr s) {
   QInputMethodEvent e;
-  if (ch) {
-    e.setCommitString(QString::fromUcs4(&ch, 1));
+  if (s.len) {
+    e.setCommitString(QString::fromUtf8((const char *)(s.ptr), s.len));
   }
   QCoreApplication::sendEvent(this->focus_object, &e);
 }

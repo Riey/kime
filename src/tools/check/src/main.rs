@@ -1,7 +1,7 @@
 use ansi_term::Color;
 use kime_engine_cffi::{
-    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
-    InputResult_NEED_FLUSH, InputResult_NEED_RESET,
+    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_NEED_FLUSH,
+    InputResult_NEED_RESET,
 };
 use kime_engine_core::{Key, KeyCode::*};
 use std::env;

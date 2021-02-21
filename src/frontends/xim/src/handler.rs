@@ -12,8 +12,9 @@ use xim::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET    , ModifierState_ALT, ModifierState_CONTROL,
-    ModifierState_SHIFT, ModifierState_SUPER,
+    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
+    InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET,
+    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub struct KimeData {

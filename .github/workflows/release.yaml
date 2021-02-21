@@ -115,12 +115,19 @@ jobs:
 
     strategy:
       matrix:
-        qt5:
-          - 5.9.5
-          - 5.11.3
-          - 5.12.8
-          - 5.14.2
-          - 5.15.2
+        include:
+          - qt: 5.9.5
+            ver: 5
+          - qt: 5.11.3
+            ver: 5
+          - qt: 5.12.8
+            ver: 5
+          - qt: 5.14.2
+            ver: 5
+          - qt: 5.15.2
+            ver: 5
+          - qt: 6.0.1
+            ver: 6
 
     steps:
       - name: Download engine
@@ -132,25 +139,25 @@ jobs:
       - name: Install engine
         run: sudo cp ./libkime_engine.so /usr/lib
 
-      - name: Cache Qt-${{ matrix.qt5 }}
+      - name: Cache Qt-${{ matrix.qt }}
         id: cache-qt
         uses: actions/cache@v2
         with:
           path: /opt/Qt
-          key: ${{ runner.os }}-QtCache-${{ matrix.qt5 }}
+          key: ${{ runner.os }}-QtCache-${{ matrix.qt }}
 
-      - name: Install Qt-${{ matrix.qt5 }}
+      - name: Install Qt-${{ matrix.qt }}
         uses: jurplel/install-qt-action@v2
         with:
           dir: /opt
-          version: ${{ matrix.qt5 }}
+          version: ${{ matrix.qt }}
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
           aqtversion: ==1.1.1
           py7zrversion: ==0.13.0
 
       - uses: actions/checkout@v2
 
-      - name: Build Qt-${{ matrix.qt5 }}
+      - name: Build Qt-${{ matrix.qt }}
         run: |
           mkdir build
           cd build
@@ -158,20 +165,20 @@ jobs:
           make -j$(nproc --all)
           strip -s ./lib/libkime-qt5.so
 
-      - name: Upload Qt-${{ matrix.qt5 }} artifact
+      - name: Upload Qt-${{ matrix.qt }} artifact
         uses: actions/upload-artifact@v2
         with:
-          name: qt-${{matrix.qt5}}
-          path: build/lib/libkime-qt5.so
+          name: qt-${{matrix.qt}}
+          path: build/lib/libkime-qt${{ matrix.ver }}.so
 
-      - name: Upload Qt-${{ matrix.qt5 }} file
+      - name: Upload Qt-${{ matrix.qt }} file
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: build/lib/libkime-qt5.so
-          asset_name: libkime-qt5-${{ matrix.qt5 }}.so
+          asset_path: build/lib/libkime-qt${{ matrix.ver }}.so
+          asset_name: libkime-qt-${{ matrix.qt }}.so
           asset_content_type: application/x-sharedlib
 
   package-arch:
@@ -199,6 +206,7 @@ jobs:
             pkg: deb
             name: debian-buster
           - qt5: 5.15.2
+            qt6: 6.0.1
             pkg: zst
             name: latest
 
@@ -208,10 +216,18 @@ jobs:
       - name: Create out folder
         run: mkdir -pv ./build/out
 
-      - name: Download qt artifact
+      - name: Download qt5 artifact
+        if: ${{ matrix.qt5 }}
         uses: actions/download-artifact@v2
         with:
           name: qt-${{ matrix.qt5 }}
+          path: ./build/out
+
+      - name: Download qt6 artifact
+        if: ${{ matrix.qt6 }}
+        uses: actions/download-artifact@v2
+        with:
+          name: qt-${{ matrix.qt6 }}
           path: ./build/out
 
       - name: Download other artifact

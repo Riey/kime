@@ -2,7 +2,7 @@
 #include "input_context.hpp"
 
 KimePlatformInputContextPlugin::KimePlatformInputContextPlugin() {
-  if (kime::kime_api_version() != 1) {
+  if (kime::kime_api_version() != kime::KIME_API_VERSION) {
     throw "Kime Engine version is mismatched!\n";
   }
 

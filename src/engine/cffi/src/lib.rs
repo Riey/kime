@@ -7,13 +7,13 @@ mod ffi;
 extern "C" {}
 
 pub use ffi::{
-    InputResult, InputResult_CONSUMED, InputResult_NEED_FLUSH, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, InputResult_NEED_UPDATE, ModifierState, ModifierState_ALT,
+    InputResult, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED,
+    InputResult_NEED_FLUSH, InputResult_NEED_RESET, ModifierState, ModifierState_ALT,
     ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub fn check_api_version() -> bool {
-    unsafe { ffi::kime_api_version() == 1 }
+    unsafe { ffi::kime_api_version() == ffi::KIME_API_VERSION }
 }
 
 pub struct InputEngine {
@@ -55,6 +55,12 @@ impl InputEngine {
         unsafe {
             let s = ffi::kime_engine_commit_str(self.engine);
             std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.ptr, s.len))
+        }
+    }
+
+    pub fn clear_preedit(&mut self) {
+        unsafe {
+            ffi::kime_engine_clear_preedit(self.engine);
         }
     }
 

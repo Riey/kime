@@ -9,6 +9,8 @@
 
 namespace kime {
 
+constexpr static const uintptr_t KIME_API_VERSION = 2;
+
 struct Config;
 
 struct InputEngine;
@@ -71,7 +73,11 @@ RustStr kime_engine_commit_str(InputEngine *engine);
 /// valid utf8 string
 RustStr kime_engine_preedit_str(InputEngine *engine);
 
+/// Flush commit_str
 void kime_engine_flush(InputEngine *engine);
+
+/// Clear preedit state and append to commit_str
+void kime_engine_clear_preedit(InputEngine *engine);
 
 /// Reset preedit state then returm commit char
 void kime_engine_reset(InputEngine *engine);

@@ -23,10 +23,12 @@ impl RustStr {
     }
 }
 
+pub const KIME_API_VERSION: usize = 2;
+
 /// Return API version
 #[no_mangle]
 pub extern "C" fn kime_api_version() -> usize {
-    2
+    KIME_API_VERSION
 }
 
 /// Create new engine
@@ -77,9 +79,16 @@ pub extern "C" fn kime_engine_preedit_str(engine: &mut InputEngine) -> RustStr {
     RustStr::new(engine.preedit_str())
 }
 
+/// Flush commit_str
 #[no_mangle]
 pub extern "C" fn kime_engine_flush(engine: &mut InputEngine) {
     engine.flush();
+}
+
+/// Clear preedit state and append to commit_str
+#[no_mangle]
+pub extern "C" fn kime_engine_clear_preedit(engine: &mut InputEngine) {
+    engine.clear_preedit();
 }
 
 /// Reset preedit state then returm commit char

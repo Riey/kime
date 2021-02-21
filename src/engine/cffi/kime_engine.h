@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define KimeKIME_API_VERSION 2
+
 typedef struct KimeConfig KimeConfig;
 
 typedef struct KimeInputEngine KimeInputEngine;
@@ -83,7 +85,15 @@ struct KimeRustStr kime_engine_commit_str(struct KimeInputEngine *engine);
  */
 struct KimeRustStr kime_engine_preedit_str(struct KimeInputEngine *engine);
 
+/**
+ * Flush commit_str
+ */
 void kime_engine_flush(struct KimeInputEngine *engine);
+
+/**
+ * Clear preedit state and append to commit_str
+ */
+void kime_engine_clear_preedit(struct KimeInputEngine *engine);
 
 /**
  * Reset preedit state then returm commit char

@@ -3,6 +3,7 @@
 pub type __uint8_t = ::std::os::raw::c_uchar;
 pub type __uint16_t = ::std::os::raw::c_ushort;
 pub type __uint32_t = ::std::os::raw::c_uint;
+pub const KIME_API_VERSION: usize = 2;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Config {
@@ -143,7 +144,12 @@ extern "C" {
     pub fn kime_engine_preedit_str(engine: *mut InputEngine) -> RustStr;
 }
 extern "C" {
+    #[doc = " Flush commit_str"]
     pub fn kime_engine_flush(engine: *mut InputEngine);
+}
+extern "C" {
+    #[doc = " Clear preedit state and append to commit_str"]
+    pub fn kime_engine_clear_preedit(engine: *mut InputEngine);
 }
 extern "C" {
     #[doc = " Reset preedit state then returm commit char"]

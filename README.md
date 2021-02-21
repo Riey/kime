@@ -4,7 +4,11 @@
 
 Korean IME
 
-[**English**](./README.md), [**한국어**](./README.ko.md)
+## View in other languages
+
+[**English**](./README.md), [한국어](./README.ko.md)
+
+---
 
 [<img alt="build" src="https://img.shields.io/github/workflow/status/Riey/kime/CI?style=for-the-badge" height="25">](https://github.com/Riey/kime/actions?query=workflow%3ACI)
 [<img alt="discord" src="https://img.shields.io/discord/801107569505992705.svg?style=for-the-badge" height="25">](https://discord.gg/YPnEfZqC6y)

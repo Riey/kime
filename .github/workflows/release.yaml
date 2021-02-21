@@ -106,7 +106,7 @@ jobs:
           asset_name: kime-${{ github.ref }}.tar.zst
           asset_content_type: application/zstd
 
-  build-qt:
+  build-qt5:
     needs:
       - build-engine
       - create-release
@@ -171,13 +171,78 @@ jobs:
         with:
           upload_url: ${{ needs.create-release.outputs.url }}
           asset_path: build/lib/libkime-qt5.so
-          asset_name: libkime-qt5-${{ matrix.qt5 }}.so
+          asset_name: libkime-qt-${{ matrix.qt5 }}.so
+          asset_content_type: application/x-sharedlib
+
+  build-qt6:
+    needs:
+      - build-engine
+      - create-release
+
+    runs-on: ubuntu-20.04
+    
+    strategy:
+      matrix:
+        qt6:
+          - 6.0.1
+
+    steps:
+      - name: Download engine
+        uses: actions/download-artifact@v2
+        with:
+          name: engine
+          path: .
+
+      - name: Install engine
+        run: sudo cp ./libkime_engine.so /usr/lib
+
+      - name: Cache Qt-${{ matrix.qt6 }}
+        id: cache-qt
+        uses: actions/cache@v2
+        with:
+          path: /opt/Qt
+          key: ${{ runner.os }}-QtCache-${{ matrix.qt6 }}
+
+      - name: Install Qt-${{ matrix.qt6 }}
+        uses: jurplel/install-qt-action@v2
+        with:
+          dir: /opt
+          version: ${{ matrix.qt6 }}
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+          aqtversion: ==1.1.1
+          py7zrversion: ==0.13.0
+
+      - uses: actions/checkout@v2
+
+      - name: Build Qt-${{ matrix.qt6 }}
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_QT6=ON ../src
+          make -j$(nproc --all)
+          strip -s ./lib/libkime-qt6.so
+
+      - name: Upload Qt-${{ matrix.qt6 }} artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: qt-${{matrix.qt6}}
+          path: build/lib/libkime-qt6.so
+
+      - name: Upload Qt-${{ matrix.qt6 }} file
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.url }}
+          asset_path: build/lib/libkime-qt6.so
+          asset_name: libkime-qt-${{ matrix.qt6 }}.so
           asset_content_type: application/x-sharedlib
 
   package-arch:
     needs:
       - build-other
-      - build-qt
+      - build-qt5
+      - build-qt6
       - create-release
 
     runs-on: ubuntu-20.04
@@ -199,6 +264,7 @@ jobs:
             pkg: deb
             name: debian-buster
           - qt5: 5.15.2
+            qt6: 6.0.1
             pkg: zst
             name: latest
 
@@ -208,10 +274,18 @@ jobs:
       - name: Create out folder
         run: mkdir -pv ./build/out
 
-      - name: Download qt artifact
+      - name: Download qt5 artifact
+        if: ${{ matrix.qt5 }}
         uses: actions/download-artifact@v2
         with:
           name: qt-${{ matrix.qt5 }}
+          path: ./build/out
+
+      - name: Download qt6 artifact
+        if: ${{ matrix.qt6 }}
+        uses: actions/download-artifact@v2
+        with:
+          name: qt-${{ matrix.qt6 }}
           path: ./build/out
 
       - name: Download other artifact
@@ -235,11 +309,11 @@ jobs:
           asset_name: kime_${{ matrix.name }}_${{ github.ref }}_amd64.deb
           asset_content_type: application/x-xz
 
-      - name: Create xz
+      - name: Create zst
         if: ${{ matrix.pkg == 'zst' }}
         run: scripts/release-zst.sh .
 
-      - name: Upload xz
+      - name: Upload zst
         if: ${{ matrix.pkg == 'zst' }}
         uses: actions/upload-release-asset@v1
         env:

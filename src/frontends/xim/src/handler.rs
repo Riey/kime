@@ -285,7 +285,9 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             user_ic.user_data.engine.reset();
         }
 
-        Ok(ret & InputResult_CONSUMED != 0)
+        let bypass = ret & InputResult_CONSUMED == 0;
+
+        Ok(!bypass)
     }
 
     fn handle_destory_ic(

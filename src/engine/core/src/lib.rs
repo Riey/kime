@@ -87,7 +87,7 @@ impl InputEngine {
 
     fn bypass(&mut self) -> InputResult {
         self.clear_preedit();
-        InputResult::empty()
+        InputResult::NEED_RESET
     }
 
     pub fn update_hangul_state(&mut self) {

@@ -63,7 +63,7 @@ impl HangulState {
         self.characters.clear();
     }
 
-    fn preedit_result(&self) -> InputResult {
+    pub fn preedit_result(&self) -> InputResult {
         if self.state.need_display() || self.word_commit && !self.characters.is_empty() {
             InputResult::HAS_PREEDIT
         } else {

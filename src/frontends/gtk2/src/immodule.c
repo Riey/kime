@@ -140,8 +140,6 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
     kime_engine_update_hangul_state(ctx->engine);
   }
 
-  update_preedit(ctx, !!(ret & KimeInputResult_HAS_PREEDIT));
-
   if (ret & (KimeInputResult_NEED_RESET | KimeInputResult_NEED_FLUSH)) {
     str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
     commit(ctx);
@@ -153,7 +151,9 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
     }
   }
 
-  return !!(ret & KimeInputResult_CONSUMED);
+  update_preedit(ctx, (ret & KimeInputResult_HAS_PREEDIT) != 0);
+
+  return (ret & KimeInputResult_CONSUMED) != 0;
 }
 
 gboolean filter_keypress(GtkIMContext *im, EventType *key) {
@@ -213,13 +213,10 @@ void set_client(GtkIMContext *im, ClientType *client) {
 void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
                         int *cursor_pos) {
   KIME_IM_CONTEXT(im);
-  uint32_t c = 0;
-  size_t str_len = 0;
+  KimeRustStr s = kime_engine_preedit_str(ctx->engine);
 
   if (out) {
-    KimeRustStr s = kime_engine_preedit_str(ctx->engine);
-
-    if (!s.len) {
+    if (s.len == 0 || !ctx->preedit_visible) {
       // Nothing to display
       if (cursor_pos) {
         *cursor_pos = 0;
@@ -231,9 +228,8 @@ void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
       memcpy(g_s, s.ptr, s.len);
 
       if (cursor_pos) {
-        *cursor_pos = g_utf8_strlen(g_s, s.len);
+        *cursor_pos = g_utf8_strlen(g_s, -1);
       }
-      str_len = s.len;
       *out = g_s;
     }
   }
@@ -241,10 +237,10 @@ void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
   if (attrs) {
     *attrs = pango_attr_list_new();
 
-    if (out && c) {
+    if (out && ctx->preedit_visible && s.len) {
       PangoAttribute *attr = pango_attr_underline_new(PANGO_UNDERLINE_SINGLE);
       attr->start_index = 0;
-      attr->end_index = str_len;
+      attr->end_index = s.len;
       pango_attr_list_insert(*attrs, attr);
     }
   }

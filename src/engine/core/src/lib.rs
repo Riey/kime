@@ -126,7 +126,7 @@ impl InputEngine {
             ret
         } else if key.code == KeyCode::Shift {
             // Don't reset state
-            InputResult::empty()
+            self.state.preedit_result()
         } else if self.check_hangul_state(config) {
             if key.code == KeyCode::Backspace {
                 self.state.backspace(config)

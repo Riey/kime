@@ -9,5 +9,7 @@ bindgen \
     --whitelist-type 'kime::.+' \
     --whitelist-function 'kime::.+' \
     --rustified-enum 'kime::InputResult' \
+    --use-core \
+    --ctypes-prefix cty \
     -o src/ffi.rs \
     ./kime_engine.hpp

@@ -156,7 +156,7 @@ impl KeyCode {
             100 => Some(Self::Henkan),
             102 => Some(Self::Muhenkan),
             108 => Some(Self::AltR),
-            122 => Some(Self::Hangul),
+            122 | 130 => Some(Self::Hangul),
             _ => None,
         }
     }

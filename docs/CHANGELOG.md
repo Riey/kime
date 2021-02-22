@@ -8,7 +8,7 @@
 
 * Support word commit [#288](https://github.com/Riey/kime/issues/288)
 * Make qt preedit string have underline style
-* Make keycode 130 to Hangul
+* Make keycode 130 to Hangul [#291](https://github.com/Riey/kime/issues/291)
 
 ## 1.1.1
 

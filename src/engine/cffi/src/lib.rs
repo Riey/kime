@@ -1,7 +1,11 @@
+#![no_std]
+
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 #[allow(non_upper_case_globals)]
-mod ffi;
+mod ffi {
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
 #[link(name = "kime_engine", kind = "dylib")]
 extern "C" {}
@@ -47,14 +51,14 @@ impl InputEngine {
     pub fn preedit_str(&self) -> &str {
         unsafe {
             let s = ffi::kime_engine_preedit_str(self.engine);
-            std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.ptr, s.len))
+            core::str::from_utf8_unchecked(core::slice::from_raw_parts(s.ptr, s.len))
         }
     }
 
     pub fn commit_str(&self) -> &str {
         unsafe {
             let s = ffi::kime_engine_commit_str(self.engine);
-            std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.ptr, s.len))
+            core::str::from_utf8_unchecked(core::slice::from_raw_parts(s.ptr, s.len))
         }
     }
 
@@ -109,7 +113,7 @@ impl Config {
             let font = ffi::kime_config_xim_preedit_font(self.config);
 
             (
-                std::str::from_utf8_unchecked(std::slice::from_raw_parts(
+                core::str::from_utf8_unchecked(core::slice::from_raw_parts(
                     font.name.ptr,
                     font.name.len,
                 )),

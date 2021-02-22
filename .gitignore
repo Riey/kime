@@ -4,5 +4,7 @@
 /cargo-timing*
 /.idea
 /.ccls-cache
+kime_engine.h
+kime_engine.hpp
 
 .DS_Store

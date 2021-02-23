@@ -34,6 +34,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build engine
         run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-10-dev
           cargo build --release -p kime-engine-capi
           LD_LIBRARY_PATH=$PWD/target/release cargo build --release -p kime-check
           strip -s ./target/release/libkime_engine.so
@@ -62,10 +64,6 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-      - name: Remove broken apt repos [Ubuntu]
-        run: |
-          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
-
       - uses: actions/checkout@v2
       - name: Install deps
         run: |
@@ -87,6 +85,7 @@ jobs:
 
       - name: Build
         run: |
+          sudo mv ./libkime_engine.so /usr/lib
           KIME_SKIP_ENGINE=1 scripts/build.sh -ar
           cp /usr/lib/libkime_engine.so ./build/out
           mv ./kime-check ./build/out
@@ -142,19 +141,11 @@ jobs:
           sudo mv ./libkime_engine.so /usr/lib
           sudo mv ./kime_engine.hpp /usr/include
 
-      - name: Cache Qt-${{ matrix.qt5 }}
-        id: cache-qt
-        uses: actions/cache@v2
-        with:
-          path: /opt/Qt
-          key: ${{ runner.os }}-QtCache-${{ matrix.qt5 }}
-
       - name: Install Qt-${{ matrix.qt5 }}
         uses: jurplel/install-qt-action@v2
         with:
           dir: /opt
           version: ${{ matrix.qt5 }}
-          cached: ${{ steps.cache-qt.outputs.cache-hit }}
           aqtversion: ==1.1.1
           py7zrversion: ==0.13.0
 
@@ -203,22 +194,22 @@ jobs:
           name: engine
           path: .
 
-      - name: Install engine
-        run: sudo cp ./libkime_engine.so /usr/lib
-
-      - name: Cache Qt-${{ matrix.qt6 }}
-        id: cache-qt
-        uses: actions/cache@v2
+      - name: Download header
+        uses: actions/download-artifact@v2
         with:
-          path: /opt/Qt
-          key: ${{ runner.os }}-QtCache-${{ matrix.qt6 }}
+          name: cpp-header
+          path: .
+
+      - name: Install engine
+        run: |
+          sudo mv ./libkime_engine.so /usr/lib
+          sudo mv ./kime_engine.hpp /usr/include
 
       - name: Install Qt-${{ matrix.qt6 }}
         uses: jurplel/install-qt-action@v2
         with:
           dir: /opt
           version: ${{ matrix.qt6 }}
-          cached: ${{ steps.cache-qt.outputs.cache-hit }}
           aqtversion: ==1.1.1
           py7zrversion: ==0.13.0
 

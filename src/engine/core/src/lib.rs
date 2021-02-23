@@ -131,24 +131,7 @@ impl InputEngine {
             if key.code == KeyCode::Backspace {
                 self.state.backspace(config)
             } else if let Some(v) = config.layout.keymap.get(&key) {
-                match *v {
-                    KeyValue::Pass(ref pass) => {
-                        self.state.pass(pass);
-                        InputResult::NEED_RESET | InputResult::CONSUMED
-                    }
-                    KeyValue::ChoJong(cho, jong, first) => {
-                        self.state.cho_jong(cho, jong, first, config)
-                    }
-                    KeyValue::ChoJung(cho, jung, first) => {
-                        self.state.cho_jung(cho, jung, first, config)
-                    }
-                    KeyValue::JungJong(jung, jong, first) => {
-                        self.state.jung_jong(jung, jong, first, config)
-                    }
-                    KeyValue::Jungseong(jung) => self.state.jung(jung, config),
-                    KeyValue::Choseong(cho) => self.state.cho(cho, config),
-                    KeyValue::Jongseong(jong) => self.state.jong(jong, config),
-                }
+                self.state.key(v, config)
             } else {
                 self.bypass()
             }

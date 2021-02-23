@@ -1,5 +1,5 @@
 use crate::{
-    characters::{Choseong, JongToCho, Jongseong, Jungseong},
+    characters::{Choseong, JongToCho, Jongseong, Jungseong, KeyValue},
     Config, InputResult,
 };
 
@@ -8,6 +8,8 @@ use crate::{
 pub struct HangulState {
     state: CharacterState,
     word_commit: bool,
+    /// 조합용 중성
+    compose_jung: bool,
     characters: String,
     buf: String,
 }
@@ -17,6 +19,7 @@ impl HangulState {
         Self {
             state: CharacterState::new(),
             word_commit,
+            compose_jung: false,
             characters: String::with_capacity(64),
             buf: String::with_capacity(64),
         }
@@ -106,51 +109,47 @@ impl HangulState {
         }
     }
 
-    pub fn cho_jong(
-        &mut self,
-        cho: Choseong,
-        jong: Jongseong,
-        first: bool,
-        config: &Config,
-    ) -> InputResult {
-        let ret = self.state.cho_jong(cho, jong, first, config);
-        self.convert_result(ret)
-    }
+    pub fn key(&mut self, kv: &KeyValue, config: &Config) -> InputResult {
+        let mut compose_jung = false;
 
-    pub fn cho_jung(
-        &mut self,
-        cho: Choseong,
-        jung: Jungseong,
-        first: bool,
-        config: &Config,
-    ) -> InputResult {
-        let ret = self.state.cho_jung(cho, jung, first, config);
-        self.convert_result(ret)
-    }
+        let ret = match kv {
+            KeyValue::Pass(pass) => {
+                self.pass(pass);
+                return InputResult::NEED_RESET | InputResult::CONSUMED;
+            }
+            KeyValue::Choseong { cho } => self.state.cho(*cho, config),
+            KeyValue::Jungseong { jung, compose } => {
+                compose_jung = *compose;
+                self.state.jung(*jung, config)
+            }
+            KeyValue::Jongseong { jong } => self.state.jong(*jong, config),
+            KeyValue::ChoJong { cho, jong, first } => {
+                self.state.cho_jong(*cho, *jong, *first, config)
+            }
+            KeyValue::ChoJung {
+                cho,
+                jung,
+                first,
+                compose,
+            } => {
+                compose_jung = *compose;
+                self.state
+                    .cho_jung(*cho, *jung, *first, self.compose_jung, config)
+            }
+            KeyValue::JungJong {
+                jung,
+                jong,
+                first,
+                compose,
+            } => {
+                compose_jung = *compose;
+                self.state
+                    .jung_jong(*jung, *jong, *first, self.compose_jung, config)
+            }
+        };
 
-    pub fn jung_jong(
-        &mut self,
-        jung: Jungseong,
-        jong: Jongseong,
-        first: bool,
-        config: &Config,
-    ) -> InputResult {
-        let ret = self.state.jung_jong(jung, jong, first, config);
-        self.convert_result(ret)
-    }
+        self.compose_jung = compose_jung;
 
-    pub fn cho(&mut self, cho: Choseong, config: &Config) -> InputResult {
-        let ret = self.state.cho(cho, config);
-        self.convert_result(ret)
-    }
-
-    pub fn jung(&mut self, jung: Jungseong, config: &Config) -> InputResult {
-        let ret = self.state.jung(jung, config);
-        self.convert_result(ret)
-    }
-
-    pub fn jong(&mut self, jong: Jongseong, config: &Config) -> InputResult {
-        let ret = self.state.jong(jong, config);
         self.convert_result(ret)
     }
 }
@@ -278,9 +277,15 @@ impl CharacterState {
         cho: Choseong,
         jung: Jungseong,
         first: bool,
+        compose_jung: bool,
         config: &Config,
     ) -> CharacterResult {
-        if self.cho.is_none() || self.jung.is_some() {
+        if self.cho.is_none()
+            || compose_jung
+                && self
+                    .jung
+                    .map_or(false, |j| j.try_add(jung, config).is_some())
+        {
             self.cho(cho, config)
         } else if self.cho.is_some() {
             self.jung(jung, config)
@@ -296,10 +301,16 @@ impl CharacterState {
         jung: Jungseong,
         jong: Jongseong,
         first: bool,
+        compose_jung: bool,
         config: &Config,
     ) -> CharacterResult {
         // 아 + $ㄴㅖ = 안
-        if self.jung.is_some() {
+        // ㅇ + $ㅜ + $ㅊㅔ = 웨
+        if !compose_jung
+            && self
+                .jung
+                .map_or(false, |j| j.try_add(jung, config).is_none())
+        {
             self.jong(jong, config)
         } else if self.cho.is_some() {
             self.jung(jung, config)

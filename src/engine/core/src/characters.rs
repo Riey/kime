@@ -450,33 +450,74 @@ pub enum JongToCho {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyValue {
-    Choseong(Choseong),
-    Jongseong(Jongseong),
-    Jungseong(Jungseong),
+    Choseong {
+        cho: Choseong,
+    },
+    Jongseong {
+        jong: Jongseong,
+    },
+    Jungseong {
+        jung: Jungseong,
+        compose: bool,
+    },
 
-    ChoJong(Choseong, Jongseong, bool),
-    ChoJung(Choseong, Jungseong, bool),
-    JungJong(Jungseong, Jongseong, bool),
+    ChoJong {
+        cho: Choseong,
+        jong: Jongseong,
+        first: bool,
+    },
 
-    Pass(String),
+    ChoJung {
+        cho: Choseong,
+        jung: Jungseong,
+        first: bool,
+        compose: bool,
+    },
+
+    JungJong {
+        jung: Jungseong,
+        jong: Jongseong,
+        first: bool,
+        compose: bool,
+    },
+
+    Pass(Box<str>),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum KeyValuePart {
-    Cho(Choseong),
-    Jung(Jungseong),
-    Jong(Jongseong),
+    /// Choseong
+    Cho { cho: Choseong },
+    /// Juneseong
+    Jung { jung: Jungseong, compose: bool },
+    /// Jongseong
+    Jong { jong: Jongseong },
 }
 
 impl KeyValuePart {
     pub fn parse(chars: &mut std::str::Chars) -> Option<KeyValuePart> {
         match chars.next()? {
-            '$' => Some(Self::Jong(Jongseong::from_jamo(chars.next()?)?)),
+            '$' => {
+                let next = chars.next()?;
+                if let Some(jung) = Jungseong::from_jamo(next) {
+                    Some(KeyValuePart::Jung {
+                        jung,
+                        compose: true,
+                    })
+                } else {
+                    Some(KeyValuePart::Jong {
+                        jong: Jongseong::from_jamo(next)?,
+                    })
+                }
+            }
             c => {
                 if let Some(cho) = Choseong::from_jamo(c) {
-                    Some(Self::Cho(cho))
+                    Some(Self::Cho { cho })
                 } else {
-                    Some(Self::Jung(Jungseong::from_jamo(c)?))
+                    Some(Self::Jung {
+                        jung: Jungseong::from_jamo(c)?,
+                        compose: false,
+                    })
                 }
             }
         }
@@ -494,23 +535,51 @@ impl FromStr for KeyValue {
         match next() {
             None => Ok(Self::Pass(s.into())),
             Some(first) => match first {
-                KeyValuePart::Cho(cho) => match next() {
-                    Some(KeyValuePart::Cho(_)) => Err(()),
-                    Some(KeyValuePart::Jong(jong)) => Ok(Self::ChoJong(cho, jong, true)),
-                    Some(KeyValuePart::Jung(jung)) => Ok(Self::ChoJung(cho, jung, true)),
-                    None => Ok(Self::Choseong(cho)),
+                KeyValuePart::Cho { cho } => match next() {
+                    Some(KeyValuePart::Cho { .. }) => Err(()),
+                    Some(KeyValuePart::Jong { jong }) => Ok(Self::ChoJong {
+                        cho,
+                        jong,
+                        first: true,
+                    }),
+                    Some(KeyValuePart::Jung { jung, compose }) => Ok(Self::ChoJung {
+                        cho,
+                        jung,
+                        first: true,
+                        compose,
+                    }),
+                    None => Ok(Self::Choseong { cho }),
                 },
-                KeyValuePart::Jung(jung) => match next() {
-                    Some(KeyValuePart::Cho(cho)) => Ok(Self::ChoJung(cho, jung, false)),
-                    Some(KeyValuePart::Jong(jong)) => Ok(Self::JungJong(jung, jong, true)),
-                    Some(KeyValuePart::Jung(_)) => Err(()),
-                    None => Ok(Self::Jungseong(jung)),
+                KeyValuePart::Jung { jung, compose } => match next() {
+                    Some(KeyValuePart::Cho { cho }) => Ok(Self::ChoJung {
+                        cho,
+                        jung,
+                        first: false,
+                        compose,
+                    }),
+                    Some(KeyValuePart::Jong { jong }) => Ok(Self::JungJong {
+                        jung,
+                        jong,
+                        first: true,
+                        compose,
+                    }),
+                    Some(KeyValuePart::Jung { .. }) => Err(()),
+                    None => Ok(Self::Jungseong { jung, compose }),
                 },
-                KeyValuePart::Jong(jong) => match next() {
-                    Some(KeyValuePart::Cho(cho)) => Ok(Self::ChoJong(cho, jong, false)),
-                    Some(KeyValuePart::Jong(_)) => Err(()),
-                    Some(KeyValuePart::Jung(jung)) => Ok(Self::JungJong(jung, jong, false)),
-                    None => Ok(Self::Jongseong(jong)),
+                KeyValuePart::Jong { jong } => match next() {
+                    Some(KeyValuePart::Cho { cho }) => Ok(Self::ChoJong {
+                        cho,
+                        jong,
+                        first: false,
+                    }),
+                    Some(KeyValuePart::Jong { .. }) => Err(()),
+                    Some(KeyValuePart::Jung { jung, compose }) => Ok(Self::JungJong {
+                        jung,
+                        jong,
+                        first: false,
+                        compose,
+                    }),
+                    None => Ok(Self::Jongseong { jong }),
                 },
             },
         }
@@ -537,26 +606,56 @@ fn decompose() {
 fn parse_keyvalue() {
     assert_eq!(
         "ㅇ".parse::<KeyValue>().unwrap(),
-        KeyValue::Choseong(Choseong::Ieung)
+        KeyValue::Choseong {
+            cho: Choseong::Ieung
+        }
     );
     assert_eq!(
         "$ㅇㅇ".parse::<KeyValue>().unwrap(),
-        KeyValue::ChoJong(Choseong::Ieung, Jongseong::Ieung, false)
+        KeyValue::ChoJong {
+            cho: Choseong::Ieung,
+            jong: Jongseong::Ieung,
+            first: false
+        }
     );
     assert_eq!(
         "ㅇ$ㅇ".parse::<KeyValue>().unwrap(),
-        KeyValue::ChoJong(Choseong::Ieung, Jongseong::Ieung, true)
+        KeyValue::ChoJong {
+            cho: Choseong::Ieung,
+            jong: Jongseong::Ieung,
+            first: true
+        }
     );
     assert_eq!(
         "ㅏ".parse::<KeyValue>().unwrap(),
-        KeyValue::Jungseong(Jungseong::A)
+        KeyValue::Jungseong {
+            jung: Jungseong::A,
+            compose: false
+        }
+    );
+    assert_eq!(
+        "$ㅏ".parse::<KeyValue>().unwrap(),
+        KeyValue::Jungseong {
+            jung: Jungseong::A,
+            compose: true
+        }
     );
     assert_eq!(
         "ㅢ$ㅅ".parse::<KeyValue>().unwrap(),
-        KeyValue::JungJong(Jungseong::YI, Jongseong::Siot, true),
+        KeyValue::JungJong {
+            jung: Jungseong::YI,
+            jong: Jongseong::Siot,
+            first: true,
+            compose: false
+        },
     );
     assert_eq!(
         "$ㅅㅢ".parse::<KeyValue>().unwrap(),
-        KeyValue::JungJong(Jungseong::YI, Jongseong::Siot, false),
+        KeyValue::JungJong {
+            jung: Jungseong::YI,
+            jong: Jongseong::Siot,
+            first: false,
+            compose: false
+        },
     );
 }

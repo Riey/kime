@@ -67,3 +67,14 @@ fn hello() {
         (Key::normal(X), "요", ""),
     ]);
 }
+
+// issue #295
+#[test]
+fn compose_jungseong() {
+    test_input(&[
+        (Key::normal(J), "ㅇ", ""),
+        (Key::normal(O), "우", ""),
+        (Key::normal(C), "웨", ""),
+        (Key::normal(S), "웬", ""),
+    ]);
+}

@@ -8,9 +8,8 @@ use crate::{
 pub struct HangulState {
     state: CharacterState,
     word_commit: bool,
-    /// 조합용 중성
-    compose_jung: bool,
-    characters: String,
+    commit_buf: String,
+    commit_characters: Vec<CharacterState>,
     buf: String,
 }
 
@@ -19,8 +18,8 @@ impl HangulState {
         Self {
             state: CharacterState::new(),
             word_commit,
-            compose_jung: false,
-            characters: String::with_capacity(64),
+            commit_buf: String::with_capacity(64),
+            commit_characters: Vec::with_capacity(16),
             buf: String::with_capacity(64),
         }
     }
@@ -28,11 +27,11 @@ impl HangulState {
     pub fn commit_str(&mut self) -> &str {
         if self.word_commit {
             self.buf.clear();
-            self.buf.push_str(&self.characters);
+            self.buf.push_str(&self.commit_buf);
             self.state.write(&mut self.buf);
             &self.buf
         } else {
-            &self.characters
+            &self.commit_buf
         }
     }
 
@@ -46,28 +45,29 @@ impl HangulState {
         }
     }
 
-    pub fn pass(&mut self, s: &str) {
-        self.state.write(&mut self.characters);
-        self.characters.push_str(s);
-        self.state.reset();
+    fn pass(&mut self, s: &str) {
+        self.commit_characters.clear();
+        self.clear_preedit();
+        self.commit_buf.push_str(s);
     }
 
     pub fn clear_preedit(&mut self) {
-        self.state.write(&mut self.characters);
+        self.state.write(&mut self.commit_buf);
         self.state.reset();
     }
 
     pub fn flush(&mut self) {
-        self.characters.clear();
+        self.commit_characters.clear();
+        self.commit_buf.clear();
     }
 
     pub fn reset(&mut self) {
+        self.flush();
         self.state.reset();
-        self.characters.clear();
     }
 
     pub fn preedit_result(&self) -> InputResult {
-        if self.state.need_display() || self.word_commit && !self.characters.is_empty() {
+        if self.state.need_display() || self.word_commit && !self.commit_characters.is_empty() {
             InputResult::HAS_PREEDIT
         } else {
             InputResult::empty()
@@ -78,10 +78,9 @@ impl HangulState {
         match ret {
             CharacterResult::Consume => self.preedit_result() | InputResult::CONSUMED,
             CharacterResult::NewCharacter(new) => {
-                debug_assert!(self.state.need_display());
-
-                self.characters.push(self.state.to_char());
-                self.state = new;
+                self.commit_buf.push(self.state.to_char());
+                self.commit_characters
+                    .push(std::mem::replace(&mut self.state, new));
 
                 if self.word_commit {
                     InputResult::HAS_PREEDIT | InputResult::CONSUMED
@@ -98,8 +97,9 @@ impl HangulState {
                 return self.preedit_result() | InputResult::CONSUMED;
             }
 
-            match self.characters.pop().map(CharacterState::load_from_ch) {
+            match self.commit_characters.pop() {
                 Some(new_last) => {
+                    self.commit_buf.pop();
                     self.state = new_last;
                 }
                 None => {
@@ -110,18 +110,13 @@ impl HangulState {
     }
 
     pub fn key(&mut self, kv: &KeyValue, config: &Config) -> InputResult {
-        let mut compose_jung = false;
-
         let ret = match kv {
             KeyValue::Pass(pass) => {
                 self.pass(pass);
                 return InputResult::NEED_RESET | InputResult::CONSUMED;
             }
             KeyValue::Choseong { cho } => self.state.cho(*cho, config),
-            KeyValue::Jungseong { jung, compose } => {
-                compose_jung = *compose;
-                self.state.jung(*jung, config)
-            }
+            KeyValue::Jungseong { jung, compose } => self.state.jung(*jung, *compose, config),
             KeyValue::Jongseong { jong } => self.state.jong(*jong, config),
             KeyValue::ChoJong { cho, jong, first } => {
                 self.state.cho_jong(*cho, *jong, *first, config)
@@ -131,24 +126,14 @@ impl HangulState {
                 jung,
                 first,
                 compose,
-            } => {
-                compose_jung = *compose;
-                self.state
-                    .cho_jung(*cho, *jung, *first, self.compose_jung, config)
-            }
+            } => self.state.cho_jung(*cho, *jung, *first, *compose, config),
             KeyValue::JungJong {
                 jung,
                 jong,
                 first,
                 compose,
-            } => {
-                compose_jung = *compose;
-                self.state
-                    .jung_jong(*jung, *jong, *first, self.compose_jung, config)
-            }
+            } => self.state.jung_jong(*jung, *jong, *first, *compose, config),
         };
-
-        self.compose_jung = compose_jung;
 
         self.convert_result(ret)
     }
@@ -165,6 +150,8 @@ enum CharacterResult {
 struct CharacterState {
     cho: Option<Choseong>,
     jung: Option<Jungseong>,
+    /// 조합용 중성
+    compose_jung: bool,
     jong: Option<Jongseong>,
 }
 
@@ -173,18 +160,8 @@ impl CharacterState {
         Self {
             cho: None,
             jung: None,
+            compose_jung: false,
             jong: None,
-        }
-    }
-
-    pub fn load_from_ch(ch: char) -> Self {
-        match Choseong::decompose(ch) {
-            Some((cho, jung, jong)) => Self {
-                cho: Some(cho),
-                jung: Some(jung),
-                jong,
-            },
-            _ => Self::new(),
         }
     }
 
@@ -237,8 +214,10 @@ impl CharacterState {
         } else if let Some(jung) = self.jung.as_mut() {
             if let Some(new_jung) = jung.backspace(config) {
                 *jung = new_jung;
+                self.compose_jung = true;
             } else {
                 self.jung = None;
+                self.compose_jung = false;
             }
         } else if let Some(cho) = self.cho.as_mut() {
             if let Some(new_cho) = cho.backspace(config) {
@@ -263,12 +242,10 @@ impl CharacterState {
     ) -> CharacterResult {
         if self.cho.is_none() || self.jung.is_none() {
             self.cho(cho, config)
-        } else if self.jung.is_some() {
+        } else if self.jung.is_some() || !first {
             self.jong(jong, config)
-        } else if first {
-            self.cho(cho, config)
         } else {
-            self.jong(jong, config)
+            self.cho(cho, config)
         }
     }
 
@@ -281,18 +258,16 @@ impl CharacterState {
         config: &Config,
     ) -> CharacterResult {
         if self.cho.is_none()
-            || compose_jung
+            || self.compose_jung
                 && self
                     .jung
                     .map_or(false, |j| j.try_add(jung, config).is_some())
         {
             self.cho(cho, config)
-        } else if self.cho.is_some() && self.jong.is_none() {
-            self.jung(jung, config)
-        } else if first {
-            self.cho(cho, config)
+        } else if self.cho.is_some() && self.jong.is_none() || !first {
+            self.jung(jung, compose_jung, config)
         } else {
-            self.jung(jung, config)
+            self.cho(cho, config)
         }
     }
 
@@ -312,12 +287,10 @@ impl CharacterState {
                 .map_or(false, |j| j.try_add(jung, config).is_none())
         {
             self.jong(jong, config)
-        } else if self.cho.is_some() {
-            self.jung(jung, config)
-        } else if first {
-            self.jong(jong, config)
+        } else if self.cho.is_some() || !first {
+            self.jung(jung, compose_jung, config)
         } else {
-            self.jung(jung, config)
+            self.jong(jong, config)
         }
     }
 
@@ -346,7 +319,12 @@ impl CharacterState {
         }
     }
 
-    pub fn jung(&mut self, jung: Jungseong, config: &Config) -> CharacterResult {
+    pub fn jung(
+        &mut self,
+        jung: Jungseong,
+        compose_jung: bool,
+        config: &Config,
+    ) -> CharacterResult {
         if let Some(jong) = self.jong {
             if self.cho.is_some() {
                 // has choseong move jongseong to next choseong
@@ -359,6 +337,7 @@ impl CharacterState {
                             cho: Some(cho),
                             jung: Some(jung),
                             jong: None,
+                            compose_jung,
                         };
                     }
                     JongToCho::Compose(jong, cho) => {
@@ -367,6 +346,7 @@ impl CharacterState {
                             cho: Some(cho),
                             jung: Some(jung),
                             jong: None,
+                            compose_jung,
                         };
                     }
                 }
@@ -378,17 +358,19 @@ impl CharacterState {
                     cho: None,
                     jung: Some(jung),
                     jong: None,
+                    compose_jung,
                 });
             }
         }
 
         if let Some(prev_jung) = self.jung {
             match prev_jung.try_add(jung, config) {
-                Some(new) => {
+                Some(new) if self.compose_jung => {
                     self.jung = Some(new);
+                    self.compose_jung = false;
                     CharacterResult::Consume
                 }
-                None => {
+                _ => {
                     let new;
 
                     if let Some(jong) = self.jong {
@@ -398,7 +380,8 @@ impl CharacterState {
                                 new = Self {
                                     cho: Some(cho),
                                     jung: Some(jung),
-                                    ..Default::default()
+                                    jong: None,
+                                    compose_jung,
                                 };
                             }
                             JongToCho::Compose(left, cho) => {
@@ -406,7 +389,8 @@ impl CharacterState {
                                 new = Self {
                                     cho: Some(cho),
                                     jung: Some(jung),
-                                    ..Default::default()
+                                    jong: None,
+                                    compose_jung,
                                 };
                             }
                         }
@@ -422,6 +406,7 @@ impl CharacterState {
             }
         } else {
             self.jung = Some(jung);
+            self.compose_jung = compose_jung;
             CharacterResult::Consume
         }
     }
@@ -471,16 +456,17 @@ mod tests {
         let config = Config::default();
 
         state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &config);
-        state.jung(Jungseong::A, &config);
+        state.jung(Jungseong::A, true, &config);
         state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &config);
 
         assert_eq!(
             CharacterResult::NewCharacter(CharacterState {
                 cho: Some(Choseong::Ieung),
                 jung: Some(Jungseong::A),
+                compose_jung: true,
                 jong: None
             }),
-            state.jung(Jungseong::A, &config)
+            state.jung(Jungseong::A, true, &config)
         );
     }
 }

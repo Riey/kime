@@ -1,5 +1,6 @@
 use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
+#[track_caller]
 fn test_input(keys: &[(Key, &str, &str)]) {
     let config = Config::from_raw_config(
         RawConfig {
@@ -17,6 +18,8 @@ fn test_input(keys: &[(Key, &str, &str)]) {
         eprintln!("Key: {:?}", key);
 
         let ret = engine.press_key(key, &config);
+
+        eprintln!("Ret: {:?}", ret);
 
         if ret.contains(InputResult::HAS_PREEDIT) {
             assert_eq!(preedit, engine.preedit_str());

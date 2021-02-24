@@ -1,5 +1,6 @@
 use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
+#[track_caller]
 fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
     let config = Config::from_raw_config(
         RawConfig {
@@ -18,7 +19,7 @@ fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
 
         let ret = engine.press_key(key, &config);
 
-        dbg!(ret);
+        eprintln!("Ret: {:?}", ret);
 
         if ret.contains(InputResult::HAS_PREEDIT) {
             assert_eq!(preedit, engine.preedit_str());
@@ -42,10 +43,12 @@ fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
     }
 }
 
+#[track_caller]
 fn test_input(keys: &[(Key, &str, &str)]) {
     test_input_impl(false, keys)
 }
 
+#[track_caller]
 fn test_word_input(keys: &[(Key, &str, &str)]) {
     test_input_impl(true, keys)
 }

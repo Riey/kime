@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 1.1.3
+
+### Improve
+
 * Fix cho-jung bug `웬 + ㅊ$ㅜ = 웬ㅊ`
 * Fix composable jungseong bug `ㅇ + $ㅆ$ㅜ + $ㅊ$ㅔ +  = 웇`
 * Fix xim bug [#304](https://github.com/Riey/kime/issues/304)

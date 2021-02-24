@@ -66,6 +66,12 @@ fn word_hello() {
     ])
 }
 
+// issue #310
+#[test]
+fn hangul_change_preedit() {
+    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::normal(Hangul), "ㄱ", "")]);
+}
+
 #[test]
 fn esc() {
     test_input(&[

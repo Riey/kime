@@ -116,7 +116,7 @@ impl InputEngine {
 
             let mut ret = match hotkey.result() {
                 HotkeyResult::Bypass => self.bypass(),
-                HotkeyResult::Consume => InputResult::CONSUMED,
+                HotkeyResult::Consume => InputResult::CONSUMED | self.state.preedit_result(),
             };
 
             if self.enable_hangul != first {

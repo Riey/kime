@@ -6,7 +6,8 @@
 
 ### Improve
 
-* Fix cho-jung bug (웬 + ㅊ$ㅜ = 웬ㅊ)
+* Fix cho-jung bug `웬 + ㅊ$ㅜ = 웬ㅊ`
+* Fix composable jungseong bug `ㅇ + $ㅆ$ㅜ + $ㅊ$ㅔ +  = 웇`
 
 ## 1.1.2
 

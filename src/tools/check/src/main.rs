@@ -3,7 +3,6 @@ use kime_engine_cffi::{
     Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_NEED_FLUSH,
     InputResult_NEED_RESET,
 };
-use kime_engine_core::{Key, KeyCode::*};
 use std::env;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
 
@@ -84,10 +83,14 @@ impl Check {
                     &mut engine,
                     &config,
                     &[
-                        (Key::normal(R), "ㄱ", ""),
-                        (Key::normal(K), "가", ""),
-                        (Key::normal(S), "간", ""),
-                        (Key::normal(K), "가", "나"),
+                        // R
+                        (27, "ㄱ", ""),
+                        // K
+                        (45, "가", ""),
+                        // S
+                        (39, "간", ""),
+                        // K
+                        (45, "나", "가"),
                     ],
                 )
             }
@@ -126,12 +129,12 @@ impl Check {
 fn check_input(
     engine: &mut InputEngine,
     config: &Config,
-    tests: &[(Key, &str, &str)],
+    tests: &[(u16, &str, &str)],
 ) -> CondResult {
     engine.set_hangul_enable(true);
 
     for (key, preedit, commit) in tests.iter().copied() {
-        let ret = engine.press_key(config, key.code as _, key.state.bits());
+        let ret = engine.press_key(config, key, 0);
 
         let preedit_ret;
         let commit_ret;
@@ -142,7 +145,7 @@ fn check_input(
             preedit_ret = preedit.is_empty();
         }
 
-        if ret & InputResult_CONSUMED != 0 {
+        if ret & InputResult_CONSUMED == 0 {
             commit_ret = commit == format!("{}PASS", engine.commit_str());
         } else if ret & (InputResult_NEED_RESET | InputResult_NEED_FLUSH) != 0 {
             commit_ret = commit == engine.commit_str();

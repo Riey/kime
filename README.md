@@ -27,6 +27,10 @@ Korean IME
 * Write in mostly Rust no segfaults
 * Allow custom layouts
 
+## Have a question?
+
+Please contact with [Discord](https://discord.gg/YPnEfZqC6y) or post issue
+
 ## Supported frontend
 
 - [x] XIM

@@ -287,7 +287,7 @@ impl CharacterState {
                     .map_or(false, |j| j.try_add(jung, config).is_some())
         {
             self.cho(cho, config)
-        } else if self.cho.is_some() {
+        } else if self.cho.is_some() && self.jong.is_none() {
             self.jung(jung, config)
         } else if first {
             self.cho(cho, config)

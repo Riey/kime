@@ -257,17 +257,16 @@ impl CharacterState {
         compose_jung: bool,
         config: &Config,
     ) -> CharacterResult {
-        if self.cho.is_none()
-            || self.compose_jung
-                && self
-                    .jung
-                    .map_or(false, |j| j.try_add(jung, config).is_some())
+        if self.cho.is_some()
+            && self.jung.map_or(true, |j| {
+                self.compose_jung && j.try_add(jung, config).is_some()
+            })
         {
-            self.cho(cho, config)
-        } else if self.cho.is_some() && self.jong.is_none() || !first {
             self.jung(jung, compose_jung, config)
-        } else {
+        } else if self.cho.is_none() || first {
             self.cho(cho, config)
+        } else {
+            self.jung(jung, compose_jung, config)
         }
     }
 
@@ -281,16 +280,15 @@ impl CharacterState {
     ) -> CharacterResult {
         // 아 + $ㄴㅖ = 안
         // ㅇ + $ㅜ + $ㅊㅔ = 웨
-        if !compose_jung
-            && self
-                .jung
-                .map_or(false, |j| j.try_add(jung, config).is_none())
-        {
-            self.jong(jong, config)
-        } else if self.cho.is_some() || !first {
+        // ㅇ + ㅜ + $ㅊㅔ = 웇
+        if self.jung.map_or(true, |j| {
+            self.compose_jung && j.try_add(jung, config).is_some()
+        }) {
             self.jung(jung, compose_jung, config)
-        } else {
+        } else if self.cho.is_some() || !first {
             self.jong(jong, config)
+        } else {
+            self.jung(jung, compose_jung, config)
         }
     }
 

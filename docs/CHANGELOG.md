@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Fix cho-jung bug (웬 + ㅊ$ㅜ = 웬ㅊ)
+
 ## 1.1.2
 
 ### Improve

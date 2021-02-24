@@ -78,3 +78,21 @@ fn compose_jungseong() {
         (Key::normal(S), "웬", ""),
     ]);
 }
+
+#[test]
+fn chocolate() {
+    test_input(&[
+        (Key::normal(J), "ㅇ", ""),
+        (Key::normal(O), "우", ""),
+        (Key::normal(C), "웨", ""),
+        (Key::normal(S), "웬", ""),
+        (Key::normal(O), "ㅊ", "웬"),
+        (Key::normal(V), "초", ""),
+        (Key::normal(Slash), "ㅋ", "초"),
+        (Key::normal(V), "코", ""),
+        (Key::normal(W), "콜", ""),
+        (Key::normal(Y), "ㄹ", "콜"),
+        (Key::normal(D), "리", ""),
+        (Key::normal(Q), "릿", ""),
+    ]);
+}

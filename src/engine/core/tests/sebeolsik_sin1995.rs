@@ -1,5 +1,6 @@
 use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
+#[track_caller]
 fn test_input(keys: &[(Key, &str, &str)]) {
     let config = Config::from_raw_config(
         RawConfig {

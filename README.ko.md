@@ -27,6 +27,10 @@
 * 대부분의 코드가 세그멘테이션 오류가 없는 Rust로 작성됨
 * 사용자 설정 자판 지원
 
+## 궁금한게 있으신가요?
+
+[디스코드](https://discord.gg/YPnEfZqC6y) 채널에 와서 연락하시거나 이슈를 올려주세요
+
 ## 지원되는 프론트엔드
 
 - [x] XIM
@@ -110,17 +114,20 @@ init 스크립트에 다음을 추가하세요.
 export GTK_IM_MODULE=kime
 export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
+
+kime-indicator &
+# 참고로 X나 wayland 세션이 초기화 되지 않았다면 밑의 커맨드들은 실패할겁니다.
+kime-xim &
+# kime-wayland &
 ```
 
-그리고 세션 초기화 후 `kime-xim` 또는 `kime-wayland` 바이너리를 실행합니다.
-
-만약 X를 사용하신다면 .xprofile에서 실행하실 수 있습니다.
-
-또 언제든 `kime-indicator`를 실행하면 한영 상태를 appindicator에서 볼 수 있습니다.
+만약 X를 사용하신다면 .xprofile에 설정하시면 됩니다.
 
 자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.ko.md)를 참고하세요.
 
 ## 종속성 목록
+
+### 런타임 종속성
 
 참고로 필요하신 종속성만 있으면 됩니다
 예를들어 qt6를 사용하지 않으신다면 필요하지 않습니다.
@@ -133,3 +140,23 @@ export XMODIFIERS=@im=kime
 * libappindicator-gtk3 (indicator)
 * libxcb (xim)
 * cairo (xim)
+
+### 빌드타임 종속성 (바이너리 실행시엔 필요 없습니다)
+
+#### 필수
+
+* cmake
+* cargo
+* libclang
+* pkg-config
+* libappindicator-gtk3
+* libxcb
+* cairo
+
+#### 선택적
+
+* gtk2
+* gtk3
+* gtk4
+* qtbase5-private
+* qtbase6-private

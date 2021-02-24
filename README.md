@@ -111,17 +111,20 @@ Add the following to your init script
 export GTK_IM_MODULE=kime
 export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
+
+kime-indicator &
+# Note that when X or wayland session is not initialized, below commands would be failed
+kime-xim &
+# kime-wayland &
 ```
 
-and run `kime-xim` or `kime-wayland` binary after session initialized
-
 if you use X it could be done in .xprofile
-
-also run `kime-indicator` when you want show hangul status with appindicator
 
 read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ## Dependencies
+
+### Run time
 
 Note that you only need deps what you need
 for example, if you don't use qt6 it won't required.
@@ -134,3 +137,23 @@ for example, if you don't use qt6 it won't required.
 * libappindicator-gtk3 (indicator)
 * libxcb (xim)
 * cairo (xim)
+
+### Build time (you don't need when run compiled binary)
+
+#### Required
+
+* cmake
+* cargo
+* libclang
+* pkg-config
+* libappindicator-gtk3
+* libxcb
+* cairo
+
+#### Optional
+
+* gtk2
+* gtk3
+* gtk4
+* qtbase5-private
+* qtbase6-private

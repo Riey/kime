@@ -75,6 +75,10 @@ impl KimeHandler {
             return Ok(());
         }
 
+        if user_ic.user_data.engine.preedit_str().is_empty() {
+            return Ok(());
+        }
+
         if let Some(pe) = user_ic.user_data.pe.as_mut() {
             // Draw in server (already have pe_window)
             let pe = self.preedit_windows.get_mut(pe).unwrap();
@@ -196,7 +200,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        log::trace!("spot: {:?}", user_ic.ic.preedit_spot());
+        log::debug!("spot: {:?}", user_ic.ic.preedit_spot());
 
         self.clear_preedit(server, user_ic)?;
         self.preedit(server, user_ic)?;
@@ -277,18 +281,17 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             self.clear_preedit(server, user_ic)?;
         }
 
-        if ret & InputResult_NEED_FLUSH != 0 {
-            user_ic.user_data.engine.flush();
-        }
-
-        if ret & InputResult_NEED_RESET != 0 {
+        if ret & InputResult_NEED_RESET | InputResult_NEED_FLUSH != 0 {
             self.commit(server, user_ic)?;
-            user_ic.user_data.engine.reset();
+
+            if ret & InputResult_NEED_RESET != 0 {
+                user_ic.user_data.engine.reset();
+            } else {
+                user_ic.user_data.engine.flush();
+            }
         }
 
-        let bypass = ret & InputResult_CONSUMED == 0;
-
-        Ok(!bypass)
+        Ok(ret & InputResult_CONSUMED != 0)
     }
 
     fn handle_destory_ic(

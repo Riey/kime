@@ -225,25 +225,25 @@ impl KimeContext {
                             self.engine.update_hangul_state();
                         }
 
-                        let bypass = ret & InputResult_CONSUMED == 0;
-
                         if ret & InputResult_HAS_PREEDIT != 0 {
                             self.preedit(self.engine.preedit_str().into());
                         } else {
                             self.clear_preedit();
                         }
 
-                        if ret & InputResult_NEED_RESET != 0 {
+                        if ret & InputResult_NEED_RESET | InputResult_NEED_FLUSH != 0 {
                             self.commit_string(self.engine.commit_str().into());
-                            self.engine.reset();
-                        } else if ret & InputResult_NEED_FLUSH != 0 {
-                            self.commit_string(self.engine.commit_str().into());
-                            self.engine.flush();
+
+                            if ret & InputResult_NEED_RESET != 0 {
+                                self.engine.reset();
+                            } else {
+                                self.engine.flush();
+                            }
                         }
 
                         self.commit();
 
-                        if bypass {
+                        if ret & InputResult_CONSUMED == 0 {
                             // Bypassed key's repeat will be handled by the clients.
                             //
                             // Reference:

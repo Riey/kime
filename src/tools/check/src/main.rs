@@ -14,6 +14,10 @@ enum CondResult {
 }
 
 impl CondResult {
+    pub const fn success(&self) -> bool {
+        matches!(self, Self::Ok | Self::Ignore(..))
+    }
+
     pub fn color(&self) -> Color {
         match self {
             CondResult::Ok => Color::Green,
@@ -24,7 +28,7 @@ impl CondResult {
 
     pub fn print(&self, message: &str) {
         let c = self.color();
-        print!("{:<6} {:<30}", c.paint(<&str>::from(self)), message);
+        print!("{:<10} {:<30}", c.paint(<&str>::from(self)), message);
 
         match self {
             CondResult::Ok => println!(),
@@ -181,10 +185,23 @@ fn check_var(name: &str, value: &str, reason: &str) -> CondResult {
     }
 }
 
-fn main() {
+#[derive(Debug)]
+struct CheckFailedError;
+
+fn main() -> Result<(), CheckFailedError> {
+    let mut success = true;
+
     for check in Check::iter() {
         let ret = check.cond();
 
+        success = success && ret.success();
+
         ret.print(check.get_message().unwrap());
+    }
+
+    if success {
+        Ok(())
+    } else {
+        Err(CheckFailedError)
     }
 }

@@ -77,6 +77,21 @@ fn compose_jungseong() {
         (Key::normal(O), "우", ""),
         (Key::normal(C), "웨", ""),
         (Key::normal(S), "웬", ""),
+        (Key::normal(J), "ㅇ", "웬"),
+        (Key::normal(P), "오", ""),
+        (Key::normal(D), "외", ""),
+    ]);
+}
+
+#[test]
+fn dont_compose_jungseong() {
+    test_input(&[
+        (Key::normal(J), "ㅇ", ""),
+        (Key::normal(B), "우", ""),
+        (Key::normal(C), "웇", ""),
+        (Key::normal(J), "ㅇ", "웇"),
+        (Key::normal(V), "오", ""),
+        (Key::normal(D), "옿", ""),
     ]);
 }
 

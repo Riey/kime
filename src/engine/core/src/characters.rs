@@ -502,7 +502,7 @@ impl KeyValuePart {
                 if let Some(jung) = Jungseong::from_jamo(next) {
                     Some(KeyValuePart::Jung {
                         jung,
-                        compose: true,
+                        compose: false,
                     })
                 } else {
                     Some(KeyValuePart::Jong {
@@ -516,7 +516,7 @@ impl KeyValuePart {
                 } else {
                     Some(Self::Jung {
                         jung: Jungseong::from_jamo(c)?,
-                        compose: false,
+                        compose: true,
                     })
                 }
             }
@@ -630,14 +630,14 @@ fn parse_keyvalue() {
         "ㅏ".parse::<KeyValue>().unwrap(),
         KeyValue::Jungseong {
             jung: Jungseong::A,
-            compose: false
+            compose: true
         }
     );
     assert_eq!(
         "$ㅏ".parse::<KeyValue>().unwrap(),
         KeyValue::Jungseong {
             jung: Jungseong::A,
-            compose: true
+            compose: false
         }
     );
     assert_eq!(
@@ -646,7 +646,7 @@ fn parse_keyvalue() {
             jung: Jungseong::YI,
             jong: Jongseong::Siot,
             first: true,
-            compose: false
+            compose: true
         },
     );
     assert_eq!(
@@ -655,7 +655,7 @@ fn parse_keyvalue() {
             jung: Jungseong::YI,
             jong: Jongseong::Siot,
             first: false,
-            compose: false
+            compose: true
         },
     );
 }

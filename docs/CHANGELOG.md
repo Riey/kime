@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Fix kime-check fail [#307](https://github.com/Riey/kime/issues/307)
+
 ## 1.1.3
 
 ### Improve

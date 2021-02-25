@@ -301,19 +301,24 @@ impl CharacterState {
                 })
             } else {
                 match prev_cho.try_add(cho, config) {
-                    Some(new) => {
+                    Some(new) if self.jung.is_none() => {
                         self.cho = Some(new);
                         CharacterResult::Consume
                     }
-                    None => CharacterResult::NewCharacter(Self {
+                    _ => CharacterResult::NewCharacter(Self {
                         cho: Some(cho),
                         ..Default::default()
                     }),
                 }
             }
-        } else {
+        } else if self.jung.is_none() && self.jong.is_none() {
             self.cho = Some(cho);
             CharacterResult::Consume
+        } else {
+            CharacterResult::NewCharacter(Self {
+                cho: Some(cho),
+                ..Default::default()
+            })
         }
     }
 

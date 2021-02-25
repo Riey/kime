@@ -59,9 +59,21 @@ fn hello() {
 fn switch_next() {
     test_input(&[
         (Key::normal(S), "ㄴ", ""),
-        (Key::normal(F), "ㅏ", "ㄴ"),
-        (Key::normal(J), "아", ""),
+        (Key::normal(J), "ㅇ", "ㄴ"),
+        (Key::normal(F), "아", ""),
     ]);
+}
+
+#[test]
+fn good() {
+    test_input(&[
+        (Key::normal(K), "ㄱ", ""),
+        (Key::normal(R), "개", ""),
+        (Key::normal(K), "ㄱ", "개"),
+        (Key::normal(K), "ㄲ", ""),
+        (Key::normal(B), "꾸", ""),
+        (Key::normal(W), "꿀", ""),
+    ])
 }
 
 #[test]

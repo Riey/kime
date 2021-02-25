@@ -21,6 +21,8 @@ hotkeys:
 layout_addons:
   all:
     - ComposeChoseongSsang
+  dubeolsik:
+    - TreatJongseongAsChoseong
 xim_preedit_font:
   - D2Coding
   - 15.0

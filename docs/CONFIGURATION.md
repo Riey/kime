@@ -107,9 +107,22 @@ format is `layout_name: [Addon]`, `all` applys all layouts
 ```yaml
 all:
   - ComposeChoseongSsang
+dubeolsik:
+  - TreatJongseongAsChoseongg
 ```
 
-### ComposeChoseongSsang
+### Addons
+
+#### TreatJongseongAsChoseong
+
+Treat jongseong as choseong
+
+```txt
+간 + ㅏ = 가나
+값 + ㅏ = 갑사
+```
+
+#### ComposeChoseongSsang
 
 When you press same choseong it will be ssangjaum
 
@@ -121,24 +134,24 @@ When you press same choseong it will be ssangjaum
 ㅈ + ㅈ = ㅉ
 ```
 
-### DecomposeChoseongSsang
+#### DecomposeChoseongSsang
 
 Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 
-### ComposeJungseongSsang
+#### ComposeJungseongSsang
 
 ```txt
 ㅑ + ㅣ = ㅒ
 ㅕ + ㅣ = ㅖ
 ```
 
-### DecomposeJungseongSsang
+#### DecomposeJungseongSsang
 
-### ComposeJongseongSsang
+#### ComposeJongseongSsang
 
 ```txt
 ㄱ + ㄱ = ㄲ
 ㅅ + ㅅ = ㅆ
 ```
 
-### DecomposeJongseongSsang
+#### DecomposeJongseongSsang

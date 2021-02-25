@@ -1,5 +1,6 @@
 use crate::{
     characters::{Choseong, JongToCho, Jongseong, Jungseong, KeyValue},
+    config::Addon,
     Config, InputResult,
 };
 
@@ -328,41 +329,43 @@ impl CharacterState {
         compose_jung: bool,
         config: &Config,
     ) -> CharacterResult {
-        if let Some(jong) = self.jong {
-            if self.cho.is_some() {
-                // has choseong move jongseong to next choseong
-                let new;
+        if config.check_addon(Addon::TreatJongseongAsChoseong) {
+            if let Some(jong) = self.jong {
+                if self.cho.is_some() {
+                    // has choseong move jongseong to next choseong
+                    let new;
 
-                match jong.to_cho(config) {
-                    JongToCho::Direct(cho) => {
-                        self.jong = None;
-                        new = Self {
-                            cho: Some(cho),
-                            jung: Some(jung),
-                            jong: None,
-                            compose_jung,
-                        };
+                    match jong.to_cho(config) {
+                        JongToCho::Direct(cho) => {
+                            self.jong = None;
+                            new = Self {
+                                cho: Some(cho),
+                                jung: Some(jung),
+                                jong: None,
+                                compose_jung,
+                            };
+                        }
+                        JongToCho::Compose(jong, cho) => {
+                            self.jong = Some(jong);
+                            new = Self {
+                                cho: Some(cho),
+                                jung: Some(jung),
+                                jong: None,
+                                compose_jung,
+                            };
+                        }
                     }
-                    JongToCho::Compose(jong, cho) => {
-                        self.jong = Some(jong);
-                        new = Self {
-                            cho: Some(cho),
-                            jung: Some(jung),
-                            jong: None,
-                            compose_jung,
-                        };
-                    }
+
+                    return CharacterResult::NewCharacter(new);
+                } else {
+                    // only jongseong commit replace with jungseong
+                    return CharacterResult::NewCharacter(Self {
+                        cho: None,
+                        jung: Some(jung),
+                        jong: None,
+                        compose_jung,
+                    });
                 }
-
-                return CharacterResult::NewCharacter(new);
-            } else {
-                // only jongseong commit replace with jungseong
-                return CharacterResult::NewCharacter(Self {
-                    cho: None,
-                    jung: Some(jung),
-                    jong: None,
-                    compose_jung,
-                });
             }
         }
 
@@ -373,39 +376,11 @@ impl CharacterState {
                     self.compose_jung = false;
                     CharacterResult::Consume
                 }
-                _ => {
-                    let new;
-
-                    if let Some(jong) = self.jong {
-                        match jong.to_cho(config) {
-                            JongToCho::Direct(cho) => {
-                                self.jong = None;
-                                new = Self {
-                                    cho: Some(cho),
-                                    jung: Some(jung),
-                                    jong: None,
-                                    compose_jung,
-                                };
-                            }
-                            JongToCho::Compose(left, cho) => {
-                                self.jong = Some(left);
-                                new = Self {
-                                    cho: Some(cho),
-                                    jung: Some(jung),
-                                    jong: None,
-                                    compose_jung,
-                                };
-                            }
-                        }
-                    } else {
-                        new = Self {
-                            jung: Some(jung),
-                            ..Default::default()
-                        };
-                    }
-
-                    CharacterResult::NewCharacter(new)
-                }
+                _ => CharacterResult::NewCharacter(Self {
+                    jung: Some(jung),
+                    compose_jung,
+                    ..Default::default()
+                }),
             }
         } else {
             self.jung = Some(jung);

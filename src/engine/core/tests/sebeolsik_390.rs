@@ -77,6 +77,16 @@ fn switch_next() {
 }
 
 #[test]
+fn dont_change_jongseong() {
+    test_input(&[
+        (Key::normal(J), "ㅇ", ""),
+        (Key::normal(F), "아", ""),
+        (Key::normal(S), "안", ""),
+        (Key::normal(D), "ㅣ", "안"),
+    ]);
+}
+
+#[test]
 fn s_number() {
     test_input(&[
         (Key::shift(Two), "", "@"),

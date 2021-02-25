@@ -5,13 +5,16 @@ pub mod build {
 
 #[macro_export]
 macro_rules! cli_boilerplate {
-    () => {
+    ($($help:expr,)*) => {{
         let mut args = pico_args::Arguments::from_env();
 
         if args.contains(["-h", "--help"]) {
             println!("-h or --help: show help");
             println!("-v or --version: show version");
             println!("--verbose: show verbose log");
+            $(
+                println!($help);
+            )*
             return;
         }
 
@@ -33,7 +36,9 @@ macro_rules! cli_boilerplate {
             env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION")
         );
-    };
+
+        args
+    }};
 }
 
 #[macro_export]

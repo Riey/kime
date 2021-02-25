@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Add more keycodes (Enter, Tab, ControlL, ControlR, Delete, AltL)
+
 ## 1.2.0
 
 ### Improve

@@ -99,9 +99,20 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 ```yaml
 all:
   - ComposeChoseongSsang
+dubeolsik:
+  - TreatJongseongAsChoseong
 ```
 
 ### Addons
+
+#### TreatJongseongAsChoseong
+
+종성을 초성처럼 취급합니다.
+
+```txt
+간 + ㅏ = 가나
+값 + ㅏ = 갑사
+```
 
 #### ComposeChoseongSsang
 

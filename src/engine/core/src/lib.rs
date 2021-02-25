@@ -11,7 +11,7 @@ use self::characters::KeyValue;
 use self::config::{HotkeyBehavior, HotkeyResult};
 use self::state::HangulState;
 
-pub use self::config::{Config, RawConfig};
+pub use self::config::{Addon, Config, RawConfig};
 pub use self::input_result::InputResult;
 pub use self::keycode::{Key, KeyCode, ModifierState};
 

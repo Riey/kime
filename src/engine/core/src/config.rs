@@ -14,6 +14,9 @@ pub enum Addon {
     DecomposeJungseongSsang,
     DecomposeJongseongSsang,
 
+    /// ㅏ + ㄱ = 가
+    FlexibleComposeOrder,
+
     /// 안 + ㅣ = 아니
     TreatJongseongAsChoseong,
 }

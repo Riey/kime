@@ -302,7 +302,10 @@ impl CharacterState {
                 })
             } else {
                 match prev_cho.try_add(cho, config) {
-                    Some(new) if self.jung.is_none() => {
+                    Some(new)
+                        if config.check_addon(Addon::FlexibleComposeOrder)
+                            || self.jung.is_none() =>
+                    {
                         self.cho = Some(new);
                         CharacterResult::Consume
                     }
@@ -312,7 +315,9 @@ impl CharacterState {
                     }),
                 }
             }
-        } else if self.jung.is_none() && self.jong.is_none() {
+        } else if config.check_addon(Addon::FlexibleComposeOrder)
+            || self.jung.is_none() && self.jong.is_none()
+        {
             self.cho = Some(cho);
             CharacterResult::Consume
         } else {

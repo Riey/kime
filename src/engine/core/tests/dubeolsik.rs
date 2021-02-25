@@ -1,15 +1,29 @@
-use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
+use enumset::EnumSet;
+use kime_engine_core::{Addon, Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
 
-#[track_caller]
-fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
-    let config = Config::from_raw_config(
+fn default_config() -> Config {
+    Config::from_raw_config(
         RawConfig {
             layout: "dubeolsik".into(),
             ..Default::default()
         },
         None,
-    );
+    )
+}
 
+fn addon_config(addon: EnumSet<Addon>) -> Config {
+    Config::from_raw_config(
+        RawConfig {
+            layout: "dubeolsik".into(),
+            layout_addons: std::iter::once(("dubeolsik".into(), addon)).collect(),
+            ..Default::default()
+        },
+        None,
+    )
+}
+
+#[track_caller]
+fn test_input_impl(config: &Config, word_commit: bool, keys: &[(Key, &str, &str)]) {
     let mut engine = InputEngine::new(word_commit);
 
     engine.set_hangul_enable(true);
@@ -45,12 +59,25 @@ fn test_input_impl(word_commit: bool, keys: &[(Key, &str, &str)]) {
 
 #[track_caller]
 fn test_input(keys: &[(Key, &str, &str)]) {
-    test_input_impl(false, keys)
+    test_input_impl(&default_config(), false, keys);
+}
+
+#[track_caller]
+fn test_input_with_addon(keys: &[(Key, &str, &str)], addon: EnumSet<Addon>) {
+    test_input_impl(&addon_config(addon), false, keys);
 }
 
 #[track_caller]
 fn test_word_input(keys: &[(Key, &str, &str)]) {
-    test_input_impl(true, keys)
+    test_input_impl(&default_config(), true, keys);
+}
+
+#[test]
+fn flexible_compose_order_addon() {
+    test_input_with_addon(
+        &[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "가", "")],
+        EnumSet::only(Addon::FlexibleComposeOrder),
+    );
 }
 
 #[test]
@@ -82,7 +109,7 @@ fn esc() {
 }
 
 #[test]
-fn con_typing() {
+fn strict_typing_order() {
     test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "ㄱ", "ㅏ")])
 }
 

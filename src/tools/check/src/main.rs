@@ -3,6 +3,7 @@ use kime_engine_cffi::{
     Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_NEED_FLUSH,
     InputResult_NEED_RESET,
 };
+use pad::PadStr;
 use std::env;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
 
@@ -28,7 +29,11 @@ impl CondResult {
 
     pub fn print(&self, message: &str) {
         let c = self.color();
-        print!("{:<10} {:<30}", c.paint(<&str>::from(self)), message);
+        print!(
+            "{} {}",
+            c.paint(<&str>::from(self).pad_to_width(8)),
+            Color::White.bold().paint(message.pad_to_width(30))
+        );
 
         match self {
             CondResult::Ok => println!(),
@@ -47,12 +52,14 @@ enum Check {
     Config,
     #[strum(message = "Engine works")]
     EngineWorks,
-    #[strum(message = "XMODIFIERS env")]
+    #[strum(message = "XMODIFIERS has @im=kime")]
     XModifier,
-    #[strum(message = "GTK_IM_MODULE env")]
+    #[strum(message = "GTK_IM_MODULE has kime")]
     GtkImModule,
-    #[strum(message = "QT_IM_MODULE env")]
+    #[strum(message = "QT_IM_MODULE has kime")]
     QtImModule,
+    #[strum(message = "LANG has UTF-8")]
+    Lang,
 }
 
 impl Check {
@@ -121,11 +128,24 @@ impl Check {
                 CondResult::Ok
             }
             Check::XModifier => match env::var("XDG_SESSION_TYPE").unwrap().as_str() {
-                "x11" => check_var("XMODIFIERS", "@im=kime", "set XMODIFIERS=@im=kime"),
+                "x11" => check_var(
+                    "XMODIFIERS",
+                    |v| v.contains("@im=kime"),
+                    "set XMODIFIERS=@im=kime",
+                ),
                 other => CondResult::Ignore(format!("Session type is {} not x11", other)),
             },
-            Check::GtkImModule => check_var("GTK_IM_MODULE", "kime", "set GTK_IM_MODULE=kime"),
-            Check::QtImModule => check_var("QT_IM_MODULE", "kime", "set QT_IM_MODULE=kime"),
+            Check::GtkImModule => {
+                check_var("GTK_IM_MODULE", |v| v == "kime", "set GTK_IM_MODULE=kime")
+            }
+            Check::QtImModule => {
+                check_var("QT_IM_MODULE", |v| v == "kime", "set QT_IM_MODULE=kime")
+            }
+            Check::Lang => check_var(
+                "LANG",
+                |v| v.to_ascii_lowercase().ends_with("utf-8"),
+                "set LANG encoding UTF-8",
+            ),
         }
     }
 }
@@ -177,8 +197,8 @@ fn check_input(
     CondResult::Ok
 }
 
-fn check_var(name: &str, value: &str, reason: &str) -> CondResult {
-    if env::var(name).map_or(false, |v| v.contains(value)) {
+fn check_var(name: &str, pred: impl Fn(&str) -> bool, reason: &str) -> CondResult {
+    if env::var(name).map_or(false, |v| pred(&v)) {
         CondResult::Ok
     } else {
         CondResult::Fail(reason.into())

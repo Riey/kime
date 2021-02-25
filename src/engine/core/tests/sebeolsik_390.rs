@@ -71,8 +71,8 @@ fn compose_choseong_ssang() {
 fn switch_next() {
     test_input(&[
         (Key::normal(S), "ㄴ", ""),
-        (Key::normal(F), "ㅏ", "ㄴ"),
-        (Key::normal(J), "아", ""),
+        (Key::normal(J), "ㅇ", "ㄴ"),
+        (Key::normal(F), "아", ""),
     ]);
 }
 

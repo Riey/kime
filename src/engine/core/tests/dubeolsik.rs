@@ -82,8 +82,8 @@ fn esc() {
 }
 
 #[test]
-fn issue_28() {
-    test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "가", "")])
+fn con_typing() {
+    test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "ㄱ", "ㅏ")])
 }
 
 #[test]

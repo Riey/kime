@@ -8,6 +8,7 @@
 
 * Fix kime-check fail [#307](https://github.com/Riey/kime/issues/307)
 * Fix preedit string disapear when press hotkey [#310](https://github.com/Riey/kime/issues/310)
+* Make character typing order strict `ㅏ + ㄱ = ㅏㄱ`
 
 ## 1.1.3
 

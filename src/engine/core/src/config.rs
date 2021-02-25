@@ -26,12 +26,14 @@ pub enum HotkeyBehavior {
     ToggleHangul,
     ToHangul,
     ToEnglish,
+    Commit,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum HotkeyResult {
     Consume,
     Bypass,
+    ConsumeIfProcessed,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]

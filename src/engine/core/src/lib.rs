@@ -8,10 +8,9 @@ use ahash::AHashMap;
 use std::io::Read;
 
 use self::characters::KeyValue;
-use self::config::{HotkeyBehavior, HotkeyResult};
 use self::state::HangulState;
 
-pub use self::config::{Addon, Config, RawConfig};
+pub use self::config::{Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, RawConfig};
 pub use self::input_result::InputResult;
 pub use self::keycode::{Key, KeyCode, ModifierState};
 
@@ -100,27 +99,49 @@ impl InputEngine {
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         if let Some(hotkey) = config.hotkeys.get(&key) {
-            let first = self.enable_hangul;
+            let mut processed = false;
+            let mut ret = InputResult::empty();
 
             match hotkey.behavior() {
                 HotkeyBehavior::ToEnglish => {
-                    self.enable_hangul = false;
+                    if self.enable_hangul {
+                        self.enable_hangul = false;
+                        ret |= InputResult::LANGUAGE_CHANGED;
+                        processed = true;
+                    }
                 }
                 HotkeyBehavior::ToHangul => {
-                    self.enable_hangul = true;
+                    if !self.enable_hangul {
+                        self.enable_hangul = true;
+                        ret |= InputResult::LANGUAGE_CHANGED;
+                        processed = true;
+                    }
                 }
                 HotkeyBehavior::ToggleHangul => {
                     self.enable_hangul = !self.enable_hangul;
+                    ret |= InputResult::LANGUAGE_CHANGED;
+                    processed = true;
+                }
+                HotkeyBehavior::Commit => {
+                    if self
+                        .state
+                        .preedit_result()
+                        .contains(InputResult::HAS_PREEDIT)
+                    {
+                        self.state.clear_preedit();
+                        ret |= InputResult::NEED_RESET;
+                        processed = true;
+                    }
                 }
             }
 
-            let mut ret = match hotkey.result() {
-                HotkeyResult::Bypass => self.bypass(),
-                HotkeyResult::Consume => InputResult::CONSUMED | self.state.preedit_result(),
-            };
-
-            if self.enable_hangul != first {
-                ret.insert(InputResult::LANGUAGE_CHANGED);
+            match (hotkey.result(), processed) {
+                (HotkeyResult::Bypass, _) | (HotkeyResult::ConsumeIfProcessed, false) => {
+                    ret |= self.bypass();
+                }
+                (HotkeyResult::Consume, _) | (HotkeyResult::ConsumeIfProcessed, true) => {
+                    ret |= InputResult::CONSUMED | self.state.preedit_result();
+                }
             }
 
             ret

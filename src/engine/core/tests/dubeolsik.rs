@@ -1,5 +1,9 @@
+use std::collections::BTreeMap;
+
 use enumset::EnumSet;
-use kime_engine_core::{Addon, Config, InputEngine, InputResult, Key, KeyCode::*, RawConfig};
+use kime_engine_core::{
+    Addon, Config, Hotkey, InputEngine, InputResult, Key, KeyCode::*, RawConfig,
+};
 
 fn default_config() -> Config {
     Config::from_raw_config(
@@ -16,6 +20,17 @@ fn addon_config(addon: EnumSet<Addon>) -> Config {
         RawConfig {
             layout: "dubeolsik".into(),
             layout_addons: std::iter::once(("dubeolsik".into(), addon)).collect(),
+            ..Default::default()
+        },
+        None,
+    )
+}
+
+fn hotkey_config(hotkeys: BTreeMap<Key, Hotkey>) -> Config {
+    Config::from_raw_config(
+        RawConfig {
+            layout: "dubeolsik".into(),
+            hotkeys,
             ..Default::default()
         },
         None,
@@ -68,6 +83,11 @@ fn test_input_with_addon(keys: &[(Key, &str, &str)], addon: EnumSet<Addon>) {
 }
 
 #[track_caller]
+fn test_input_with_hotkey(keys: &[(Key, &str, &str)], hotkeys: BTreeMap<Key, Hotkey>) {
+    test_input_impl(&hotkey_config(hotkeys), false, keys);
+}
+
+#[track_caller]
 fn test_word_input(keys: &[(Key, &str, &str)]) {
     test_input_impl(&default_config(), true, keys);
 }
@@ -78,6 +98,29 @@ fn flexible_compose_order_addon() {
         &[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "가", "")],
         EnumSet::only(Addon::FlexibleComposeOrder),
     );
+}
+
+#[test]
+fn space_commit() {
+    test_input_with_hotkey(
+        &[
+            (Key::normal(R), "ㄱ", ""),
+            (Key::normal(K), "가", ""),
+            (Key::normal(Space), "", "가"),
+            (Key::normal(S), "ㄴ", ""),
+            (Key::normal(K), "나", ""),
+            (Key::normal(Space), "", "나"),
+            (Key::normal(Space), "", "PASS"),
+        ],
+        std::iter::once((
+            Key::normal(Space),
+            Hotkey::new(
+                kime_engine_core::HotkeyBehavior::Commit,
+                kime_engine_core::HotkeyResult::ConsumeIfProcessed,
+            ),
+        ))
+        .collect(),
+    )
 }
 
 #[test]

@@ -75,7 +75,12 @@ impl Check {
             Check::Icons => {
                 let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
 
-                let icons = &["kime-han-64x64.png", "kime-eng-64x64.png"];
+                let icons = &[
+                    "kime-han-black-64x64.png",
+                    "kime-han-white-64x64.png",
+                    "kime-eng-black-64x64.png",
+                    "kime-eng-white-64x64.png",
+                ];
 
                 for icon in icons {
                     match dirs.find_data_file(format!("icons/{}", icon)) {

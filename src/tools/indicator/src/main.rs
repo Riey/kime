@@ -12,15 +12,18 @@ macro_rules! cs {
     };
 }
 
-const HAN_ICON: &str = "kime-han-64x64.png";
-const ENG_ICON: &str = "kime-eng-64x64.png";
+enum IconColor {
+    Black,
+    White,
+}
 
 struct Indicator {
     indicator: *mut AppIndicator,
+    color: IconColor,
 }
 
 impl Indicator {
-    pub fn new() -> Self {
+    pub fn new(color: IconColor) -> Self {
         unsafe fn set_icon_path(indicator: *mut AppIndicator, path: &Path) {
             let s = path.to_str().unwrap();
             let s = CString::new(s).unwrap();
@@ -48,13 +51,11 @@ impl Indicator {
                 cs!(""),
                 libappindicator_sys::AppIndicatorCategory_APP_INDICATOR_CATEGORY_APPLICATION_STATUS,
             );
-            let han = icon_dirs.find_data_file(HAN_ICON).unwrap();
-            let eng = icon_dirs.find_data_file(ENG_ICON).unwrap();
-            set_icon_path(indicator, han.parent().unwrap());
 
-            if han != eng {
-                set_icon_path(indicator, eng.parent().unwrap());
-            }
+            let icon = icon_dirs
+                .find_data_file("kime-han-white-64x64.png")
+                .expect("Can't find image");
+            set_icon_path(indicator, icon.parent().unwrap());
 
             libappindicator_sys::app_indicator_set_status(
                 indicator,
@@ -62,37 +63,41 @@ impl Indicator {
             );
             libappindicator_sys::app_indicator_set_menu(indicator, m.cast());
             gtk_sys::gtk_widget_show_all(m);
-            Self { indicator }
+            Self { indicator, color }
         }
     }
 
     pub fn enable_hangul(&mut self) {
         unsafe {
-            libappindicator_sys::app_indicator_set_icon_full(
+            libappindicator_sys::app_indicator_set_icon(
                 self.indicator,
-                cs!("kime-han-64x64"),
-                cs!("icon"),
+                match self.color {
+                    IconColor::Black => cs!("kime-han-black-64x64"),
+                    IconColor::White => cs!("kime-han-white-64x64"),
+                },
             );
         }
     }
 
     pub fn disable_hangul(&mut self) {
         unsafe {
-            libappindicator_sys::app_indicator_set_icon_full(
+            libappindicator_sys::app_indicator_set_icon(
                 self.indicator,
-                cs!("kime-eng-64x64"),
-                cs!("icon"),
+                match self.color {
+                    IconColor::Black => cs!("kime-eng-black-64x64"),
+                    IconColor::White => cs!("kime-eng-white-64x64"),
+                },
             );
         }
     }
 }
 
-fn daemon_main() -> Result<()> {
+fn indicator_main(color: IconColor) -> Result<()> {
     unsafe {
         gtk_sys::gtk_init(ptr::null_mut(), ptr::null_mut());
     }
 
-    let mut indicator = Indicator::new();
+    let mut indicator = Indicator::new(color);
 
     indicator.disable_hangul();
 
@@ -147,9 +152,18 @@ fn daemon_main() -> Result<()> {
 }
 
 fn main() {
-    kime_version::cli_boilerplate!();
+    let mut args = kime_version::cli_boilerplate!(
+        "--dark: show dark icon (default)",
+        "--white: show white icon",
+    );
 
-    match daemon_main() {
+    let mut color = IconColor::Black;
+
+    if args.contains("--white") {
+        color = IconColor::White;
+    }
+
+    match indicator_main(color) {
         Ok(_) => {}
         Err(err) => {
             log::error!("Error: {}", err);

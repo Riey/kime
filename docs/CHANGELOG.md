@@ -12,6 +12,7 @@
 * Add `TreatJongseongAsChoseong` addon
 * Add `FlexibleComposeOrder` addon [#318](https://github.com/Riey/kime/issues/318)
 * Check LANG env in kime-check [#317](https://github.com/Riey/kime/issues/317)
+* Add `Commit` hotkey, `ConsumeIfProcessed` hotkey result [#315](https://github.com/Riey/kime/issues/315)
 
 ## 1.1.3
 

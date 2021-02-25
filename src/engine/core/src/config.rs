@@ -13,6 +13,9 @@ pub enum Addon {
     DecomposeChoseongSsang,
     DecomposeJungseongSsang,
     DecomposeJongseongSsang,
+
+    /// 안 + ㅣ = 아니
+    TreatJongseongAsChoseong,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
@@ -89,10 +92,14 @@ impl Default for RawConfig {
             .iter()
             .copied()
             .collect(),
-            layout_addons: std::iter::once((
-                "all".into(),
-                EnumSet::only(Addon::ComposeChoseongSsang),
-            ))
+            layout_addons: vec![
+                ("all".into(), EnumSet::only(Addon::ComposeChoseongSsang)),
+                (
+                    "dubeolsik".into(),
+                    EnumSet::only(Addon::TreatJongseongAsChoseong),
+                ),
+            ]
+            .into_iter()
             .collect(),
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
         }

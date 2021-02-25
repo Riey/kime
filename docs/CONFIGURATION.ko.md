@@ -114,6 +114,15 @@ dubeolsik:
 값 + ㅏ = 갑사
 ```
 
+#### FlexibleComposeOrder
+
+초성과 중성의 순서를 바꿔도 조합이 되도록 합니다 오타 교정에 도움이 될 수 있습니다.
+
+```txt
+ㅏ + ㄱ = 가
+ㅚ + ㄱ = 괴
+```
+
 #### ComposeChoseongSsang
 
 같은 자음을 두 번 누를 때 쌍자음을 합성합니다.

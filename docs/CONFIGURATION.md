@@ -122,6 +122,15 @@ Treat jongseong as choseong
 값 + ㅏ = 갑사
 ```
 
+#### FlexibleComposeOrder
+
+Compose choseong and jungseong even order is reversed it could be help for fix typo error.
+
+```txt
+ㅏ + ㄱ = 가
+ㅚ + ㄱ = 괴
+```
+
 #### ComposeChoseongSsang
 
 When you press same choseong it will be ssangjaum

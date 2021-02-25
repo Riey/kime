@@ -71,6 +71,10 @@ Super-Space:
 
 한글모드로 바꿉니다
 
+##### Commit
+
+현재 조합상태를 종료하고 커밋합니다
+
 #### result
 
 ##### Bypass
@@ -80,6 +84,10 @@ Super-Space:
 ##### Consume
 
 키 처리를 종료합니다
+
+##### ConsumeIfProcessed
+
+단축키가 실행됐을 경우에는 Consume처럼, 아닐때는 Bypass처럼 동작합니다.
 
 ## xim_preedit_font
 

@@ -59,6 +59,10 @@ Set english mode
 
 Set hangul mode
 
+##### Commit
+
+End current preedit state then commit
+
 #### result
 
 ##### Bypass
@@ -68,6 +72,10 @@ Bypass key to continue key process
 ##### Consume
 
 Consume key to end key process
+
+##### ConsumeIfProcessed
+
+When hotkey processed it act like Consume otherwise it act like Bypass
 
 ### default
 

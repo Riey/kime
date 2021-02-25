@@ -3,6 +3,7 @@ use kime_engine_cffi::{
     Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_NEED_FLUSH,
     InputResult_NEED_RESET,
 };
+use pad::PadStr;
 use std::env;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
 
@@ -28,7 +29,11 @@ impl CondResult {
 
     pub fn print(&self, message: &str) {
         let c = self.color();
-        print!("{:<10} {:<30}", c.paint(<&str>::from(self)), message);
+        print!(
+            "{} {}",
+            c.paint(<&str>::from(self).pad_to_width(8)),
+            Color::White.bold().paint(message.pad_to_width(30))
+        );
 
         match self {
             CondResult::Ok => println!(),
@@ -47,13 +52,13 @@ enum Check {
     Config,
     #[strum(message = "Engine works")]
     EngineWorks,
-    #[strum(message = "XMODIFIERS env")]
+    #[strum(message = "XMODIFIERS has @im=kime")]
     XModifier,
-    #[strum(message = "GTK_IM_MODULE env")]
+    #[strum(message = "GTK_IM_MODULE has kime")]
     GtkImModule,
-    #[strum(message = "QT_IM_MODULE env")]
+    #[strum(message = "QT_IM_MODULE has kime")]
     QtImModule,
-    #[strum(message = "LANG env")]
+    #[strum(message = "LANG has UTF-8")]
     Lang,
 }
 

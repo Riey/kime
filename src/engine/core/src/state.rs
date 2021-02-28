@@ -46,9 +46,20 @@ impl HangulState {
         }
     }
 
-    fn pass(&mut self, s: &str) {
+    pub fn pass(&mut self, s: &str) {
         self.commit_characters.clear();
         self.clear_preedit();
+        self.commit_buf.push_str(s);
+    }
+
+    pub fn pass_replace(&mut self, s: &str) {
+        self.commit_characters.clear();
+
+        if self.word_commit {
+            self.commit_buf.clear();
+        }
+
+        self.state.reset();
         self.commit_buf.push_str(s);
     }
 

@@ -9,6 +9,7 @@
 * Add more keycodes (Enter, Tab, ControlL, ControlR, Delete, AltL)
 * Split kime-window into other repo
 * Fix gtk preedit bug [#325](https://github.com/Riey/kime/issues/325)
+* Support emoji, hanja input
 
 ## 1.2.0
 

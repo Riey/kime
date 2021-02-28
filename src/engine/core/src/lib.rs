@@ -5,7 +5,8 @@ mod keycode;
 mod state;
 
 use ahash::AHashMap;
-use std::io::Read;
+use std::io::{Read, Write};
+use std::os::unix::net::UnixStream;
 
 use self::characters::KeyValue;
 use self::state::HangulState;
@@ -43,6 +44,7 @@ impl Layout {
 pub struct InputEngine {
     state: HangulState,
     enable_hangul: bool,
+    buf: Vec<u8>,
 }
 
 impl Default for InputEngine {
@@ -56,6 +58,7 @@ impl InputEngine {
         Self {
             state: HangulState::new(word_commit),
             enable_hangul: false,
+            buf: Vec::with_capacity(16),
         }
     }
 
@@ -67,11 +70,14 @@ impl InputEngine {
         self.enable_hangul
     }
 
-    fn read_global_hangul_state(&self) -> std::io::Result<bool> {
-        let mut file = std::fs::File::open("/tmp/kime_hangul_state")?;
-        let mut buf = [0; 1];
-        file.read_exact(&mut buf)?;
-        Ok(buf[0] != b'0')
+    fn read_global_hangul_state(&mut self) -> std::io::Result<bool> {
+        let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
+        stream.write_all(b"l")?;
+        let len = stream.read_to_end(&mut self.buf)?;
+        let data = &self.buf[..len];
+        let ret = data == b"han";
+        self.buf.clear();
+        Ok(ret)
     }
 
     fn check_hangul_state(&mut self, config: &Config) -> bool {
@@ -89,12 +95,11 @@ impl InputEngine {
         InputResult::NEED_RESET
     }
 
-    pub fn update_hangul_state(&mut self) {
-        std::fs::write(
-            "/tmp/kime_hangul_state",
-            if self.enable_hangul { "1" } else { "0" },
-        )
-        .ok();
+    pub fn update_hangul_state(&mut self) -> std::io::Result<()> {
+        let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
+        stream.write_all(if self.enable_hangul { b"ihan" } else { b"ieng" })?;
+
+        Ok(())
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {

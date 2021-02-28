@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 1.3.0
+
+### Improve
+
 * Add more keycodes (Enter, Tab, ControlL, ControlR, Delete, AltL, F1-F12, HangulHanja)
 * Split kime-window into other repo
 * Fix gtk preedit bug [#325](https://github.com/Riey/kime/issues/325)

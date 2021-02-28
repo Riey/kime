@@ -38,20 +38,32 @@
 ### 기본값
 
 ```yaml
+Super-Space:
+  behavior: ToggleHangul
+  result: Consume
+M-C-E:
+  behavior: Emoji
+  result: ConsumeIfProcessed
 Esc:
   behavior: ToEnglish
   result: Bypass
-AltR:
-  behavior: ToggleHangul
+ControlR:
+  behavior: Hanja
   result: Consume
 Muhenkan:
+  behavior: ToggleHangul
+  result: Consume
+AltR:
   behavior: ToggleHangul
   result: Consume
 Hangul:
   behavior: ToggleHangul
   result: Consume
-Super-Space:
-  behavior: ToggleHangul
+HangulHanja:
+  behavior: Hanja
+  result: Consume
+F9:
+  behavior: Hanja
   result: Consume
 ```
 
@@ -74,6 +86,14 @@ Super-Space:
 ##### Commit
 
 현재 조합상태를 종료하고 커밋합니다
+
+##### Emoji
+
+kime-window로 이모티콘을 입력합니다
+
+##### Hanja
+
+kime-window로 한자를 입력합니다
 
 #### result
 

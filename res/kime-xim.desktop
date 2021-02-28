@@ -1,0 +1,10 @@
+[Desktop Entry]
+Exec=/usr/bin/kime-xim
+Name=kime xim server
+Name[ko]=kime xim 서버
+Comment=Start kime xim server
+Type=Application
+Terminal=false
+StartupNotify=true
+Icon=/usr/share/kime/icons/kime-han-black-64x64.png
+

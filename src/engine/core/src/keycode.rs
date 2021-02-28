@@ -97,6 +97,20 @@ pub enum KeyCode {
     AltL,
     AltR,
     Hangul,
+    HangulHanja,
+
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
 }
 
 impl KeyCode {
@@ -169,6 +183,21 @@ impl KeyCode {
             64 => Some(Self::AltL),
             108 => Some(Self::AltR),
             122 | 130 => Some(Self::Hangul),
+            121 | 123 | 131 => Some(Self::HangulHanja),
+
+            67 => Some(Self::F1),
+            68 => Some(Self::F2),
+            69 => Some(Self::F3),
+            70 => Some(Self::F4),
+            71 => Some(Self::F5),
+            72 => Some(Self::F6),
+            73 => Some(Self::F7),
+            74 => Some(Self::F8),
+            75 => Some(Self::F9),
+            76 => Some(Self::F10),
+            77 => Some(Self::F11),
+            78 => Some(Self::F12),
+
             _ => None,
         }
     }

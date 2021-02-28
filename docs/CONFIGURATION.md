@@ -63,6 +63,14 @@ Set hangul mode
 
 End current preedit state then commit
 
+##### Emoji
+
+Input emoji with kime-window
+
+##### Hanja
+
+Input hanja with kime-window
+
 #### result
 
 ##### Bypass

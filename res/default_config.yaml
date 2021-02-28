@@ -6,9 +6,15 @@ hotkeys:
   Super-Space:
     behavior: ToggleHangul
     result: Consume
+  M-C-E:
+    behavior: Emoji
+    result: ConsumeIfProcessed
   Esc:
     behavior: ToEnglish
     result: Bypass
+  ControlR:
+    behavior: Hanja
+    result: Consume
   Muhenkan:
     behavior: ToggleHangul
     result: Consume
@@ -17,6 +23,12 @@ hotkeys:
     result: Consume
   Hangul:
     behavior: ToggleHangul
+    result: Consume
+  HangulHanja:
+    behavior: Hanja
+    result: Consume
+  F9:
+    behavior: Hanja
     result: Consume
 layout_addons:
   all:

@@ -115,7 +115,7 @@ export GTK_IM_MODULE=kime
 export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
 
-kime-indicator &
+kime-window &
 # 참고로 X나 wayland 세션이 초기화 되지 않았다면 밑의 커맨드들은 실패할겁니다.
 kime-xim &
 # kime-wayland &

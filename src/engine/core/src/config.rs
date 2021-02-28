@@ -1,4 +1,4 @@
-use crate::{keycode::Key, KeyCode, Layout};
+use crate::{keycode::Key, KeyCode, Layout, ModifierState};
 use ahash::AHashMap;
 use enumset::{EnumSet, EnumSetType};
 use serde::{Deserialize, Serialize};
@@ -27,6 +27,8 @@ pub enum HotkeyBehavior {
     ToHangul,
     ToEnglish,
     Commit,
+    Emoji,
+    Hanja,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
@@ -92,6 +94,22 @@ impl Default for RawConfig {
                 (
                     Key::super_(KeyCode::Space),
                     Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                ),
+                (
+                    Key::normal(KeyCode::F9),
+                    Hotkey::new(HotkeyBehavior::Hanja, HotkeyResult::Consume),
+                ),
+                (
+                    Key::new(KeyCode::E, ModifierState::CONTROL | ModifierState::ALT),
+                    Hotkey::new(HotkeyBehavior::Emoji, HotkeyResult::ConsumeIfProcessed),
+                ),
+                (
+                    Key::normal(KeyCode::ControlR),
+                    Hotkey::new(HotkeyBehavior::Hanja, HotkeyResult::Consume),
+                ),
+                (
+                    Key::normal(KeyCode::HangulHanja),
+                    Hotkey::new(HotkeyBehavior::Hanja, HotkeyResult::Consume),
                 ),
             ]
             .iter()

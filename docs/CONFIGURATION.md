@@ -88,20 +88,32 @@ When hotkey processed it act like Consume otherwise it act like Bypass
 ### default
 
 ```yaml
+Super-Space:
+  behavior: ToggleHangul
+  result: Consume
+M-C-E:
+  behavior: Emoji
+  result: ConsumeIfProcessed
 Esc:
   behavior: ToEnglish
   result: Bypass
-AltR:
-  behavior: ToggleHangul
+ControlR:
+  behavior: Hanja
   result: Consume
 Muhenkan:
+  behavior: ToggleHangul
+  result: Consume
+AltR:
   behavior: ToggleHangul
   result: Consume
 Hangul:
   behavior: ToggleHangul
   result: Consume
-Super-Space:
-  behavior: ToggleHangul
+HangulHanja:
+  behavior: Hanja
+  result: Consume
+F9:
+  behavior: Hanja
   result: Consume
 ```
 

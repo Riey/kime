@@ -114,14 +114,23 @@ init 스크립트에 다음을 추가하세요.
 export GTK_IM_MODULE=kime
 export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
-
-kime-window &
-# 참고로 X나 wayland 세션이 초기화 되지 않았다면 밑의 커맨드들은 실패할겁니다.
-kime-xim &
-# kime-wayland &
 ```
 
 만약 X를 사용하신다면 .xprofile에 설정하시면 됩니다.
+
+### 추가적인 서버를 실행
+
+kime은 실행하실수 있는 여러 .desktop 파일을 설치합니다
+
+| `kime-xim` | `kime-wayland` | `kime-window` |
+|------------|----------------|---------------|
+| xim용      | wayland용      | 한자, 이모티콘, 표시기용 |
+
+만약 DE를 사용하신다면 이 서버들을 시작 프로그램으로 등록해주세요
+
+혹시 `i3`나 `sway`처럼 `시작 프로그램`을 지원하지 않는다면 그냥 설정파일에서 커맨드를 실행해주세요
+
+### Configuration
 
 자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.ko.md)를 참고하세요.
 

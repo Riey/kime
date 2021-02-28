@@ -56,7 +56,7 @@ pub unsafe extern "C" fn kime_engine_delete(engine: &mut InputEngine) {
 /// Update hangul state
 #[no_mangle]
 pub extern "C" fn kime_engine_update_hangul_state(engine: &mut InputEngine) {
-    engine.update_hangul_state();
+    engine.update_hangul_state().ok();
 }
 
 /// Get commit string of engine

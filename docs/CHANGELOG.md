@@ -7,6 +7,7 @@
 ### Improve
 
 * Add more keycodes (Enter, Tab, ControlL, ControlR, Delete, AltL)
+* Split kime-window into other repo
 
 ## 1.2.0
 

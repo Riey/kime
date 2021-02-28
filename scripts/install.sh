@@ -56,6 +56,8 @@ fi
 install_if () {
     if [ -f $KIME_OUT/$1 ]; then
         install -Dm$2 $KIME_OUT/$1 $3 "$PREFIX/$4"
+    else
+        echo "SKIP $1"
     fi
 }
 
@@ -64,7 +66,7 @@ install_bin () {
 }
 
 install_bin kime-check
-install_bin kime-indicator
+install_bin kime-window
 install_bin kime-xim
 install_bin kime-wayland
 

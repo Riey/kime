@@ -65,8 +65,6 @@ void update_preedit(KimeImContext *ctx, gboolean visible) {
 }
 
 void commit(KimeImContext *ctx) {
-  debug("commit: %s", ctx->buf.ptr);
-
   g_signal_emit(ctx, ctx->signals.commit, 0, ctx->buf.ptr);
 }
 
@@ -140,6 +138,10 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
     kime_engine_update_hangul_state(ctx->engine);
   }
 
+  if (!(ret & KimeInputResult_HAS_PREEDIT)) {
+    update_preedit(ctx, FALSE);
+  }
+
   if (ret & (KimeInputResult_NEED_RESET | KimeInputResult_NEED_FLUSH)) {
     str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
     commit(ctx);
@@ -151,7 +153,9 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
     }
   }
 
-  update_preedit(ctx, (ret & KimeInputResult_HAS_PREEDIT) != 0);
+  if (ret & KimeInputResult_HAS_PREEDIT) {
+    update_preedit(ctx, TRUE);
+  }
 
   return (ret & KimeInputResult_CONSUMED) != 0;
 }

@@ -26,7 +26,7 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: false
-  
+
   build-window:
     runs-on: ubuntu-18.04
 
@@ -34,6 +34,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: Riey/kime-window
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-10-dev unicode-cldr-core libgtk-3-dev libglib2.0 libappindicator3-dev
       - name: Build window
         run: |
           cargo build --release
@@ -87,7 +92,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libclang-10-dev
-          sudo apt-get install -y libpango1.0-dev libcairo2-dev libgtk2.0-dev libgtk-3-dev libglib2.0 libxcb1 libappindicator3-dev
+          sudo apt-get install -y libpango1.0-dev libcairo2-dev libgtk2.0-dev libgtk-3-dev libglib2.0 libxcb1
 
       - name: Download engine
         uses: actions/download-artifact@v2
@@ -206,7 +211,7 @@ jobs:
       - create-release
 
     runs-on: ubuntu-20.04
-    
+
     strategy:
       matrix:
         qt6:

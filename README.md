@@ -103,11 +103,13 @@ sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 
 ## Configuration
 
-### Debian-like
+### Setup environment variables
+
+#### Debian-like
 
 Set input method `kime` in language setting
 
-### Other
+#### Other
 
 Add the following to your init script
 
@@ -115,16 +117,25 @@ Add the following to your init script
 export GTK_IM_MODULE=kime
 export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
-
-kime-indicator &
-# Note that when X or wayland session is not initialized, below commands would be failed
-kime-xim &
-# kime-wayland &
 ```
 
 if you use X it could be done in .xprofile
 
-read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
+### Start additional servers
+
+kime install several .desktop file that you can run
+
+| `kime-xim` | `kime-wayland` | `kime-window` |
+|------------|----------------|---------------|
+| for xim    | for wayland    | for hanja, emoji, indicator |
+
+if you use DE consider add these servers as your start application
+
+if you doesn't have `start application` such as `i3` or `sway` that just run this commands in your config file
+
+### Configuration
+
+Read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ## Dependencies
 

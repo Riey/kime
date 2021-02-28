@@ -143,7 +143,7 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
   }
 
   if (ret & (KimeInputResult_NEED_RESET | KimeInputResult_NEED_FLUSH)) {
-    str_buf_set_str(&ctx->buf, str);
+    str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
     commit(ctx);
 
     if (ret & KimeInputResult_NEED_RESET) {

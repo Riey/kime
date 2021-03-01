@@ -1,96 +1,7 @@
-use std::collections::BTreeMap;
+#[macro_use]
+mod shared;
 
-use enumset::EnumSet;
-use kime_engine_core::{
-    Addon, Config, Hotkey, InputEngine, InputResult, Key, KeyCode::*, RawConfig,
-};
-
-fn default_config() -> Config {
-    Config::from_raw_config(
-        RawConfig {
-            layout: "dubeolsik".into(),
-            ..Default::default()
-        },
-        None,
-    )
-}
-
-fn addon_config(addon: EnumSet<Addon>) -> Config {
-    Config::from_raw_config(
-        RawConfig {
-            layout: "dubeolsik".into(),
-            layout_addons: std::iter::once(("dubeolsik".into(), addon)).collect(),
-            ..Default::default()
-        },
-        None,
-    )
-}
-
-fn hotkey_config(hotkeys: BTreeMap<Key, Hotkey>) -> Config {
-    Config::from_raw_config(
-        RawConfig {
-            layout: "dubeolsik".into(),
-            hotkeys,
-            ..Default::default()
-        },
-        None,
-    )
-}
-
-#[track_caller]
-fn test_input_impl(config: &Config, word_commit: bool, keys: &[(Key, &str, &str)]) {
-    let mut engine = InputEngine::new(word_commit);
-
-    engine.set_hangul_enable(true);
-
-    for (key, preedit, commit) in keys.iter().copied() {
-        eprintln!("Key: {:?}", key);
-
-        let ret = engine.press_key(key, &config);
-
-        eprintln!("Ret: {:?}", ret);
-
-        if ret.contains(InputResult::HAS_PREEDIT) {
-            assert_eq!(preedit, engine.preedit_str());
-        } else {
-            assert!(preedit.is_empty());
-        }
-
-        if !ret.contains(InputResult::CONSUMED) {
-            assert_eq!(commit, format!("{}PASS", engine.commit_str()));
-        } else if ret.intersects(InputResult::NEED_RESET | InputResult::NEED_FLUSH) {
-            assert_eq!(commit, engine.commit_str());
-        } else {
-            assert!(commit.is_empty());
-        }
-
-        if ret.contains(InputResult::NEED_RESET) {
-            engine.reset();
-        } else if ret.contains(InputResult::NEED_FLUSH) {
-            engine.flush();
-        }
-    }
-}
-
-#[track_caller]
-fn test_input(keys: &[(Key, &str, &str)]) {
-    test_input_impl(&default_config(), false, keys);
-}
-
-#[track_caller]
-fn test_input_with_addon(keys: &[(Key, &str, &str)], addon: EnumSet<Addon>) {
-    test_input_impl(&addon_config(addon), false, keys);
-}
-
-#[track_caller]
-fn test_input_with_hotkey(keys: &[(Key, &str, &str)], hotkeys: BTreeMap<Key, Hotkey>) {
-    test_input_impl(&hotkey_config(hotkeys), false, keys);
-}
-
-#[track_caller]
-fn test_word_input(keys: &[(Key, &str, &str)]) {
-    test_input_impl(&default_config(), true, keys);
-}
+define_layout_test!("dubeolsik");
 
 #[test]
 fn flexible_compose_order_addon() {
@@ -126,14 +37,13 @@ fn space_commit() {
             (Key::normal(Space), "", "나"),
             (Key::normal(Space), "", "PASS"),
         ],
-        std::iter::once((
+        &[(
             Key::normal(Space),
             Hotkey::new(
                 kime_engine_core::HotkeyBehavior::Commit,
                 kime_engine_core::HotkeyResult::ConsumeIfProcessed,
             ),
-        ))
-        .collect(),
+        )],
     )
 }
 

@@ -132,11 +132,11 @@ impl Default for RawConfig {
 }
 
 pub struct Config {
-    pub(crate) layout: Layout,
-    pub(crate) global_hangul_state: bool,
-    pub(crate) hotkeys: AHashMap<Key, Hotkey>,
-    layout_addons: EnumSet<Addon>,
-    word_commit: bool,
+    pub layout: Layout,
+    pub global_hangul_state: bool,
+    pub hotkeys: AHashMap<Key, Hotkey>,
+    pub layout_addons: EnumSet<Addon>,
+    pub word_commit: bool,
     pub xim_preedit_font: (String, f64),
 }
 
@@ -199,7 +199,7 @@ impl Config {
                     }
                 }
 
-                load_builtin_layout!("dubeolsik", "sebeolsik-390", "sebeolsik-391", "sebeolsik-sin1995")
+                load_builtin_layout!("dubeolsik", "sebeolsik-3-90", "sebeolsik-3-91", "sebeolsik-3sin-1995")
             });
 
         Self::new(layout, raw)

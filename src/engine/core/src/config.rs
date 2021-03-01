@@ -142,7 +142,7 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self::from_raw_config(RawConfig::default(), None)
+        Self::from_raw_config(RawConfig::default())
     }
 }
 
@@ -168,43 +168,54 @@ impl Config {
         }
     }
 
-    pub fn from_raw_config(raw: RawConfig, dir: Option<xdg::BaseDirectories>) -> Self {
-        let layout = dir
-            .and_then(|dir| {
-                dir.list_config_files("layouts")
-                    .into_iter()
-                    .find_map(|layout| {
-                        if layout.file_stem()?.to_str()? == raw.layout {
-                            Some(Layout::from_items(
-                                serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
-                            ))
-                        } else {
-                            None
-                        }
-                    })
-            })
-            .unwrap_or_else(|| {
-                macro_rules! load_builtin_layout {
-                    ($($name:expr),+) => {
-                        match raw.layout.as_str() {
-                            $(
-                                $name => Layout::load_from(include_str!(concat!(concat!("../data/", $name), ".yaml"))).unwrap_or_else(|_| {
-                                    Layout::default()
-                                }),
-                            )+
-                            _ => {
-                                Layout::default()
-                            }
-                        }
+    pub fn from_raw_config(raw: RawConfig) -> Self {
+        macro_rules! load_builtin_layout {
+            ($($name:expr),+) => {
+                match raw.layout.as_str() {
+                    $(
+                        $name => Layout::load_from(include_str!(concat!(concat!("../data/", $name), ".yaml"))).unwrap_or_else(|_| {
+                            Layout::default()
+                        }),
+                    )+
+                    _ => {
+                        Layout::default()
                     }
                 }
+            }
+        }
 
-                load_builtin_layout!("dubeolsik", "sebeolsik-3-90", "sebeolsik-3-91", "sebeolsik-3sin-1995")
-            });
+        let layout = load_builtin_layout!(
+            "dubeolsik",
+            "sebeolsik-3-90",
+            "sebeolsik-3-91",
+            "sebeolsik-3sin-1995"
+        );
 
         Self::new(layout, raw)
     }
 
+    #[cfg(unix)]
+    pub fn from_raw_config_with_dir(raw: RawConfig, dir: xdg::BaseDirectories) -> Self {
+        if let Some(layout) = dir
+            .list_config_files("layouts")
+            .into_iter()
+            .find_map(|layout| {
+                if layout.file_stem()?.to_str()? == raw.layout {
+                    Some(Layout::from_items(
+                        serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
+                    ))
+                } else {
+                    None
+                }
+            })
+        {
+            Self::new(layout, raw)
+        } else {
+            Self::from_raw_config(raw)
+        }
+    }
+
+    #[cfg(unix)]
     pub fn load_from_config_dir() -> Option<Self> {
         let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
 
@@ -213,7 +224,7 @@ impl Config {
             .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
             .unwrap_or_default();
 
-        Some(Self::from_raw_config(raw, Some(dir)))
+        Some(Self::from_raw_config_with_dir(raw, dir))
     }
 
     pub fn word_commit(&self) -> bool {

@@ -14,4 +14,6 @@ num-traits = "0.2.14"
 serde = { version = "1.0.118", features = ["derive"] }
 serde_yaml = "0.8.15"
 strum = { version = "0.20.0", features = ["derive"] }
+
+[target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"

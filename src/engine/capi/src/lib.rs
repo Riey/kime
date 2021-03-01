@@ -113,6 +113,7 @@ pub extern "C" fn kime_engine_press_key(
 }
 
 /// Load config from local file
+#[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_config_load() -> *mut Config {
     Box::into_raw(Box::new(Config::load_from_config_dir().unwrap_or_default()))

@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Add `TreatJongseongAsChoseongCompose` addon [#332](https://github.com/Riey/kime/issues/332)
+
 ## 1.3.0
 
 ### Improve

@@ -245,6 +245,16 @@ impl CharacterState {
         true
     }
 
+    fn choseong_can_compose_jongseong(&self, cho: Choseong, config: &Config) -> bool {
+        self.jong.map_or(false, |j| match j.to_cho(config) {
+            JongToCho::Direct(prev_cho) | JongToCho::Compose(_, prev_cho) => {
+                prev_cho.try_add(cho, config).is_some()
+            }
+        })
+    }
+
+    // 갈마들이 입력
+
     pub fn cho_jong(
         &mut self,
         cho: Choseong,
@@ -252,7 +262,11 @@ impl CharacterState {
         first: bool,
         config: &Config,
     ) -> CharacterResult {
-        if self.cho.is_none() || self.jung.is_none() {
+        if self.cho.is_none()
+            || self.jung.is_none()
+            || config.check_addon(Addon::TreatJongseongAsChoseongCompose)
+                && self.choseong_can_compose_jongseong(cho, config)
+        {
             self.cho(cho, config)
         } else if self.jung.is_some() || !first {
             self.jong(jong, config)
@@ -304,9 +318,28 @@ impl CharacterState {
         }
     }
 
-    pub fn cho(&mut self, cho: Choseong, config: &Config) -> CharacterResult {
+    // 일반 입력
+
+    pub fn cho(&mut self, mut cho: Choseong, config: &Config) -> CharacterResult {
         if let Some(prev_cho) = self.cho {
-            if self.jong.is_some() {
+            if let Some(jong) = self.jong {
+                if config.check_addon(Addon::TreatJongseongAsChoseongCompose) {
+                    match jong.to_cho(config) {
+                        JongToCho::Direct(prev_cho) => {
+                            if let Some(new_cho) = prev_cho.try_add(cho, config) {
+                                self.jong = None;
+                                cho = new_cho;
+                            }
+                        }
+                        JongToCho::Compose(jong, prev_cho) => {
+                            if let Some(new_cho) = prev_cho.try_add(cho, config) {
+                                self.jong = Some(jong);
+                                cho = new_cho;
+                            }
+                        }
+                    }
+                }
+
                 CharacterResult::NewCharacter(Self {
                     cho: Some(cho),
                     ..Default::default()

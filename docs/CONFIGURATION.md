@@ -150,6 +150,17 @@ Treat jongseong as choseong
 값 + ㅏ = 갑사
 ```
 
+#### TreatJongseongAsChoseongCompose
+
+Compose previous jongseong and current choseong
+
+Note that it depends on other addons this example is only work when `ComposeChoseongSsang` is on
+
+```txt
+읅 + ㄱ = 을ㄲ
+앇 + ㅅ = 악ㅆ
+```
+
 #### FlexibleComposeOrder
 
 Compose choseong and jungseong even order is reversed it could be help for fix typo error.

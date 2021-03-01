@@ -101,6 +101,20 @@ fn flexible_compose_order_addon() {
 }
 
 #[test]
+fn treat_jongseong_as_choseong_compose_addon() {
+    test_input_with_addon(
+        &[
+            (Key::normal(D), "ㅇ", ""),
+            (Key::normal(M), "으", ""),
+            (Key::normal(F), "을", ""),
+            (Key::normal(R), "읅", ""),
+            (Key::normal(R), "ㄲ", "을"),
+        ],
+        Addon::ComposeChoseongSsang | Addon::TreatJongseongAsChoseongCompose,
+    );
+}
+
+#[test]
 fn space_commit() {
     test_input_with_hotkey(
         &[

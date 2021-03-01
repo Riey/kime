@@ -4,17 +4,17 @@ mod input_result;
 mod keycode;
 mod state;
 
+mod os;
+
 use ahash::AHashMap;
-use std::io::{self, Read, Write};
-use std::net::Shutdown;
-use std::os::unix::net::UnixStream;
 
-use self::characters::KeyValue;
-use self::state::HangulState;
+use crate::characters::KeyValue;
 
-pub use self::config::{Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, RawConfig};
-pub use self::input_result::InputResult;
-pub use self::keycode::{Key, KeyCode, ModifierState};
+pub use crate::config::{Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, RawConfig};
+pub use crate::input_result::InputResult;
+pub use crate::keycode::{Key, KeyCode, ModifierState};
+pub use crate::os::{DefaultOsContext, OsContext};
+pub use crate::state::HangulState;
 
 #[derive(Clone, Default)]
 pub struct Layout {
@@ -45,7 +45,7 @@ impl Layout {
 pub struct InputEngine {
     state: HangulState,
     enable_hangul: bool,
-    buf: Vec<u8>,
+    os_ctx: Box<dyn OsContext>,
 }
 
 impl Default for InputEngine {
@@ -55,12 +55,16 @@ impl Default for InputEngine {
 }
 
 impl InputEngine {
-    pub fn new(word_commit: bool) -> Self {
+    pub fn with_os_ctx(word_commit: bool, os_ctx: Box<dyn OsContext>) -> Self {
         Self {
             state: HangulState::new(word_commit),
             enable_hangul: false,
-            buf: Vec::with_capacity(16),
+            os_ctx,
         }
+    }
+
+    pub fn new(word_commit: bool) -> Self {
+        Self::with_os_ctx(word_commit, Box::new(DefaultOsContext::default()))
     }
 
     pub fn set_hangul_enable(&mut self, enable: bool) {
@@ -71,24 +75,8 @@ impl InputEngine {
         self.enable_hangul
     }
 
-    fn read_global_hangul_state(&mut self) -> io::Result<bool> {
-        let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-        stream.write_all(b"l")?;
-        let len = stream.read_to_end(&mut self.buf)?;
-        let data = &self.buf[..len];
-        let ret = data == b"han";
-        self.buf.clear();
-        Ok(ret)
-    }
-
-    fn check_hangul_state(&mut self, config: &Config) -> bool {
-        if config.global_hangul_state {
-            self.enable_hangul = self
-                .read_global_hangul_state()
-                .unwrap_or(self.enable_hangul);
-        }
-
-        self.enable_hangul
+    pub fn update_hangul_state(&mut self) -> std::io::Result<()> {
+        self.os_ctx.update_hangul_state(self.enable_hangul)
     }
 
     fn bypass(&mut self) -> InputResult {
@@ -96,50 +84,15 @@ impl InputEngine {
         InputResult::NEED_RESET
     }
 
-    fn hanja(&mut self) -> io::Result<bool> {
-        let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-        let hangul = self.state.preedit_str();
-        stream.write_all(format!("h{}", hangul).as_bytes())?;
-        stream.flush()?;
-        stream.shutdown(Shutdown::Write)?;
-        let len = stream.read_to_end(&mut self.buf)?;
-
-        if len == 0 {
-            Ok(false)
-        } else {
-            let hanja = std::str::from_utf8(&self.buf[..len])
-                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-            self.state.pass_replace(hanja);
-            self.buf.clear();
-
-            Ok(true)
+    fn check_hangul_state(&mut self, config: &Config) -> bool {
+        if config.global_hangul_state {
+            self.enable_hangul = self
+                .os_ctx
+                .read_global_hangul_state()
+                .unwrap_or(self.enable_hangul);
         }
-    }
 
-    fn emoji(&mut self) -> io::Result<bool> {
-        let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-        stream.write_all(b"e")?;
-        stream.flush()?;
-        stream.shutdown(Shutdown::Write)?;
-        let len = stream.read_to_end(&mut self.buf)?;
-
-        if len == 0 {
-            Ok(false)
-        } else {
-            let emoji = std::str::from_utf8(&self.buf[..len])
-                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-            self.state.pass(emoji);
-            self.buf.clear();
-
-            Ok(true)
-        }
-    }
-
-    pub fn update_hangul_state(&mut self) -> io::Result<()> {
-        let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-        stream.write_all(if self.enable_hangul { b"ihan" } else { b"ieng" })?;
-
-        Ok(())
+        self.enable_hangul
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
@@ -156,13 +109,13 @@ impl InputEngine {
                     }
                 }
                 HotkeyBehavior::Emoji => {
-                    if self.emoji().unwrap_or(false) {
+                    if self.os_ctx.emoji(&mut self.state).unwrap_or(false) {
                         ret |= InputResult::NEED_RESET;
                         processed = true;
                     }
                 }
                 HotkeyBehavior::Hanja => {
-                    if self.hanja().unwrap_or(false) {
+                    if self.os_ctx.hanja(&mut self.state).unwrap_or(false) {
                         ret |= InputResult::NEED_RESET;
                         processed = true;
                     }

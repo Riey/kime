@@ -142,6 +142,17 @@ dubeolsik:
 값 + ㅏ = 갑사
 ```
 
+#### TreatJongseongAsChoseongCompose
+
+이전 종성과 현재 초성을 조합합니다.
+
+참고로 이건 다른 애드온들에 따라 달라집니다 이 예제는 `ComposeChoseongSsang`이 켜져있어야 작동합니다
+
+```txt
+읅 + ㄱ = 을ㄲ
+앇 + ㅅ = 악ㅆ
+```
+
 #### FlexibleComposeOrder
 
 초성과 중성의 순서를 바꿔도 조합이 되도록 합니다 오타 교정에 도움이 될 수 있습니다.
@@ -163,15 +174,9 @@ dubeolsik:
 ㅈ + ㅈ = ㅉ
 ```
 
-| 기본값 |`true`|
-|--------|------|
-
 #### DecomposeChoseongSsang
 
 쌍자음에 백스페이스를 누를 때 쌍자음을 분해시킵니다. (e.g. ㄲ -> ㄱ)
-
-| 기본값 |`false`|
-|--------|-------|
 
 #### ComposeJungseongSsang
 

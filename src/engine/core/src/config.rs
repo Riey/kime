@@ -19,6 +19,8 @@ pub enum Addon {
 
     /// 안 + ㅣ = 아니
     TreatJongseongAsChoseong,
+    /// 읅 + ㄱ = 을ㄲ
+    TreatJongseongAsChoseongCompose,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]

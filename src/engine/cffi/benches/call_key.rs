@@ -3,18 +3,15 @@
 
 extern crate test;
 
-use kime_engine_cffi::{Config, InputEngine, InputResultType};
+use kime_engine_cffi::{Config, InputEngine};
 
 #[bench]
 fn simple(b: &mut test::Bencher) {
-    let mut engine = InputEngine::new();
     let config = Config::default();
+    let mut engine = InputEngine::new(&config);
     engine.set_hangul_enable(true);
 
-    assert_eq!(
-        engine.press_key(&config, 52, 0).ty,
-        InputResultType::Preedit
-    );
+    engine.press_key(&config, 52, 0);
 
     b.iter(|| {
         for _ in 0..1000 {

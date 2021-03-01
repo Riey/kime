@@ -46,7 +46,7 @@ macro_rules! define_layout_test {
         fn default_config() -> Config {
             let mut config = RawConfig::default();
             config.layout = $layout.into();
-            Config::from_raw_config(config, None)
+            Config::from_raw_config(config)
         }
 
         #[allow(dead_code)]

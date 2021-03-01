@@ -4,6 +4,14 @@
 
 ### Breaking
 
+* Rename sebeolsik layouts
+
+```txt
+sebeolsik-390 -> sebeolsik-3-90
+sebeolsik-391 -> sebeolsik-3-90
+sebeolsik-sin1995 -> sebeolsik-3sin-1995
+```
+
 ### Improve
 
 * Add `TreatJongseongAsChoseongCompose` addon [#332](https://github.com/Riey/kime/issues/332)

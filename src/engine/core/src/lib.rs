@@ -10,7 +10,9 @@ use ahash::AHashMap;
 
 use crate::characters::KeyValue;
 
-pub use crate::config::{Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, RawConfig};
+pub use crate::config::{
+    Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, RawConfig, BUILTIN_LAYOUTS,
+};
 pub use crate::input_result::InputResult;
 pub use crate::keycode::{Key, KeyCode, ModifierState};
 pub use crate::os::{DefaultOsContext, OsContext};

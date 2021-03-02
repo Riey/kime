@@ -1,28 +1,41 @@
 ---
-layout: dubeolsik
-global_hangul_state: false
+default_category: Latin
+global_layout_state: false
 word_commit: false
 hotkeys:
   Super-Space:
-    behavior: ToggleHangul
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
     result: Consume
   M-C-E:
     behavior: Emoji
     result: ConsumeIfProcessed
   Esc:
-    behavior: ToEnglish
+    behavior:
+      Switch: Latin
     result: Bypass
   ControlR:
     behavior: Hanja
     result: Consume
   Muhenkan:
-    behavior: ToggleHangul
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
     result: Consume
   AltR:
-    behavior: ToggleHangul
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
     result: Consume
   Hangul:
-    behavior: ToggleHangul
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
     result: Consume
   HangulHanja:
     behavior: Hanja
@@ -30,6 +43,9 @@ hotkeys:
   F9:
     behavior: Hanja
     result: Consume
+category_default_layout:
+  Latin: direct
+  Hangul: dubeolsik
 layout_addons:
   all:
     - ComposeChoseongSsang

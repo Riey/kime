@@ -1,10 +1,10 @@
-use kime_engine_core::{Config, InputEngine, InputResult, Key};
+use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, Key};
 
 #[track_caller]
 pub fn test_input_impl(config: &Config, keys: &[(Key, &str, &str)]) {
-    let mut engine = InputEngine::new(config.word_commit());
+    let mut engine = InputEngine::new(config);
 
-    engine.set_hangul_enable(true);
+    engine.set_input_category(config, InputCategory::Hangul);
 
     for (key, preedit, commit) in keys.iter().copied() {
         eprintln!("Key: {:?}", key);
@@ -39,13 +39,13 @@ pub fn test_input_impl(config: &Config, keys: &[(Key, &str, &str)]) {
 macro_rules! define_layout_test {
     ($layout:literal) => {
         use enumset::EnumSet;
-        use kime_engine_core::{Addon, Config, Hotkey, Key, KeyCode::*, RawConfig};
+        use kime_engine_core::{Addon, Config, Hotkey, InputCategory, Key, KeyCode::*, RawConfig};
         use shared::test_input_impl;
 
         #[allow(dead_code)]
         fn default_config() -> Config {
             let mut config = RawConfig::default();
-            config.layout = $layout.into();
+            config.category_default_layout[InputCategory::Hangul] = $layout.into();
             Config::from_raw_config(config)
         }
 
@@ -75,7 +75,7 @@ macro_rules! define_layout_test {
         #[track_caller]
         fn test_input_with_addon(keys: &[(Key, &str, &str)], addons: impl Into<EnumSet<Addon>>) {
             let mut config = default_config();
-            config.layout_addons = addons.into();
+            config.layout_addons.insert($layout.into(), addons.into());
             test_input_impl(&config, keys);
         }
     };

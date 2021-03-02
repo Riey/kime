@@ -8,6 +8,7 @@ license = "GPL-3.0"
 [dependencies]
 ahash = { version = "0.7.0", features = ["serde"] }
 bitflags = "1.2.1"
+enum-map = "0.6.4"
 enumset = { version = "1.0.4", features = ["serde"] }
 num-derive = "0.3.3"
 num-traits = "0.2.14"

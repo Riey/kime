@@ -1,6 +1,6 @@
 #![allow(clippy::missing_safety_doc)]
 
-pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState};
+pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState, InputCategory};
 
 #[repr(C)]
 pub struct XimPreeditFont {
@@ -23,7 +23,7 @@ impl RustStr {
     }
 }
 
-pub const KIME_API_VERSION: usize = 2;
+pub const KIME_API_VERSION: usize = 3;
 
 /// Return API version
 #[no_mangle]
@@ -34,13 +34,13 @@ pub extern "C" fn kime_api_version() -> usize {
 /// Create new engine
 #[no_mangle]
 pub extern "C" fn kime_engine_new(config: &Config) -> *mut InputEngine {
-    Box::into_raw(Box::new(InputEngine::new(config.word_commit())))
+    Box::into_raw(Box::new(InputEngine::new(config)))
 }
 
 /// Set hangul enable state
 #[no_mangle]
-pub extern "C" fn kime_engine_set_hangul_enable(engine: &mut InputEngine, mode: bool) {
-    engine.set_hangul_enable(mode);
+pub extern "C" fn kime_engine_set_input_category(engine: &mut InputEngine, config: &Config, category: InputCategory) {
+    engine.set_input_category(config, category);
 }
 
 /// Delete engine
@@ -56,7 +56,7 @@ pub unsafe extern "C" fn kime_engine_delete(engine: &mut InputEngine) {
 /// Update hangul state
 #[no_mangle]
 pub extern "C" fn kime_engine_update_hangul_state(engine: &mut InputEngine) {
-    engine.update_hangul_state().ok();
+    engine.update_layout_state().ok();
 }
 
 /// Get commit string of engine

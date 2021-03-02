@@ -164,6 +164,10 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
         "sebeolsik-3sin-1995",
         include_str!("../data/sebeolsik-3sin-1995.yaml"),
     ),
+    (
+        "sebeolsik-3sin-p2",
+        include_str!("../data/sebeolsik-3sin-p2.yaml"),
+    ),
 ];
 
 impl Config {

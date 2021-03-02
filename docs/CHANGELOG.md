@@ -17,6 +17,7 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 * Add `TreatJongseongAsChoseongCompose` addon [#332](https://github.com/Riey/kime/issues/332)
 * Fix 3-91 layout Z, S-Z bug [#335](https://github.com/Riey/kime/issues/335)
 * Fix libreoffice-calc bug [#339](https://github.com/Riey/kime/issues/339)
+* Add sebeolsik-3sin-p2 layout (except yet hangul) [#222](https://github.com/Riey/kime/issues/222)
 
 ## 1.3.0
 

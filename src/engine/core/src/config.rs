@@ -146,6 +146,26 @@ impl Default for Config {
     }
 }
 
+pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
+    ("dubeolsik", include_str!("../data/dubeolsik.yaml")),
+    (
+        "sebeolsik-3-90",
+        include_str!("../data/sebeolsik-3-90.yaml"),
+    ),
+    (
+        "sebeolsik-3-91",
+        include_str!("../data/sebeolsik-3-91.yaml"),
+    ),
+    (
+        "sebeolsik-3-2015",
+        include_str!("../data/sebeolsik-3-2015.yaml"),
+    ),
+    (
+        "sebeolsik-3sin-1995",
+        include_str!("../data/sebeolsik-3sin-1995.yaml"),
+    ),
+];
+
 impl Config {
     pub fn new(layout: Layout, raw: RawConfig) -> Self {
         Self {
@@ -169,27 +189,17 @@ impl Config {
     }
 
     pub fn from_raw_config(raw: RawConfig) -> Self {
-        macro_rules! load_builtin_layout {
-            ($($name:expr),+) => {
-                match raw.layout.as_str() {
-                    $(
-                        $name => Layout::load_from(include_str!(concat!(concat!("../data/", $name), ".yaml"))).unwrap_or_else(|_| {
-                            Layout::default()
-                        }),
-                    )+
-                    _ => {
-                        Layout::default()
-                    }
+        let layout = BUILTIN_LAYOUTS
+            .iter()
+            .copied()
+            .find_map(|(name, layout)| {
+                if name == raw.layout {
+                    Layout::load_from(layout).ok()
+                } else {
+                    None
                 }
-            }
-        }
-
-        let layout = load_builtin_layout!(
-            "dubeolsik",
-            "sebeolsik-3-90",
-            "sebeolsik-3-91",
-            "sebeolsik-3sin-1995"
-        );
+            })
+            .unwrap_or_default();
 
         Self::new(layout, raw)
     }

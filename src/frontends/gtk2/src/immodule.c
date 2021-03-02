@@ -4,7 +4,8 @@
 #include <stdio.h>
 
 static GType KIME_TYPE_IM_CONTEXT = 0;
-static const guint FORWARDED_MASK = 1 << 25;
+// for many buggy gtk apps
+static const guint HANDLED_MASK = 1 << 25;
 
 #if GTK_CHECK_VERSION(3, 98, 4)
 typedef GtkWidget ClientType;
@@ -37,7 +38,6 @@ typedef struct KimeImContext {
   ClientType *client;
   KimeSignals signals;
   KimeInputEngine *engine;
-  gboolean focus;
   gboolean preedit_visible;
   KimeConfig *config;
 } KimeImContext;
@@ -85,7 +85,6 @@ void focus_in(GtkIMContext *im) {
 
   debug("focus_in");
 
-  ctx->focus = TRUE;
   kime_engine_update_hangul_state(ctx->engine);
 }
 
@@ -109,7 +108,6 @@ void focus_out(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
   debug("focus_out");
-  ctx->focus = FALSE;
 
   kime_reset(ctx);
 }
@@ -120,10 +118,10 @@ void put_event(KimeImContext *ctx, EventType *key) {
       GTK_IM_CONTEXT(ctx), gdk_event_get_event_type(key) == GDK_KEY_PRESS,
       gdk_event_get_surface(key), gdk_event_get_device(key),
       gdk_event_get_time(key), gdk_key_event_get_keycode(key),
-      gdk_event_get_modifier_state(key) | FORWARDED_MASK, 0);
+      gdk_event_get_modifier_state(key) | HANDLED_MASK, 0);
 #else
-  key->state |= FORWARDED_MASK;
-  gdk_event_put(gdk_event_copy((GdkEvent *)key));
+  key->state |= HANDLED_MASK;
+  gdk_event_put((GdkEvent *)key);
 #endif
 }
 
@@ -182,7 +180,9 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint keyval = gdk_key_event_get_keyval(key);
   GdkModifierType state = gdk_event_get_modifier_state(key);
 #else
-  if (key->type != GDK_KEY_PRESS) {
+  if (key->type != GDK_KEY_PRESS || key->state & HANDLED_MASK) {
+    if (key->state & HANDLED_MASK)
+      debug("handled");
     return FALSE;
   }
   guint16 code = key->hardware_keycode;
@@ -208,8 +208,14 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     kime_state |= KimeModifierState_SUPER;
   }
 
-  return on_key_input(ctx, code, kime_state) ||
-         commit_event(ctx, state, keyval);
+  if (on_key_input(ctx, code, kime_state) ||
+      commit_event(ctx, state, keyval)) {
+    return TRUE;
+  } else {
+    // Can't just return FALSE because firefox can't accept FALSE when preedit-end is called
+    put_event(ctx, key);
+    return FALSE;
+  }
 }
 
 void set_client(GtkIMContext *im, ClientType *client) {
@@ -267,39 +273,12 @@ void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
 GdkFilterReturn global_filter_event(GdkXEvent *xevent, GdkEvent *event,
                                     gpointer data) {
   KimeImContext *ctx = (KimeImContext *)data;
-  XEvent *native_event = (XEvent *)xevent;
 
-  if (!ctx->focus || !ctx->client) {
-    return GDK_FILTER_CONTINUE;
-  }
-
-  if (native_event->type == ButtonPress) {
+  // button press
+  if (*((int *)xevent) == 4) {
     kime_reset(ctx);
-  } else if (native_event->type == KeyPress) {
-    XKeyPressedEvent *kev = (XKeyPressedEvent *)xevent;
-    KimeModifierState state = 0;
-
-    if (kev->state & 0x1) {
-      state |= KimeModifierState_SHIFT;
-    }
-
-    if (kev->state & 0x4) {
-      state |= KimeModifierState_CONTROL;
-    }
-
-    if (kev->state & 0x8) {
-      state |= KimeModifierState_ALT;
-    }
-
-    if (kev->state & 0x40) {
-      state |= KimeModifierState_SUPER;
-    }
-
-    if (on_key_input(ctx, (guint16)kev->keycode, state)) {
-      // handled
-      return GDK_FILTER_REMOVE;
-    }
   }
+
   return GDK_FILTER_CONTINUE;
 }
 #endif
@@ -311,7 +290,6 @@ void im_context_class_finalize(KimeImContextClass *klass, gpointer _data) {
 void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->buf = str_buf_new();
   ctx->client = NULL;
-  ctx->focus = FALSE;
   ctx->signals = klass->signals;
   ctx->engine = kime_engine_new(klass->config);
   ctx->config = klass->config;

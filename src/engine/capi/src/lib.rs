@@ -1,6 +1,6 @@
 #![allow(clippy::missing_safety_doc)]
 
-pub use kime_engine_core::{Config, InputEngine, InputResult, ModifierState, InputCategory};
+pub use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, ModifierState};
 
 #[repr(C)]
 pub struct XimPreeditFont {
@@ -39,7 +39,11 @@ pub extern "C" fn kime_engine_new(config: &Config) -> *mut InputEngine {
 
 /// Set hangul enable state
 #[no_mangle]
-pub extern "C" fn kime_engine_set_input_category(engine: &mut InputEngine, config: &Config, category: InputCategory) {
+pub extern "C" fn kime_engine_set_input_category(
+    engine: &mut InputEngine,
+    config: &Config,
+    category: InputCategory,
+) {
     engine.set_input_category(config, category);
 }
 

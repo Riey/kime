@@ -228,7 +228,8 @@ impl Default for Config {
 
 pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
     ("direct", include_str!("../data/direct.yaml")),
-    ("QWERTY", include_str!("../data/qwerty.yaml")),
+    ("qwerty", include_str!("../data/qwerty.yaml")),
+    ("colemak", include_str!("../data/colemak.yaml")),
     ("dubeolsik", include_str!("../data/dubeolsik.yaml")),
     (
         "sebeolsik-3-90",

@@ -155,7 +155,9 @@ impl KimeContext {
     }
 
     fn commit_string(&mut self, s: String) {
-        self.im.commit_string(s);
+        if !s.is_empty() {
+            self.im.commit_string(s);
+        }
     }
 
     fn clear_preedit(&mut self) {

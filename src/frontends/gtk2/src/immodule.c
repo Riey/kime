@@ -65,6 +65,18 @@ void update_preedit(KimeImContext *ctx, gboolean visible) {
 }
 
 void commit(KimeImContext *ctx) {
+  // Don't commit zero size string
+  if (ctx->buf.len == 0) {
+    return;
+  }
+
+// hide commit string when not debug
+#ifdef DEBUG
+  debug("commit(%zu): `%s`", ctx->buf.len, ctx->buf.ptr);
+#else
+  debug("commit(%zu)", ctx->buf.len);
+#endif
+
   g_signal_emit(ctx, ctx->signals.commit, 0, ctx->buf.ptr);
 }
 

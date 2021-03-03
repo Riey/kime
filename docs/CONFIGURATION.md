@@ -13,21 +13,37 @@ You can also change the location of config file using [`$XDG_CONFIG_DIR` or
 
 [xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
 
-## layout
+## default_category
 
-Hangul layout name. "dubeolsik", "sebeolsik-390", and "sebeolsik-391" are
-available as default. Custom layout can be added by creating layout YAML files
+Set default InputCategory when IME starts, please select between `Latin` and `Hangul`
+
+| 기본값 |`Latin`|
+|--------|-------|
+
+## category_layout
+
+Set layout per categories
+
+### Embeded layouts
+
+* `direct`
+* `qwerty`
+* `colmak`
+* `dubeolsik`(두벌식)
+* `sebeolsik-390`(세벌식 390)
+* `sebeolsik-391`(세벌식 최종)
+* `sebeolsik-3sin-1995`(신세벌식 1995)
+* `sebeolsik-3sin-p2`(신세벌식 p2 *옛한글은 미구현*)
+
+Custom layout can be added by creating layout YAML files
 at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
 structure of keyboard layout file.
 
 [dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
 
-| default |`dubeolsik`|
-|---------|-----------|
+## global_category_state
 
-## global_hangul_state
-
-Set hangul state globally
+Set category state globally
 
 | default |`false`|
 |---------|-------|
@@ -42,48 +58,6 @@ Let commit by word
 ## hotkeys
 
 Set engine hotkey format is `Key: Content`
-
-### content
-
-#### behavior
-
-##### ToggleHangul
-
-Toggle hangul mode
-
-##### ToEnglish
-
-Set english mode
-
-##### ToHangul
-
-Set hangul mode
-
-##### Commit
-
-End current preedit state then commit
-
-##### Emoji
-
-Input emoji with kime-window
-
-##### Hanja
-
-Input hanja with kime-window
-
-#### result
-
-##### Bypass
-
-Bypass key to continue key process
-
-##### Consume
-
-Consume key to end key process
-
-##### ConsumeIfProcessed
-
-When hotkey processed it act like Consume otherwise it act like Bypass
 
 ### default
 
@@ -116,6 +90,44 @@ F9:
   behavior: Hanja
   result: Consume
 ```
+
+### content
+
+#### behavior
+
+##### Toggle: [InputCategory, InputCategory]
+
+Toggle Left and Right category
+
+##### Switch: InputCategory
+
+Switch to specific category
+
+##### Commit
+
+End current preedit state then commit
+
+##### Emoji
+
+Input emoji with kime-window
+
+##### Hanja
+
+Input hanja with kime-window
+
+#### result
+
+##### Bypass
+
+Bypass key to continue key process
+
+##### Consume
+
+Consume key to end key process
+
+##### ConsumeIfProcessed
+
+When hotkey processed it act like Consume otherwise it act like Bypass
 
 ## xim_preedit_font
 

@@ -9,14 +9,44 @@ mod os;
 use ahash::AHashMap;
 
 use crate::characters::KeyValue;
+use crate::os::{DefaultOsContext, OsContext};
+use enumset::EnumSet;
 
 pub use crate::config::{
-    Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, RawConfig, BUILTIN_LAYOUTS,
+    Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, InputCategory, RawConfig, BUILTIN_LAYOUTS,
 };
 pub use crate::input_result::InputResult;
 pub use crate::keycode::{Key, KeyCode, ModifierState};
-pub use crate::os::{DefaultOsContext, OsContext};
 pub use crate::state::HangulState;
+
+pub struct LayoutContext {
+    pub input_category: InputCategory,
+    pub layout_addons: EnumSet<Addon>,
+}
+
+impl Default for LayoutContext {
+    fn default() -> Self {
+        Self::new(&Config::default())
+    }
+}
+
+impl LayoutContext {
+    pub fn new(config: &Config) -> Self {
+        Self {
+            input_category: config.default_category,
+            layout_addons: config.layout_addons[config.default_category],
+        }
+    }
+
+    pub fn update_layout(&mut self, category: InputCategory, config: &Config) {
+        self.input_category = category;
+        self.layout_addons = config.layout_addons[category];
+    }
+
+    pub fn check_addon(&self, addon: Addon) -> bool {
+        self.layout_addons.contains(addon)
+    }
+}
 
 #[derive(Clone, Default)]
 pub struct Layout {
@@ -46,39 +76,35 @@ impl Layout {
 
 pub struct InputEngine {
     state: HangulState,
-    enable_hangul: bool,
-    os_ctx: Box<dyn OsContext>,
+    layout_ctx: LayoutContext,
+    os_ctx: DefaultOsContext,
 }
 
 impl Default for InputEngine {
     fn default() -> Self {
-        Self::new(true)
+        Self::new(&Config::default())
     }
 }
 
 impl InputEngine {
-    pub fn with_os_ctx(word_commit: bool, os_ctx: Box<dyn OsContext>) -> Self {
+    pub fn new(config: &Config) -> Self {
         Self {
-            state: HangulState::new(word_commit),
-            enable_hangul: false,
-            os_ctx,
+            state: HangulState::new(config.word_commit),
+            os_ctx: DefaultOsContext::default(),
+            layout_ctx: LayoutContext::new(config),
         }
     }
 
-    pub fn new(word_commit: bool) -> Self {
-        Self::with_os_ctx(word_commit, Box::new(DefaultOsContext::default()))
-    }
-
-    pub fn set_hangul_enable(&mut self, enable: bool) {
-        self.enable_hangul = enable;
+    pub fn set_input_category(&mut self, config: &Config, category: InputCategory) {
+        self.layout_ctx.update_layout(category, config);
     }
 
     pub fn is_hangul_enabled(&self) -> bool {
-        self.enable_hangul
+        self.layout_ctx.input_category == InputCategory::Hangul
     }
 
-    pub fn update_hangul_state(&mut self) -> std::io::Result<()> {
-        self.os_ctx.update_hangul_state(self.enable_hangul)
+    pub fn update_layout_state(&mut self) -> std::io::Result<()> {
+        self.os_ctx.update_layout_state(self.is_hangul_enabled())
     }
 
     fn bypass(&mut self) -> InputResult {
@@ -86,15 +112,22 @@ impl InputEngine {
         InputResult::NEED_RESET
     }
 
-    fn check_hangul_state(&mut self, config: &Config) -> bool {
-        if config.global_hangul_state {
-            self.enable_hangul = self
+    fn try_get_global_input_category_state(&mut self, config: &Config) {
+        if config.global_category_state {
+            let global = if self
                 .os_ctx
                 .read_global_hangul_state()
-                .unwrap_or(self.enable_hangul);
-        }
+                .unwrap_or(self.is_hangul_enabled())
+            {
+                InputCategory::Hangul
+            } else {
+                InputCategory::Latin
+            };
 
-        self.enable_hangul
+            if self.layout_ctx.input_category != global {
+                self.layout_ctx.update_layout(global, config);
+            }
+        }
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
@@ -103,12 +136,25 @@ impl InputEngine {
             let mut ret = InputResult::empty();
 
             match hotkey.behavior() {
-                HotkeyBehavior::ToEnglish => {
-                    if self.enable_hangul {
-                        self.enable_hangul = false;
+                HotkeyBehavior::Switch(category) => {
+                    if self.layout_ctx.input_category != category {
+                        self.layout_ctx.update_layout(category, config);
                         ret |= InputResult::LANGUAGE_CHANGED;
                         processed = true;
                     }
+                }
+                HotkeyBehavior::Toggle(left, right) => {
+                    let change = if self.layout_ctx.input_category == left {
+                        right
+                    } else if self.layout_ctx.input_category == right {
+                        left
+                    } else {
+                        right
+                    };
+
+                    self.layout_ctx.update_layout(change, config);
+                    ret |= InputResult::LANGUAGE_CHANGED;
+                    processed = true;
                 }
                 HotkeyBehavior::Emoji => {
                     if self.os_ctx.emoji(&mut self.state).unwrap_or(false) {
@@ -121,18 +167,6 @@ impl InputEngine {
                         ret |= InputResult::NEED_RESET;
                         processed = true;
                     }
-                }
-                HotkeyBehavior::ToHangul => {
-                    if !self.enable_hangul {
-                        self.enable_hangul = true;
-                        ret |= InputResult::LANGUAGE_CHANGED;
-                        processed = true;
-                    }
-                }
-                HotkeyBehavior::ToggleHangul => {
-                    self.enable_hangul = !self.enable_hangul;
-                    ret |= InputResult::LANGUAGE_CHANGED;
-                    processed = true;
                 }
                 HotkeyBehavior::Commit => {
                     if self
@@ -160,16 +194,19 @@ impl InputEngine {
         } else if key.code == KeyCode::Shift {
             // Don't reset state
             self.state.preedit_result()
-        } else if self.check_hangul_state(config) {
+        } else {
+            self.try_get_global_input_category_state(config);
+
             if key.code == KeyCode::Backspace {
-                self.state.backspace(config)
-            } else if let Some(v) = config.layout.keymap.get(&key) {
-                self.state.key(v, config)
+                self.state.backspace(&self.layout_ctx)
+            } else if let Some(v) = config.layouts[self.layout_ctx.input_category]
+                .keymap
+                .get(&key)
+            {
+                self.state.key(v, &self.layout_ctx)
             } else {
                 self.bypass()
             }
-        } else {
-            self.bypass()
         }
     }
 

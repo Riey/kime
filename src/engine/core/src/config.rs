@@ -1,8 +1,60 @@
 use crate::{keycode::Key, KeyCode, Layout, ModifierState};
 use ahash::AHashMap;
+use enum_map::{enum_map, Enum, EnumMap};
 use enumset::{EnumSet, EnumSetType};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+mod serde_enummap_default {
+    use super::InputCategory;
+    use enum_map::EnumMap;
+    use serde::{
+        de::{MapAccess, Visitor},
+        ser::SerializeMap,
+        Deserializer, Serializer,
+    };
+
+    type My = EnumMap<InputCategory, String>;
+
+    pub fn serialize<S: Serializer>(map: &My, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut ser_map = serializer.serialize_map(Some(2))?;
+
+        for (k, v) in map {
+            ser_map.serialize_entry(&k, &v)?;
+        }
+
+        ser_map.end()
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<My, D::Error> {
+        deserializer.deserialize_map(MapVisitor)
+    }
+
+    struct MapVisitor;
+
+    impl<'de> Visitor<'de> for MapVisitor {
+        type Value = My;
+
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            f.write_str("InputCategory map")
+        }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: MapAccess<'de>,
+        {
+            let mut ret = enum_map::enum_map! {
+                _ => "direct".into(),
+            };
+
+            while let Some((k, v)) = map.next_entry()? {
+                ret[k] = v;
+            }
+
+            Ok(ret)
+        }
+    }
+}
 
 #[derive(Hash, Serialize, Deserialize, EnumSetType)]
 #[enumset(serialize_as_list)]
@@ -23,14 +75,30 @@ pub enum Addon {
     TreatJongseongAsChoseongCompose,
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[repr(u32)]
+pub enum InputCategory {
+    Latin,
+    Hangul,
+}
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum HotkeyBehavior {
-    ToggleHangul,
-    ToHangul,
-    ToEnglish,
+    Toggle(InputCategory, InputCategory),
+    Switch(InputCategory),
     Commit,
     Emoji,
     Hanja,
+}
+
+impl HotkeyBehavior {
+    pub const fn toggle_hangul_latin() -> Self {
+        Self::Toggle(InputCategory::Hangul, InputCategory::Latin)
+    }
+
+    pub const fn switch(category: InputCategory) -> Self {
+        Self::Switch(category)
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
@@ -62,8 +130,10 @@ impl Hotkey {
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct RawConfig {
-    pub layout: String,
-    pub global_hangul_state: bool,
+    pub default_category: InputCategory,
+    #[serde(with = "self::serde_enummap_default")]
+    pub category_layout: EnumMap<InputCategory, String>,
+    pub global_category_state: bool,
     pub word_commit: bool,
     pub hotkeys: BTreeMap<Key, Hotkey>,
     pub layout_addons: BTreeMap<String, EnumSet<Addon>>,
@@ -73,29 +143,32 @@ pub struct RawConfig {
 impl Default for RawConfig {
     fn default() -> Self {
         Self {
-            layout: "dubeolsik".to_string(),
-            global_hangul_state: false,
+            default_category: InputCategory::Latin,
+            global_category_state: false,
             word_commit: false,
             hotkeys: [
                 (
                     Key::normal(KeyCode::Esc),
-                    Hotkey::new(HotkeyBehavior::ToEnglish, HotkeyResult::Bypass),
+                    Hotkey::new(
+                        HotkeyBehavior::switch(InputCategory::Latin),
+                        HotkeyResult::Bypass,
+                    ),
                 ),
                 (
                     Key::normal(KeyCode::AltR),
-                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                    Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 ),
                 (
                     Key::normal(KeyCode::Muhenkan),
-                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                    Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 ),
                 (
                     Key::normal(KeyCode::Hangul),
-                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                    Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 ),
                 (
                     Key::super_(KeyCode::Space),
-                    Hotkey::new(HotkeyBehavior::ToggleHangul, HotkeyResult::Consume),
+                    Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 ),
                 (
                     Key::normal(KeyCode::F9),
@@ -117,6 +190,10 @@ impl Default for RawConfig {
             .iter()
             .copied()
             .collect(),
+            category_layout: enum_map! {
+                InputCategory::Latin => "direct".into(),
+                InputCategory::Hangul => "dubeolsik".into(),
+            },
             layout_addons: vec![
                 ("all".into(), EnumSet::only(Addon::ComposeChoseongSsang)),
                 (
@@ -132,10 +209,12 @@ impl Default for RawConfig {
 }
 
 pub struct Config {
-    pub layout: Layout,
-    pub global_hangul_state: bool,
+    pub layouts: EnumMap<InputCategory, Layout>,
+    pub global_category_state: bool,
     pub hotkeys: AHashMap<Key, Hotkey>,
-    pub layout_addons: EnumSet<Addon>,
+    pub default_category: InputCategory,
+    pub category_layout: EnumMap<InputCategory, String>,
+    pub layout_addons: EnumMap<InputCategory, EnumSet<Addon>>,
     pub word_commit: bool,
     pub xim_preedit_font: (String, f64),
 }
@@ -147,6 +226,9 @@ impl Default for Config {
 }
 
 pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
+    ("direct", include_str!("../data/direct.yaml")),
+    ("qwerty", include_str!("../data/qwerty.yaml")),
+    ("colemak", include_str!("../data/colemak.yaml")),
     ("dubeolsik", include_str!("../data/dubeolsik.yaml")),
     (
         "sebeolsik-3-90",
@@ -155,10 +237,6 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
     (
         "sebeolsik-3-91",
         include_str!("../data/sebeolsik-3-91.yaml"),
-    ),
-    (
-        "sebeolsik-3-2015",
-        include_str!("../data/sebeolsik-3-2015.yaml"),
     ),
     (
         "sebeolsik-3sin-1995",
@@ -170,63 +248,66 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
     ),
 ];
 
+fn builtin_layouts() -> impl Iterator<Item = (String, Layout)> {
+    BUILTIN_LAYOUTS
+        .iter()
+        .copied()
+        .filter_map(|(name, layout)| {
+            Layout::load_from(layout)
+                .ok()
+                .map(|l| (name.to_string(), l))
+        })
+}
+
 impl Config {
-    pub fn new(layout: Layout, raw: RawConfig) -> Self {
+    pub fn new(layouts: EnumMap<InputCategory, Layout>, raw: RawConfig) -> Self {
+        let all_addons = raw.layout_addons.get("all").copied().unwrap_or_default();
+
         Self {
-            layout,
-            global_hangul_state: raw.global_hangul_state,
+            global_category_state: raw.global_category_state,
+            default_category: raw.default_category,
+            layouts,
             word_commit: raw.word_commit,
-            layout_addons: raw
-                .layout_addons
-                .get("all")
-                .copied()
-                .unwrap_or_default()
-                .union(
-                    raw.layout_addons
-                        .get(&raw.layout)
-                        .copied()
-                        .unwrap_or_default(),
-                ),
+            layout_addons: (|category| {
+                let name = &raw.category_layout[category];
+                all_addons.union(raw.layout_addons.get(name).copied().unwrap_or_default())
+            })
+            .into(),
+            category_layout: raw.category_layout,
             hotkeys: raw.hotkeys.into_iter().collect(),
             xim_preedit_font: raw.xim_preedit_font,
         }
     }
 
-    pub fn from_raw_config(raw: RawConfig) -> Self {
-        let layout = BUILTIN_LAYOUTS
-            .iter()
-            .copied()
-            .find_map(|(name, layout)| {
-                if name == raw.layout {
-                    Layout::load_from(layout).ok()
-                } else {
-                    None
-                }
+    pub fn from_layout_map(mut layouts: AHashMap<String, Layout>, raw: RawConfig) -> Self {
+        Self::new(
+            (|category| {
+                let name = raw.category_layout[category].as_str();
+                layouts.remove(name).unwrap_or_default()
             })
-            .unwrap_or_default();
+            .into(),
+            raw,
+        )
+    }
 
-        Self::new(layout, raw)
+    pub fn from_raw_config(raw: RawConfig) -> Self {
+        Self::from_layout_map(builtin_layouts().collect(), raw)
     }
 
     #[cfg(unix)]
     pub fn from_raw_config_with_dir(raw: RawConfig, dir: xdg::BaseDirectories) -> Self {
-        if let Some(layout) = dir
+        let custom_layouts = dir
             .list_config_files("layouts")
             .into_iter()
-            .find_map(|layout| {
-                if layout.file_stem()?.to_str()? == raw.layout {
-                    Some(Layout::from_items(
-                        serde_yaml::from_reader(std::fs::File::open(layout).ok()?).ok()?,
-                    ))
-                } else {
-                    None
-                }
-            })
-        {
-            Self::new(layout, raw)
-        } else {
-            Self::from_raw_config(raw)
-        }
+            .filter_map(|path| {
+                let name = path.file_stem()?.to_str()?;
+
+                Layout::load_from(std::fs::read_to_string(&path).ok()?.as_str())
+                    .ok()
+                    .map(|l| (name.to_string(), l))
+            });
+
+        Self::from_layout_map(builtin_layouts().chain(custom_layouts).collect(), raw)
     }
 
     #[cfg(unix)]
@@ -243,9 +324,5 @@ impl Config {
 
     pub fn word_commit(&self) -> bool {
         self.word_commit
-    }
-
-    pub fn check_addon(&self, addon: Addon) -> bool {
-        self.layout_addons.contains(addon)
     }
 }

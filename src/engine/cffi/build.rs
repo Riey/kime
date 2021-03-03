@@ -24,6 +24,7 @@ fn main() {
     let rust_binding = bindgen::builder()
         .header("./kime_engine.hpp")
         .disable_name_namespacing()
+        .rustified_enum("kime::.+")
         .whitelist_var("kime::.+")
         .whitelist_type("kime::.+")
         .whitelist_function("kime::.+")

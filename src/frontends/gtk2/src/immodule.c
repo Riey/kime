@@ -4,8 +4,6 @@
 #include <stdio.h>
 
 static GType KIME_TYPE_IM_CONTEXT = 0;
-// for many buggy gtk apps
-static const guint HANDLED_MASK = 1 << 25;
 
 #if GTK_CHECK_VERSION(3, 98, 4)
 typedef GtkWidget ClientType;
@@ -16,6 +14,8 @@ typedef GdkWindow ClientType;
 typedef GdkEventKey EventType;
 #endif
 
+// prevent double press event see #344
+#define KIME_HANDLED_MASK (1 << 25)
 static const guint NOT_ENGLISH_MASK =
     GDK_ALT_MASK | GDK_CONTROL_MASK | GDK_SUPER_MASK;
 
@@ -112,19 +112,6 @@ void focus_out(GtkIMContext *im) {
   kime_reset(ctx);
 }
 
-void put_event(KimeImContext *ctx, EventType *key) {
-#if GTK_CHECK_VERSION(3, 98, 4)
-  gtk_im_context_filter_key(
-      GTK_IM_CONTEXT(ctx), gdk_event_get_event_type(key) == GDK_KEY_PRESS,
-      gdk_event_get_surface(key), gdk_event_get_device(key),
-      gdk_event_get_time(key), gdk_key_event_get_keycode(key),
-      gdk_event_get_modifier_state(key) | HANDLED_MASK, 0);
-#else
-  key->state |= HANDLED_MASK;
-  gdk_event_put((GdkEvent *)key);
-#endif
-}
-
 gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
   if (!(state & NOT_ENGLISH_MASK)) {
     uint32_t c = gdk_keyval_to_unicode(keyval);
@@ -180,15 +167,22 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint keyval = gdk_key_event_get_keyval(key);
   GdkModifierType state = gdk_event_get_modifier_state(key);
 #else
-  if (key->type != GDK_KEY_PRESS || key->state & HANDLED_MASK) {
-    if (key->state & HANDLED_MASK)
-      debug("handled");
+  if (key->type != GDK_KEY_PRESS) {
     return FALSE;
   }
   guint16 code = key->hardware_keycode;
   guint keyval = key->keyval;
   GdkModifierType state = key->state;
 #endif
+
+#if !GTK_CHECK_VERSION(3, 98, 4) && DEBUG
+  debug("type: %d, state: %d, code: %d", key->type, key->state, key->hardware_keycode);
+#endif
+
+  // prevent double press event see #344
+  if (state & KIME_HANDLED_MASK) {
+    return TRUE;
+  }
 
   KimeModifierState kime_state = 0;
 
@@ -212,8 +206,10 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
       commit_event(ctx, state, keyval)) {
     return TRUE;
   } else {
-    // Can't just return FALSE because firefox can't accept FALSE when preedit-end is called
-    put_event(ctx, key);
+// prevent double press event see #344
+#if !GTK_CHECK_VERSION(3, 98, 4)
+    key->state |= KIME_HANDLED_MASK;
+#endif
     return FALSE;
   }
 }

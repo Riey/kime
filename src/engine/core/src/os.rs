@@ -3,7 +3,7 @@ use std::io;
 
 pub trait OsContext {
     fn read_global_hangul_state(&mut self) -> io::Result<bool>;
-    fn update_hangul_state(&mut self, state: bool) -> io::Result<()>;
+    fn update_layout_state(&mut self, state: bool) -> io::Result<()>;
     fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool>;
     fn emoji(&mut self, state: &mut HangulState) -> io::Result<bool>;
 }
@@ -38,7 +38,7 @@ mod unix {
             Ok(ret)
         }
 
-        fn update_hangul_state(&mut self, state: bool) -> io::Result<()> {
+        fn update_layout_state(&mut self, state: bool) -> io::Result<()> {
             let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
             stream.write_all(if state { b"ihan" } else { b"ieng" })?;
 
@@ -97,7 +97,7 @@ mod fallback {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn update_hangul_state(&mut self, _state: bool) -> io::Result<()> {
+        fn update_layout_state(&mut self, _state: bool) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 

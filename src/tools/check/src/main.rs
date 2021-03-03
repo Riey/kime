@@ -1,7 +1,7 @@
 use ansi_term::Color;
 use kime_engine_cffi::{
-    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_NEED_FLUSH,
-    InputResult_NEED_RESET,
+    Config, InputCategory, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
+    InputResult_NEED_FLUSH, InputResult_NEED_RESET,
 };
 use pad::PadStr;
 use std::env;
@@ -160,7 +160,7 @@ fn check_input(
     config: &Config,
     tests: &[(u16, &str, &str)],
 ) -> CondResult {
-    engine.set_hangul_enable(true);
+    engine.set_input_category(config, InputCategory::Hangul);
 
     for (key, preedit, commit) in tests.iter().copied() {
         let ret = engine.press_key(config, key, 0);

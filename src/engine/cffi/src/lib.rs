@@ -11,9 +11,9 @@ mod ffi {
 extern "C" {}
 
 pub use ffi::{
-    InputResult, InputResult_CONSUMED, InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED,
-    InputResult_NEED_FLUSH, InputResult_NEED_RESET, ModifierState, ModifierState_ALT,
-    ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
+    InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
+    InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET, ModifierState,
+    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub fn check_api_version() -> bool {
@@ -35,8 +35,8 @@ impl InputEngine {
         unsafe { ffi::kime_engine_update_hangul_state(self.engine) }
     }
 
-    pub fn set_hangul_enable(&mut self, mode: bool) {
-        unsafe { ffi::kime_engine_set_hangul_enable(self.engine, mode) };
+    pub fn set_input_category(&mut self, config: &Config, category: InputCategory) {
+        unsafe { ffi::kime_engine_set_input_category(self.engine, config.config, category) };
     }
 
     pub fn press_key(

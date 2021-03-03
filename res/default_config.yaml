@@ -1,5 +1,8 @@
 ---
 default_category: Latin
+category_default_layout:
+  Latin: direct
+  Hangul: dubeolsik
 global_layout_state: false
 word_commit: false
 hotkeys:
@@ -43,9 +46,6 @@ hotkeys:
   F9:
     behavior: Hanja
     result: Consume
-category_default_layout:
-  Latin: direct
-  Hangul: dubeolsik
 layout_addons:
   all:
     - ComposeChoseongSsang

@@ -132,11 +132,11 @@ impl Hotkey {
 #[serde(default)]
 pub struct RawConfig {
     pub default_category: InputCategory,
+    #[serde(with = "self::serde_enummap_default")]
+    pub category_default_layout: EnumMap<InputCategory, String>,
     pub global_layout_state: bool,
     pub word_commit: bool,
     pub hotkeys: BTreeMap<Key, Hotkey>,
-    #[serde(with = "self::serde_enummap_default")]
-    pub category_default_layout: EnumMap<InputCategory, String>,
     pub layout_addons: BTreeMap<String, EnumSet<Addon>>,
     pub xim_preedit_font: (String, f64),
 }

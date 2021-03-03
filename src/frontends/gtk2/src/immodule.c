@@ -167,16 +167,17 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint keyval = gdk_key_event_get_keyval(key);
   GdkModifierType state = gdk_event_get_modifier_state(key);
 #else
+#if DEBUG
+  debug("type: %d, state: %d, code: %d", key->type, key->state,
+        key->hardware_keycode);
+#endif
+
   if (key->type != GDK_KEY_PRESS) {
     return FALSE;
   }
   guint16 code = key->hardware_keycode;
   guint keyval = key->keyval;
   GdkModifierType state = key->state;
-#endif
-
-#if !GTK_CHECK_VERSION(3, 98, 4) && DEBUG
-  debug("type: %d, state: %d, code: %d", key->type, key->state, key->hardware_keycode);
 #endif
 
   // prevent double press event see #344
@@ -202,8 +203,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     kime_state |= KimeModifierState_SUPER;
   }
 
-  if (on_key_input(ctx, code, kime_state) ||
-      commit_event(ctx, state, keyval)) {
+  if (on_key_input(ctx, code, kime_state) || commit_event(ctx, state, keyval)) {
     return TRUE;
   } else {
 // prevent double press event see #344

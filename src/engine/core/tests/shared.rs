@@ -45,7 +45,7 @@ macro_rules! define_layout_test {
         #[allow(dead_code)]
         fn default_config() -> Config {
             let mut config = RawConfig::default();
-            config.category_default_layout[InputCategory::Hangul] = $layout.into();
+            config.category_layout[InputCategory::Hangul] = $layout.into();
             Config::from_raw_config(config)
         }
 
@@ -75,7 +75,7 @@ macro_rules! define_layout_test {
         #[track_caller]
         fn test_input_with_addon(keys: &[(Key, &str, &str)], addons: impl Into<EnumSet<Addon>>) {
             let mut config = default_config();
-            config.layout_addons.insert($layout.into(), addons.into());
+            config.layout_addons[InputCategory::Hangul] = addons.into();
             test_input_impl(&config, keys);
         }
     };

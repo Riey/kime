@@ -4,7 +4,6 @@ use enum_map::{enum_map, Enum, EnumMap};
 use enumset::{EnumSet, EnumSetType};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::rc::Rc;
 
 mod serde_enummap_default {
     use super::InputCategory;
@@ -133,8 +132,8 @@ impl Hotkey {
 pub struct RawConfig {
     pub default_category: InputCategory,
     #[serde(with = "self::serde_enummap_default")]
-    pub category_default_layout: EnumMap<InputCategory, String>,
-    pub global_layout_state: bool,
+    pub category_layout: EnumMap<InputCategory, String>,
+    pub global_category_state: bool,
     pub word_commit: bool,
     pub hotkeys: BTreeMap<Key, Hotkey>,
     pub layout_addons: BTreeMap<String, EnumSet<Addon>>,
@@ -145,7 +144,7 @@ impl Default for RawConfig {
     fn default() -> Self {
         Self {
             default_category: InputCategory::Latin,
-            global_layout_state: false,
+            global_category_state: false,
             word_commit: false,
             hotkeys: [
                 (
@@ -191,7 +190,7 @@ impl Default for RawConfig {
             .iter()
             .copied()
             .collect(),
-            category_default_layout: enum_map! {
+            category_layout: enum_map! {
                 InputCategory::Latin => "direct".into(),
                 InputCategory::Hangul => "dubeolsik".into(),
             },
@@ -210,12 +209,12 @@ impl Default for RawConfig {
 }
 
 pub struct Config {
-    pub layouts: AHashMap<String, Rc<Layout>>,
-    pub global_layout_state: bool,
+    pub layouts: EnumMap<InputCategory, Layout>,
+    pub global_category_state: bool,
     pub hotkeys: AHashMap<Key, Hotkey>,
     pub default_category: InputCategory,
-    pub category_default_layout: EnumMap<InputCategory, String>,
-    pub layout_addons: AHashMap<String, EnumSet<Addon>>,
+    pub category_layout: EnumMap<InputCategory, String>,
+    pub layout_addons: EnumMap<InputCategory, EnumSet<Addon>>,
     pub word_commit: bool,
     pub xim_preedit_font: (String, f64),
 }
@@ -249,33 +248,50 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
     ),
 ];
 
-fn builtin_layouts() -> impl Iterator<Item = (String, Rc<Layout>)> {
+fn builtin_layouts() -> impl Iterator<Item = (String, Layout)> {
     BUILTIN_LAYOUTS
         .iter()
         .copied()
         .filter_map(|(name, layout)| {
             Layout::load_from(layout)
                 .ok()
-                .map(|l| (name.to_string(), Rc::new(l)))
+                .map(|l| (name.to_string(), l))
         })
 }
 
 impl Config {
-    pub fn new(layouts: AHashMap<String, Rc<Layout>>, raw: RawConfig) -> Self {
+    pub fn new(layouts: EnumMap<InputCategory, Layout>, raw: RawConfig) -> Self {
+        let all_addons = raw.layout_addons.get("all").copied().unwrap_or_default();
+
         Self {
-            global_layout_state: raw.global_layout_state,
-            category_default_layout: raw.category_default_layout,
+            global_category_state: raw.global_category_state,
             default_category: raw.default_category,
             layouts,
             word_commit: raw.word_commit,
-            layout_addons: raw.layout_addons.into_iter().collect(),
+            layout_addons: (|category| {
+                let name = &raw.category_layout[category];
+                all_addons.union(raw.layout_addons.get(name).copied().unwrap_or_default())
+            })
+            .into(),
+            category_layout: raw.category_layout,
             hotkeys: raw.hotkeys.into_iter().collect(),
             xim_preedit_font: raw.xim_preedit_font,
         }
     }
 
+    pub fn from_layout_map(mut layouts: AHashMap<String, Layout>, raw: RawConfig) -> Self {
+        Self::new(
+            (|category| {
+                let name = raw.category_layout[category].as_str();
+                layouts.remove(name).unwrap_or_default()
+            })
+            .into(),
+            raw,
+        )
+    }
+
     pub fn from_raw_config(raw: RawConfig) -> Self {
-        Self::new(builtin_layouts().collect(), raw)
+        Self::from_layout_map(builtin_layouts().collect(), raw)
     }
 
     #[cfg(unix)]
@@ -288,10 +304,10 @@ impl Config {
 
                 Layout::load_from(std::fs::read_to_string(&path).ok()?.as_str())
                     .ok()
-                    .map(|l| (name.to_string(), Rc::new(l)))
+                    .map(|l| (name.to_string(), l))
             });
 
-        Self::new(builtin_layouts().chain(custom_layouts).collect(), raw)
+        Self::from_layout_map(builtin_layouts().chain(custom_layouts).collect(), raw)
     }
 
     #[cfg(unix)]

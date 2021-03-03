@@ -11,7 +11,6 @@ use ahash::AHashMap;
 use crate::characters::KeyValue;
 use crate::os::{DefaultOsContext, OsContext};
 use enumset::EnumSet;
-use std::rc::Rc;
 
 pub use crate::config::{
     Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, InputCategory, RawConfig, BUILTIN_LAYOUTS,
@@ -22,7 +21,6 @@ pub use crate::state::HangulState;
 
 pub struct LayoutContext {
     pub input_category: InputCategory,
-    pub layout: Rc<Layout>,
     pub layout_addons: EnumSet<Addon>,
 }
 
@@ -34,27 +32,15 @@ impl Default for LayoutContext {
 
 impl LayoutContext {
     pub fn new(config: &Config) -> Self {
-        let mut ret = Self {
+        Self {
             input_category: config.default_category,
-            layout_addons: EnumSet::empty(),
-            layout: Rc::new(Layout::default()),
-        };
-
-        ret.update_layout(ret.input_category, config);
-
-        ret
+            layout_addons: config.layout_addons[config.default_category],
+        }
     }
 
     pub fn update_layout(&mut self, category: InputCategory, config: &Config) {
-        let name = &config.category_default_layout[category];
         self.input_category = category;
-        self.layout = config.layouts.get(name).cloned().unwrap_or_default();
-        self.layout_addons = config
-            .layout_addons
-            .get("all")
-            .copied()
-            .unwrap_or_default()
-            .union(config.layout_addons.get(name).copied().unwrap_or_default());
+        self.layout_addons = config.layout_addons[category];
     }
 
     pub fn check_addon(&self, addon: Addon) -> bool {
@@ -126,8 +112,8 @@ impl InputEngine {
         InputResult::NEED_RESET
     }
 
-    fn try_get_global_layout_state(&mut self, config: &Config) {
-        if config.global_layout_state {
+    fn try_get_global_input_category_state(&mut self, config: &Config) {
+        if config.global_category_state {
             let global = if self
                 .os_ctx
                 .read_global_hangul_state()
@@ -209,11 +195,14 @@ impl InputEngine {
             // Don't reset state
             self.state.preedit_result()
         } else {
-            self.try_get_global_layout_state(config);
+            self.try_get_global_input_category_state(config);
 
             if key.code == KeyCode::Backspace {
                 self.state.backspace(&self.layout_ctx)
-            } else if let Some(v) = self.layout_ctx.layout.keymap.get(&key) {
+            } else if let Some(v) = config.layouts[self.layout_ctx.input_category]
+                .keymap
+                .get(&key)
+            {
                 self.state.key(v, &self.layout_ctx)
             } else {
                 self.bypass()

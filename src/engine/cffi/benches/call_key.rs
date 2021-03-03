@@ -3,7 +3,7 @@
 
 extern crate test;
 
-use kime_engine_cffi::{check_api_version, Config, InputEngine, InputCategory};
+use kime_engine_cffi::{check_api_version, Config, InputCategory, InputEngine};
 
 #[bench]
 fn simple(b: &mut test::Bencher) {

@@ -1,9 +1,9 @@
 ---
 default_category: Latin
-category_default_layout:
+category_layout:
   Latin: direct
   Hangul: dubeolsik
-global_layout_state: false
+global_category_state: false
 word_commit: false
 hotkeys:
   Super-Space:

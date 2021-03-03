@@ -8,18 +8,43 @@
 
 [xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
 
-## layout
+## default_category
 
-키보드 자판을 설정합니다. `dubeolsik`(두벌식), `sebeolsik-390`(세벌식 390), `sebeolsik-391`(세벌식 391)이 기본으로 내장되어 있습니다. `$XDG_CONFIG_HOME/kime/layouts/`에 위 목록에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
+입력기가 시작될때의 기본 언어를 설정합니다. `Latin`(로마자), `Hangul`(한글) 중에서 설정해주세요
+
+| 기본값 |`Latin`|
+|--------|-------|
+
+## category_layout
+
+언어별 키보드 자판을 설정합니다.
+
+### 내장된 자판들
+
+* `direct`
+* `qwerty`
+* `colmak`
+* `dubeolsik`(두벌식)
+* `sebeolsik-390`(세벌식 390)
+* `sebeolsik-391`(세벌식 최종)
+* `sebeolsik-3sin-1995`(신세벌식 1995)
+* `sebeolsik-3sin-p2`(신세벌식 p2 *옛한글은 미구현*)
+
+`$XDG_CONFIG_HOME/kime/layouts/`에 위 목록에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
 
 [dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
 
-| 기본값 |`dubeolsik`|
-|--------|-----------|
+### 기본값
 
-## global_hangul_state
+```yaml
+category_layout:
+  Latin: direct
+  Hangul: dubeolsi
+```
 
-한영상태를 전역에서 설정합니다.
+## global_category_state
+
+언어상태를 전역에서 설정합니다.
 
 | 기본값 |`false`|
 |--------|-------|
@@ -38,50 +63,60 @@
 ### 기본값
 
 ```yaml
-Super-Space:
-  behavior: ToggleHangul
-  result: Consume
-M-C-E:
-  behavior: Emoji
-  result: ConsumeIfProcessed
-Esc:
-  behavior: ToEnglish
-  result: Bypass
-ControlR:
-  behavior: Hanja
-  result: Consume
-Muhenkan:
-  behavior: ToggleHangul
-  result: Consume
-AltR:
-  behavior: ToggleHangul
-  result: Consume
-Hangul:
-  behavior: ToggleHangul
-  result: Consume
-HangulHanja:
-  behavior: Hanja
-  result: Consume
-F9:
-  behavior: Hanja
-  result: Consume
+hotkeys:
+  Super-Space:
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
+    result: Consume
+  M-C-E:
+    behavior: Emoji
+    result: ConsumeIfProcessed
+  Esc:
+    behavior:
+      Switch: Latin
+    result: Bypass
+  ControlR:
+    behavior: Hanja
+    result: Consume
+  Muhenkan:
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
+    result: Consume
+  AltR:
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
+    result: Consume
+  Hangul:
+    behavior:
+      Toggle:
+        - Hangul
+        - Latin
+    result: Consume
+  HangulHanja:
+    behavior: Hanja
+    result: Consume
+  F9:
+    behavior: Hanja
+    result: Consume
 ```
 
 ### 내용
 
 #### behavior
 
-##### ToggleHangul
+##### Toggle: [InputCategory, InputCategory]
 
-한영상태를 바꿉니다
+왼쪽과 오른쪽의 상태를 바꿉니다
 
-##### ToEnglish
+##### Switch: InputCategory
 
-영문모드로 바꿉니다
-
-##### ToHangul
-
-한글모드로 바꿉니다
+해당 언어로 바꿉니다
 
 ##### Commit
 

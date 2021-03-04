@@ -9,7 +9,6 @@
 ### Improve
 
 * Prevent double key press [#344](https://github.com/Riey/kime/issues/344)
-* Don't use gtk-put-event [#348](https://github.com/Riey/kime/issues/348)
 
 ## 1.3.1
 

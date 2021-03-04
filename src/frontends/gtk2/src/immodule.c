@@ -39,6 +39,8 @@ typedef struct KimeImContext {
   KimeSignals signals;
   KimeInputEngine *engine;
   gboolean preedit_visible;
+  // for firefox edge case
+  gboolean preedit_has_ended;
   KimeConfig *config;
 } KimeImContext;
 
@@ -141,6 +143,8 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
 
 gboolean on_key_input(KimeImContext *ctx, guint16 code,
                       KimeModifierState state) {
+  ctx->preedit_has_ended = FALSE;
+
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
 
@@ -149,6 +153,7 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
   }
 
   if (!(ret & KimeInputResult_HAS_PREEDIT)) {
+    ctx->preedit_has_ended = ctx->preedit_visible;
     update_preedit(ctx, FALSE);
   }
 
@@ -181,8 +186,6 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   GdkModifierType state = gdk_event_get_modifier_state(key);
 #else
   if (key->type != GDK_KEY_PRESS || key->state & HANDLED_MASK) {
-    if (key->state & HANDLED_MASK)
-      debug("handled");
     return FALSE;
   }
   guint16 code = key->hardware_keycode;
@@ -211,9 +214,11 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   if (on_key_input(ctx, code, kime_state) ||
       commit_event(ctx, state, keyval)) {
     return TRUE;
-  } else {
+  } else if (ctx->preedit_has_ended) {
     // Can't just return FALSE because firefox can't accept FALSE when preedit-end is called
     put_event(ctx, key);
+    return TRUE;
+  } else {
     return FALSE;
   }
 }
@@ -290,6 +295,8 @@ void im_context_class_finalize(KimeImContextClass *klass, gpointer _data) {
 void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->buf = str_buf_new();
   ctx->client = NULL;
+  ctx->preedit_visible = FALSE;
+  ctx->preedit_has_ended = FALSE;
   ctx->signals = klass->signals;
   ctx->engine = kime_engine_new(klass->config);
   ctx->config = klass->config;

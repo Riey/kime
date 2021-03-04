@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 static GType KIME_TYPE_IM_CONTEXT = 0;
+// for many buggy gtk apps
+static const guint HANDLED_MASK = 1 << 25;
 
 #if GTK_CHECK_VERSION(3, 98, 4)
 typedef GtkWidget ClientType;
@@ -14,8 +16,6 @@ typedef GdkWindow ClientType;
 typedef GdkEventKey EventType;
 #endif
 
-// prevent double press event see #344
-#define KIME_HANDLED_MASK (1 << 25)
 static const guint NOT_ENGLISH_MASK =
     GDK_ALT_MASK | GDK_CONTROL_MASK | GDK_SUPER_MASK;
 
@@ -39,6 +39,8 @@ typedef struct KimeImContext {
   KimeSignals signals;
   KimeInputEngine *engine;
   gboolean preedit_visible;
+  // for firefox edge case
+  gboolean preedit_has_ended;
   KimeConfig *config;
 } KimeImContext;
 
@@ -112,6 +114,19 @@ void focus_out(GtkIMContext *im) {
   kime_reset(ctx);
 }
 
+void put_event(KimeImContext *ctx, EventType *key) {
+#if GTK_CHECK_VERSION(3, 98, 4)
+  gtk_im_context_filter_key(
+      GTK_IM_CONTEXT(ctx), gdk_event_get_event_type(key) == GDK_KEY_PRESS,
+      gdk_event_get_surface(key), gdk_event_get_device(key),
+      gdk_event_get_time(key), gdk_key_event_get_keycode(key),
+      gdk_event_get_modifier_state(key) | HANDLED_MASK, 0);
+#else
+  key->state |= HANDLED_MASK;
+  gdk_event_put((GdkEvent *)key);
+#endif
+}
+
 gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
   if (!(state & NOT_ENGLISH_MASK)) {
     uint32_t c = gdk_keyval_to_unicode(keyval);
@@ -128,6 +143,8 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
 
 gboolean on_key_input(KimeImContext *ctx, guint16 code,
                       KimeModifierState state) {
+  ctx->preedit_has_ended = FALSE;
+
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
 
@@ -136,6 +153,7 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
   }
 
   if (!(ret & KimeInputResult_HAS_PREEDIT)) {
+    ctx->preedit_has_ended = ctx->preedit_visible;
     update_preedit(ctx, FALSE);
   }
 
@@ -167,23 +185,13 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint keyval = gdk_key_event_get_keyval(key);
   GdkModifierType state = gdk_event_get_modifier_state(key);
 #else
-#if DEBUG
-  debug("type: %d, state: %d, code: %d", key->type, key->state,
-        key->hardware_keycode);
-#endif
-
-  if (key->type != GDK_KEY_PRESS) {
+  if (key->type != GDK_KEY_PRESS || key->state & HANDLED_MASK) {
     return FALSE;
   }
   guint16 code = key->hardware_keycode;
   guint keyval = key->keyval;
   GdkModifierType state = key->state;
 #endif
-
-  // prevent double press event see #344
-  if (state & KIME_HANDLED_MASK) {
-    return TRUE;
-  }
 
   KimeModifierState kime_state = 0;
 
@@ -203,13 +211,14 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     kime_state |= KimeModifierState_SUPER;
   }
 
-  if (on_key_input(ctx, code, kime_state) || commit_event(ctx, state, keyval)) {
+  if (on_key_input(ctx, code, kime_state) ||
+      commit_event(ctx, state, keyval)) {
+    return TRUE;
+  } else if (ctx->preedit_has_ended) {
+    // Can't just return FALSE because firefox can't accept FALSE when preedit-end is called
+    put_event(ctx, key);
     return TRUE;
   } else {
-// prevent double press event see #344
-#if !GTK_CHECK_VERSION(3, 98, 4)
-    key->state |= KIME_HANDLED_MASK;
-#endif
     return FALSE;
   }
 }
@@ -286,6 +295,8 @@ void im_context_class_finalize(KimeImContextClass *klass, gpointer _data) {
 void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->buf = str_buf_new();
   ctx->client = NULL;
+  ctx->preedit_visible = FALSE;
+  ctx->preedit_has_ended = FALSE;
   ctx->signals = klass->signals;
   ctx->engine = kime_engine_new(klass->config);
   ctx->config = klass->config;

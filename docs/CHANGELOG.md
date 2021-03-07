@@ -9,6 +9,7 @@
 ### Improve
 
 * Prevent double key press [#344](https://github.com/Riey/kime/issues/344)
+* Emoji hotkey now use `rofimoji`
 
 ## 1.3.1
 

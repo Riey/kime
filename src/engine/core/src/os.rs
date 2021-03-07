@@ -14,6 +14,7 @@ mod unix {
     use std::io::{self, Read, Write};
     use std::net::Shutdown;
     use std::os::unix::net::UnixStream;
+    use std::process;
 
     pub struct OsContext {
         buf: Vec<u8>,
@@ -66,18 +67,22 @@ mod unix {
         }
 
         fn emoji(&mut self, state: &mut HangulState) -> io::Result<bool> {
-            let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-            stream.write_all(b"e")?;
-            stream.flush()?;
-            stream.shutdown(Shutdown::Write)?;
-            let len = stream.read_to_end(&mut self.buf)?;
+            let mut rofimoji = process::Command::new("rofimoji")
+                .arg("--action")
+                .arg("print")
+                .stdout(process::Stdio::piped())
+                .spawn()?;
 
-            if len == 0 {
+            let len = rofimoji.stdout.as_mut().unwrap().read_to_end(&mut self.buf)?;
+
+            let exit = rofimoji.wait()?;
+
+            if !exit.success() || len == 0 {
                 Ok(false)
             } else {
                 let emoji = std::str::from_utf8(&self.buf[..len])
                     .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-                state.pass(emoji);
+                state.pass(emoji.trim_end_matches('\n'));
                 self.buf.clear();
 
                 Ok(true)

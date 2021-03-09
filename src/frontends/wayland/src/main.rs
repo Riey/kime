@@ -6,6 +6,26 @@ use wayland_client::{
     DispatchData, Display, Filter, GlobalManager, Main,
 };
 
+mod zwp_input_method {
+    // The generated code tends to trigger a lot of warnings
+    // so we isolate it into a very permissive module
+    #![allow(dead_code, non_camel_case_types, unused_unsafe, unused_variables)]
+    #![allow(non_upper_case_globals, non_snake_case, unused_imports)]
+    pub mod input_method_unstable_v2 {
+        // These imports are used by the generated code
+        use wayland_client::protocol::*;
+        use wayland_client::sys;
+        use wayland_client::{AnonymousObject, Attached, Main, Proxy, ProxyMap};
+        use wayland_commons::map::{Object, ObjectMetadata};
+        use wayland_commons::smallvec;
+        use wayland_commons::wire::{Argument, ArgumentType, Message, MessageDesc};
+        use wayland_commons::{Interface, MessageGroup};
+        use wayland_protocols::unstable::text_input::v3::client::zwp_text_input_v3;
+        // Include generated code
+        include!(concat!(env!("OUT_DIR"), "/input_method_api.rs"));
+    }
+}
+
 use zwp_input_method::input_method_unstable_v2::{
     zwp_input_method_keyboard_grab_v2::{Event as KeyEvent, ZwpInputMethodKeyboardGrabV2},
     zwp_input_method_manager_v2::ZwpInputMethodManagerV2,
@@ -322,7 +342,6 @@ impl KimeContext {
                     Some((info, press_state.unwrap_or(PressState::NotPressing)))
                 }
             }
-            _ => {}
         }
     }
 

@@ -43,15 +43,6 @@ jobs:
     - name: Run tests
       run: cargo test --all
 
-  markdown-lint:
-    runs-on: ubuntu-20.04
-
-    steps:
-      - uses: actions/checkout@v2
-      - run: sudo npm install -g markdownlint-cli
-      - run: sudo npm install -g markdown-link-check
-      - run: ci/check_md.sh
-
   cargo-deny:
     runs-on: ubuntu-20.04
     strategy:

@@ -35,7 +35,7 @@ typedef struct KimeImContextClass {
 typedef struct KimeImContext {
   GtkIMContext parent;
   StrBuf buf;
-  ClientType *client;
+  GtkWidget *widget;
   KimeSignals signals;
   KimeInputEngine *engine;
   gboolean preedit_visible;
@@ -211,11 +211,11 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     kime_state |= KimeModifierState_SUPER;
   }
 
-  if (on_key_input(ctx, code, kime_state) ||
-      commit_event(ctx, state, keyval)) {
+  if (on_key_input(ctx, code, kime_state) || commit_event(ctx, state, keyval)) {
     return TRUE;
   } else if (ctx->preedit_has_ended) {
-    // Can't just return FALSE because firefox can't accept FALSE when preedit-end is called
+    // Can't just return FALSE because firefox can't accept FALSE when
+    // preedit-end is called
     put_event(ctx, key);
     return TRUE;
   } else {
@@ -223,18 +223,45 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   }
 }
 
+GtkWidget *client_get_widget(ClientType *client) {
+#if GTK_CHECK_VERSION(3, 98, 4)
+  return client;
+#else
+  while (client) {
+    gpointer user_data;
+    gdk_window_get_user_data(client, &user_data);
+    if (user_data)
+      return user_data;
+    client = gdk_window_get_parent(client);
+  }
+  return NULL;
+#endif
+}
+
+gboolean client_button_press(GtkWidget *widget, GdkEvent *event,
+                             gpointer user_data) {
+  debug("button");
+  KimeImContext *ctx = (KimeImContext *)user_data;
+  kime_reset(ctx);
+
+  return FALSE;
+}
+
 void set_client(GtkIMContext *im, ClientType *client) {
   KIME_IM_CONTEXT(im);
+  GtkWidget *widget = client_get_widget(client);
 
-  if (ctx->client) {
-    g_object_unref(ctx->client);
+  if (ctx->widget) {
+    g_signal_handlers_disconnect_by_func(ctx->widget,
+                                         (GCallback)client_button_press, ctx);
+    g_object_unref(ctx->widget);
   }
-
-  if (client) {
-    g_object_ref(client);
+  if (widget) {
+    g_signal_connect(widget, "button-press-event",
+                     (GCallback)client_button_press, ctx);
+    g_object_ref(widget);
   }
-
-  ctx->client = client;
+  ctx->widget = widget;
 }
 
 void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
@@ -273,51 +300,28 @@ void get_preedit_string(GtkIMContext *im, gchar **out, PangoAttrList **attrs,
   }
 }
 
-#if !GTK_CHECK_VERSION(3, 98, 4)
-// workaround click bug perhaps not occured in gtk4 see #282
-GdkFilterReturn global_filter_event(GdkXEvent *xevent, GdkEvent *event,
-                                    gpointer data) {
-  KimeImContext *ctx = (KimeImContext *)data;
-
-  // button press
-  if (*((int *)xevent) == 4) {
-    kime_reset(ctx);
-  }
-
-  return GDK_FILTER_CONTINUE;
-}
-#endif
-
 void im_context_class_finalize(KimeImContextClass *klass, gpointer _data) {
   kime_config_delete(klass->config);
 }
 
 void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->buf = str_buf_new();
-  ctx->client = NULL;
+  ctx->widget = NULL;
   ctx->preedit_visible = FALSE;
   ctx->preedit_has_ended = FALSE;
   ctx->signals = klass->signals;
   ctx->engine = kime_engine_new(klass->config);
   ctx->config = klass->config;
-
-#if !GTK_CHECK_VERSION(3, 98, 4)
-  gdk_window_add_filter(NULL, global_filter_event, ctx);
-#endif
 }
 
 void im_context_finalize(GObject *obj) {
   KIME_IM_CONTEXT(obj);
   str_buf_delete(&ctx->buf);
-  if (ctx->client) {
-    g_object_unref(ctx->client);
-    ctx->client = NULL;
+  if (ctx->widget) {
+    g_object_unref(ctx->widget);
+    ctx->widget = NULL;
   }
   kime_engine_delete(ctx->engine);
-
-#if !GTK_CHECK_VERSION(3, 98, 4)
-  gdk_window_remove_filter(NULL, global_filter_event, ctx);
-#endif
 }
 
 void im_context_class_init(KimeImContextClass *klass, gpointer _data) {

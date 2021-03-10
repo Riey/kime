@@ -9,6 +9,7 @@
 ### Improve
 
 * Prevent double key press [#344](https://github.com/Riey/kime/issues/344)
+* Using signal connect client's window instead of `gdk_window_add_filter`
 
 ## 1.3.1
 

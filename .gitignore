@@ -3,7 +3,9 @@
 /cmake_build
 /cargo-timing*
 /.idea
+/.cache
 /.ccls-cache
+compile_commands.json
 kime_engine.h
 kime_engine.hpp
 

@@ -1,0 +1,13 @@
+[package]
+name = "kime-engine-dict"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+phf = "0.8.0"
+
+[build-dependencies]
+itertools = "0.10.0"
+phf_codegen = "0.8.0"

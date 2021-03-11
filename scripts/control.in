@@ -5,5 +5,5 @@ Description: Korean IME
 Homepage: https://github.com/Riey/kime
 Section: utils
 Priority: optional
-Architecture: amd64
+Architecture: %ARCH%
 Depends: libcairo2, libxcb1

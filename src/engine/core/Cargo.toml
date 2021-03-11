@@ -6,6 +6,7 @@ edition = "2018"
 license = "GPL-3.0"
 
 [dependencies]
+kime-engine-dict = { path = "../dict" }
 ahash = { version = "0.7.0", features = ["serde"] }
 bitflags = "1.2.1"
 enum-map = "0.6.4"

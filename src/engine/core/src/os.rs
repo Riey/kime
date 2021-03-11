@@ -11,9 +11,9 @@ pub trait OsContext {
 #[cfg(unix)]
 mod unix {
     use crate::HangulState;
-    use std::io::{self, Read, Write};
-    use std::net::Shutdown;
+    use std::io::{self, BufWriter, Read, Write};
     use std::os::unix::net::UnixStream;
+    use std::process::{Command, Stdio};
 
     pub struct OsContext {
         buf: Vec<u8>,
@@ -46,42 +46,74 @@ mod unix {
         }
 
         fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool> {
-            let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
             let hangul = state.preedit_str();
-            stream.write_all(format!("h{}", hangul).as_bytes())?;
-            stream.flush()?;
-            stream.shutdown(Shutdown::Write)?;
-            let len = stream.read_to_end(&mut self.buf)?;
+            let mut hanja = String::with_capacity(hangul.len());
+            let mut buf = [0; 8];
 
-            if len == 0 {
-                Ok(false)
-            } else {
-                let hanja = std::str::from_utf8(&self.buf[..len])
-                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-                state.pass_replace(hanja);
-                self.buf.clear();
+            for ch in hangul.chars() {
+                let hanjas = kime_engine_dict::lookup(ch);
 
-                Ok(true)
+                if hanjas.is_empty() {
+                    hanja.push(ch);
+                    continue;
+                }
+
+                let mut rofi = Command::new("rofi")
+                    .arg("-dmenu")
+                    .arg("-i")
+                    .arg("-format")
+                    .arg("i")
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped())
+                    .spawn()?;
+
+                let mut stdin = BufWriter::new(rofi.stdin.take().unwrap());
+
+                for (hanja, definition) in hanjas.iter().copied() {
+                    stdin.write_all(hanja.encode_utf8(&mut buf[..]).as_bytes())?;
+                    stdin.write_all(b": ")?;
+                    stdin.write_all(definition.as_bytes())?;
+                    stdin.write_all(b"\n")?;
+                }
+
+                stdin.flush()?;
+
+                let mut stdout = rofi.stdout.take().unwrap();
+                let len = stdout.read_to_end(&mut self.buf)?;
+                let h = std::str::from_utf8(&self.buf[..len])
+                    .ok()
+                    .and_then(|l| hanjas.get(l.trim_end_matches('\n').parse::<usize>().ok()?))
+                    .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Not valid index"))?
+                    .0;
+
+                rofi.wait()?;
+
+                hanja.push(h);
             }
+
+            state.pass_replace(&hanja);
+            self.buf.clear();
+
+            Ok(true)
         }
 
         fn emoji(&mut self, state: &mut HangulState) -> io::Result<bool> {
-            let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-            stream.write_all(b"e")?;
-            stream.flush()?;
-            stream.shutdown(Shutdown::Write)?;
-            let len = stream.read_to_end(&mut self.buf)?;
+            let mut rofimoji = Command::new("rofimoji")
+                .arg("--action")
+                .arg("print")
+                .stdout(Stdio::piped())
+                .spawn()?;
 
-            if len == 0 {
-                Ok(false)
-            } else {
-                let emoji = std::str::from_utf8(&self.buf[..len])
-                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-                state.pass(emoji);
-                self.buf.clear();
+            let mut stdout = rofimoji.stdout.take().unwrap();
+            let len = stdout.read_to_end(&mut self.buf)?;
+            let emoji = std::str::from_utf8(&self.buf[..len])
+                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
-                Ok(true)
-            }
+            rofimoji.wait()?;
+
+            state.pass(emoji.trim_end_matches('\n'));
+            self.buf.clear();
+            Ok(true)
         }
     }
 }

@@ -3,6 +3,7 @@ members = [
     "src/engine/core",
     "src/engine/capi",
     "src/engine/cffi",
+    "src/engine/dict",
 
     "src/frontends/wayland",
     "src/frontends/xim",

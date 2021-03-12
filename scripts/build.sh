@@ -49,6 +49,11 @@ while getopts hrda opt; do
             set_debug
             ;;
         a)
+            KIME_BUILD_CHECK=1
+            KIME_BUILD_WAYLAND=1
+            if (pkg-config --exists xcb && pkg-config --exists cairo); then
+                KIME_BUILD_XIM=1
+            fi
             KIME_CMAKE_ARGS="-DENABLE_GTK2=ON -DENABLE_GTK3=ON -DENABLE_GTK4=ON -DENABLE_QT5=ON -DENABLE_QT6=ON $KIME_CMAKE_ARGS"
             ;;
     esac
@@ -56,23 +61,37 @@ done
 
 if [ "$KIME_SKIP_ENGINE" -eq "1" ]; then
     _KIME_CMAKE_ARGS="${_KIME_CMAKE_ARGS} -DUSE_SYSTEM_ENGINE=ON"
+    unset KIME_BUILD_CHECK
     echo Use system engine
 else
     LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PWD}/${TARGET_DIR}"
     echo Build core...
     cargo_build -p kime-engine-capi
-    echo Build check...
-    cargo_build -p kime-check
     cp $TARGET_DIR/libkime_engine.so $KIME_OUT
-    cp $TARGET_DIR/kime-check $KIME_OUT
 fi
 
-echo Build xim wayland...
+echo Build rust pkgs
 
-cargo_build -p kime-xim -p kime-wayland
+KIME_RUST_PKGS=()
 
-cp $TARGET_DIR/kime-xim $KIME_OUT
-cp $TARGET_DIR/kime-wayland $KIME_OUT
+if [ "$KIME_BUILD_CHECK" -eq "1" ]; then
+    KIME_RUST_PKGS+=("-pkime-check")
+fi
+
+if [ "$KIME_BUILD_XIM" -eq "1" ]; then
+    KIME_RUST_PKGS+=("-pkime-xim")
+fi
+
+if [ "$KIME_BUILD_WAYLAND" -eq "1" ]; then
+    KIME_RUST_PKGS+=("-pkime-wayland")
+fi
+
+cargo_build "${KIME_RUST_PKGS[@]}"
+
+cp $TARGET_DIR/kime-check $KIME_OUT || true
+cp $TARGET_DIR/kime-xim $KIME_OUT || true
+cp $TARGET_DIR/kime-wayland $KIME_OUT || true
+
 cp src/engine/cffi/kime_engine.h $KIME_OUT
 cp src/engine/cffi/kime_engine.hpp $KIME_OUT
 cp LICENSE $KIME_OUT

@@ -12,6 +12,7 @@
 * Using signal connect client's window instead of `gdk_window_add_filter`
 * Insert emoji with `rofimoji`
 * Embed hanja dict
+* Support multiple archtectures
 
 ## 1.3.1
 

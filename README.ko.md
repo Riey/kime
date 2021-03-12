@@ -158,9 +158,6 @@ kime은 실행하실수 있는 여러 .desktop 파일을 설치합니다
 * cargo
 * libclang
 * pkg-config
-* libappindicator-gtk3
-* libxcb
-* cairo
 
 #### 선택적
 
@@ -169,3 +166,6 @@ kime은 실행하실수 있는 여러 .desktop 파일을 설치합니다
 * gtk4
 * qtbase5-private
 * qtbase6-private
+* libappindicator-gtk3
+* libxcb
+* cairo

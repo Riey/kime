@@ -17,7 +17,7 @@ VER=$(git tag --sort=v:refname | tail -1 | cut -b2-)
 mkdir -pv $TMP_PATH/DEBIAN
 mkdir -pv $TMP_PATH/usr/share/im-config/data
 
-cat scripts/control.in | sed "s/%VER%/$VER/" | sed "s/%ARCH%/$ARCH" > $TMP_PATH/DEBIAN/control
+cat scripts/control.in | sed "s/%VER%/$VER/; s/%ARCH%/$ARCH/" > $TMP_PATH/DEBIAN/control
 cp scripts/im_kime.rc $TMP_PATH/usr/share/im-config/data/$KIME_PREFIX.rc
 cp scripts/im_kime.conf $TMP_PATH/usr/share/im-config/data/$KIME_PREFIX.conf
 

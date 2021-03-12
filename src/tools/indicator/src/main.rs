@@ -162,9 +162,9 @@ fn client_send(file_path: &Path, color: IconColor, lang: Lang) -> io::Result<()>
 
 fn main() {
     let mut args = kime_version::cli_boilerplate!(
-        "--dark: show dark icon (default)",
+        "--black: show black icon (default)",
         "--white: show white icon",
-        "--english: set english (default)",
+        "--latin: set latin (default)",
         "--hangul: set hangul",
     );
 

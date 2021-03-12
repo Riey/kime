@@ -161,9 +161,6 @@ for example, if you don't use qt6 it won't required.
 * cargo
 * libclang
 * pkg-config
-* libappindicator-gtk3
-* libxcb
-* cairo
 
 #### Optional
 
@@ -172,3 +169,6 @@ for example, if you don't use qt6 it won't required.
 * gtk4
 * qtbase5-private
 * qtbase6-private
+* libappindicator-gtk3
+* libxcb
+* cairo

@@ -12,5 +12,5 @@ nightly = []
 cty = "0.2.1"
 
 [build-dependencies]
-bindgen = { version = "0.57.0", default-features = false }
+bindgen = { version = "0.52.0", default-features = false }
 cbindgen = { version = "0.17.0", default-features = false }

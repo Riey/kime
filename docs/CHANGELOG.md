@@ -13,6 +13,7 @@
 * Insert emoji with `rofimoji`
 * Embed hanja dict
 * Support multiple archtectures
+* Hide desktop entries from DE menu and application launchers [#357](https://github.com/Riey/kime/pull/357)
 
 ## 1.3.1
 

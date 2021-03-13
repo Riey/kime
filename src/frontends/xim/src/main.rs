@@ -7,7 +7,14 @@ use xim::{x11rb::HasConnection, ServerError, XimConnections};
 mod handler;
 mod pe_window;
 
-fn main_inner() -> Result<(), ServerError> {
+fn main() -> Result<(), ServerError> {
+    kime_version::cli_boilerplate!(Ok(()),);
+
+    assert!(
+        kime_engine_cffi::check_api_version(),
+        "Engine version mismatched"
+    );
+
     let config = kime_engine_cffi::Config::load();
 
     let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;
@@ -38,22 +45,6 @@ fn main_inner() -> Result<(), ServerError> {
                     log::trace!("Unfiltered event: {:?}", e);
                 }
             }
-        }
-    }
-}
-
-fn main() {
-    kime_version::cli_boilerplate!();
-
-    assert!(
-        kime_engine_cffi::check_api_version(),
-        "Engine version mismatched"
-    );
-
-    match main_inner() {
-        Ok(_) => {}
-        Err(err) => {
-            log::error!("Server error: {}", err);
         }
     }
 }

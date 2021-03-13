@@ -2,10 +2,7 @@ use anyhow::Result;
 use gio::{prelude::*, FileExt, FileMonitorEvent};
 use gobject_sys::g_signal_connect_data;
 use libappindicator_sys::{AppIndicator, AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE};
-use std::path::Path;
-use std::ptr;
-use std::{env, path::PathBuf};
-use std::{ffi::CString, io};
+use std::{ffi::CString, path::Path, ptr};
 
 macro_rules! cs {
     ($ex:expr) => {
@@ -13,13 +10,13 @@ macro_rules! cs {
     };
 }
 
-#[derive(Clone, Copy)]
-enum Lang {
-    Eng,
-    Han,
+#[derive(Clone, Copy, Debug)]
+enum InputCategory {
+    Latin,
+    Hangul,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum IconColor {
     Black,
     White,
@@ -75,10 +72,30 @@ impl Indicator {
         }
     }
 
-    pub fn update(&self, color: IconColor, lang: Lang) {
+    pub fn update_with_bytes(&self, bytes: &[u8]) {
+        if bytes.len() < 2 {
+            return;
+        }
+
+        let category = match bytes[0] {
+            1 => InputCategory::Hangul,
+            _ => InputCategory::Latin,
+        };
+
+        let color = match bytes[1] {
+            1 => IconColor::White,
+            _ => IconColor::Black,
+        };
+
+        self.update(category, color);
+    }
+
+    pub fn update(&self, category: InputCategory, color: IconColor) {
+        log::debug!("Update: ({:?}, {:?})", category, color);
+
         unsafe {
-            match lang {
-                Lang::Eng => {
+            match category {
+                InputCategory::Latin => {
                     libappindicator_sys::app_indicator_set_icon(
                         self.indicator,
                         match color {
@@ -87,7 +104,7 @@ impl Indicator {
                         },
                     );
                 }
-                Lang::Han => {
+                InputCategory::Hangul => {
                     libappindicator_sys::app_indicator_set_icon(
                         self.indicator,
                         match color {
@@ -107,7 +124,12 @@ fn indicator_server(file_path: &Path) -> Result<()> {
     }
 
     let indicator = Indicator::new();
-    indicator.update(IconColor::Black, Lang::Eng);
+
+    if let Ok(bytes) = std::fs::read(file_path) {
+        indicator.update_with_bytes(&bytes);
+    } else {
+        indicator.update(InputCategory::Latin, IconColor::Black);
+    }
 
     let cancellable: Option<&gio::Cancellable> = None;
     let file = gio::File::new_for_path(file_path);
@@ -121,18 +143,7 @@ fn indicator_server(file_path: &Path) -> Result<()> {
             let read = f.read(cancellable).unwrap();
             let len = read.read_all(&mut buf[..], cancellable).unwrap().0;
 
-            if len == 2 {
-                let color = match buf[0] {
-                    0 => IconColor::Black,
-                    _ => IconColor::White,
-                };
-                let lang = match buf[1] {
-                    0 => Lang::Eng,
-                    _ => Lang::Han,
-                };
-
-                indicator.update(color, lang);
-            }
+            indicator.update_with_bytes(&buf[..len]);
         }
         _ => {}
     });
@@ -144,66 +155,10 @@ fn indicator_server(file_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn client_send(file_path: &Path, color: IconColor, lang: Lang) -> io::Result<()> {
-    let mut msg = [0; 2];
+fn main() -> Result<()> {
+    kime_version::cli_boilerplate!(Ok(()),);
 
-    msg[0] = match color {
-        IconColor::Black => 0,
-        IconColor::White => 1,
-    };
-
-    msg[1] = match lang {
-        Lang::Eng => 0,
-        Lang::Han => 1,
-    };
-
-    std::fs::write(file_path, &msg)
-}
-
-fn main() {
-    let mut args = kime_version::cli_boilerplate!(
-        "--black: show black icon (default)",
-        "--white: show white icon",
-        "--latin: set latin (default)",
-        "--hangul: set hangul",
-    );
-
-    let mut color = IconColor::Black;
-
-    if args.contains("--white") {
-        color = IconColor::White;
-    }
-
-    let mut lang = Lang::Eng;
-
-    if args.contains("--hangul") {
-        lang = Lang::Han;
-    }
-
-    let run_dir = PathBuf::from(env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into()));
-    let pid_path = run_dir.join("kime-indicator.pid");
+    let run_dir = kime_run_dir::get_run_dir();
     let file_path = run_dir.join("kime-indicator.state");
-    let file_path_inner = file_path.clone();
-
-    let daemonize = daemonize::Daemonize::new()
-        .pid_file(pid_path)
-        .exit_action(move || {
-            client_send(&file_path_inner, color, lang).ok();
-        });
-
-    match daemonize.start() {
-        Ok(_) => match indicator_server(&file_path) {
-            Ok(_) => {}
-            Err(err) => {
-                log::error!("Error: {}", err);
-            }
-        },
-        // Already running
-        Err(daemonize::DaemonizeError::LockPidfile(_)) => {
-            client_send(&file_path, color, lang).ok();
-        }
-        Err(err) => {
-            log::error!("Start failed: {}", err);
-        }
-    }
+    indicator_server(&file_path)
 }

@@ -24,8 +24,7 @@ mod unix {
     }
 
     fn get_state_dir() -> PathBuf {
-        let run_path =
-            PathBuf::from(std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into()));
+        let run_path = kime_run_dir::get_run_dir();
         run_path.join("kime-indicator.state")
     }
 
@@ -54,22 +53,16 @@ mod unix {
             category: InputCategory,
             color: IconColor,
         ) -> io::Result<()> {
-            let color = match color {
-                IconColor::White => "--white",
-                IconColor::Black => "--black",
-            };
             let category = match category {
-                InputCategory::Latin => "--latin",
-                InputCategory::Hangul => "--hangul",
+                InputCategory::Latin => 0,
+                InputCategory::Hangul => 1,
+            };
+            let color = match color {
+                IconColor::Black => 0,
+                IconColor::White => 1,
             };
 
-            Command::new("kime-indicator")
-                .arg(color)
-                .arg(category)
-                .spawn()?
-                .wait()?;
-
-            Ok(())
+            std::fs::write(&self.state_path, &[category, color])
         }
 
         fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool> {
@@ -146,8 +139,8 @@ mod unix {
 }
 
 mod fallback {
+    use crate::{IconColor, InputCategory};
     use std::io;
-    use crate::{InputCategory, IconColor};
 
     #[derive(Default)]
     pub struct OsContext;

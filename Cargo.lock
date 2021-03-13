@@ -113,12 +113,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
-name = "boxfnonce"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5988cb1d626264ac94100be357308f29ff7cbdd3b36bda27f450a4ee3f713426"
-
-[[package]]
 name = "cairo-rs"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -236,16 +230,6 @@ name = "cty"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7313c0d620d0cb4dbd9d019e461a4beb501071ff46ec0ab933efb4daa76d73e3"
-
-[[package]]
-name = "daemonize"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70c24513e34f53b640819f0ac9f705b673fcf4006d7aab8778bee72ebfc89815"
-dependencies = [
- "boxfnonce",
- "libc",
-]
 
 [[package]]
 name = "darling"
@@ -784,6 +768,7 @@ dependencies = [
  "enum-map",
  "enumset",
  "kime-engine-dict",
+ "kime-run-dir",
  "num-derive",
  "num-traits",
  "serde",
@@ -806,17 +791,15 @@ name = "kime-indicator"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "daemonize",
  "gio",
  "glib",
  "gobject-sys",
  "gtk-sys",
- "kime-log",
+ "kime-run-dir",
  "kime-version",
  "libappindicator-sys",
  "log",
  "pico-args",
- "simplelog",
  "xdg",
 ]
 
@@ -828,9 +811,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kime-run-dir"
+version = "0.1.0"
+
+[[package]]
 name = "kime-version"
 version = "0.1.0"
 dependencies = [
+ "kime-log",
  "shadow-rs",
 ]
 
@@ -839,14 +827,12 @@ name = "kime-wayland"
 version = "0.1.0"
 dependencies = [
  "kime-engine-cffi",
- "kime-log",
  "kime-version",
  "libc",
  "log",
  "mio",
  "mio-timerfd",
  "pico-args",
- "simplelog",
  "wayland-client",
  "wayland-commons",
  "wayland-protocols",
@@ -861,7 +847,6 @@ dependencies = [
  "ahash",
  "cairo-rs",
  "kime-engine-cffi",
- "kime-log",
  "kime-version",
  "log",
  "pico-args",

@@ -19,3 +19,4 @@ strum = { version = "0.20.0", features = ["derive"] }
 
 [target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"
+kime-run-dir = { path = "../../tools/run_dir" }

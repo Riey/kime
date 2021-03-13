@@ -11,6 +11,7 @@ members = [
     "src/tools/check",
     "src/tools/indicator",
     "src/tools/log",
+    "src/tools/run_dir",
     "src/tools/version",
 ]
 

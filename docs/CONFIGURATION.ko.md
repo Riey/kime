@@ -53,8 +53,20 @@ category_layout:
 
 커밋을 단어 단위로 합니다.
 
-| default |`false`|
-|---------|-------|
+| 기본값 |`false`|
+|--------|-------|
+
+## icon_color
+
+indicator에서 사용할 아이콘의 색을 정합니다
+
+### 가능한 값
+
+* Black
+* White
+
+| 기본값 |`Black`|
+|--------|-------|
 
 ## hotkeys
 

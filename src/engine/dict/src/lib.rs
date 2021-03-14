@@ -12,8 +12,8 @@ mod tests {
 
     #[test]
     fn symbol_alpha() {
-        dbg!(&crate::dict::SYMBOL_DICT["alpha"]);
-        assert_eq!(crate::lookup_symbol("alpha"), Some("α"));
+        dbg!(&crate::dict::MATH_SYMBOL_DICT["alpha"]);
+        assert_eq!(crate::lookup_math_symbol("alpha"), Some("α"));
     }
 }
 
@@ -21,6 +21,6 @@ pub fn lookup(hangul: char) -> &'static [(char, &'static str)] {
     crate::dict::DICT.get(&hangul).copied().unwrap_or(&[])
 }
 
-pub fn lookup_symbol(keyword: &str) -> Option<&'static str> {
-    crate::dict::SYMBOL_DICT.get(keyword).copied()
+pub fn lookup_math_symbol(keyword: &str) -> Option<&'static str> {
+    crate::dict::MATH_SYMBOL_DICT.get(keyword).copied()
 }

@@ -120,7 +120,7 @@ fn main() {
     }
     writeln!(
         out,
-        "pub static SYMBOL_DICT: phf::Map<&'static str, &'static str> = {};",
+        "pub static MATH_SYMBOL_DICT: phf::Map<&'static str, &'static str> = {};",
         map.build()
     )
     .unwrap();

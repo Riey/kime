@@ -13,6 +13,8 @@
 * Insert emoji with `rofimoji`
 * Embed hanja dict
 * Support multiple archtectures
+* Integrate kime-indicator again
+* Add `icon_color` config
 * Replace `libappindicator` to `ksni`
 
 ## 1.3.1

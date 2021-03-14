@@ -31,8 +31,8 @@ struct HanjaEntry {
 
 #[derive(Deserialize)]
 struct KeySymPair {
-    keyword : String,
-    symbol : String
+    keyword: String,
+    symbol: String,
 }
 
 fn main() {
@@ -102,7 +102,8 @@ fn main() {
         out,
         "pub static DICT: phf::Map<char, &[(char, &str)]> = {};",
         map.build()
-        ).unwrap();
+    )
+    .unwrap();
 
     let symbol_map = include_str!("data/symbol_map.json");
     let symbol_map: Vec<KeySymPair> = serde_json::from_str(symbol_map).unwrap();
@@ -121,5 +122,6 @@ fn main() {
         out,
         "pub static SYMBOL_DICT: phf::Map<&'static str, &'static str> = {};",
         map.build()
-        ).unwrap();
+    )
+    .unwrap();
 }

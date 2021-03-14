@@ -70,7 +70,7 @@ install_bin () {
 }
 
 install_bin kime-check
-install_bin kime-window
+install_bin kime-indicator
 install_bin kime-xim
 install_bin kime-wayland
 

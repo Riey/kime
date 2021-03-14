@@ -146,7 +146,7 @@ kime은 실행하실수 있는 여러 .desktop 파일을 설치합니다
 * gtk4
 * qt5
 * qt6
-* libappindicator-gtk3 (indicator)
+* libdbus (indicator)
 * libxcb (xim)
 * cairo (xim)
 
@@ -166,6 +166,6 @@ kime은 실행하실수 있는 여러 .desktop 파일을 설치합니다
 * gtk4
 * qtbase5-private
 * qtbase6-private
-* libappindicator-gtk3
+* libdbus
 * libxcb
 * cairo

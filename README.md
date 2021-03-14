@@ -149,7 +149,7 @@ for example, if you don't use qt6 it won't required.
 * gtk4
 * qt5
 * qt6
-* libappindicator-gtk3 (indicator)
+* libdbus (indicator)
 * libxcb (xim)
 * cairo (xim)
 
@@ -169,6 +169,6 @@ for example, if you don't use qt6 it won't required.
 * gtk4
 * qtbase5-private
 * qtbase6-private
-* libappindicator-gtk3
+* libdbus
 * libxcb
 * cairo

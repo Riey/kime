@@ -36,10 +36,11 @@ while getopts hrda opt; do
     case $opt in
         h)
             echo "build.sh"
+            echo "Please set KIME_BUILD_{CHECK,INDICATOR,XIM,WAYLAND}, KIME_CMAKE_ARGS or use -a"
             echo "-h: help"
             echo "-r: release mode(default)"
             echo "-d: debug mode"
-            echo "-a: all immodules"
+            echo "-a: all modules"
             exit 0
             ;;
         r)
@@ -50,6 +51,7 @@ while getopts hrda opt; do
             ;;
         a)
             KIME_BUILD_CHECK=1
+            KIME_BUILD_INDICATOR=1
             KIME_BUILD_WAYLAND=1
             if (pkg-config --exists xcb && pkg-config --exists cairo); then
                 KIME_BUILD_XIM=1
@@ -78,6 +80,10 @@ if [ "$KIME_BUILD_CHECK" -eq "1" ]; then
     KIME_RUST_PKGS+=("-pkime-check")
 fi
 
+if [ "$KIME_BUILD_INDICATOR" -eq "1" ]; then
+    KIME_RUST_PKGS+=("-pkime-indicator")
+fi
+
 if [ "$KIME_BUILD_XIM" -eq "1" ]; then
     KIME_RUST_PKGS+=("-pkime-xim")
 fi
@@ -89,6 +95,7 @@ fi
 cargo_build "${KIME_RUST_PKGS[@]}"
 
 cp $TARGET_DIR/kime-check $KIME_OUT || true
+cp $TARGET_DIR/kime-indicator $KIME_OUT || true
 cp $TARGET_DIR/kime-xim $KIME_OUT || true
 cp $TARGET_DIR/kime-wayland $KIME_OUT || true
 

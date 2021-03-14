@@ -13,7 +13,8 @@ use crate::os::{DefaultOsContext, OsContext};
 use enumset::EnumSet;
 
 pub use crate::config::{
-    Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, InputCategory, RawConfig, BUILTIN_LAYOUTS,
+    Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, IconColor, InputCategory, RawConfig,
+    BUILTIN_LAYOUTS,
 };
 pub use crate::input_result::InputResult;
 pub use crate::keycode::{Key, KeyCode, ModifierState};
@@ -78,6 +79,7 @@ pub struct InputEngine {
     state: HangulState,
     layout_ctx: LayoutContext,
     os_ctx: DefaultOsContext,
+    icon_color: IconColor,
 }
 
 impl Default for InputEngine {
@@ -92,6 +94,7 @@ impl InputEngine {
             state: HangulState::new(config.word_commit),
             os_ctx: DefaultOsContext::default(),
             layout_ctx: LayoutContext::new(config),
+            icon_color: config.icon_color,
         }
     }
 
@@ -99,12 +102,13 @@ impl InputEngine {
         self.layout_ctx.update_layout(category, config);
     }
 
-    pub fn is_hangul_enabled(&self) -> bool {
-        self.layout_ctx.input_category == InputCategory::Hangul
+    pub fn category(&self) -> InputCategory {
+        self.layout_ctx.input_category
     }
 
     pub fn update_layout_state(&mut self) -> std::io::Result<()> {
-        self.os_ctx.update_layout_state(self.is_hangul_enabled())
+        self.os_ctx
+            .update_layout_state(self.layout_ctx.input_category, self.icon_color)
     }
 
     fn bypass(&mut self) -> InputResult {
@@ -114,15 +118,10 @@ impl InputEngine {
 
     fn try_get_global_input_category_state(&mut self, config: &Config) {
         if config.global_category_state {
-            let global = if self
+            let global = self
                 .os_ctx
                 .read_global_hangul_state()
-                .unwrap_or(self.is_hangul_enabled())
-            {
-                InputCategory::Hangul
-            } else {
-                InputCategory::Latin
-            };
+                .unwrap_or(self.category());
 
             if self.layout_ctx.input_category != global {
                 self.layout_ctx.update_layout(global, config);

@@ -5,6 +5,7 @@ category_layout:
   Hangul: dubeolsik
 global_category_state: false
 word_commit: false
+icon_color: Black
 hotkeys:
   Super-Space:
     behavior:

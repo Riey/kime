@@ -1,48 +1,74 @@
-use crate::HangulState;
+use crate::{HangulState, IconColor, InputCategory};
 use std::io;
 
 pub trait OsContext {
-    fn read_global_hangul_state(&mut self) -> io::Result<bool>;
-    fn update_layout_state(&mut self, state: bool) -> io::Result<()>;
+    fn read_global_hangul_state(&mut self) -> io::Result<InputCategory>;
+    fn update_layout_state(&mut self, category: InputCategory, color: IconColor) -> io::Result<()>;
     fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool>;
     fn emoji(&mut self, state: &mut HangulState) -> io::Result<bool>;
 }
 
 #[cfg(unix)]
 mod unix {
-    use crate::HangulState;
-    use std::io::{self, BufWriter, Read, Write};
-    use std::os::unix::net::UnixStream;
+    use crate::{HangulState, IconColor, InputCategory};
     use std::process::{Command, Stdio};
+    use std::{
+        io::{self, BufWriter, Read, Write},
+        os::unix::net::UnixStream,
+        path::PathBuf,
+        time::Duration,
+    };
 
     pub struct OsContext {
+        sock_path: PathBuf,
         buf: Vec<u8>,
+    }
+
+    fn get_state_dir() -> PathBuf {
+        let run_path = kime_run_dir::get_run_dir();
+        run_path.join("kime-indicator.sock")
     }
 
     impl Default for OsContext {
         fn default() -> Self {
             Self {
                 buf: Vec::with_capacity(64),
+                sock_path: get_state_dir(),
             }
         }
     }
 
     impl super::OsContext for OsContext {
-        fn read_global_hangul_state(&mut self) -> io::Result<bool> {
-            let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-            stream.write_all(b"l")?;
-            let len = stream.read_to_end(&mut self.buf)?;
-            let data = &self.buf[..len];
-            let ret = data == b"han";
-            self.buf.clear();
-            Ok(ret)
+        fn read_global_hangul_state(&mut self) -> io::Result<InputCategory> {
+            let mut buf = [0; 2];
+            let mut client = UnixStream::connect(&self.sock_path)?;
+            client.set_read_timeout(Some(Duration::from_secs(2))).ok();
+            client.set_write_timeout(Some(Duration::from_secs(2))).ok();
+            client.read_exact(&mut buf)?;
+            match buf[0] {
+                b'1' => Ok(InputCategory::Hangul),
+                _ => Ok(InputCategory::Latin),
+            }
         }
 
-        fn update_layout_state(&mut self, state: bool) -> io::Result<()> {
-            let mut stream = UnixStream::connect("/tmp/kime_window.sock")?;
-            stream.write_all(if state { b"ihan" } else { b"ieng" })?;
+        fn update_layout_state(
+            &mut self,
+            category: InputCategory,
+            color: IconColor,
+        ) -> io::Result<()> {
+            let category = match category {
+                InputCategory::Latin => 0,
+                InputCategory::Hangul => 1,
+            };
+            let color = match color {
+                IconColor::Black => 0,
+                IconColor::White => 1,
+            };
 
-            Ok(())
+            let mut client = UnixStream::connect(&self.sock_path)?;
+            client.set_read_timeout(Some(Duration::from_secs(2))).ok();
+            client.set_write_timeout(Some(Duration::from_secs(2))).ok();
+            client.write_all(&[category, color])
         }
 
         fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool> {
@@ -119,17 +145,22 @@ mod unix {
 }
 
 mod fallback {
+    use crate::{IconColor, InputCategory};
     use std::io;
 
     #[derive(Default)]
     pub struct OsContext;
 
     impl super::OsContext for OsContext {
-        fn read_global_hangul_state(&mut self) -> io::Result<bool> {
+        fn read_global_hangul_state(&mut self) -> io::Result<InputCategory> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn update_layout_state(&mut self, _state: bool) -> io::Result<()> {
+        fn update_layout_state(
+            &mut self,
+            _category: InputCategory,
+            _color: IconColor,
+        ) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 

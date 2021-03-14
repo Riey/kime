@@ -1,12 +1,8 @@
 [package]
-name = "kime-version"
+name = "kime-run-dir"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
 
 [dependencies]
-kime-log = { path = "../../tools/log" }
-
-[build-dependencies]
-shadow-rs = "0.5.24"

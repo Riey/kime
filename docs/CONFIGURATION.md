@@ -55,6 +55,18 @@ Let commit by word
 | default |`false`|
 |---------|-------|
 
+## icon_color
+
+Set icon color for indicator
+
+### Possible values
+
+* Black
+* White
+
+| default |`Black`|
+|---------|-------|
+
 ## hotkeys
 
 Set engine hotkey format is `Key: Content`

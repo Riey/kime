@@ -74,8 +74,8 @@ allow = [
     "Apache-2.0",
     "BSD-3-Clause",
     "Apache-2.0 WITH LLVM-exception",
-    "LGPL-3.0",
     "GPL-3.0",
+    "Unlicense",
 ]
 # List of explictly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
@@ -171,8 +171,6 @@ deny = [
 ]
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-    { name = "strum_macros", version = "=0.18.0" },
-    { name = "strum", version = "=0.18.0" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate 
 # detection. Unlike skip, it also includes the entire tree of transitive 

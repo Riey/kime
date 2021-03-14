@@ -1,41 +1,38 @@
 #[doc(hidden)]
+pub use kime_log;
+
+#[doc(hidden)]
 pub mod build {
     include!(concat!(env!("OUT_DIR"), "/shadow.rs"));
 }
 
 #[macro_export]
 macro_rules! cli_boilerplate {
-    ($($help:expr,)*) => {{
+    ($ok:expr, $($help:expr,)*) => {{
         let mut args = pico_args::Arguments::from_env();
 
         if args.contains(["-h", "--help"]) {
             println!("-h or --help: show help");
             println!("-v or --version: show version");
-            println!("--verbose: show verbose log");
+            println!("--verbose: more verbose log");
             $(
                 println!($help);
             )*
-            return;
+            return $ok;
         }
 
         if args.contains(["-v", "--version"]) {
             $crate::print_version!();
-            return;
+            return $ok;
         }
 
         let level = if args.contains("--verbose") {
-            kime_log::LevelFilter::Trace
+            $crate::kime_log::LevelFilter::Trace
         } else {
-            kime_log::LevelFilter::Info
+            $crate::kime_log::LevelFilter::Info
         };
 
-        kime_log::enable_logger(level);
-
-        log::info!(
-            "Start {}: {}",
-            env!("CARGO_PKG_NAME"),
-            env!("CARGO_PKG_VERSION")
-        );
+        $crate::kime_log::enable_logger(level);
 
         args
     }};

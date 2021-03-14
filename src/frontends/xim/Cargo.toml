@@ -9,7 +9,6 @@ license = "GPL-3.0"
 [dependencies]
 kime-engine-cffi = { path = "../../engine/cffi" }
 kime-version = { path = "../../tools/version" }
-kime-log = { path = "../../tools/log" }
 
 xim = { version = "0.1.0", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 # xim = { path = "../../../../xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }

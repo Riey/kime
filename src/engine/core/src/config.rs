@@ -127,6 +127,18 @@ impl Hotkey {
     }
 }
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub enum IconColor {
+    White,
+    Black,
+}
+
+impl Default for IconColor {
+    fn default() -> Self {
+        Self::Black
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct RawConfig {
@@ -135,6 +147,7 @@ pub struct RawConfig {
     pub category_layout: EnumMap<InputCategory, String>,
     pub global_category_state: bool,
     pub word_commit: bool,
+    pub icon_color: IconColor,
     pub hotkeys: BTreeMap<Key, Hotkey>,
     pub layout_addons: BTreeMap<String, EnumSet<Addon>>,
     pub xim_preedit_font: (String, f64),
@@ -146,6 +159,7 @@ impl Default for RawConfig {
             default_category: InputCategory::Latin,
             global_category_state: false,
             word_commit: false,
+            icon_color: IconColor::default(),
             hotkeys: [
                 (
                     Key::normal(KeyCode::Esc),
@@ -215,6 +229,7 @@ pub struct Config {
     pub default_category: InputCategory,
     pub category_layout: EnumMap<InputCategory, String>,
     pub layout_addons: EnumMap<InputCategory, EnumSet<Addon>>,
+    pub icon_color: IconColor,
     pub word_commit: bool,
     pub xim_preedit_font: (String, f64),
 }
@@ -268,6 +283,7 @@ impl Config {
             default_category: raw.default_category,
             layouts,
             word_commit: raw.word_commit,
+            icon_color: raw.icon_color,
             layout_addons: (|category| {
                 let name = &raw.category_layout[category];
                 all_addons.union(raw.layout_addons.get(name).copied().unwrap_or_default())

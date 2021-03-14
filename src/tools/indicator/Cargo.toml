@@ -1,0 +1,15 @@
+[package]
+name = "kime-indicator"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+kime-version = { path = "../version" }
+kime-run-dir = { path = "../run_dir" }
+
+anyhow = "1.0.38"
+pico-args = "0.4.0"
+log = "0.4.14"
+ksni = "0.1.2"

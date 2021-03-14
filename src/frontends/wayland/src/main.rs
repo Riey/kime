@@ -388,7 +388,7 @@ impl KimeContext {
 }
 
 fn main() {
-    kime_version::cli_boilerplate!();
+    kime_version::cli_boilerplate!((),);
 
     assert!(
         kime_engine_cffi::check_api_version(),

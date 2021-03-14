@@ -27,27 +27,6 @@ jobs:
           draft: true
           prerelease: false
 
-  build-window:
-    runs-on: ubuntu-18.04
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: Riey/kime-window
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unicode-cldr-core libgtk-3-dev libglib2.0 libappindicator3-dev
-      - name: Build window
-        run: |
-          cargo build --release
-          strip -s ./target/release/kime-window
-      - name: Upload window
-        uses: actions/upload-artifact@v2
-        with:
-          name: window
-          path: ./target/release/kime-window
-
   build-engine:
     runs-on: ubuntu-18.04
 
@@ -80,7 +59,6 @@ jobs:
   build-other:
     needs:
       - build-engine
-      - build-window
       - create-release
 
     runs-on: ubuntu-18.04
@@ -105,18 +83,11 @@ jobs:
           name: check
           path: .
 
-      - name: Download window
-        uses: actions/download-artifact@v2
-        with:
-          name: window
-          path: .
-
       - name: Build
         run: |
           sudo mv ./libkime_engine.so /usr/lib
           KIME_SKIP_ENGINE=1 scripts/build.sh -ar
           cp /usr/lib/libkime_engine.so ./build/out
-          mv ./kime-window ./build/out
           mv ./kime-check ./build/out
           scripts/release-zst.sh .
 

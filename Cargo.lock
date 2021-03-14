@@ -573,6 +573,8 @@ dependencies = [
  "itertools 0.10.0",
  "phf",
  "phf_codegen",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

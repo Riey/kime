@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use phf_codegen::Map;
+use serde::Deserialize;
 use std::{collections::BTreeMap, env, io::Write, path::PathBuf};
 
 fn parse_unich(ch: &str) -> char {
@@ -26,6 +27,12 @@ struct HanjaEntry {
     hanja: char,
     definition: &'static str,
     ty: EntryType,
+}
+
+#[derive(Deserialize)]
+struct KeySymPair {
+    keyword : String,
+    symbol : String
 }
 
 fn main() {
@@ -74,8 +81,6 @@ fn main() {
     let mut out =
         std::fs::File::create(PathBuf::from(env::var("OUT_DIR").unwrap()).join("dict.rs")).unwrap();
 
-    write!(out, "pub static DICT: phf::Map<char, &[(char, &str)]> =").unwrap();
-
     let mut map = Map::new();
     let mut entries = String::new();
     for (k, mut values) in dict {
@@ -93,5 +98,28 @@ fn main() {
         entries.clear();
     }
 
-    writeln!(out, "{};", map.build()).unwrap();
+    writeln!(
+        out,
+        "pub static DICT: phf::Map<char, &[(char, &str)]> = {};",
+        map.build()
+        ).unwrap();
+
+    let symbol_map = include_str!("data/symbol_map.json");
+    let symbol_map: Vec<KeySymPair> = serde_json::from_str(symbol_map).unwrap();
+
+    let mut map = Map::new();
+    let mut entries = String::new();
+    for pair in &symbol_map {
+        let keyword = &pair.keyword;
+        entries.push_str("\"");
+        entries.push_str(&pair.symbol);
+        entries.push_str("\"");
+        map.entry(keyword.as_str(), &entries);
+        entries.clear();
+    }
+    writeln!(
+        out,
+        "pub static SYMBOL_DICT: phf::Map<&'static str, &'static str> = {};",
+        map.build()
+        ).unwrap();
 }

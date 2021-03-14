@@ -9,12 +9,7 @@ license = "GPL-3.0"
 kime-version = { path = "../version" }
 kime-run-dir = { path = "../run_dir" }
 
-glib = "0.10.3"
-gio = "0.9.1"
-gobject-sys = "0.10.0"
-gtk-sys = "0.10.0"
-libappindicator-sys = "0.5.0"
 anyhow = "1.0.38"
 pico-args = "0.4.0"
-xdg = "2.2.0"
 log = "0.4.14"
+ksni = "0.1.2"

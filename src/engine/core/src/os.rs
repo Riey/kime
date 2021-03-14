@@ -11,37 +11,40 @@ pub trait OsContext {
 #[cfg(unix)]
 mod unix {
     use crate::{HangulState, IconColor, InputCategory};
-    use std::fs::File;
     use std::process::{Command, Stdio};
     use std::{
+        os::unix::net::UnixStream,
+        time::Duration,
         io::{self, BufWriter, Read, Write},
         path::PathBuf,
     };
 
     pub struct OsContext {
-        state_path: PathBuf,
+        sock_path: PathBuf,
         buf: Vec<u8>,
     }
 
     fn get_state_dir() -> PathBuf {
         let run_path = kime_run_dir::get_run_dir();
-        run_path.join("kime-indicator.state")
+        run_path.join("kime-indicator.sock")
     }
 
     impl Default for OsContext {
         fn default() -> Self {
             Self {
                 buf: Vec::with_capacity(64),
-                state_path: get_state_dir(),
+                sock_path: get_state_dir(),
             }
         }
     }
 
     impl super::OsContext for OsContext {
         fn read_global_hangul_state(&mut self) -> io::Result<InputCategory> {
-            let mut file = File::open(&self.state_path)?;
-            let mut buf = [0; 1];
-            file.read_exact(&mut buf)?;
+            let mut buf = [0; 2];
+            let mut client = UnixStream::connect(&self.sock_path)?;
+            client.set_read_timeout(Some(Duration::from_secs(2))).ok();
+            client.set_write_timeout(Some(Duration::from_secs(2))).ok();
+            client.read_exact(&mut buf)?;
             match buf[0] {
                 b'1' => Ok(InputCategory::Hangul),
                 _ => Ok(InputCategory::Latin),
@@ -62,7 +65,10 @@ mod unix {
                 IconColor::White => 1,
             };
 
-            std::fs::write(&self.state_path, &[category, color])
+            let mut client = UnixStream::connect(&self.sock_path)?;
+            client.set_read_timeout(Some(Duration::from_secs(2))).ok();
+            client.set_write_timeout(Some(Duration::from_secs(2))).ok();
+            client.write_all(&[category, color])
         }
 
         fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool> {

@@ -1,14 +1,9 @@
 use anyhow::Result;
-use gio::{prelude::*, FileExt, FileMonitorEvent};
-use gobject_sys::g_signal_connect_data;
-use libappindicator_sys::{AppIndicator, AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE};
-use std::{ffi::CString, path::Path, ptr};
-
-macro_rules! cs {
-    ($ex:expr) => {
-        concat!($ex, "\0").as_ptr().cast()
-    };
-}
+use ksni::menu::*;
+use std::{io::{Read, Write}, time::Duration};
+use std::net::Shutdown;
+use std::os::unix::net::UnixListener;
+use std::path::Path;
 
 #[derive(Clone, Copy, Debug)]
 enum InputCategory {
@@ -22,57 +17,39 @@ enum IconColor {
     White,
 }
 
-struct Indicator {
-    indicator: *mut AppIndicator,
+struct KimeTray {
+    icon_name: &'static str,
 }
 
-impl Indicator {
-    pub fn new() -> Self {
-        unsafe fn set_icon_path(indicator: *mut AppIndicator, path: &Path) {
-            let s = path.to_str().unwrap();
-            let s = CString::new(s).unwrap();
-            libappindicator_sys::app_indicator_set_icon_theme_path(indicator, s.as_ptr());
-        }
-
-        unsafe {
-            let m = gtk_sys::gtk_menu_new();
-            let mi = gtk_sys::gtk_check_menu_item_new_with_label(cs!("Exit"));
-            unsafe extern "C" fn exit() {
-                gtk_sys::gtk_main_quit();
-            }
-            g_signal_connect_data(
-                mi.cast(),
-                cs!("activate"),
-                Some(exit),
-                ptr::null_mut(),
-                None,
-                0,
-            );
-            gtk_sys::gtk_menu_shell_append(m.cast(), mi.cast());
-            let icon_dirs = xdg::BaseDirectories::with_prefix("kime/icons").unwrap();
-            let indicator = libappindicator_sys::app_indicator_new(
-                cs!("kime"),
-                cs!(""),
-                libappindicator_sys::AppIndicatorCategory_APP_INDICATOR_CATEGORY_APPLICATION_STATUS,
-            );
-
-            let icon = icon_dirs
-                .find_data_file("kime-han-white-64x64.png")
-                .expect("Can't find image");
-            set_icon_path(indicator, icon.parent().unwrap());
-
-            gtk_sys::gtk_widget_show_all(m);
-            libappindicator_sys::app_indicator_set_menu(indicator, m.cast());
-            libappindicator_sys::app_indicator_set_status(
-                indicator,
-                AppIndicatorStatus_APP_INDICATOR_STATUS_ACTIVE,
-            );
-
-            Self { indicator }
-        }
+impl ksni::Tray for KimeTray {
+    fn icon_name(&self) -> String {
+        self.icon_name.into()
     }
 
-    pub fn update_with_bytes(&self, bytes: &[u8]) {
+    fn title(&self) -> String {
+        "kime".into()
+    }
+    fn attention_icon_name(&self) -> String {
+        self.icon_name.into()
+    }
+    fn menu(&self) -> Vec<MenuItem<Self>> {
+        vec![StandardItem {
+            label: "Exit".into(),
+            icon_name: "application-exit".into(),
+            activate: Box::new(|_| std::process::exit(0)),
+            ..Default::default()
+        }
+        .into()]
+    }
+}
+
+impl KimeTray {
+    pub fn new() -> Self {
+        Self {
+            icon_name: "kime-eng-black",
+        }
+    }
+    pub fn update_with_bytes(&mut self, bytes: &[u8]) {
         if bytes.len() < 2 {
             return;
         }
@@ -90,75 +67,57 @@ impl Indicator {
         self.update(category, color);
     }
 
-    pub fn update(&self, category: InputCategory, color: IconColor) {
+    pub fn update(&mut self, category: InputCategory, color: IconColor) {
         log::debug!("Update: ({:?}, {:?})", category, color);
 
-        unsafe {
-            match category {
-                InputCategory::Latin => {
-                    libappindicator_sys::app_indicator_set_icon(
-                        self.indicator,
-                        match color {
-                            IconColor::Black => cs!("kime-eng-black-64x64"),
-                            IconColor::White => cs!("kime-eng-white-64x64"),
-                        },
-                    );
-                }
-                InputCategory::Hangul => {
-                    libappindicator_sys::app_indicator_set_icon(
-                        self.indicator,
-                        match color {
-                            IconColor::Black => cs!("kime-han-black-64x64"),
-                            IconColor::White => cs!("kime-han-white-64x64"),
-                        },
-                    );
-                }
-            }
+        self.icon_name = match category {
+            InputCategory::Latin => match color {
+                IconColor::Black => "kime-eng-black",
+                IconColor::White => "kime-eng-white",
+            },
+            InputCategory::Hangul => match color {
+                IconColor::Black => "kime-han-black",
+                IconColor::White => "kime-han-white",
+            },
         }
     }
 }
 
 fn indicator_server(file_path: &Path) -> Result<()> {
-    unsafe {
-        gtk_sys::gtk_init(ptr::null_mut(), ptr::null_mut());
-    }
+    let service = ksni::TrayService::new(KimeTray::new());
+    let handle = service.handle();
+    service.spawn();
 
-    let indicator = Indicator::new();
+    std::fs::remove_file(file_path)?;
 
-    if let Ok(bytes) = std::fs::read(file_path) {
-        indicator.update_with_bytes(&bytes);
-    } else {
-        indicator.update(InputCategory::Latin, IconColor::Black);
-    }
+    let listener = UnixListener::bind(file_path)?;
 
-    let cancellable: Option<&gio::Cancellable> = None;
-    let file = gio::File::new_for_path(file_path);
-    let monitor = file
-        .monitor_file(gio::FileMonitorFlags::WATCH_MOVES, cancellable)
-        .expect("Create Monitor");
+    let mut current_bytes = [0; 2];
+    let mut read_buf = [0; 2];
 
-    monitor.connect_changed(move |_m, f, _, e| match e {
-        FileMonitorEvent::Created | FileMonitorEvent::Changed => {
-            let mut buf = [0; 2];
-            let read = f.read(cancellable).unwrap();
-            let len = read.read_all(&mut buf[..], cancellable).unwrap().0;
+    loop {
+        let mut client = listener.accept()?.0;
+        client.set_read_timeout(Some(Duration::from_secs(2))).ok();
+        client.set_write_timeout(Some(Duration::from_secs(2))).ok();
+        client.write_all(&current_bytes).ok();
+        client.shutdown(Shutdown::Write).ok();
+        match client.read_exact(&mut read_buf) {
+            Ok(_) => {
+                current_bytes = read_buf;
 
-            indicator.update_with_bytes(&buf[..len]);
+                handle.update(|tray| {
+                    tray.update_with_bytes(&current_bytes);
+                });
+            }
+            _ => {}
         }
-        _ => {}
-    });
-
-    unsafe {
-        gtk_sys::gtk_main();
     }
-
-    Ok(())
 }
 
-fn main() -> Result<()> {
-    kime_version::cli_boilerplate!(Ok(()),);
+fn main() {
+    kime_version::cli_boilerplate!((),);
 
     let run_dir = kime_run_dir::get_run_dir();
-    let file_path = run_dir.join("kime-indicator.state");
-    indicator_server(&file_path)
+    let file_path = run_dir.join("kime-indicator.sock");
+    indicator_server(&file_path).unwrap();
 }

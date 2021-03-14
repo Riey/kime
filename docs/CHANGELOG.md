@@ -13,6 +13,7 @@
 * Insert emoji with `rofimoji`
 * Embed hanja dict
 * Support multiple archtectures
+* Replace `libappindicator` to `ksni`
 
 ## 1.3.1
 

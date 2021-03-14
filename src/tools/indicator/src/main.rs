@@ -1,9 +1,12 @@
 use anyhow::Result;
 use ksni::menu::*;
-use std::{io::{Read, Write}, time::Duration};
 use std::net::Shutdown;
 use std::os::unix::net::UnixListener;
 use std::path::Path;
+use std::{
+    io::{Read, Write},
+    time::Duration,
+};
 
 #[derive(Clone, Copy, Debug)]
 enum InputCategory {

@@ -13,10 +13,10 @@ mod unix {
     use crate::{HangulState, IconColor, InputCategory};
     use std::process::{Command, Stdio};
     use std::{
-        os::unix::net::UnixStream,
-        time::Duration,
         io::{self, BufWriter, Read, Write},
+        os::unix::net::UnixStream,
         path::PathBuf,
+        time::Duration,
     };
 
     pub struct OsContext {

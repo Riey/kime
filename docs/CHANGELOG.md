@@ -16,6 +16,7 @@
 * Integrate kime-indicator again
 * Add `icon_color` config
 * Replace `libappindicator` to `ksni`
+* Now InputEngine implementations are split several crates for support many InputCategories
 
 ## 1.3.1
 

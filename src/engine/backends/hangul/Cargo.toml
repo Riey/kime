@@ -1,0 +1,17 @@
+[package]
+name = "kime-engine-hangul"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+kime-engine-core = { path = "../../core" }
+enumset = "1.0.6"
+num-derive = "0.3.3"
+num-traits = "0.2.14"
+serde = { version = "1.0.124", features = ["derive"] }
+serde_yaml = "0.8.17"
+
+[target.'cfg(unix)'.dependencies]
+xdg = "2.2.0"

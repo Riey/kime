@@ -1,6 +1,8 @@
+use enumset::EnumSet;
+
 use crate::{
     characters::{Choseong, JongToCho, Jongseong, Jungseong, KeyValue},
-    Addon, InputResult, LayoutContext,
+    Addon, InputResult,
 };
 
 /// 한글 입력 오토마타
@@ -8,9 +10,8 @@ use crate::{
 pub struct HangulState {
     state: CharacterState,
     word_commit: bool,
+    word_buf: String,
     commit_buf: String,
-    commit_characters: Vec<CharacterState>,
-    buf: String,
 }
 
 impl HangulState {
@@ -18,113 +19,80 @@ impl HangulState {
         Self {
             state: CharacterState::new(),
             word_commit,
+            word_buf: String::new(),
             commit_buf: String::with_capacity(64),
-            commit_characters: Vec::with_capacity(16),
-            buf: String::with_capacity(64),
         }
     }
 
-    pub fn commit_str(&mut self) -> &str {
-        if self.word_commit {
-            self.buf.clear();
-            self.buf.push_str(&self.commit_buf);
-            self.state.write(&mut self.buf);
-            &self.buf
-        } else {
-            &self.commit_buf
-        }
+    pub fn commit_str(&self) -> &str {
+        &self.commit_buf
     }
 
-    pub fn preedit_str(&mut self) -> &str {
-        if self.word_commit {
-            self.commit_str()
-        } else {
-            self.buf.clear();
-            self.state.write(&mut self.buf);
-            &self.buf
-        }
+    pub fn has_preedit(&self) -> bool {
+        self.state.need_display() || !self.word_buf.is_empty()
+    }
+
+    pub fn preedit_str(&self, buf: &mut String) {
+        buf.push_str(&self.word_buf);
+        self.state.write(buf);
     }
 
     pub fn pass(&mut self, s: &str) {
-        self.commit_characters.clear();
         self.clear_preedit();
         self.commit_buf.push_str(s);
     }
 
-    pub fn pass_replace(&mut self, s: &str) {
-        self.commit_characters.clear();
-
-        if self.word_commit {
-            self.commit_buf.clear();
-        }
-
-        self.state.reset();
-        self.commit_buf.push_str(s);
+    pub fn clear_commit(&mut self) {
+        self.commit_buf.clear();
     }
 
     pub fn clear_preedit(&mut self) {
+        self.commit_buf.push_str(&self.word_buf);
+        self.word_buf.clear();
         self.state.write(&mut self.commit_buf);
         self.state.reset();
     }
 
-    pub fn flush(&mut self) {
-        self.commit_characters.clear();
-        self.commit_buf.clear();
-    }
-
-    pub fn reset(&mut self) {
-        self.flush();
+    pub fn remove_preedit(&mut self) {
+        self.word_buf.clear();
         self.state.reset();
     }
 
-    pub fn preedit_result(&self) -> InputResult {
-        if self.state.need_display() || self.word_commit && !self.commit_characters.is_empty() {
-            InputResult::HAS_PREEDIT
-        } else {
-            InputResult::empty()
-        }
+    pub fn reset(&mut self) {
+        self.remove_preedit();
+        self.commit_buf.clear();
     }
 
-    fn convert_result(&mut self, ret: CharacterResult) -> InputResult {
+    fn convert_result(&mut self, ret: CharacterResult) -> bool {
         match ret {
-            CharacterResult::Consume => self.preedit_result() | InputResult::CONSUMED,
-            CharacterResult::NewCharacter(new) => {
-                self.commit_buf.push(self.state.to_char());
-                self.commit_characters
-                    .push(std::mem::replace(&mut self.state, new));
-
+            CharacterResult::Consume => true,
+            CharacterResult::NewCharacter(new_ch) => {
                 if self.word_commit {
-                    InputResult::HAS_PREEDIT | InputResult::CONSUMED
+                    self.word_buf.push(self.state.to_char());
                 } else {
-                    InputResult::NEED_FLUSH | self.preedit_result() | InputResult::CONSUMED
+                    self.commit_buf.push(self.state.to_char());
                 }
+                self.state = new_ch;
+                true
             }
         }
     }
 
-    pub fn backspace(&mut self, addons: EnumSet<Addon>) -> InputResult {
-        loop {
-            if self.state.backspace(addons) {
-                return self.preedit_result() | InputResult::CONSUMED;
-            }
-
-            match self.commit_characters.pop() {
-                Some(new_last) => {
-                    self.commit_buf.pop();
-                    self.state = new_last;
-                }
-                None => {
-                    return InputResult::empty();
-                }
-            }
+    pub fn backspace(&mut self, addons: EnumSet<Addon>) -> bool {
+        if self.state.backspace(addons) {
+            true
+        } else if self.commit_buf.pop().is_some() {
+            true
+        } else {
+            false
         }
     }
 
-    pub fn key(&mut self, kv: &KeyValue, addons: EnumSet<Addon>) -> InputResult {
+    pub fn key(&mut self, kv: &KeyValue, addons: EnumSet<Addon>) -> bool {
         let ret = match kv {
             KeyValue::Pass(pass) => {
                 self.pass(pass);
-                return InputResult::NEED_RESET | InputResult::CONSUMED;
+                return true;
             }
             KeyValue::Choseong { cho } => self.state.cho(*cho, addons),
             KeyValue::Jungseong { jung, compose } => self.state.jung(*jung, *compose, addons),
@@ -137,17 +105,13 @@ impl HangulState {
                 jung,
                 first,
                 compose,
-            } => self
-                .state
-                .cho_jung(*cho, *jung, *first, *compose, addons),
+            } => self.state.cho_jung(*cho, *jung, *first, *compose, addons),
             KeyValue::JungJong {
                 jung,
                 jong,
                 first,
                 compose,
-            } => self
-                .state
-                .jung_jong(*jung, *jong, *first, *compose, addons),
+            } => self.state.jung_jong(*jung, *jong, *first, *compose, addons),
         };
 
         self.convert_result(ret)
@@ -350,8 +314,7 @@ impl CharacterState {
             } else {
                 match prev_cho.try_add(cho, addons) {
                     Some(new)
-                        if addons.contains(Addon::FlexibleComposeOrder)
-                            || self.jung.is_none() =>
+                        if addons.contains(Addon::FlexibleComposeOrder) || self.jung.is_none() =>
                     {
                         self.cho = Some(new);
                         CharacterResult::Consume
@@ -483,13 +446,11 @@ mod tests {
     #[test]
     fn jong() {
         let mut state = CharacterState::default();
-        let mut config = crate::Config::default();
-        config.default_category = crate::InputCategory::Hangul;
-        let addons = LayoutContext::new(&config);
+        let addons = EnumSet::only(Addon::TreatJongseongAsChoseong);
 
-        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &addons);
-        state.jung(Jungseong::A, true, &addons);
-        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &addons);
+        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, addons);
+        state.jung(Jungseong::A, true, addons);
+        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, addons);
 
         assert_eq!(
             CharacterResult::NewCharacter(CharacterState {
@@ -498,7 +459,7 @@ mod tests {
                 compose_jung: true,
                 jong: None
             }),
-            state.jung(Jungseong::A, true, &addons)
+            state.jung(Jungseong::A, true, addons)
         );
     }
 }

@@ -6,17 +6,10 @@ edition = "2018"
 license = "GPL-3.0"
 
 [dependencies]
-kime-engine-dict = { path = "../dict" }
 ahash = { version = "0.7.0", features = ["serde"] }
 bitflags = "1.2.1"
 enum-map = "0.6.4"
 enumset = { version = "1.0.4", features = ["serde"] }
-num-derive = "0.3.3"
-num-traits = "0.2.14"
 serde = { version = "1.0.118", features = ["derive"] }
 serde_yaml = "0.8.15"
 strum = { version = "0.20.0", features = ["derive"] }
-
-[target.'cfg(unix)'.dependencies]
-xdg = "2.2.0"
-kime-run-dir = { path = "../../tools/run_dir" }

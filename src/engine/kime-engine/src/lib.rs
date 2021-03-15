@@ -124,11 +124,13 @@ impl InputEngine {
         } else {
             self.try_get_global_input_category_state(config);
 
-            let mut ret = self.engine_impl.current_result();
+            let mut ret = InputResult::empty();
 
             if self.engine_impl.press_key(key) {
                 ret |= InputResult::CONSUMED;
             }
+
+            ret |= self.engine_impl.current_result();
 
             ret
         }

@@ -147,6 +147,11 @@ impl InputEngine {
     }
 
     #[inline]
+    pub fn clear_commit(&mut self) {
+        self.engine_impl.clear_commit();
+    }
+
+    #[inline]
     pub fn clear_preedit(&mut self) {
         self.engine_impl.clear_preedit();
     }

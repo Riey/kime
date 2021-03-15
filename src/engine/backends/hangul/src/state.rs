@@ -2,7 +2,7 @@ use enumset::EnumSet;
 
 use crate::{
     characters::{Choseong, JongToCho, Jongseong, Jungseong, KeyValue},
-    Addon, InputResult,
+    Addon,
 };
 
 /// 한글 입력 오토마타

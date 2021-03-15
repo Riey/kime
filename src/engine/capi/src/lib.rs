@@ -56,9 +56,9 @@ pub unsafe extern "C" fn kime_engine_delete(engine: &mut InputEngine) {
     drop(Box::from_raw(engine));
 }
 
-/// Update hangul state
+/// Update layout state
 #[no_mangle]
-pub extern "C" fn kime_engine_update_hangul_state(engine: &mut InputEngine) {
+pub extern "C" fn kime_engine_update_layout_state(engine: &mut InputEngine) {
     engine.update_layout_state().ok();
 }
 
@@ -68,7 +68,7 @@ pub extern "C" fn kime_engine_update_hangul_state(engine: &mut InputEngine) {
 ///
 /// valid utf8 string
 #[no_mangle]
-pub extern "C" fn kime_engine_commit_str(engine: &mut InputEngine) -> RustStr {
+pub extern "C" fn kime_engine_commit_str(engine: &InputEngine) -> RustStr {
     RustStr::new(engine.commit_str())
 }
 
@@ -80,6 +80,12 @@ pub extern "C" fn kime_engine_commit_str(engine: &mut InputEngine) -> RustStr {
 #[no_mangle]
 pub extern "C" fn kime_engine_preedit_str(engine: &mut InputEngine) -> RustStr {
     RustStr::new(engine.preedit_str())
+}
+
+/// Clear commit string
+#[no_mangle]
+pub extern "C" fn kime_engine_clear_commit(engine: &mut InputEngine) {
+    engine.clear_commit();
 }
 
 /// Clear preedit state this function may append to commit string

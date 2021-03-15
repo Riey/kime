@@ -596,8 +596,8 @@ name = "kime-check"
 version = "0.1.0"
 dependencies = [
  "ansi_term 0.12.1",
+ "kime-engine",
  "kime-engine-cffi",
- "kime-engine-core",
  "pad",
  "serde_yaml",
  "strum 0.20.0",

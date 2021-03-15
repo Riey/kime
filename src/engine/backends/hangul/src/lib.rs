@@ -7,7 +7,7 @@ use state::HangulState;
 use std::{borrow::Cow, collections::BTreeMap};
 
 use enumset::{EnumSet, EnumSetType};
-use kime_engine_core::{InputEngine, InputResult, Key, KeyCode};
+use kime_engine_core::{InputEngine, Key, KeyCode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]

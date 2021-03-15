@@ -1,10 +1,10 @@
 use crate::{HangulConfig, HangulEngine, LatinConfig, LatinEngine};
 use enumset::{EnumSet, EnumSetType};
 use kime_engine_core::{AHashMap, Key, KeyCode, ModifierState};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(serde::Serialize, Deserialize, Debug, EnumSetType)]
+#[derive(Serialize, Deserialize, Debug, EnumSetType)]
 #[enumset(serialize_as_list)]
 #[repr(u32)]
 pub enum InputCategory {
@@ -13,7 +13,7 @@ pub enum InputCategory {
     Math,
 }
 
-#[derive(Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum HotkeyBehavior {
     Toggle(InputCategory, InputCategory),
     Switch(InputCategory),
@@ -32,14 +32,14 @@ impl HotkeyBehavior {
     }
 }
 
-#[derive(Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum HotkeyResult {
     Consume,
     Bypass,
     ConsumeIfProcessed,
 }
 
-#[derive(Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct Hotkey {
     behavior: HotkeyBehavior,
     #[serde(default = "EnumSet::all")]
@@ -72,7 +72,7 @@ impl Hotkey {
     }
 }
 
-#[derive(Clone, Copy, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum IconColor {
     White,
     Black,
@@ -84,13 +84,13 @@ impl Default for IconColor {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct RawConfig {
     pub default_category: InputCategory,
     pub global_category_state: bool,
     pub icon_color: IconColor,
-    pub hotkeys: AHashMap<Key, Hotkey>,
+    pub hotkeys: BTreeMap<Key, Hotkey>,
     pub xim_preedit_font: (String, f64),
     pub latin: LatinConfig,
     pub hangul: HangulConfig,

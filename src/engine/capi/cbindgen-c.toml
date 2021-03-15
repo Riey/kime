@@ -13,7 +13,7 @@ bitflags = true
 
 [parse]
 parse_deps = true
-include = ["kime-engine-core", "kime-log"]
+include = ["kime-engine", "kime-engine-core"]
 
 [export]
 prefix = "Kime"

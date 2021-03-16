@@ -18,6 +18,7 @@
 * Add `icon_color` config
 * Replace `libappindicator` to `ksni`
 * Now InputEngine implementations are split several crates for support many InputCategories
+* Implement math backend
 
 ## 1.3.1
 

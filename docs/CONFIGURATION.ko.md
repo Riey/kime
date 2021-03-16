@@ -72,51 +72,13 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 엔진의 단축키를 설정합니다 형식은 `키: 내용` 입니다
 
-### 기본값
+### global_hotkeys
 
-```yaml
-hotkeys:
-  Super-Space:
-    behavior:
-      Toggle:
-        - Hangul
-        - Latin
-    result: Consume
-  M-C-E:
-    behavior: Emoji
-    result: ConsumeIfProcessed
-  Esc:
-    behavior:
-      Switch: Latin
-    result: Bypass
-  ControlR:
-    behavior: Hanja
-    result: Consume
-  Muhenkan:
-    behavior:
-      Toggle:
-        - Hangul
-        - Latin
-    result: Consume
-  AltR:
-    behavior:
-      Toggle:
-        - Hangul
-        - Latin
-    result: Consume
-  Hangul:
-    behavior:
-      Toggle:
-        - Hangul
-        - Latin
-    result: Consume
-  HangulHanja:
-    behavior: Hanja
-    result: Consume
-  F9:
-    behavior: Hanja
-    result: Consume
-```
+전역 단축키입니다
+
+### category_hotkeys
+
+언어별 단축키입니다 전역 단축키를 덮어씁니다
 
 ### 내용
 

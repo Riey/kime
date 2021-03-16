@@ -596,8 +596,8 @@ name = "kime-check"
 version = "0.1.0"
 dependencies = [
  "ansi_term 0.12.1",
- "kime-engine",
  "kime-engine-cffi",
+ "kime-engine-core",
  "pad",
  "serde_yaml",
  "strum 0.20.0",
@@ -605,26 +605,45 @@ dependencies = [
 ]
 
 [[package]]
-name = "kime-engine"
-version = "0.1.0"
+name = "kime-engine-backend"
+version = "1.0.0"
 dependencies = [
+ "ahash",
+ "bitflags",
  "enum-map",
  "enumset",
- "kime-engine-core",
- "kime-engine-dict",
- "kime-engine-hangul",
- "kime-engine-latin",
- "kime-run-dir",
+ "serde",
+ "serde_yaml",
+ "strum 0.20.0",
+]
+
+[[package]]
+name = "kime-engine-backend-hangul"
+version = "0.1.0"
+dependencies = [
+ "enumset",
+ "kime-engine-backend",
+ "num-derive",
+ "num-traits",
  "serde",
  "serde_yaml",
  "xdg",
 ]
 
 [[package]]
+name = "kime-engine-backend-latin"
+version = "0.1.0"
+dependencies = [
+ "kime-engine-backend",
+ "serde",
+ "serde_yaml",
+]
+
+[[package]]
 name = "kime-engine-capi"
 version = "0.8.1"
 dependencies = [
- "kime-engine",
+ "kime-engine-core",
 ]
 
 [[package]]
@@ -638,15 +657,18 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-core"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
- "ahash",
- "bitflags",
  "enum-map",
  "enumset",
+ "kime-engine-backend",
+ "kime-engine-backend-hangul",
+ "kime-engine-backend-latin",
+ "kime-engine-dict",
+ "kime-run-dir",
  "serde",
  "serde_yaml",
- "strum 0.20.0",
+ "xdg",
 ]
 
 [[package]]
@@ -656,28 +678,6 @@ dependencies = [
  "itertools 0.10.0",
  "phf",
  "phf_codegen",
-]
-
-[[package]]
-name = "kime-engine-hangul"
-version = "0.1.0"
-dependencies = [
- "enumset",
- "kime-engine-core",
- "num-derive",
- "num-traits",
- "serde",
- "serde_yaml",
- "xdg",
-]
-
-[[package]]
-name = "kime-engine-latin"
-version = "0.1.0"
-dependencies = [
- "kime-engine-core",
- "serde",
- "serde_yaml",
 ]
 
 [[package]]

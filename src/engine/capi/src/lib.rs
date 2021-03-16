@@ -1,6 +1,6 @@
 #![allow(clippy::missing_safety_doc)]
 
-pub use kime_engine::{Config, InputCategory, InputEngine, InputResult, ModifierState};
+pub use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, ModifierState};
 
 #[repr(C)]
 pub struct XimPreeditFont {

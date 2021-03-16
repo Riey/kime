@@ -1,4 +1,4 @@
-use kime_engine_core::{AHashMap, InputEngine, Key};
+use kime_engine_backend::{AHashMap, InputEngineBackend, Key};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -37,7 +37,7 @@ impl LatinEngine {
     }
 }
 
-impl InputEngine for LatinEngine {
+impl InputEngineBackend for LatinEngine {
     fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
         if let Some(ch) = self.layout.get(&key) {
             commit_buf.push(*ch);

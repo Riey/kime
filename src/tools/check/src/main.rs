@@ -119,7 +119,7 @@ impl Check {
 
                 println!("Loading config path: {}", config_path.display());
 
-                let _config: kime_engine::RawConfig = match serde_yaml::from_str(
+                let _config: kime_engine_core::RawConfig = match serde_yaml::from_str(
                     &std::fs::read_to_string(config_path).expect("Read config file"),
                 ) {
                     Ok(config) => config,

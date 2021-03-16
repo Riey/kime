@@ -1,6 +1,6 @@
 use crate::{HangulConfig, HangulEngine, LatinConfig, LatinEngine};
 use enumset::{EnumSet, EnumSetType};
-use kime_engine_core::{AHashMap, Key, KeyCode, ModifierState};
+use kime_engine_backend::{AHashMap, Key, KeyCode, ModifierState};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -185,7 +185,7 @@ impl Config {
             hotkeys: raw.hotkeys.into_iter().collect(),
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
-            hangul_engine: HangulEngine::new(&raw.hangul, kime_engine_hangul::builtin_layouts()),
+            hangul_engine: HangulEngine::new(&raw.hangul, kime_engine_backend_hangul::builtin_layouts()),
             latin_engine: LatinEngine::new(&raw.latin),
         }
     }

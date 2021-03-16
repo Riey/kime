@@ -11,4 +11,4 @@ name = "kime_engine"
 crate-type = ["cdylib"]
 
 [dependencies]
-kime-engine = { path = "../kime-engine" }
+kime-engine-core = { path = "../core" }

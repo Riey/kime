@@ -1,18 +1,18 @@
 use crate::{IconColor, InputCategory};
-use kime_engine_core::InputEngine;
+use kime_engine_backend::InputEngineBackend;
 use std::io;
 
 pub trait OsContext {
     fn read_global_hangul_state(&mut self) -> io::Result<InputCategory>;
     fn update_layout_state(&mut self, category: InputCategory, color: IconColor) -> io::Result<()>;
-    fn hanja(&mut self, engine: &mut impl InputEngine, commit_buf: &mut String) -> io::Result<()>;
-    fn emoji(&mut self, engine: &mut impl InputEngine, commit_buf: &mut String) -> io::Result<()>;
+    fn hanja(&mut self, engine: &mut impl InputEngineBackend, commit_buf: &mut String) -> io::Result<()>;
+    fn emoji(&mut self, engine: &mut impl InputEngineBackend, commit_buf: &mut String) -> io::Result<()>;
 }
 
 #[cfg(unix)]
 mod unix {
     use crate::{IconColor, InputCategory};
-    use kime_engine_core::InputEngine;
+    use kime_engine_backend::InputEngineBackend;
     use std::process::{Command, Stdio};
     use std::{
         io::{self, BufWriter, Read, Write},
@@ -79,7 +79,7 @@ mod unix {
 
         fn hanja(
             &mut self,
-            engine: &mut impl InputEngine,
+            engine: &mut impl InputEngineBackend,
             commit_buf: &mut String,
         ) -> io::Result<()> {
             self.buf_str.clear();
@@ -136,7 +136,7 @@ mod unix {
 
         fn emoji(
             &mut self,
-            engine: &mut impl InputEngine,
+            engine: &mut impl InputEngineBackend,
             commit_buf: &mut String,
         ) -> io::Result<()> {
             let mut rofimoji = Command::new("rofimoji")
@@ -162,7 +162,7 @@ mod unix {
 
 mod fallback {
     use crate::{IconColor, InputCategory};
-    use kime_engine_core::InputEngine;
+    use kime_engine_backend::InputEngineBackend;
     use std::io;
 
     #[derive(Default)]
@@ -183,7 +183,7 @@ mod fallback {
 
         fn hanja(
             &mut self,
-            _state: &mut impl InputEngine,
+            _state: &mut impl InputEngineBackend,
             _commit_buf: &mut String,
         ) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
@@ -191,7 +191,7 @@ mod fallback {
 
         fn emoji(
             &mut self,
-            _state: &mut impl InputEngine,
+            _state: &mut impl InputEngineBackend,
             _commit_buf: &mut String,
         ) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))

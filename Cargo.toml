@@ -4,7 +4,8 @@ members = [
     "src/engine/core",
     "src/engine/cffi",
     "src/engine/dict",
-    "src/engine/kime-engine",
+
+    "src/engine/backend",
     "src/engine/backends/hangul",
     "src/engine/backends/latin",
 

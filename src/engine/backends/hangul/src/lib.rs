@@ -7,7 +7,7 @@ use state::HangulState;
 use std::{borrow::Cow, collections::BTreeMap};
 
 use enumset::{EnumSet, EnumSetType};
-use kime_engine_core::{InputEngine, Key, KeyCode};
+use kime_engine_backend::{InputEngineBackend, Key, KeyCode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]
@@ -128,7 +128,7 @@ impl HangulEngine {
     }
 }
 
-impl InputEngine for HangulEngine {
+impl InputEngineBackend for HangulEngine {
     fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
         if key.code == KeyCode::Backspace {
             self.state.backspace(self.addons, commit_buf)

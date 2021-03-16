@@ -1,15 +1,20 @@
 [package]
 name = "kime-engine-core"
-version = "1.0.0"
+version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
 
 [dependencies]
-ahash = { version = "0.7.0", features = ["serde"] }
-bitflags = "1.2.1"
+kime-engine-backend = { path = "../backend" }
+kime-engine-backend-hangul = { path = "../backends/hangul" }
+kime-engine-backend-latin = { path = "../backends/latin" }
+kime-engine-dict = { path = "../dict" }
+serde = { version = "1.0.124", features = ["derive"] }
+serde_yaml = "0.8.17"
 enum-map = "0.6.4"
-enumset = { version = "1.0.4", features = ["serde"] }
-serde = { version = "1.0.118", features = ["derive"] }
-serde_yaml = "0.8.15"
-strum = { version = "0.20.0", features = ["derive"] }
+enumset = "1.0.6"
+
+[target.'cfg(unix)'.dependencies]
+xdg = "2.2.0"
+kime-run-dir = { path = "../../tools/run_dir" }

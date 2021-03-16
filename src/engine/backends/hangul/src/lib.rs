@@ -129,35 +129,25 @@ impl HangulEngine {
 }
 
 impl InputEngine for HangulEngine {
-    fn press_key(&mut self, key: Key) -> bool {
+    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
         if key.code == KeyCode::Backspace {
-            self.state.backspace(self.addons)
+            self.state.backspace(self.addons, commit_buf)
         } else if let Some(kv) = self.layout.lookup_kv(&key) {
-            self.state.key(kv, self.addons)
+            self.state.key(kv, self.addons, commit_buf)
         } else {
-            self.state.clear_preedit();
+            self.clear_preedit(commit_buf);
             false
         }
     }
 
     #[inline]
-    fn clear_preedit(&mut self) {
-        self.state.clear_preedit();
+    fn clear_preedit(&mut self, commit_buf: &mut String) {
+        self.state.clear_preedit(commit_buf);
     }
 
     #[inline]
-    fn remove_preedit(&mut self) {
-        self.state.remove_preedit();
-    }
-
-    #[inline]
-    fn clear_commit(&mut self) {
-        self.state.clear_commit();
-    }
-
-    #[inline]
-    fn commit_str(&self) -> &str {
-        self.state.commit_str()
+    fn reset(&mut self) {
+        self.state.reset();
     }
 
     #[inline]
@@ -168,16 +158,6 @@ impl InputEngine for HangulEngine {
     #[inline]
     fn preedit_str(&self, buf: &mut String) {
         self.state.preedit_str(buf);
-    }
-
-    #[inline]
-    fn reset(&mut self) {
-        self.state.reset();
-    }
-
-    #[inline]
-    fn pass(&mut self, s: &str) {
-        self.state.pass(s);
     }
 }
 

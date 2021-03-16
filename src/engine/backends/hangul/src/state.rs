@@ -11,7 +11,6 @@ pub struct HangulState {
     state: CharacterState,
     word_commit: bool,
     word_buf: String,
-    commit_buf: String,
 }
 
 impl HangulState {
@@ -20,12 +19,7 @@ impl HangulState {
             state: CharacterState::new(),
             word_commit,
             word_buf: String::new(),
-            commit_buf: String::with_capacity(64),
         }
-    }
-
-    pub fn commit_str(&self) -> &str {
-        &self.commit_buf
     }
 
     pub fn has_preedit(&self) -> bool {
@@ -37,40 +31,26 @@ impl HangulState {
         self.state.write(buf);
     }
 
-    pub fn pass(&mut self, s: &str) {
-        self.clear_preedit();
-        self.commit_buf.push_str(s);
-    }
-
-    pub fn clear_commit(&mut self) {
-        self.commit_buf.clear();
-    }
-
-    pub fn clear_preedit(&mut self) {
-        self.commit_buf.push_str(&self.word_buf);
+    pub fn clear_preedit(&mut self, commit_buf: &mut String) {
+        commit_buf.push_str(&self.word_buf);
         self.word_buf.clear();
-        self.state.write(&mut self.commit_buf);
-        self.state.reset();
-    }
-
-    pub fn remove_preedit(&mut self) {
-        self.word_buf.clear();
+        self.state.write(commit_buf);
         self.state.reset();
     }
 
     pub fn reset(&mut self) {
-        self.remove_preedit();
-        self.commit_buf.clear();
+        self.word_buf.clear();
+        self.state.reset();
     }
 
-    fn convert_result(&mut self, ret: CharacterResult) -> bool {
+    fn convert_result(&mut self, ret: CharacterResult, commit_buf: &mut String) -> bool {
         match ret {
             CharacterResult::Consume => true,
             CharacterResult::NewCharacter(new_ch) => {
                 if self.word_commit {
                     self.word_buf.push(self.state.to_char());
                 } else {
-                    self.commit_buf.push(self.state.to_char());
+                    commit_buf.push(self.state.to_char());
                 }
                 self.state = new_ch;
                 true
@@ -78,20 +58,20 @@ impl HangulState {
         }
     }
 
-    pub fn backspace(&mut self, addons: EnumSet<Addon>) -> bool {
+    pub fn backspace(&mut self, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         if self.state.backspace(addons) {
             true
-        } else if self.commit_buf.pop().is_some() {
+        } else if commit_buf.pop().is_some() {
             true
         } else {
             false
         }
     }
 
-    pub fn key(&mut self, kv: &KeyValue, addons: EnumSet<Addon>) -> bool {
+    pub fn key(&mut self, kv: &KeyValue, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         let ret = match kv {
             KeyValue::Pass(pass) => {
-                self.pass(pass);
+                commit_buf.push_str(pass);
                 return true;
             }
             KeyValue::Choseong { cho } => self.state.cho(*cho, addons),
@@ -114,7 +94,7 @@ impl HangulState {
             } => self.state.jung_jong(*jung, *jong, *first, *compose, addons),
         };
 
-        self.convert_result(ret)
+        self.convert_result(ret, commit_buf)
     }
 }
 

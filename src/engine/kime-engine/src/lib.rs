@@ -15,6 +15,7 @@ pub use kime_engine_core::{InputResult, Key, KeyCode, ModifierState};
 
 pub struct InputEngine {
     engine_impl: EngineImpl,
+    commit_buf: String,
     preedit_buf: String,
     os_ctx: DefaultOsContext,
     icon_color: IconColor,
@@ -30,6 +31,7 @@ impl InputEngine {
     pub fn new(config: &Config) -> Self {
         Self {
             engine_impl: EngineImpl::new(config),
+            commit_buf: String::with_capacity(16),
             preedit_buf: String::with_capacity(16),
             os_ctx: DefaultOsContext::default(),
             icon_color: config.icon_color,
@@ -91,18 +93,26 @@ impl InputEngine {
                     processed = true;
                 }
                 HotkeyBehavior::Emoji => {
-                    if self.os_ctx.emoji(&mut self.engine_impl).unwrap_or(false) {
+                    if self
+                        .os_ctx
+                        .emoji(&mut self.engine_impl, &mut self.commit_buf)
+                        .is_ok()
+                    {
                         processed = true;
                     }
                 }
                 HotkeyBehavior::Hanja => {
-                    if self.os_ctx.hanja(&mut self.engine_impl).unwrap_or(false) {
+                    if self
+                        .os_ctx
+                        .hanja(&mut self.engine_impl, &mut self.commit_buf)
+                        .is_ok()
+                    {
                         processed = true;
                     }
                 }
                 HotkeyBehavior::Commit => {
                     if self.engine_impl.has_preedit() {
-                        self.engine_impl.clear_preedit();
+                        self.engine_impl.clear_preedit(&mut self.commit_buf);
                         processed = true;
                     }
                 }
@@ -115,22 +125,22 @@ impl InputEngine {
                 }
             }
 
-            ret |= self.engine_impl.current_result();
+            ret |= self.current_result();
 
             ret
         } else if key.code == KeyCode::Shift {
             // Don't reset state
-            self.engine_impl.current_result()
+            self.current_result()
         } else {
             self.try_get_global_input_category_state(config);
 
             let mut ret = InputResult::empty();
 
-            if self.engine_impl.press_key(key) {
+            if self.engine_impl.press_key(key, &mut self.commit_buf) {
                 ret |= InputResult::CONSUMED;
             }
 
-            ret |= self.engine_impl.current_result();
+            ret |= self.current_result();
 
             ret
         }
@@ -144,23 +154,18 @@ impl InputEngine {
     ) -> InputResult {
         match KeyCode::from_hardward_code(hardware_code) {
             Some(code) => self.press_key(Key::new(code, state), config),
-            None => self.engine_impl.current_result(),
+            None => self.current_result(),
         }
     }
 
     #[inline]
     pub fn clear_commit(&mut self) {
-        self.engine_impl.clear_commit();
+        self.commit_buf.clear();
     }
 
     #[inline]
     pub fn clear_preedit(&mut self) {
-        self.engine_impl.clear_preedit();
-    }
-
-    #[inline]
-    pub fn remove_preedit(&mut self) {
-        self.engine_impl.remove_preedit();
+        self.engine_impl.clear_preedit(&mut self.commit_buf);
     }
 
     #[inline]
@@ -172,12 +177,24 @@ impl InputEngine {
 
     #[inline]
     pub fn commit_str(&self) -> &str {
-        self.engine_impl.commit_str()
+        &self.commit_buf
     }
 
     #[inline]
     pub fn reset(&mut self) {
+        self.commit_buf.clear();
         self.engine_impl.reset();
+    }
+
+    fn current_result(&self) -> InputResult {
+        let mut ret = InputResult::empty();
+        if self.engine_impl.has_preedit() {
+            ret |= InputResult::HAS_PREEDIT;
+        }
+        if !self.commit_buf.is_empty() {
+            ret |= InputResult::HAS_COMMIT;
+        }
+        ret
     }
 }
 
@@ -197,17 +214,6 @@ impl EngineImpl {
             math_engine: config.latin_engine.clone(),
         }
     }
-
-    pub fn current_result(&self) -> InputResult {
-        let mut ret = InputResult::empty();
-        if self.has_preedit() {
-            ret |= InputResult::HAS_PREEDIT;
-        }
-        if !self.commit_str().is_empty() {
-            ret |= InputResult::HAS_COMMIT;
-        }
-        ret
-    }
 }
 
 macro_rules! do_engine {
@@ -221,16 +227,12 @@ macro_rules! do_engine {
 }
 
 impl kime_engine_core::InputEngine for EngineImpl {
-    fn press_key(&mut self, key: Key) -> bool {
-        do_engine!(self, press_key(key))
+    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
+        do_engine!(self, press_key(key, commit_buf))
     }
 
-    fn clear_preedit(&mut self) {
-        do_engine!(self, clear_preedit());
-    }
-
-    fn clear_commit(&mut self) {
-        do_engine!(self, clear_commit());
+    fn clear_preedit(&mut self, commit_buf: &mut String) {
+        do_engine!(self, clear_preedit(commit_buf));
     }
 
     fn reset(&mut self) {
@@ -243,13 +245,5 @@ impl kime_engine_core::InputEngine for EngineImpl {
 
     fn preedit_str(&self, buf: &mut String) {
         do_engine!(self, preedit_str(buf));
-    }
-
-    fn commit_str(&self) -> &str {
-        do_engine!(self, commit_str())
-    }
-
-    fn pass(&mut self, s: &str) {
-        do_engine!(self, pass(s));
     }
 }

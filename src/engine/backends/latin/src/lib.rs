@@ -23,7 +23,6 @@ impl Default for LatinConfig {
 #[derive(Clone)]
 pub struct LatinEngine {
     layout: AHashMap<Key, char>,
-    buf: String,
 }
 
 impl LatinEngine {
@@ -34,42 +33,26 @@ impl LatinEngine {
         };
         Self {
             layout: serde_yaml::from_str(layout).unwrap_or_default(),
-            buf: String::with_capacity(16),
         }
     }
 }
 
 impl InputEngine for LatinEngine {
-    fn press_key(&mut self, key: Key) -> bool {
+    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
         if let Some(ch) = self.layout.get(&key) {
-            self.buf.push(*ch);
+            commit_buf.push(*ch);
             true
         } else {
             false
         }
     }
 
-    fn clear_commit(&mut self) {
-        self.buf.clear();
-    }
-
-    fn clear_preedit(&mut self) {}
-
-    fn reset(&mut self) {
-        self.buf.clear();
-    }
+    fn clear_preedit(&mut self, _commit_buf: &mut String) {}
+    fn reset(&mut self) {}
 
     fn has_preedit(&self) -> bool {
         false
     }
 
     fn preedit_str(&self, _buf: &mut String) {}
-
-    fn commit_str(&self) -> &str {
-        &self.buf
-    }
-
-    fn pass(&mut self, s: &str) {
-        self.buf.push_str(s);
-    }
 }

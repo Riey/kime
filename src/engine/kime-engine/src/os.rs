@@ -5,8 +5,8 @@ use std::io;
 pub trait OsContext {
     fn read_global_hangul_state(&mut self) -> io::Result<InputCategory>;
     fn update_layout_state(&mut self, category: InputCategory, color: IconColor) -> io::Result<()>;
-    fn hanja(&mut self, engine: &mut impl InputEngine) -> io::Result<bool>;
-    fn emoji(&mut self, engine: &mut impl InputEngine) -> io::Result<bool>;
+    fn hanja(&mut self, engine: &mut impl InputEngine, commit_buf: &mut String) -> io::Result<()>;
+    fn emoji(&mut self, engine: &mut impl InputEngine, commit_buf: &mut String) -> io::Result<()>;
 }
 
 #[cfg(unix)]
@@ -77,18 +77,21 @@ mod unix {
             client.write_all(&[category, color])
         }
 
-        fn hanja(&mut self, engine: &mut impl InputEngine) -> io::Result<bool> {
+        fn hanja(
+            &mut self,
+            engine: &mut impl InputEngine,
+            commit_buf: &mut String,
+        ) -> io::Result<()> {
             self.buf_str.clear();
             engine.preedit_str(&mut self.buf_str);
             let hangul = self.buf_str.as_str();
-            let mut hanja = String::with_capacity(hangul.len());
             let mut buf = [0; 8];
 
             for ch in hangul.chars() {
                 let hanjas = kime_engine_dict::lookup(ch);
 
                 if hanjas.is_empty() {
-                    hanja.push(ch);
+                    commit_buf.push(ch);
                     continue;
                 }
 
@@ -113,6 +116,7 @@ mod unix {
                 stdin.flush()?;
 
                 let mut stdout = rofi.stdout.take().unwrap();
+                self.buf.clear();
                 let len = stdout.read_to_end(&mut self.buf)?;
                 let h = std::str::from_utf8(&self.buf[..len])
                     .ok()
@@ -122,17 +126,19 @@ mod unix {
 
                 rofi.wait()?;
 
-                hanja.push(h);
+                commit_buf.push(h);
             }
 
-            engine.remove_preedit();
-            engine.pass(&hanja);
-            self.buf.clear();
+            engine.reset();
 
-            Ok(true)
+            Ok(())
         }
 
-        fn emoji(&mut self, engine: &mut impl InputEngine) -> io::Result<bool> {
+        fn emoji(
+            &mut self,
+            engine: &mut impl InputEngine,
+            commit_buf: &mut String,
+        ) -> io::Result<()> {
             let mut rofimoji = Command::new("rofimoji")
                 .arg("--action")
                 .arg("print")
@@ -146,9 +152,10 @@ mod unix {
 
             rofimoji.wait()?;
 
-            engine.pass(emoji.trim_end_matches('\n'));
+            engine.reset();
+            commit_buf.push_str(emoji.trim_end_matches('\n'));
             self.buf.clear();
-            Ok(true)
+            Ok(())
         }
     }
 }
@@ -174,11 +181,11 @@ mod fallback {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn hanja(&mut self, _state: &mut impl InputEngine) -> io::Result<bool> {
+        fn hanja(&mut self, _state: &mut impl InputEngine, _commit_buf: &mut String) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn emoji(&mut self, _state: &mut impl InputEngine) -> io::Result<bool> {
+        fn emoji(&mut self, _state: &mut impl InputEngine, _commit_buf: &mut String) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
     }

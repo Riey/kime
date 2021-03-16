@@ -12,9 +12,9 @@ use xim::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET,
-    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
+    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT, InputResult_HAS_PREEDIT,
+    InputResult_LANGUAGE_CHANGED, ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT,
+    ModifierState_SUPER,
 };
 
 pub struct KimeData {
@@ -272,7 +272,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         log::trace!("{:?}", ret);
 
         if ret & InputResult_LANGUAGE_CHANGED != 0 {
-            user_ic.user_data.engine.update_hangul_state();
+            user_ic.user_data.engine.update_layout_state();
         }
 
         if ret & InputResult_HAS_PREEDIT != 0 {
@@ -281,14 +281,9 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             self.clear_preedit(server, user_ic)?;
         }
 
-        if ret & InputResult_NEED_RESET | InputResult_NEED_FLUSH != 0 {
+        if ret & InputResult_HAS_COMMIT != 0 {
             self.commit(server, user_ic)?;
-
-            if ret & InputResult_NEED_RESET != 0 {
-                user_ic.user_data.engine.reset();
-            } else {
-                user_ic.user_data.engine.flush();
-            }
+            user_ic.user_data.engine.clear_commit();
         }
 
         Ok(ret & InputResult_CONSUMED != 0)
@@ -330,7 +325,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         _server: &mut X11rbServer<XCBConnection>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        user_ic.user_data.engine.update_hangul_state();
+        user_ic.user_data.engine.update_layout_state();
         Ok(())
     }
 

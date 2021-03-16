@@ -87,7 +87,7 @@ void focus_in(GtkIMContext *im) {
 
   debug("focus_in");
 
-  kime_engine_update_hangul_state(ctx->engine);
+  kime_engine_update_layout_state(ctx->engine);
 }
 
 void kime_reset(KimeImContext *ctx) {
@@ -149,7 +149,7 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
 
   if (ret & KimeInputResult_LANGUAGE_CHANGED) {
-    kime_engine_update_hangul_state(ctx->engine);
+    kime_engine_update_layout_state(ctx->engine);
   }
 
   if (!(ret & KimeInputResult_HAS_PREEDIT)) {
@@ -157,15 +157,10 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
     update_preedit(ctx, FALSE);
   }
 
-  if (ret & (KimeInputResult_NEED_RESET | KimeInputResult_NEED_FLUSH)) {
+  if (ret & KimeInputResult_HAS_COMMIT) {
     str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
     commit(ctx);
-
-    if (ret & KimeInputResult_NEED_RESET) {
-      kime_engine_reset(ctx->engine);
-    } else {
-      kime_engine_flush(ctx->engine);
-    }
+    kime_engine_clear_commit(ctx->engine);
   }
 
   if (ret & KimeInputResult_HAS_PREEDIT) {

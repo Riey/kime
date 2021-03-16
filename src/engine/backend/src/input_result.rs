@@ -4,8 +4,7 @@ bitflags::bitflags! {
         const CONSUMED = 0b1;
         const LANGUAGE_CHANGED = 0b10;
         const HAS_PREEDIT = 0b100;
-        const NEED_RESET = 0b1000;
-        const NEED_FLUSH = 0b10000;
+        const HAS_COMMIT = 0b1000;
     }
 }
 

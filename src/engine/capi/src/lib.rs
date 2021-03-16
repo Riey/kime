@@ -23,7 +23,7 @@ impl RustStr {
     }
 }
 
-pub const KIME_API_VERSION: usize = 3;
+pub const KIME_API_VERSION: usize = 4;
 
 /// Return API version
 #[no_mangle]
@@ -41,10 +41,9 @@ pub extern "C" fn kime_engine_new(config: &Config) -> *mut InputEngine {
 #[no_mangle]
 pub extern "C" fn kime_engine_set_input_category(
     engine: &mut InputEngine,
-    config: &Config,
     category: InputCategory,
 ) {
-    engine.set_input_category(config, category);
+    engine.set_input_category(category);
 }
 
 /// Delete engine
@@ -57,9 +56,9 @@ pub unsafe extern "C" fn kime_engine_delete(engine: &mut InputEngine) {
     drop(Box::from_raw(engine));
 }
 
-/// Update hangul state
+/// Update layout state
 #[no_mangle]
-pub extern "C" fn kime_engine_update_hangul_state(engine: &mut InputEngine) {
+pub extern "C" fn kime_engine_update_layout_state(engine: &mut InputEngine) {
     engine.update_layout_state().ok();
 }
 
@@ -69,7 +68,7 @@ pub extern "C" fn kime_engine_update_hangul_state(engine: &mut InputEngine) {
 ///
 /// valid utf8 string
 #[no_mangle]
-pub extern "C" fn kime_engine_commit_str(engine: &mut InputEngine) -> RustStr {
+pub extern "C" fn kime_engine_commit_str(engine: &InputEngine) -> RustStr {
     RustStr::new(engine.commit_str())
 }
 
@@ -83,19 +82,25 @@ pub extern "C" fn kime_engine_preedit_str(engine: &mut InputEngine) -> RustStr {
     RustStr::new(engine.preedit_str())
 }
 
-/// Flush commit_str
+/// Clear commit string
 #[no_mangle]
-pub extern "C" fn kime_engine_flush(engine: &mut InputEngine) {
-    engine.flush();
+pub extern "C" fn kime_engine_clear_commit(engine: &mut InputEngine) {
+    engine.clear_commit();
 }
 
-/// Clear preedit state and append to commit_str
+/// Clear preedit state this function may append to commit string
 #[no_mangle]
 pub extern "C" fn kime_engine_clear_preedit(engine: &mut InputEngine) {
     engine.clear_preedit();
 }
 
-/// Reset preedit state then returm commit char
+/// Clear preedit state this function must not append to commit string
+#[no_mangle]
+pub extern "C" fn kime_engine_remove_preedit(engine: &mut InputEngine) {
+    engine.remove_preedit();
+}
+
+/// Reset engine state
 #[no_mangle]
 pub extern "C" fn kime_engine_reset(engine: &mut InputEngine) {
     engine.reset();

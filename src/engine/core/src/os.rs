@@ -1,16 +1,26 @@
-use crate::{HangulState, IconColor, InputCategory};
+use crate::{IconColor, InputCategory};
+use kime_engine_backend::InputEngineBackend;
 use std::io;
 
 pub trait OsContext {
     fn read_global_hangul_state(&mut self) -> io::Result<InputCategory>;
     fn update_layout_state(&mut self, category: InputCategory, color: IconColor) -> io::Result<()>;
-    fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool>;
-    fn emoji(&mut self, state: &mut HangulState) -> io::Result<bool>;
+    fn hanja(
+        &mut self,
+        engine: &mut impl InputEngineBackend,
+        commit_buf: &mut String,
+    ) -> io::Result<()>;
+    fn emoji(
+        &mut self,
+        engine: &mut impl InputEngineBackend,
+        commit_buf: &mut String,
+    ) -> io::Result<()>;
 }
 
 #[cfg(unix)]
 mod unix {
-    use crate::{HangulState, IconColor, InputCategory};
+    use crate::{IconColor, InputCategory};
+    use kime_engine_backend::InputEngineBackend;
     use std::process::{Command, Stdio};
     use std::{
         io::{self, BufWriter, Read, Write},
@@ -22,6 +32,7 @@ mod unix {
     pub struct OsContext {
         sock_path: PathBuf,
         buf: Vec<u8>,
+        buf_str: String,
     }
 
     fn get_state_dir() -> PathBuf {
@@ -33,6 +44,7 @@ mod unix {
         fn default() -> Self {
             Self {
                 buf: Vec::with_capacity(64),
+                buf_str: String::with_capacity(16),
                 sock_path: get_state_dir(),
             }
         }
@@ -46,6 +58,7 @@ mod unix {
             client.set_write_timeout(Some(Duration::from_secs(2))).ok();
             client.read_exact(&mut buf)?;
             match buf[0] {
+                b'2' => Ok(InputCategory::Math),
                 b'1' => Ok(InputCategory::Hangul),
                 _ => Ok(InputCategory::Latin),
             }
@@ -57,8 +70,9 @@ mod unix {
             color: IconColor,
         ) -> io::Result<()> {
             let category = match category {
-                InputCategory::Latin => 0,
+                InputCategory::Math => 2,
                 InputCategory::Hangul => 1,
+                InputCategory::Latin => 0,
             };
             let color = match color {
                 IconColor::Black => 0,
@@ -71,16 +85,21 @@ mod unix {
             client.write_all(&[category, color])
         }
 
-        fn hanja(&mut self, state: &mut HangulState) -> io::Result<bool> {
-            let hangul = state.preedit_str();
-            let mut hanja = String::with_capacity(hangul.len());
+        fn hanja(
+            &mut self,
+            engine: &mut impl InputEngineBackend,
+            commit_buf: &mut String,
+        ) -> io::Result<()> {
+            self.buf_str.clear();
+            engine.preedit_str(&mut self.buf_str);
+            let hangul = self.buf_str.as_str();
             let mut buf = [0; 8];
 
             for ch in hangul.chars() {
                 let hanjas = kime_engine_dict::lookup(ch);
 
                 if hanjas.is_empty() {
-                    hanja.push(ch);
+                    commit_buf.push(ch);
                     continue;
                 }
 
@@ -105,6 +124,7 @@ mod unix {
                 stdin.flush()?;
 
                 let mut stdout = rofi.stdout.take().unwrap();
+                self.buf.clear();
                 let len = stdout.read_to_end(&mut self.buf)?;
                 let h = std::str::from_utf8(&self.buf[..len])
                     .ok()
@@ -114,16 +134,19 @@ mod unix {
 
                 rofi.wait()?;
 
-                hanja.push(h);
+                commit_buf.push(h);
             }
 
-            state.pass_replace(&hanja);
-            self.buf.clear();
+            engine.reset();
 
-            Ok(true)
+            Ok(())
         }
 
-        fn emoji(&mut self, state: &mut HangulState) -> io::Result<bool> {
+        fn emoji(
+            &mut self,
+            engine: &mut impl InputEngineBackend,
+            commit_buf: &mut String,
+        ) -> io::Result<()> {
             let mut rofimoji = Command::new("rofimoji")
                 .arg("--action")
                 .arg("print")
@@ -137,15 +160,17 @@ mod unix {
 
             rofimoji.wait()?;
 
-            state.pass(emoji.trim_end_matches('\n'));
+            engine.reset();
+            commit_buf.push_str(emoji.trim_end_matches('\n'));
             self.buf.clear();
-            Ok(true)
+            Ok(())
         }
     }
 }
 
 mod fallback {
     use crate::{IconColor, InputCategory};
+    use kime_engine_backend::InputEngineBackend;
     use std::io;
 
     #[derive(Default)]
@@ -164,11 +189,19 @@ mod fallback {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn hanja(&mut self, _state: &mut crate::HangulState) -> io::Result<bool> {
+        fn hanja(
+            &mut self,
+            _state: &mut impl InputEngineBackend,
+            _commit_buf: &mut String,
+        ) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn emoji(&mut self, _state: &mut crate::HangulState) -> io::Result<bool> {
+        fn emoji(
+            &mut self,
+            _state: &mut impl InputEngineBackend,
+            _commit_buf: &mut String,
+        ) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
     }

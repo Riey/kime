@@ -1,7 +1,7 @@
 [package]
 name = "kime-engine-capi"
 description = "Kime engine library"
-version = "0.8.1"
+version = "0.4.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"

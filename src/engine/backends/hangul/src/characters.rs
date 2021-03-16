@@ -1,9 +1,10 @@
+use enumset::EnumSet;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, str::FromStr};
 
-use crate::{Addon, LayoutContext};
+use crate::Addon;
 
 macro_rules! impl_jamo {
     ($ty:ty, [$(($item:ident, $ch:expr),)+]) => {
@@ -283,8 +284,8 @@ impl Choseong {
         Some((cho, jung, jong))
     }
 
-    pub fn try_add(self, other: Self, layout_ctx: &LayoutContext) -> Option<Self> {
-        let compose_choseong_ssang = layout_ctx.check_addon(Addon::ComposeChoseongSsang);
+    pub fn try_add(self, other: Self, addons: EnumSet<Addon>) -> Option<Self> {
+        let compose_choseong_ssang = addons.contains(Addon::ComposeChoseongSsang);
         match (self, other) {
             (Self::Giyeok, Self::Giyeok) if compose_choseong_ssang => Some(Self::SsangGiyeok),
             (Self::Bieup, Self::Bieup) if compose_choseong_ssang => Some(Self::SsangBieup),
@@ -295,8 +296,8 @@ impl Choseong {
         }
     }
 
-    pub fn backspace(self, layout_ctx: &LayoutContext) -> Option<Self> {
-        let decompose_choseong_ssang = layout_ctx.check_addon(Addon::DecomposeChoseongSsang);
+    pub fn backspace(self, addons: EnumSet<Addon>) -> Option<Self> {
+        let decompose_choseong_ssang = addons.contains(Addon::DecomposeChoseongSsang);
         match self {
             Self::SsangGiyeok if decompose_choseong_ssang => Some(Self::Giyeok),
             Self::SsangBieup if decompose_choseong_ssang => Some(Self::Bieup),
@@ -309,8 +310,8 @@ impl Choseong {
 }
 
 impl Jungseong {
-    pub fn try_add(self, other: Self, layout_ctx: &LayoutContext) -> Option<Self> {
-        let compose_jungseong_ssang = layout_ctx.check_addon(Addon::ComposeJungseongSsang);
+    pub fn try_add(self, other: Self, addons: EnumSet<Addon>) -> Option<Self> {
+        let compose_jungseong_ssang = addons.contains(Addon::ComposeJungseongSsang);
         match (self, other) {
             // ㅑ ㅣ = ㅒ
             (Self::YA, Self::I) if compose_jungseong_ssang => Some(Self::YAE),
@@ -334,8 +335,8 @@ impl Jungseong {
         }
     }
 
-    pub fn backspace(self, layout_ctx: &LayoutContext) -> Option<Self> {
-        let decompose_jungseong_ssang = layout_ctx.check_addon(Addon::DecomposeJungseongSsang);
+    pub fn backspace(self, addons: EnumSet<Addon>) -> Option<Self> {
+        let decompose_jungseong_ssang = addons.contains(Addon::DecomposeJungseongSsang);
 
         match self {
             // ㅖ -> ㅕ
@@ -362,8 +363,8 @@ impl Jungseong {
 }
 
 impl Jongseong {
-    pub fn try_add(self, other: Self, layout_ctx: &LayoutContext) -> Option<Self> {
-        let compose_jongseong_ssang = layout_ctx.check_addon(Addon::ComposeJongseongSsang);
+    pub fn try_add(self, other: Self, addons: EnumSet<Addon>) -> Option<Self> {
+        let compose_jongseong_ssang = addons.contains(Addon::ComposeJongseongSsang);
 
         match (self, other) {
             (Self::Giyeok, Self::Giyeok) if compose_jongseong_ssang => Some(Self::SsangGiyeok),
@@ -384,8 +385,8 @@ impl Jongseong {
         }
     }
 
-    pub fn backspace(self, layout_ctx: &LayoutContext) -> Option<Self> {
-        let decompose_jongseong_ssang = layout_ctx.check_addon(Addon::DecomposeJongseongSsang);
+    pub fn backspace(self, addons: EnumSet<Addon>) -> Option<Self> {
+        let decompose_jongseong_ssang = addons.contains(Addon::DecomposeJongseongSsang);
 
         match self {
             Self::SsangGiyeok if decompose_jongseong_ssang => Some(Self::Giyeok),
@@ -402,8 +403,8 @@ impl Jongseong {
         }
     }
 
-    pub fn to_cho(self, layout_ctx: &LayoutContext) -> JongToCho {
-        let decompose_jongseong_ssang = layout_ctx.check_addon(Addon::DecomposeJongseongSsang);
+    pub fn to_cho(self, addons: EnumSet<Addon>) -> JongToCho {
+        let decompose_jongseong_ssang = addons.contains(Addon::DecomposeJongseongSsang);
 
         use JongToCho::{Compose, Direct};
         match self {

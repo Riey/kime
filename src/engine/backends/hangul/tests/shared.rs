@@ -1,11 +1,12 @@
-use kime_engine_core::{InputEngine, InputResult, Key};
-use kime_engine_hangul::{builtin_layouts, HangulConfig, HangulEngine};
+use kime_engine_backend::{InputEngineBackend, Key};
+use kime_engine_backend_hangul::{builtin_layouts, HangulConfig, HangulEngine};
 
 #[track_caller]
 pub fn test_input_impl(config: &HangulConfig, keys: &[(Key, &str, &str)]) {
     let mut engine = HangulEngine::new(config, builtin_layouts());
 
     let mut buf = String::with_capacity(16);
+    let mut commit_buf = String::with_capacity(16);
 
     macro_rules! test_preedit {
         ($text:expr) => {{
@@ -17,17 +18,17 @@ pub fn test_input_impl(config: &HangulConfig, keys: &[(Key, &str, &str)]) {
 
     macro_rules! test_commit {
         ($text:expr) => {{
-            assert_eq!(engine.commit_str(), $text);
+            assert_eq!(commit_buf, $text);
         }};
         (@pass $text:expr) => {{
-            assert_eq!(format!("{}PASS", engine.commit_str()), $text);
+            assert_eq!(format!("{}PASS", commit_buf), $text);
         }};
     }
 
     for (key, preedit, commit) in keys.iter().copied() {
         eprintln!("Key: {:?}", key);
 
-        let ret = engine.press_key(key);
+        let ret = engine.press_key(key, &mut commit_buf);
 
         eprintln!("Ret: {:?}", ret);
 
@@ -41,8 +42,8 @@ pub fn test_input_impl(config: &HangulConfig, keys: &[(Key, &str, &str)]) {
             test_commit!(@pass commit);
         } else {
             test_commit!(commit);
-            engine.clear_commit();
         }
+        commit_buf.clear();
     }
 }
 
@@ -50,8 +51,8 @@ pub fn test_input_impl(config: &HangulConfig, keys: &[(Key, &str, &str)]) {
 macro_rules! define_layout_test {
     ($layout:literal) => {
         use enumset::EnumSet;
-        use kime_engine_core::{Key, KeyCode::*};
-        use kime_engine_hangul::{Addon, HangulConfig};
+        use kime_engine_backend::{Key, KeyCode::*};
+        use kime_engine_backend_hangul::{Addon, HangulConfig};
         use shared::test_input_impl;
 
         #[allow(dead_code)]

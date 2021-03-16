@@ -71,6 +71,7 @@ impl HangulState {
     pub fn key(&mut self, kv: &KeyValue, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         let ret = match kv {
             KeyValue::Pass(pass) => {
+                self.clear_preedit(commit_buf);
                 commit_buf.push_str(pass);
                 return true;
             }

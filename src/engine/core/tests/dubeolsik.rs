@@ -12,6 +12,11 @@ fn flexible_compose_order_addon() {
 }
 
 #[test]
+fn strict_typing_order() {
+    test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "ㄱ", "ㅏ")])
+}
+
+#[test]
 fn treat_jongseong_as_choseong_compose_addon() {
     test_input_with_addon(
         &[
@@ -38,15 +43,13 @@ fn word_hello() {
     ])
 }
 
-// // issue #310
-// #[test]
-// fn hangul_change_preedit() {
-//     test_input(&[(Key::normal(R), "ㄱ", ""), (Key::normal(Hangul), "ㄱ", "")]);
-// }
-
 #[test]
-fn strict_typing_order() {
-    test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "ㄱ", "ㅏ")])
+fn esc() {
+    test_input(&[
+        (Key::normal(R), "ㄱ", ""),
+        (Key::normal(Esc), "", "ㄱPASS"),
+        (Key::normal(R), "", "r"),
+    ]);
 }
 
 #[test]

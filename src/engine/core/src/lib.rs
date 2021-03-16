@@ -9,7 +9,7 @@ use kime_engine_backend::InputEngineBackend;
 use kime_engine_backend_hangul::{HangulConfig, HangulEngine};
 use kime_engine_backend_latin::{LatinConfig, LatinEngine};
 
-pub use config::{Config, InputCategory, RawConfig};
+pub use config::{Config, Hotkey, InputCategory, RawConfig};
 
 pub use kime_engine_backend::{InputResult, Key, KeyCode, ModifierState};
 
@@ -40,7 +40,7 @@ impl InputEngine {
 
     pub fn set_input_category(&mut self, category: InputCategory) {
         // Reset previous engine
-        self.engine_impl.reset();
+        self.engine_impl.clear_preedit(&mut self.commit_buf);
         self.engine_impl.category = category;
     }
 

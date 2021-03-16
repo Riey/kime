@@ -181,11 +181,19 @@ mod fallback {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn hanja(&mut self, _state: &mut impl InputEngine, _commit_buf: &mut String) -> io::Result<()> {
+        fn hanja(
+            &mut self,
+            _state: &mut impl InputEngine,
+            _commit_buf: &mut String,
+        ) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn emoji(&mut self, _state: &mut impl InputEngine, _commit_buf: &mut String) -> io::Result<()> {
+        fn emoji(
+            &mut self,
+            _state: &mut impl InputEngine,
+            _commit_buf: &mut String,
+        ) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
     }

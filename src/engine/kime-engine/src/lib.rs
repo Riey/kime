@@ -128,9 +128,6 @@ impl InputEngine {
             ret |= self.current_result();
 
             ret
-        } else if key.code == KeyCode::Shift {
-            // Don't reset state
-            self.current_result()
         } else {
             self.try_get_global_input_category_state(config);
 

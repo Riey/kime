@@ -30,9 +30,9 @@ struct HanjaEntry {
 }
 
 #[derive(Deserialize)]
-struct KeySymPair {
-    keyword: String,
-    symbol: String,
+struct KeySymPair<'a> {
+    keyword: &'a str,
+    symbol: &'a str,
 }
 
 fn main() {
@@ -115,12 +115,12 @@ fn main() {
         entries.push_str("\"");
         entries.push_str(&pair.symbol);
         entries.push_str("\"");
-        map.entry(keyword.as_str(), &entries);
+        map.entry(keyword, &entries);
         entries.clear();
     }
     writeln!(
         out,
-        "pub static MATH_SYMBOL_DICT: phf::Map<&'static str, &'static str> = {};",
+        "pub static MATH_SYMBOL_DICT: phf::Map<&str, &str> = {};",
         map.build()
     )
     .unwrap();

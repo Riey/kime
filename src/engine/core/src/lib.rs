@@ -6,8 +6,9 @@ use config::{HotkeyBehavior, HotkeyResult, IconColor};
 use os::{DefaultOsContext, OsContext};
 
 use kime_engine_backend::InputEngineBackend;
-use kime_engine_backend_hangul::{HangulConfig, HangulEngine};
-use kime_engine_backend_latin::{LatinConfig, LatinEngine};
+use kime_engine_backend_hangul::HangulEngine;
+use kime_engine_backend_latin::LatinEngine;
+use kime_engine_backend_math::MathEngine;
 
 pub use config::{Config, Hotkey, InputCategory, RawConfig};
 
@@ -66,8 +67,18 @@ impl InputEngine {
         }
     }
 
+    fn try_hotkey<'c>(&self, key: &Key, config: &'c Config) -> Option<&'c Hotkey> {
+        if let Some(category_hotkey) = config.category_hotkeys[self.category()].get(key) {
+            Some(category_hotkey)
+        } else if let Some(global) = config.global_hotkeys.get(key) {
+            Some(global)
+        } else {
+            None
+        }
+    }
+
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
-        if let Some(hotkey) = config.hotkeys.get(&key) {
+        if let Some(hotkey) = self.try_hotkey(&key, config) {
             let mut processed = false;
             let mut ret = InputResult::empty();
 
@@ -204,7 +215,7 @@ struct EngineImpl {
     category: InputCategory,
     latin_engine: LatinEngine,
     hangul_engine: HangulEngine,
-    math_engine: LatinEngine,
+    math_engine: MathEngine,
 }
 
 impl EngineImpl {
@@ -213,7 +224,7 @@ impl EngineImpl {
             category: config.default_category,
             latin_engine: config.latin_engine.clone(),
             hangul_engine: config.hangul_engine.clone(),
-            math_engine: config.latin_engine.clone(),
+            math_engine: config.math_engine.clone(),
         }
     }
 }

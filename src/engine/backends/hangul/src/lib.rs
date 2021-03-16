@@ -135,10 +135,6 @@ impl InputEngineBackend for HangulEngine {
         } else if let Some(kv) = self.layout.lookup_kv(&key) {
             self.state.key(kv, self.addons, commit_buf)
         } else {
-            // ignore shift
-            if key.code != KeyCode::Shift {
-                self.clear_preedit(commit_buf);
-            }
             false
         }
     }

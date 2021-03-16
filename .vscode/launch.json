@@ -97,7 +97,7 @@
                 "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug",
                 "G_MESSAGES_DEBUG": "kime",
             },
-            "program": "/usr/lib/firefox/firefox",
+            "program": "/usr/lib64/firefox/firefox",
             "args": ["-g", "-new-instance", "-P", "kime-debug", "-new-window", "https://codepen.io/hpop/pen/drLiH"]
         },
         {

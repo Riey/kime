@@ -1,10 +1,10 @@
 use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, Key, RawConfig};
 
 #[track_caller]
-pub fn test_input_impl(config: RawConfig, keys: &[(Key, &str, &str)]) {
+pub fn test_input_impl(config: RawConfig, category: InputCategory, keys: &[(Key, &str, &str)]) {
     let config = Config::new(config);
     let mut engine = InputEngine::new(&config);
-    engine.set_input_category(InputCategory::Hangul);
+    engine.set_input_category(category);
 
     macro_rules! test_preedit {
         ($text:expr) => {{
@@ -50,23 +50,25 @@ pub fn test_input_impl(config: RawConfig, keys: &[(Key, &str, &str)]) {
 
 #[allow(unused_macros)]
 macro_rules! define_layout_test {
-    ($layout:literal) => {
+    ($layout:expr, $latin_layout:expr, $category:expr) => {
         use enumset::EnumSet;
         use kime_engine_backend_hangul::Addon;
-        use kime_engine_core::{Hotkey, Key, KeyCode::*, RawConfig};
+        use kime_engine_backend_latin::LatinLayout;
+        use kime_engine_core::{Hotkey, InputCategory, Key, KeyCode::*, RawConfig};
         use shared::test_input_impl;
 
         #[allow(dead_code)]
         fn default_config() -> RawConfig {
             let mut config = RawConfig::default();
             config.hangul.layout = $layout.into();
+            config.latin.layout = $latin_layout;
             config
         }
 
         #[allow(dead_code)]
         #[track_caller]
         fn test_input(keys: &[(Key, &str, &str)]) {
-            test_input_impl(default_config(), keys);
+            test_input_impl(default_config(), $category, keys);
         }
 
         #[allow(dead_code)]
@@ -74,7 +76,7 @@ macro_rules! define_layout_test {
         fn test_word_input(keys: &[(Key, &str, &str)]) {
             let mut config = default_config();
             config.hangul.word_commit = true;
-            test_input_impl(config, keys);
+            test_input_impl(config, $category, keys);
         }
 
         #[allow(dead_code)]
@@ -82,15 +84,18 @@ macro_rules! define_layout_test {
         fn test_input_with_addon(keys: &[(Key, &str, &str)], addons: impl Into<EnumSet<Addon>>) {
             let mut config = default_config();
             config.hangul.addons.insert($layout.into(), addons.into());
-            test_input_impl(config, keys);
+            test_input_impl(config, $category, keys);
         }
 
         #[allow(dead_code)]
         #[track_caller]
         fn test_input_with_hotkey(keys: &[(Key, &str, &str)], hotkeys: &[(Key, Hotkey)]) {
             let mut config = default_config();
-            config.hotkeys = hotkeys.iter().copied().collect();
-            test_input_impl(config, keys);
+            config.global_hotkeys = hotkeys.iter().copied().collect();
+            test_input_impl(config, $category, keys);
         }
+    };
+    ($layout:expr) => {
+        define_layout_test!($layout, LatinLayout::Qwerty, InputCategory::Hangul);
     };
 }

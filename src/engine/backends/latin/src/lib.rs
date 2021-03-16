@@ -9,7 +9,7 @@ pub enum LatinLayout {
 
 #[derive(Serialize, Deserialize)]
 pub struct LatinConfig {
-    layout: LatinLayout,
+    pub layout: LatinLayout,
 }
 
 impl Default for LatinConfig {
@@ -20,6 +20,14 @@ impl Default for LatinConfig {
     }
 }
 
+pub fn load_layout(config: &LatinConfig) -> AHashMap<Key, char> {
+    let layout = match config.layout {
+        LatinLayout::Qwerty => include_str!("../data/qwerty.yaml"),
+        LatinLayout::Colemak => include_str!("../data/colemak.yaml"),
+    };
+    serde_yaml::from_str(layout).unwrap_or_default()
+}
+
 #[derive(Clone)]
 pub struct LatinEngine {
     layout: AHashMap<Key, char>,
@@ -27,12 +35,8 @@ pub struct LatinEngine {
 
 impl LatinEngine {
     pub fn new(config: &LatinConfig) -> Self {
-        let layout = match config.layout {
-            LatinLayout::Qwerty => include_str!("../data/qwerty.yaml"),
-            LatinLayout::Colemak => include_str!("../data/colemak.yaml"),
-        };
         Self {
-            layout: serde_yaml::from_str(layout).unwrap_or_default(),
+            layout: load_layout(config),
         }
     }
 }

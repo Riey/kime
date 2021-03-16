@@ -34,3 +34,15 @@ fn space() {
         (Key::normal(Space), "", "⟪PASS"),
     ]);
 }
+
+#[test]
+fn backspace() {
+    test_input(&[
+        (Key::normal(Backslash), "\\", ""),
+        (Key::normal(P), "\\p", ""),
+        (Key::normal(I), "\\pi", ""),
+        (Key::normal(Backspace), "\\p", ""),
+        (Key::normal(Backspace), "\\", ""),
+        (Key::normal(Backspace), "", ""),
+    ])
+}

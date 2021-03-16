@@ -32,6 +32,14 @@ impl InputEngineBackend for MathEngine {
             return true;
         }
 
+        if self.math_mode && key.code == KeyCode::Backspace {
+            if self.buf.pop().is_none() {
+                self.math_mode = false;
+            }
+
+            return true;
+        }
+
         if let Some(ch) = self.layout.get(&key) {
             if self.math_mode {
                 self.buf.push(*ch);

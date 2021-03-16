@@ -1,4 +1,4 @@
-pub use enum_map::{Enum, EnumMap};
+use enum_map::{Enum, EnumMap};
 use enumset::EnumSetType;
 use kime_engine_backend::{AHashMap, Key, KeyCode, ModifierState};
 use kime_engine_backend_hangul::{HangulConfig, HangulEngine};

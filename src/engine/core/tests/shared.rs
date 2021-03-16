@@ -91,7 +91,7 @@ macro_rules! define_layout_test {
         #[track_caller]
         fn test_input_with_hotkey(keys: &[(Key, &str, &str)], hotkeys: &[(Key, Hotkey)]) {
             let mut config = default_config();
-            config.hotkeys = hotkeys.iter().copied().collect();
+            config.global_hotkeys = hotkeys.iter().copied().collect();
             test_input_impl(config, $category, keys);
         }
     };

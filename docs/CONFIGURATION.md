@@ -71,37 +71,13 @@ Set icon color for indicator
 
 Set engine hotkey format is `Key: Content`
 
-### default
+### global_hotkeys
 
-```yaml
-Super-Space:
-  behavior: ToggleHangul
-  result: Consume
-M-C-E:
-  behavior: Emoji
-  result: ConsumeIfProcessed
-Esc:
-  behavior: ToEnglish
-  result: Bypass
-ControlR:
-  behavior: Hanja
-  result: Consume
-Muhenkan:
-  behavior: ToggleHangul
-  result: Consume
-AltR:
-  behavior: ToggleHangul
-  result: Consume
-Hangul:
-  behavior: ToggleHangul
-  result: Consume
-HangulHanja:
-  behavior: Hanja
-  result: Consume
-F9:
-  behavior: Hanja
-  result: Consume
-```
+Global hotkey
+
+### category_hotkeys
+
+Hotkey for specific category override global hotkey
 
 ### content
 

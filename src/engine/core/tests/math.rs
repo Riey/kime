@@ -17,11 +17,11 @@ fn pi() {
         (Key::normal(Backslash), "\\", ""),
         (Key::normal(P), "\\p", ""),
         (Key::normal(I), "\\pi", ""),
-        (Key::normal(Enter), "", "π"),
+        (Key::normal(Tab), "", "π"),
         (Key::normal(Backslash), "\\", ""),
         (Key::shift(P), "\\P", ""),
         (Key::normal(I), "\\Pi", ""),
-        (Key::normal(Enter), "", "Π"),
+        (Key::normal(Tab), "", "Π"),
     ]);
 }
 

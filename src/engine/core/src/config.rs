@@ -185,7 +185,10 @@ impl Config {
             hotkeys: raw.hotkeys.into_iter().collect(),
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
-            hangul_engine: HangulEngine::new(&raw.hangul, kime_engine_backend_hangul::builtin_layouts()),
+            hangul_engine: HangulEngine::new(
+                &raw.hangul,
+                kime_engine_backend_hangul::builtin_layouts(),
+            ),
             latin_engine: LatinEngine::new(&raw.latin),
         }
     }

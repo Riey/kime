@@ -5,8 +5,16 @@ use std::io;
 pub trait OsContext {
     fn read_global_hangul_state(&mut self) -> io::Result<InputCategory>;
     fn update_layout_state(&mut self, category: InputCategory, color: IconColor) -> io::Result<()>;
-    fn hanja(&mut self, engine: &mut impl InputEngineBackend, commit_buf: &mut String) -> io::Result<()>;
-    fn emoji(&mut self, engine: &mut impl InputEngineBackend, commit_buf: &mut String) -> io::Result<()>;
+    fn hanja(
+        &mut self,
+        engine: &mut impl InputEngineBackend,
+        commit_buf: &mut String,
+    ) -> io::Result<()>;
+    fn emoji(
+        &mut self,
+        engine: &mut impl InputEngineBackend,
+        commit_buf: &mut String,
+    ) -> io::Result<()>;
 }
 
 #[cfg(unix)]

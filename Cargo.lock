@@ -606,7 +606,7 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-backend"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "ahash",
  "bitflags",
@@ -641,7 +641,7 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-capi"
-version = "0.8.1"
+version = "0.4.0"
 dependencies = [
  "kime-engine-core",
 ]
@@ -657,7 +657,7 @@ dependencies = [
 
 [[package]]
 name = "kime-engine-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "enum-map",
  "enumset",

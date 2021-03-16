@@ -26,7 +26,7 @@ void KimeInputContext::reset() {
 
 void KimeInputContext::setFocusObject(QObject *object) {
   if (object) {
-    kime::kime_engine_update_hangul_state(this->engine);
+    kime::kime_engine_update_layout_state(this->engine);
   }
   this->focus_object = object;
 }
@@ -76,17 +76,12 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
       this->engine, this->config, (uint16_t)keyevent->nativeScanCode(), state);
 
   if (ret & kime::InputResult_LANGUAGE_CHANGED) {
-    kime::kime_engine_update_hangul_state(this->engine);
+    kime::kime_engine_update_layout_state(this->engine);
   }
 
-  if (ret & (kime::InputResult_NEED_FLUSH | kime::InputResult_NEED_RESET)) {
+  if (ret & (kime::InputResult_HAS_COMMIT)) {
     commit_str(kime::kime_engine_commit_str(this->engine));
-
-    if (ret & kime::InputResult_NEED_FLUSH) {
-      kime::kime_engine_flush(this->engine);
-    } else {
-      kime::kime_engine_reset(this->engine);
-    }
+    kime::kime_engine_clear_commit(this->engine);
   }
 
   if (ret & kime::InputResult_HAS_PREEDIT) {

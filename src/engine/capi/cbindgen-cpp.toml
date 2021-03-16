@@ -17,7 +17,7 @@ bitflags = true
 
 [parse]
 parse_deps = true
-include = ["kime-engine-core", "kime-log"]
+include = ["kime-engine-backend", "kime-engine-core"]
 
 [const]
 allow_static_const = true

@@ -1,10 +1,25 @@
-use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, Key};
+use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, Key, RawConfig};
 
 #[track_caller]
-pub fn test_input_impl(config: &Config, keys: &[(Key, &str, &str)]) {
-    let mut engine = InputEngine::new(config);
+pub fn test_input_impl(config: RawConfig, keys: &[(Key, &str, &str)]) {
+    let config = Config::new(config);
+    let mut engine = InputEngine::new(&config);
+    engine.set_input_category(InputCategory::Hangul);
 
-    engine.set_input_category(config, InputCategory::Hangul);
+    macro_rules! test_preedit {
+        ($text:expr) => {{
+            assert_eq!(engine.preedit_str(), $text);
+        }};
+    }
+
+    macro_rules! test_commit {
+        ($text:expr) => {{
+            assert_eq!(engine.commit_str(), $text);
+        }};
+        (@pass $text:expr) => {{
+            assert_eq!(format!("{}PASS", engine.commit_str()), $text);
+        }};
+    }
 
     for (key, preedit, commit) in keys.iter().copied() {
         eprintln!("Key: {:?}", key);
@@ -14,24 +29,22 @@ pub fn test_input_impl(config: &Config, keys: &[(Key, &str, &str)]) {
         eprintln!("Ret: {:?}", ret);
 
         if ret.contains(InputResult::HAS_PREEDIT) {
-            assert_eq!(preedit, engine.preedit_str());
+            test_preedit!(preedit);
         } else {
             assert!(preedit.is_empty());
         }
 
-        if !ret.contains(InputResult::CONSUMED) {
-            assert_eq!(commit, format!("{}PASS", engine.commit_str()));
-        } else if ret.intersects(InputResult::NEED_RESET | InputResult::NEED_FLUSH) {
-            assert_eq!(commit, engine.commit_str());
-        } else {
-            assert!(commit.is_empty());
+        if ret.contains(InputResult::HAS_COMMIT) {
+            if ret.contains(InputResult::CONSUMED) {
+                test_commit!(commit);
+            } else {
+                test_commit!(@pass commit);
+            }
+        } else if !ret.contains(InputResult::CONSUMED) {
+            assert_eq!("PASS", commit);
         }
 
-        if ret.contains(InputResult::NEED_RESET) {
-            engine.reset();
-        } else if ret.contains(InputResult::NEED_FLUSH) {
-            engine.flush();
-        }
+        engine.clear_commit();
     }
 }
 
@@ -39,28 +52,37 @@ pub fn test_input_impl(config: &Config, keys: &[(Key, &str, &str)]) {
 macro_rules! define_layout_test {
     ($layout:literal) => {
         use enumset::EnumSet;
-        use kime_engine_core::{Addon, Config, Hotkey, InputCategory, Key, KeyCode::*, RawConfig};
+        use kime_engine_backend_hangul::Addon;
+        use kime_engine_core::{Hotkey, Key, KeyCode::*, RawConfig};
         use shared::test_input_impl;
 
         #[allow(dead_code)]
-        fn default_config() -> Config {
+        fn default_config() -> RawConfig {
             let mut config = RawConfig::default();
-            config.category_layout[InputCategory::Hangul] = $layout.into();
-            Config::from_raw_config(config)
+            config.hangul.layout = $layout.into();
+            config
         }
 
         #[allow(dead_code)]
         #[track_caller]
         fn test_input(keys: &[(Key, &str, &str)]) {
-            test_input_impl(&default_config(), keys);
+            test_input_impl(default_config(), keys);
         }
 
         #[allow(dead_code)]
         #[track_caller]
         fn test_word_input(keys: &[(Key, &str, &str)]) {
             let mut config = default_config();
-            config.word_commit = true;
-            test_input_impl(&config, keys);
+            config.hangul.word_commit = true;
+            test_input_impl(config, keys);
+        }
+
+        #[allow(dead_code)]
+        #[track_caller]
+        fn test_input_with_addon(keys: &[(Key, &str, &str)], addons: impl Into<EnumSet<Addon>>) {
+            let mut config = default_config();
+            config.hangul.addons.insert($layout.into(), addons.into());
+            test_input_impl(config, keys);
         }
 
         #[allow(dead_code)]
@@ -68,15 +90,7 @@ macro_rules! define_layout_test {
         fn test_input_with_hotkey(keys: &[(Key, &str, &str)], hotkeys: &[(Key, Hotkey)]) {
             let mut config = default_config();
             config.hotkeys = hotkeys.iter().copied().collect();
-            test_input_impl(&config, keys);
-        }
-
-        #[allow(dead_code)]
-        #[track_caller]
-        fn test_input_with_addon(keys: &[(Key, &str, &str)], addons: impl Into<EnumSet<Addon>>) {
-            let mut config = default_config();
-            config.layout_addons[InputCategory::Hangul] = addons.into();
-            test_input_impl(&config, keys);
+            test_input_impl(config, keys);
         }
     };
 }

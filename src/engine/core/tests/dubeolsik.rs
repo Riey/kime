@@ -12,6 +12,11 @@ fn flexible_compose_order_addon() {
 }
 
 #[test]
+fn strict_typing_order() {
+    test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "ㄱ", "ㅏ")])
+}
+
+#[test]
 fn treat_jongseong_as_choseong_compose_addon() {
     test_input_with_addon(
         &[
@@ -23,28 +28,6 @@ fn treat_jongseong_as_choseong_compose_addon() {
         ],
         Addon::ComposeChoseongSsang | Addon::TreatJongseongAsChoseongCompose,
     );
-}
-
-#[test]
-fn space_commit() {
-    test_input_with_hotkey(
-        &[
-            (Key::normal(R), "ㄱ", ""),
-            (Key::normal(K), "가", ""),
-            (Key::normal(Space), "", "가"),
-            (Key::normal(S), "ㄴ", ""),
-            (Key::normal(K), "나", ""),
-            (Key::normal(Space), "", "나"),
-            (Key::normal(Space), "", "PASS"),
-        ],
-        &[(
-            Key::normal(Space),
-            Hotkey::new(
-                kime_engine_core::HotkeyBehavior::Commit,
-                kime_engine_core::HotkeyResult::ConsumeIfProcessed,
-            ),
-        )],
-    )
 }
 
 #[test]
@@ -60,24 +43,13 @@ fn word_hello() {
     ])
 }
 
-// issue #310
-#[test]
-fn hangul_change_preedit() {
-    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::normal(Hangul), "ㄱ", "")]);
-}
-
 #[test]
 fn esc() {
     test_input(&[
         (Key::normal(R), "ㄱ", ""),
         (Key::normal(Esc), "", "ㄱPASS"),
-        (Key::normal(R), "", "PASS"),
+        (Key::normal(R), "", "r"),
     ]);
-}
-
-#[test]
-fn strict_typing_order() {
-    test_input(&[(Key::normal(K), "ㅏ", ""), (Key::normal(R), "ㄱ", "ㅏ")])
 }
 
 #[test]

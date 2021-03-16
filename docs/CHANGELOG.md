@@ -5,6 +5,7 @@
 ### Breaking
 
 * Include english layouts [#347](https://github.com/Riey/kime/issues/347)
+* Now change InputCategory clear preedit state
 
 ### Improve
 
@@ -16,6 +17,7 @@
 * Integrate kime-indicator again
 * Add `icon_color` config
 * Replace `libappindicator` to `ksni`
+* Now InputEngine implementations are split several crates for support many InputCategories
 
 ## 1.3.1
 

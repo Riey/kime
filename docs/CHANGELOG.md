@@ -16,6 +16,7 @@
 * Support multiple archtectures
 * Integrate kime-indicator again
 * Add `icon_color` config
+* Add dvorak layout
 * Replace `libappindicator` to `ksni`
 * Now InputEngine implementations are split several crates for support many InputCategories
 * Implement math backend

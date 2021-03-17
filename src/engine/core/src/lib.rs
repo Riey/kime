@@ -113,12 +113,8 @@ impl InputEngine {
                     }
                 }
                 HotkeyBehavior::Hanja => {
-                    if self
-                        .os_ctx
-                        .hanja(&mut self.engine_impl, &mut self.commit_buf)
-                        .is_ok()
-                    {
-                        processed = true;
+                    if self.category() == InputCategory::Hangul {
+                        processed = self.engine_impl.hangul_engine.enable_hanja_mode();
                     }
                 }
                 HotkeyBehavior::Commit => {

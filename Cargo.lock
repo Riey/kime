@@ -612,6 +612,7 @@ version = "0.1.0"
 dependencies = [
  "enumset",
  "kime-engine-backend",
+ "kime-engine-dict",
  "num-derive",
  "num-traits",
  "serde",

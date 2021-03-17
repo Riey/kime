@@ -6,6 +6,7 @@ members = [
     "src/engine/dict",
 
     "src/engine/backend",
+    "src/engine/backends/emoji",
     "src/engine/backends/hangul",
     "src/engine/backends/hanja",
     "src/engine/backends/latin",

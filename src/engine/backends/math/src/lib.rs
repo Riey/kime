@@ -1,6 +1,6 @@
 use kime_engine_backend::{
     AHashMap, InputEngineMode,
-    InputEngineModeResult::{self, Continue, Exit},
+    InputEngineModeResult::{self, Continue},
     Key, KeyCode,
 };
 use kime_engine_backend_latin::{load_layout, LatinConfig};
@@ -53,7 +53,7 @@ impl InputEngineMode for MathMode {
 
             Continue(true)
         } else {
-            Exit
+            Continue(false)
         }
     }
 

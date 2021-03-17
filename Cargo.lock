@@ -607,6 +607,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kime-engine-backend-emoji"
+version = "0.1.0"
+dependencies = [
+ "kime-engine-backend",
+ "kime-engine-backend-latin",
+ "kime-engine-dict",
+]
+
+[[package]]
 name = "kime-engine-backend-hangul"
 version = "0.1.0"
 dependencies = [
@@ -668,6 +677,7 @@ dependencies = [
  "enum-map",
  "enumset",
  "kime-engine-backend",
+ "kime-engine-backend-emoji",
  "kime-engine-backend-hangul",
  "kime-engine-backend-hanja",
  "kime-engine-backend-latin",

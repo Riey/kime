@@ -170,11 +170,3 @@ pub fn builtin_layouts() -> impl Iterator<Item = (Cow<'static, str>, Layout)> {
         .copied()
         .filter_map(|(name, layout)| Layout::load_from(layout).ok().map(|l| (name.into(), l)))
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}

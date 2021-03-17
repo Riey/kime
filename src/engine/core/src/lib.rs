@@ -1,19 +1,18 @@
 mod config;
 mod os;
 
-use config::{HotkeyBehavior, HotkeyResult, IconColor};
+pub use config::{Config, Hotkey, InputCategory, InputMode, RawConfig};
+pub use kime_engine_backend::{InputResult, Key, KeyCode, ModifierState};
 
-use kime_engine_backend_hanja::HanjaMode;
+use config::{HotkeyBehavior, HotkeyResult, IconColor};
 use os::{DefaultOsContext, OsContext};
 
 use kime_engine_backend::{InputEngineBackend, InputEngineMode, InputEngineModeResult};
+use kime_engine_backend_emoji::EmojiMode;
 use kime_engine_backend_hangul::HangulEngine;
+use kime_engine_backend_hanja::HanjaMode;
 use kime_engine_backend_latin::LatinEngine;
 use kime_engine_backend_math::MathMode;
-
-pub use config::{Config, Hotkey, InputCategory, InputMode, RawConfig};
-
-pub use kime_engine_backend::{InputResult, Key, KeyCode, ModifierState};
 
 pub struct InputEngine {
     engine_impl: EngineImpl,
@@ -115,15 +114,6 @@ impl InputEngine {
                     ret |= InputResult::LANGUAGE_CHANGED;
                     processed = true;
                 }
-                HotkeyBehavior::Emoji => {
-                    if self
-                        .os_ctx
-                        .emoji(&mut self.engine_impl, &mut self.commit_buf)
-                        .is_ok()
-                    {
-                        processed = true;
-                    }
-                }
                 HotkeyBehavior::Mode(mode) => {
                     processed = self.engine_impl.set_mode(mode, &mut self.commit_buf);
                 }
@@ -224,6 +214,7 @@ struct EngineImpl {
     hangul_engine: HangulEngine,
     hanja_mode: HanjaMode,
     math_mode: MathMode,
+    emoji_mode: EmojiMode,
 }
 
 impl EngineImpl {
@@ -234,15 +225,16 @@ impl EngineImpl {
             latin_engine: config.latin_engine.clone(),
             hangul_engine: config.hangul_engine.clone(),
             hanja_mode: HanjaMode::new(),
-            math_mode: config.math_engine.clone(),
+            math_mode: config.math_mode.clone(),
+            emoji_mode: config.emoji_mode.clone(),
         }
     }
 
     pub fn set_mode(&mut self, mode: InputMode, commit_buf: &mut String) -> bool {
         match mode {
-            InputMode::Math => {
+            InputMode::Math | InputMode::Emoji => {
                 self.clear_preedit(commit_buf);
-                self.mode = Some(InputMode::Math);
+                self.mode = Some(mode);
                 true
             }
             InputMode::Hanja => match self.category {
@@ -262,27 +254,26 @@ impl EngineImpl {
 }
 
 macro_rules! do_mode {
+    (@retarm $field:ident $self:expr, $func:ident($($arg:expr,)*)) => {
+        match $self.$field.$func($($arg,)*) {
+            InputEngineModeResult::Continue(ret) => {
+                return ret;
+            }
+            InputEngineModeResult::Exit => {
+                $self.mode = None;
+            }
+        }
+    };
     (@ret $self:expr, $func:ident($($arg:expr,)*)) => {
         match $self.mode {
             Some(InputMode::Math) => {
-                match $self.math_mode.$func($($arg,)*) {
-                    InputEngineModeResult::Continue(ret) => {
-                        return ret;
-                    }
-                    InputEngineModeResult::Exit => {
-                        $self.mode = None;
-                    }
-                }
+                do_mode!(@retarm math_mode $self, $func($($arg,)*));
             }
             Some(InputMode::Hanja) => {
-                match $self.hanja_mode.$func($($arg,)*) {
-                    InputEngineModeResult::Continue(ret) => {
-                        return ret;
-                    }
-                    InputEngineModeResult::Exit => {
-                        $self.mode = None;
-                    }
-                }
+                do_mode!(@retarm hanja_mode $self, $func($($arg,)*));
+            }
+            Some(InputMode::Emoji) => {
+                do_mode!(@retarm emoji_mode $self, $func($($arg,)*));
             }
             None => {}
         }
@@ -294,6 +285,9 @@ macro_rules! do_mode {
             }
             Some(InputMode::Math) => {
                 return $self.math_mode.$func($($arg,)*);
+            }
+            Some(InputMode::Emoji) => {
+                return $self.emoji_mode.$func($($arg,)*);
             }
             None => {}
         }

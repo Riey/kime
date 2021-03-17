@@ -89,6 +89,8 @@ impl InputEngine {
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
+        self.try_get_global_input_category_state(config);
+
         if let Some(hotkey) = self.try_hotkey(&key, config) {
             let mut processed = false;
             let mut ret = InputResult::empty();
@@ -136,8 +138,6 @@ impl InputEngine {
 
             ret
         } else {
-            self.try_get_global_input_category_state(config);
-
             let mut ret = InputResult::empty();
 
             if self.engine_impl.press_key(key, &mut self.commit_buf) {

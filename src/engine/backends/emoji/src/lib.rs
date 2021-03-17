@@ -41,12 +41,14 @@ impl InputEngineMode for EmojiMode {
             if let Some(anno) = kime_engine_dict::search_unicode_annotations(&self.buf).next() {
                 commit_buf.push_str(anno.codepoint);
             }
+            self.buf.clear();
         }
 
         Exit
     }
 
     fn reset(&mut self) -> InputEngineModeResult<()> {
+        self.buf.clear();
         Exit
     }
 

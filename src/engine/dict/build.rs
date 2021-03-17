@@ -165,7 +165,7 @@ fn main() {
 
     writeln!(out, "];").unwrap();
 
-    writeln!(out, "#[derive(Clone, Copy, Debug)] pub struct UnicodeAnnotation {{ pub codepoint: &'static str, pub description: &'static str, pub tts: &'static str, }}").unwrap();
+    writeln!(out, "#[derive(Clone, Copy, Debug)] pub struct UnicodeAnnotation {{ pub codepoint: &'static str, pub tts: &'static str, }}").unwrap();
     writeln!(
         out,
         "pub static UNICODE_ANNOTATIONS: &[UnicodeAnnotation] = &["
@@ -174,8 +174,8 @@ fn main() {
     for entry in load_unicode_annotations().unwrap() {
         writeln!(
             out,
-            "UnicodeAnnotation {{ codepoint: \"{}\", description: \"{}\", tts: \"{}\" }},",
-            entry.cp, entry.description, entry.tts
+            "UnicodeAnnotation {{ codepoint: \"{}\", tts: \"{}\" }},",
+            entry.cp, entry.tts
         )
         .unwrap()
     }

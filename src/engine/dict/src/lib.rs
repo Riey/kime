@@ -46,5 +46,5 @@ pub fn search_unicode_annotations(keyword: &str) -> impl Iterator<Item = Unicode
     crate::dict::UNICODE_ANNOTATIONS
         .iter()
         .copied()
-        .filter(move |annotation| annotation.description.contains(keyword))
+        .filter(move |annotation| annotation.tts.contains(keyword))
 }

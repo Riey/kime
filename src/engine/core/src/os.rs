@@ -51,7 +51,6 @@ mod unix {
             client.set_write_timeout(Some(Duration::from_secs(2))).ok();
             client.read_exact(&mut buf)?;
             match buf[0] {
-                b'2' => Ok(InputCategory::Math),
                 b'1' => Ok(InputCategory::Hangul),
                 _ => Ok(InputCategory::Latin),
             }
@@ -63,7 +62,6 @@ mod unix {
             color: IconColor,
         ) -> io::Result<()> {
             let category = match category {
-                InputCategory::Math => 2,
                 InputCategory::Hangul => 1,
                 InputCategory::Latin => 0,
             };

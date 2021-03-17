@@ -69,11 +69,7 @@ impl HanjaState {
         buf.push('/');
         buf.push(current_hanja.0);
         buf.push('(');
-        if current_hanja.1.len() < 15 {
-            buf.push_str(current_hanja.1);
-        } else {
-            buf.push_str(&current_hanja.1[..15]);
-        }
+        buf.push_str(current_hanja.1);
         buf.push(')');
 
         if let Some(next_hanjas) = self.hanja_entires.get(self.index + 1..) {

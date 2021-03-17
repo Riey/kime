@@ -139,6 +139,20 @@ impl HangulEngine {
 
         self.hanja_state.is_some()
     }
+
+    fn try_hanja_press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
+        if let Some(ref mut hanja_state) = self.hanja_state {
+            if hanja_state.press_key(key) {
+                true
+            } else {
+                commit_buf.push(hanja_state.current_hanja());
+                self.hanja_state = None;
+                false
+            }
+        } else {
+            false
+        }
+    }
 }
 
 impl InputEngineBackend for HangulEngine {
@@ -149,14 +163,8 @@ impl InputEngineBackend for HangulEngine {
             } else {
                 self.state.backspace(self.addons, commit_buf)
             }
-        } else if let Some(ref mut hanja_state) = self.hanja_state {
-            if !hanja_state.press_key(key) {
-                commit_buf.push(hanja_state.current_hanja());
-                self.hanja_state = None;
-                false
-            } else {
-                true
-            }
+        } else if self.try_hanja_press_key(key, commit_buf) {
+            true
         } else if let Some(kv) = self.layout.lookup_kv(&key) {
             self.state.key(kv, self.addons, commit_buf)
         } else {

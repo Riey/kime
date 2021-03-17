@@ -98,7 +98,7 @@ impl InputEngineMode for HanjaMode {
 
     fn clear_preedit(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
         commit_buf.push(self.current_hanja());
-        Exit
+        self.reset()
     }
 
     fn reset(&mut self) -> InputEngineModeResult<()> {
@@ -107,13 +107,5 @@ impl InputEngineMode for HanjaMode {
 
     fn has_preedit(&self) -> bool {
         true
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
     }
 }

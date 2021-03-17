@@ -4,6 +4,7 @@ use std::{
     collections::BTreeMap,
     env,
     io::{BufWriter, Write},
+    mem,
     path::PathBuf,
 };
 
@@ -33,13 +34,20 @@ struct HanjaEntry {
     ty: EntryType,
 }
 
+#[derive(Default, Debug, Clone)]
+struct UnicodeEntry {
+    cp: String,
+    description: String,
+    tts: String,
+}
+
 #[derive(Deserialize)]
 struct KeySymPair<'a> {
     keyword: &'a str,
     symbol: &'a str,
 }
 
-fn main() {
+fn load_hanja_dict() -> BTreeMap<char, Vec<HanjaEntry>> {
     let mut dict: BTreeMap<char, Vec<HanjaEntry>> = BTreeMap::new();
     let unihan = include_str!("data/Unihan_Readings.txt");
     let mut entry = HanjaEntry::default();
@@ -82,6 +90,45 @@ fn main() {
         }
     }
 
+    dict
+}
+
+fn load_unicode_annotations() -> quick_xml::Result<Vec<UnicodeEntry>> {
+    use quick_xml::{events::Event, Reader};
+
+    let mut out = Vec::with_capacity(512);
+    let mut buf = Vec::with_capacity(512);
+    let mut current_entry = UnicodeEntry::default();
+
+    let mut reader = Reader::from_str(include_str!("data/en.xml"));
+
+    loop {
+        match reader.read_event(&mut buf)? {
+            Event::Start(start) if start.name() == b"annotation" => {
+                let cp = start.attributes().next().unwrap()?;
+                debug_assert_eq!(cp.key, b"cp");
+                let cp = cp.unescape_and_decode_value(&reader)?;
+                if current_entry.cp != cp {
+                    if !current_entry.cp.is_empty() {
+                        out.push(mem::take(&mut current_entry));
+                    }
+
+                    current_entry.cp = cp;
+                    current_entry.description = reader.read_text(b"annotation", &mut buf)?;
+                } else {
+                    current_entry.tts = reader.read_text(b"annotation", &mut buf)?;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+
+    out.push(mem::take(&mut current_entry));
+    Ok(out)
+}
+
+fn main() {
     let mut out = BufWriter::new(
         std::fs::File::create(PathBuf::from(env::var("OUT_DIR").unwrap()).join("dict.rs")).unwrap(),
     );
@@ -92,7 +139,7 @@ fn main() {
     )
     .unwrap();
 
-    for (k, mut values) in dict {
+    for (k, mut values) in load_hanja_dict() {
         write!(out, "('{}', &[", k).unwrap();
         values.sort_unstable_by_key(|x| x.ty);
         for value in values {
@@ -116,6 +163,22 @@ fn main() {
         writeln!(out, "(\"{}\", \"{}\"),", pair.keyword, pair.symbol).unwrap();
     }
 
+    writeln!(out, "];").unwrap();
+
+    writeln!(out, "#[derive(Clone, Copy, Debug)] pub struct UnicodeAnnotation {{ pub codepoint: &'static str, pub tts: &'static str, }}").unwrap();
+    writeln!(
+        out,
+        "pub static UNICODE_ANNOTATIONS: &[UnicodeAnnotation] = &["
+    )
+    .unwrap();
+    for entry in load_unicode_annotations().unwrap() {
+        writeln!(
+            out,
+            "UnicodeAnnotation {{ codepoint: \"{}\", tts: \"{}\" }},",
+            entry.cp, entry.tts
+        )
+        .unwrap()
+    }
     writeln!(out, "];").unwrap();
 
     out.flush().unwrap();

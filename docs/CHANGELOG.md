@@ -6,7 +6,7 @@
 
 * Include english layouts [#347](https://github.com/Riey/kime/issues/347)
 * Now change InputCategory clear preedit state
-* Let select hanja in preedit string
+* Let select hanja, emoji in preedit string
 
 ### Improve
 

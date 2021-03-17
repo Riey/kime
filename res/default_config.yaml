@@ -5,11 +5,8 @@ icon_color: Black
 global_hotkeys:
   M-C-Backslash:
     behavior:
-      Switch: Math
-    result: Consume
-  Space:
-    behavior: Commit
-    result: Bypass
+      Mode: Math
+    result: ConsumeIfProcessed
   Super-Space:
     behavior:
       Toggle:
@@ -17,14 +14,12 @@ global_hotkeys:
         - Latin
     result: Consume
   M-C-E:
-    behavior: Emoji
+    behavior:
+      Mode: Emoji
     result: ConsumeIfProcessed
   Esc:
     behavior:
       Switch: Latin
-    result: Bypass
-  Enter:
-    behavior: Commit
     result: Bypass
   Tab:
     behavior: Commit
@@ -49,16 +44,40 @@ global_hotkeys:
     result: Consume
 category_hotkeys:
   Hangul:
+    Space:
+      behavior: Commit
+      result: Bypass
+    Enter:
+      behavior: Commit
+      result: Bypass
     ControlR:
-      behavior: Hanja
+      behavior:
+        Mode: Hanja
       result: Consume
     HangulHanja:
-      behavior: Hanja
+      behavior:
+        Mode: Hanja
       result: Consume
     F9:
-      behavior: Hanja
-      result: Consume
+      behavior:
+        Mode: Hanja
+      result: ConsumeIfProcessed
+mode_hotkeys:
   Math:
+    Space:
+      behavior: Commit
+      result: Bypass
+    Enter:
+      behavior: Commit
+      result: ConsumeIfProcessed
+  Hanja:
+    Space:
+      behavior: Commit
+      result: Bypass
+    Enter:
+      behavior: Commit
+      result: ConsumeIfProcessed
+  Emoji:
     Enter:
       behavior: Commit
       result: ConsumeIfProcessed

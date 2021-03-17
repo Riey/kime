@@ -1,0 +1,11 @@
+[package]
+name = "kime-engine-backend-emoji"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+kime-engine-backend = { path = "../../backend" }
+kime-engine-backend-latin = { path = "../latin" }
+kime-engine-dict = { path = "../../dict" }

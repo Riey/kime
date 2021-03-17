@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub enum LatinLayout {
     Qwerty,
+    Dvorak,
     Colemak,
 }
 
@@ -23,6 +24,7 @@ impl Default for LatinConfig {
 pub fn load_layout(config: &LatinConfig) -> AHashMap<Key, char> {
     let layout = match config.layout {
         LatinLayout::Qwerty => include_str!("../data/qwerty.yaml"),
+        LatinLayout::Dvorak => include_str!("../data/dvorak.yaml"),
         LatinLayout::Colemak => include_str!("../data/colemak.yaml"),
     };
     serde_yaml::from_str(layout).unwrap_or_default()

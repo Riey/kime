@@ -69,7 +69,13 @@ impl InputEngine {
     }
 
     fn try_hotkey<'c>(&self, key: &Key, config: &'c Config) -> Option<&'c Hotkey> {
-        if let Some(category_hotkey) = config.category_hotkeys[self.category()].get(key) {
+        if let Some(mode_hotkey) = self
+            .engine_impl
+            .mode
+            .and_then(|mode| config.mode_hotkeys[mode].get(key))
+        {
+            Some(mode_hotkey)
+        } else if let Some(category_hotkey) = config.category_hotkeys[self.category()].get(key) {
             Some(category_hotkey)
         } else if let Some(global) = config.global_hotkeys.get(key) {
             Some(global)
@@ -229,20 +235,18 @@ impl EngineImpl {
 
     pub fn set_mode(&mut self, mode: InputMode) -> bool {
         match mode {
-            InputMode::Hanja => {
-                match self.category {
-                    InputCategory::Hangul => {
-                        if self.hanja_mode.set_key(self.hangul_engine.get_hanja_char()) {
-                            self.mode = Some(InputMode::Hanja);
-                            self.hangul_engine.reset();
-                            true
-                        } else {
-                            false
-                        }
+            InputMode::Hanja => match self.category {
+                InputCategory::Hangul => {
+                    if self.hanja_mode.set_key(self.hangul_engine.get_hanja_char()) {
+                        self.mode = Some(InputMode::Hanja);
+                        self.hangul_engine.reset();
+                        true
+                    } else {
+                        false
                     }
-                    _ => false,
                 }
-            }
+                _ => false,
+            },
         }
     }
 }

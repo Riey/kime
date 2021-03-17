@@ -85,6 +85,7 @@ pub struct RawConfig {
     pub icon_color: IconColor,
     pub global_hotkeys: BTreeMap<Key, Hotkey>,
     pub category_hotkeys: BTreeMap<InputCategory, BTreeMap<Key, Hotkey>>,
+    pub mode_hotkeys: BTreeMap<InputMode, BTreeMap<Key, Hotkey>>,
     pub xim_preedit_font: (String, f64),
     pub latin: LatinConfig,
     pub hangul: HangulConfig,
@@ -102,7 +103,7 @@ impl Default for RawConfig {
                 Key::normal(KeyCode::Esc) => Hotkey::new(HotkeyBehavior::Switch(InputCategory::Latin), HotkeyResult::Bypass),
                 Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                 Key::normal(KeyCode::Space) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
+                Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
                 Key::normal(KeyCode::AltR) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::normal(KeyCode::Hangul) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::super_(KeyCode::Space) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
@@ -120,6 +121,11 @@ impl Default for RawConfig {
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                 },
             },
+            mode_hotkeys: btreemap! {
+                InputMode::Hanja => btreemap! {
+                    Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Consume),
+                }
+            },
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
         }
     }
@@ -130,6 +136,7 @@ pub struct Config {
     pub global_category_state: bool,
     pub global_hotkeys: AHashMap<Key, Hotkey>,
     pub category_hotkeys: EnumMap<InputCategory, AHashMap<Key, Hotkey>>,
+    pub mode_hotkeys: EnumMap<InputMode, AHashMap<Key, Hotkey>>,
     pub icon_color: IconColor,
     pub xim_preedit_font: (String, f64),
     pub hangul_engine: HangulEngine,
@@ -144,7 +151,7 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn new(raw: RawConfig) -> Self {
+    fn new_impl(raw: RawConfig, hangul_engine: HangulEngine) -> Self {
         Self {
             default_category: raw.default_category,
             global_category_state: raw.global_category_state,
@@ -155,37 +162,33 @@ impl Config {
                     Default::default()
                 }
             }),
+            mode_hotkeys: EnumMap::from(|mode| {
+                if let Some(map) = raw.mode_hotkeys.get(&mode) {
+                    map.iter().map(|(k, v)| (*k, *v)).collect()
+                } else {
+                    Default::default()
+                }
+            }),
             global_hotkeys: raw.global_hotkeys.into_iter().collect(),
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
-            hangul_engine: HangulEngine::new(
-                &raw.hangul,
-                kime_engine_backend_hangul::builtin_layouts(),
-            ),
             latin_engine: LatinEngine::new(&raw.latin),
             math_engine: MathEngine::new(&raw.latin),
+            hangul_engine,
         }
+    }
+
+    pub fn new(raw: RawConfig) -> Self {
+        let hangul_engine =
+            HangulEngine::new(&raw.hangul, kime_engine_backend_hangul::builtin_layouts());
+
+        Self::new_impl(raw, hangul_engine)
     }
 
     #[cfg(unix)]
     pub fn from_raw_config_with_dir(raw: RawConfig, dir: &xdg::BaseDirectories) -> Self {
-        Self {
-            default_category: raw.default_category,
-            global_category_state: raw.global_category_state,
-            category_hotkeys: EnumMap::from(|cat| {
-                if let Some(map) = raw.category_hotkeys.get(&cat) {
-                    map.iter().map(|(k, v)| (*k, *v)).collect()
-                } else {
-                    Default::default()
-                }
-            }),
-            global_hotkeys: raw.global_hotkeys.into_iter().collect(),
-            icon_color: raw.icon_color,
-            xim_preedit_font: raw.xim_preedit_font,
-            hangul_engine: HangulEngine::from_config_with_dir(&raw.hangul, dir),
-            latin_engine: LatinEngine::new(&raw.latin),
-            math_engine: MathEngine::new(&raw.latin),
-        }
+        let hangul_engine = HangulEngine::from_config_with_dir(&raw.hangul, dir);
+        Self::new_impl(raw, hangul_engine)
     }
 
     #[cfg(unix)]

@@ -1,7 +1,11 @@
 use itertools::Itertools;
-use phf_codegen::Map;
 use serde::Deserialize;
-use std::{collections::BTreeMap, env, io::Write, path::PathBuf};
+use std::{
+    collections::BTreeMap,
+    env,
+    io::{BufWriter, Write},
+    path::PathBuf,
+};
 
 fn parse_unich(ch: &str) -> char {
     let ch = ch.strip_prefix("U+").unwrap();
@@ -78,50 +82,41 @@ fn main() {
         }
     }
 
-    let mut out =
-        std::fs::File::create(PathBuf::from(env::var("OUT_DIR").unwrap()).join("dict.rs")).unwrap();
+    let mut out = BufWriter::new(
+        std::fs::File::create(PathBuf::from(env::var("OUT_DIR").unwrap()).join("dict.rs")).unwrap(),
+    );
 
-    let mut map = Map::new();
-    let mut entries = String::new();
+    writeln!(
+        out,
+        "pub static HANJA_ENTRIES: &[(char, &[(char, &str)])] = &[",
+    )
+    .unwrap();
+
     for (k, mut values) in dict {
-        entries.push_str("&[");
+        write!(out, "('{}', &[", k).unwrap();
         values.sort_unstable_by_key(|x| x.ty);
         for value in values {
             if value.hanja == '\0' {
                 continue;
             }
-            use std::fmt::Write;
-            write!(entries, "('{}', \"{}\"),", value.hanja, value.definition).unwrap();
+            write!(out, "('{}', \"{}\"),", value.hanja, value.definition).unwrap();
         }
-        entries.push_str("]");
-        map.entry(k, &entries);
-        entries.clear();
+        writeln!(out, "]),").unwrap();
     }
 
-    writeln!(
-        out,
-        "pub static DICT: phf::Map<char, &[(char, &str)]> = {};",
-        map.build()
-    )
-    .unwrap();
+    writeln!(out, "];").unwrap();
 
     let symbol_map = include_str!("data/symbol_map.json");
-    let symbol_map: Vec<KeySymPair> = serde_json::from_str(symbol_map).unwrap();
+    let mut symbol_map: Vec<KeySymPair> = serde_json::from_str(symbol_map).unwrap();
+    symbol_map.sort_unstable_by_key(|pair| pair.keyword);
 
-    let mut map = Map::new();
-    let mut entries = String::new();
+    writeln!(out, "pub static MATH_SYMBOL_ENTRIES: &[(&str, &str)] = &[").unwrap();
+
     for pair in &symbol_map {
-        let keyword = &pair.keyword;
-        entries.push_str("\"");
-        entries.push_str(&pair.symbol);
-        entries.push_str("\"");
-        map.entry(keyword, &entries);
-        entries.clear();
+        writeln!(out, "(\"{}\", \"{}\"),", pair.keyword, pair.symbol).unwrap();
     }
-    writeln!(
-        out,
-        "pub static MATH_SYMBOL_DICT: phf::Map<&str, &str> = {};",
-        map.build()
-    )
-    .unwrap();
+
+    writeln!(out, "];").unwrap();
+
+    out.flush().unwrap();
 }

@@ -6,21 +6,24 @@ mod dict {
 mod tests {
     #[test]
     fn simple() {
-        dbg!(&crate::dict::DICT[&'가']);
         assert_eq!(crate::lookup('가')[0].0, '家');
     }
 
     #[test]
     fn symbol_alpha() {
-        dbg!(&crate::dict::MATH_SYMBOL_DICT["alpha"]);
         assert_eq!(crate::lookup_math_symbol("alpha"), Some("α"));
     }
 }
 
 pub fn lookup(hangul: char) -> &'static [(char, &'static str)] {
-    crate::dict::DICT.get(&hangul).copied().unwrap_or(&[])
+    crate::dict::HANJA_ENTRIES
+        .binary_search_by_key(&hangul, |(k, _)| *k)
+        .map_or(&[], |idx| crate::dict::HANJA_ENTRIES[idx].1)
 }
 
 pub fn lookup_math_symbol(keyword: &str) -> Option<&'static str> {
-    crate::dict::MATH_SYMBOL_DICT.get(keyword).copied()
+    crate::dict::MATH_SYMBOL_ENTRIES
+        .binary_search_by_key(&keyword, |(k, _)| *k)
+        .ok()
+        .map(|idx| crate::dict::MATH_SYMBOL_ENTRIES[idx].1)
 }

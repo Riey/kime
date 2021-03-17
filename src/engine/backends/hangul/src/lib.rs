@@ -3,7 +3,7 @@ mod layout;
 mod state;
 
 use layout::Layout;
-use state::{HangulState, HanjaState};
+use state::HangulState;
 use std::{borrow::Cow, collections::BTreeMap};
 
 use enumset::{EnumSet, EnumSetType};
@@ -76,7 +76,6 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
 pub struct HangulEngine {
     layout: Layout,
     addons: EnumSet<Addon>,
-    hanja_state: Option<HanjaState>,
     state: HangulState,
 }
 
@@ -124,47 +123,20 @@ impl HangulEngine {
                     .copied()
                     .unwrap_or_default(),
             ),
-            hanja_state: None,
             state: HangulState::new(config.word_commit),
         }
     }
 
-    pub fn enable_hanja_mode(&mut self) -> bool {
-        let hangul = self.state.get_hanja_char();
-        self.state.reset();
-
-        if hangul != '\0' {
-            self.hanja_state = HanjaState::new(hangul);
-        }
-
-        self.hanja_state.is_some()
-    }
-
-    fn try_hanja_press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
-        if let Some(ref mut hanja_state) = self.hanja_state {
-            if hanja_state.press_key(key) {
-                true
-            } else {
-                commit_buf.push(hanja_state.current_hanja());
-                self.hanja_state = None;
-                false
-            }
-        } else {
-            false
-        }
+    #[inline]
+    pub fn get_hanja_char(&self) -> char {
+        self.state.get_hanja_char()
     }
 }
 
 impl InputEngineBackend for HangulEngine {
     fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
         if key.code == KeyCode::Backspace {
-            if self.hanja_state.take().is_some() {
-                true
-            } else {
-                self.state.backspace(self.addons, commit_buf)
-            }
-        } else if self.try_hanja_press_key(key, commit_buf) {
-            true
+            self.state.backspace(self.addons, commit_buf)
         } else if let Some(kv) = self.layout.lookup_kv(&key) {
             self.state.key(kv, self.addons, commit_buf)
         } else {
@@ -174,30 +146,21 @@ impl InputEngineBackend for HangulEngine {
 
     #[inline]
     fn clear_preedit(&mut self, commit_buf: &mut String) {
-        if let Some(hanja) = self.hanja_state.take() {
-            commit_buf.push(hanja.current_hanja());
-        } else {
-            self.state.clear_preedit(commit_buf);
-        }
+        self.state.clear_preedit(commit_buf);
     }
 
     #[inline]
     fn reset(&mut self) {
-        self.hanja_state = None;
         self.state.reset();
     }
 
     #[inline]
     fn has_preedit(&self) -> bool {
-        self.hanja_state.is_some() || self.state.has_preedit()
+        self.state.has_preedit()
     }
 
     fn preedit_str(&self, buf: &mut String) {
-        if let Some(hanja) = self.hanja_state.as_ref() {
-            hanja.preedit_str(buf);
-        } else {
-            self.state.preedit_str(buf);
-        }
+        self.state.preedit_str(buf);
     }
 }
 

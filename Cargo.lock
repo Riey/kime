@@ -612,12 +612,19 @@ version = "0.1.0"
 dependencies = [
  "enumset",
  "kime-engine-backend",
- "kime-engine-dict",
  "num-derive",
  "num-traits",
  "serde",
  "serde_yaml",
  "xdg",
+]
+
+[[package]]
+name = "kime-engine-backend-hanja"
+version = "0.1.0"
+dependencies = [
+ "kime-engine-backend",
+ "kime-engine-dict",
 ]
 
 [[package]]
@@ -662,9 +669,9 @@ dependencies = [
  "enumset",
  "kime-engine-backend",
  "kime-engine-backend-hangul",
+ "kime-engine-backend-hanja",
  "kime-engine-backend-latin",
  "kime-engine-backend-math",
- "kime-engine-dict",
  "kime-run-dir",
  "maplit",
  "serde",

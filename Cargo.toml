@@ -7,6 +7,7 @@ members = [
 
     "src/engine/backend",
     "src/engine/backends/hangul",
+    "src/engine/backends/hanja",
     "src/engine/backends/latin",
     "src/engine/backends/math",
 

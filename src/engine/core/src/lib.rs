@@ -3,14 +3,15 @@ mod os;
 
 use config::{HotkeyBehavior, HotkeyResult, IconColor};
 
+use kime_engine_backend_hanja::HanjaMode;
 use os::{DefaultOsContext, OsContext};
 
-use kime_engine_backend::InputEngineBackend;
+use kime_engine_backend::{InputEngineBackend, InputEngineMode, InputEngineModeResult};
 use kime_engine_backend_hangul::HangulEngine;
 use kime_engine_backend_latin::LatinEngine;
 use kime_engine_backend_math::MathEngine;
 
-pub use config::{Config, Hotkey, InputCategory, RawConfig};
+pub use config::{Config, Hotkey, InputCategory, InputMode, RawConfig};
 
 pub use kime_engine_backend::{InputResult, Key, KeyCode, ModifierState};
 
@@ -112,10 +113,8 @@ impl InputEngine {
                         processed = true;
                     }
                 }
-                HotkeyBehavior::Hanja => {
-                    if self.category() == InputCategory::Hangul {
-                        processed = self.engine_impl.hangul_engine.enable_hanja_mode();
-                    }
+                HotkeyBehavior::Mode(mode) => {
+                    processed = self.engine_impl.set_mode(mode);
                 }
                 HotkeyBehavior::Commit => {
                     if self.engine_impl.has_preedit() {
@@ -209,8 +208,10 @@ impl InputEngine {
 
 struct EngineImpl {
     category: InputCategory,
+    mode: Option<InputMode>,
     latin_engine: LatinEngine,
     hangul_engine: HangulEngine,
+    hanja_mode: HanjaMode,
     math_engine: MathEngine,
 }
 
@@ -218,15 +219,62 @@ impl EngineImpl {
     pub fn new(config: &Config) -> Self {
         Self {
             category: config.default_category,
+            mode: None,
             latin_engine: config.latin_engine.clone(),
             hangul_engine: config.hangul_engine.clone(),
+            hanja_mode: HanjaMode::new(),
             math_engine: config.math_engine.clone(),
+        }
+    }
+
+    pub fn set_mode(&mut self, mode: InputMode) -> bool {
+        match mode {
+            InputMode::Hanja => {
+                match self.category {
+                    InputCategory::Hangul => {
+                        if self.hanja_mode.set_key(self.hangul_engine.get_hanja_char()) {
+                            self.mode = Some(InputMode::Hanja);
+                            self.hangul_engine.reset();
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    _ => false,
+                }
+            }
         }
     }
 }
 
+macro_rules! do_mode {
+    (@ret $self:expr, $func:ident($($arg:expr,)*)) => {
+        match $self.mode {
+            Some(InputMode::Hanja) => {
+                match $self.hanja_mode.$func($($arg,)*) {
+                    InputEngineModeResult::Continue(ret) => {
+                        return ret;
+                    }
+                    InputEngineModeResult::Exit => {
+                        $self.mode = None;
+                    }
+                }
+            }
+            None => {}
+        }
+    };
+    (@direct $self:expr, $func:ident($($arg:expr,)*)) => {
+        match $self.mode {
+            Some(InputMode::Hanja) => {
+                return $self.hanja_mode.$func($($arg,)*);
+            }
+            None => {}
+        }
+    };
+}
+
 macro_rules! do_engine {
-    ($self:expr, $func:ident($($arg:expr),*)) => {
+    ($self:expr, $func:ident($($arg:expr,)*)) => {
         match $self.category {
             InputCategory::Hangul => $self.hangul_engine.$func($($arg,)*),
             InputCategory::Latin => $self.latin_engine.$func($($arg,)*),
@@ -235,24 +283,31 @@ macro_rules! do_engine {
     };
 }
 
+macro_rules! connect {
+    (@$key:ident $self:expr, $func:ident($($arg:expr$(,)?)*)) => {{
+        do_mode!(@$key $self, $func($($arg,)*));
+        do_engine!($self, $func($($arg,)*))
+    }};
+}
+
 impl InputEngineBackend for EngineImpl {
     fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
-        do_engine!(self, press_key(key, commit_buf))
+        connect!(@ret self, press_key(key, commit_buf))
     }
 
     fn clear_preedit(&mut self, commit_buf: &mut String) {
-        do_engine!(self, clear_preedit(commit_buf));
+        connect!(@ret self, clear_preedit(commit_buf));
     }
 
     fn reset(&mut self) {
-        do_engine!(self, reset());
+        connect!(@ret self, reset());
     }
 
     fn has_preedit(&self) -> bool {
-        do_engine!(self, has_preedit())
+        connect!(@direct self, has_preedit())
     }
 
     fn preedit_str(&self, buf: &mut String) {
-        do_engine!(self, preedit_str(buf));
+        connect!(@direct self, preedit_str(buf));
     }
 }

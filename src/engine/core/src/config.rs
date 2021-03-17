@@ -17,13 +17,20 @@ pub enum InputCategory {
     Math,
 }
 
+#[derive(Serialize, Deserialize, Debug, EnumSetType, Enum, PartialOrd, Ord)]
+#[enumset(serialize_as_list)]
+#[repr(u32)]
+pub enum InputMode {
+    Hanja,
+}
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum HotkeyBehavior {
     Switch(InputCategory),
     Toggle(InputCategory, InputCategory),
+    Mode(InputMode),
     Commit,
     Emoji,
-    Hanja,
 }
 
 impl HotkeyBehavior {
@@ -105,9 +112,9 @@ impl Default for RawConfig {
             },
             category_hotkeys: btreemap! {
                 InputCategory::Hangul => btreemap! {
-                    Key::normal(KeyCode::F9) => Hotkey::new(HotkeyBehavior::Hanja, HotkeyResult::Consume),
-                    Key::normal(KeyCode::HangulHanja) => Hotkey::new(HotkeyBehavior::Hanja, HotkeyResult::Consume),
-                    Key::normal(KeyCode::ControlR) => Hotkey::new(HotkeyBehavior::Hanja, HotkeyResult::Consume),
+                    Key::normal(KeyCode::F9) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
+                    Key::normal(KeyCode::HangulHanja) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
+                    Key::normal(KeyCode::ControlR) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
                 },
                 InputCategory::Math => btreemap! {
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),

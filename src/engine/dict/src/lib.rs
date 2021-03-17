@@ -6,7 +6,7 @@ mod dict {
 mod tests {
     #[test]
     fn simple() {
-        assert_eq!(crate::lookup('가')[0].0, '家');
+        assert_eq!(crate::lookup('가').unwrap()[0].0, '家');
     }
 
     #[test]
@@ -15,10 +15,11 @@ mod tests {
     }
 }
 
-pub fn lookup(hangul: char) -> &'static [(char, &'static str)] {
+pub fn lookup(hangul: char) -> Option<&'static [(char, &'static str)]> {
     crate::dict::HANJA_ENTRIES
         .binary_search_by_key(&hangul, |(k, _)| *k)
-        .map_or(&[], |idx| crate::dict::HANJA_ENTRIES[idx].1)
+        .ok()
+        .map(|idx| crate::dict::HANJA_ENTRIES[idx].1)
 }
 
 pub fn lookup_math_symbol(keyword: &str) -> Option<&'static str> {

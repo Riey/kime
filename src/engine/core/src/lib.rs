@@ -43,6 +43,7 @@ impl InputEngine {
     pub fn set_input_category(&mut self, category: InputCategory) {
         // Reset previous engine
         self.engine_impl.clear_preedit(&mut self.commit_buf);
+        self.engine_impl.mode = None;
         self.engine_impl.category = category;
     }
 

@@ -1,14 +1,18 @@
-use kime_engine_backend::{AHashMap, InputEngineBackend, Key, KeyCode};
+use kime_engine_backend::{
+    AHashMap, InputEngineMode,
+    InputEngineModeResult::{self, Continue, Exit},
+    Key, KeyCode,
+};
 use kime_engine_backend_latin::{load_layout, LatinConfig};
 
 #[derive(Clone)]
-pub struct MathEngine {
+pub struct MathMode {
     math_mode: bool,
     buf: String,
     layout: AHashMap<Key, char>,
 }
 
-impl MathEngine {
+impl MathMode {
     pub fn new(config: &LatinConfig) -> Self {
         Self {
             math_mode: false,
@@ -18,8 +22,8 @@ impl MathEngine {
     }
 }
 
-impl InputEngineBackend for MathEngine {
-    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
+impl InputEngineMode for MathMode {
+    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> InputEngineModeResult<bool> {
         if key == Key::normal(KeyCode::Backslash) {
             if self.math_mode {
                 // double backslash
@@ -29,7 +33,7 @@ impl InputEngineBackend for MathEngine {
                 self.math_mode = true;
             }
 
-            return true;
+            return Continue(true);
         }
 
         if self.math_mode && key.code == KeyCode::Backspace {
@@ -37,7 +41,7 @@ impl InputEngineBackend for MathEngine {
                 self.math_mode = false;
             }
 
-            return true;
+            return Continue(true);
         }
 
         if let Some(ch) = self.layout.get(&key) {
@@ -47,23 +51,25 @@ impl InputEngineBackend for MathEngine {
                 commit_buf.push(*ch);
             }
 
-            true
+            Continue(true)
         } else {
-            false
+            Exit
         }
     }
 
-    fn clear_preedit(&mut self, commit_buf: &mut String) {
+    fn clear_preedit(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
         if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&self.buf) {
             commit_buf.push_str(symbol);
         }
         self.buf.clear();
         self.math_mode = false;
+        Continue(())
     }
 
-    fn reset(&mut self) {
+    fn reset(&mut self) -> InputEngineModeResult<()> {
         self.buf.clear();
         self.math_mode = false;
+        Continue(())
     }
 
     fn preedit_str(&self, buf: &mut String) {

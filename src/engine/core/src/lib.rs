@@ -9,7 +9,7 @@ use os::{DefaultOsContext, OsContext};
 use kime_engine_backend::{InputEngineBackend, InputEngineMode, InputEngineModeResult};
 use kime_engine_backend_hangul::HangulEngine;
 use kime_engine_backend_latin::LatinEngine;
-use kime_engine_backend_math::MathEngine;
+use kime_engine_backend_math::MathMode;
 
 pub use config::{Config, Hotkey, InputCategory, InputMode, RawConfig};
 
@@ -44,6 +44,10 @@ impl InputEngine {
         // Reset previous engine
         self.engine_impl.clear_preedit(&mut self.commit_buf);
         self.engine_impl.category = category;
+    }
+
+    pub fn set_input_mode(&mut self, mode: InputMode) -> bool {
+        self.engine_impl.set_mode(mode, &mut self.commit_buf)
     }
 
     pub fn category(&self) -> InputCategory {
@@ -120,7 +124,7 @@ impl InputEngine {
                     }
                 }
                 HotkeyBehavior::Mode(mode) => {
-                    processed = self.engine_impl.set_mode(mode);
+                    processed = self.engine_impl.set_mode(mode, &mut self.commit_buf);
                 }
                 HotkeyBehavior::Commit => {
                     if self.engine_impl.has_preedit() {
@@ -218,7 +222,7 @@ struct EngineImpl {
     latin_engine: LatinEngine,
     hangul_engine: HangulEngine,
     hanja_mode: HanjaMode,
-    math_engine: MathEngine,
+    math_mode: MathMode,
 }
 
 impl EngineImpl {
@@ -229,17 +233,22 @@ impl EngineImpl {
             latin_engine: config.latin_engine.clone(),
             hangul_engine: config.hangul_engine.clone(),
             hanja_mode: HanjaMode::new(),
-            math_engine: config.math_engine.clone(),
+            math_mode: config.math_engine.clone(),
         }
     }
 
-    pub fn set_mode(&mut self, mode: InputMode) -> bool {
+    pub fn set_mode(&mut self, mode: InputMode, commit_buf: &mut String) -> bool {
         match mode {
+            InputMode::Math => {
+                self.clear_preedit(commit_buf);
+                self.mode = Some(InputMode::Math);
+                true
+            }
             InputMode::Hanja => match self.category {
                 InputCategory::Hangul => {
                     if self.hanja_mode.set_key(self.hangul_engine.get_hanja_char()) {
-                        self.mode = Some(InputMode::Hanja);
                         self.hangul_engine.reset();
+                        self.mode = Some(InputMode::Hanja);
                         true
                     } else {
                         false
@@ -254,6 +263,16 @@ impl EngineImpl {
 macro_rules! do_mode {
     (@ret $self:expr, $func:ident($($arg:expr,)*)) => {
         match $self.mode {
+            Some(InputMode::Math) => {
+                match $self.math_mode.$func($($arg,)*) {
+                    InputEngineModeResult::Continue(ret) => {
+                        return ret;
+                    }
+                    InputEngineModeResult::Exit => {
+                        $self.mode = None;
+                    }
+                }
+            }
             Some(InputMode::Hanja) => {
                 match $self.hanja_mode.$func($($arg,)*) {
                     InputEngineModeResult::Continue(ret) => {
@@ -272,6 +291,9 @@ macro_rules! do_mode {
             Some(InputMode::Hanja) => {
                 return $self.hanja_mode.$func($($arg,)*);
             }
+            Some(InputMode::Math) => {
+                return $self.math_mode.$func($($arg,)*);
+            }
             None => {}
         }
     };
@@ -282,7 +304,6 @@ macro_rules! do_engine {
         match $self.category {
             InputCategory::Hangul => $self.hangul_engine.$func($($arg,)*),
             InputCategory::Latin => $self.latin_engine.$func($($arg,)*),
-            InputCategory::Math => $self.math_engine.$func($($arg,)*),
         }
     };
 }

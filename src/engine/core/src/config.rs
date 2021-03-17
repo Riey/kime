@@ -3,7 +3,7 @@ use enumset::EnumSetType;
 use kime_engine_backend::{AHashMap, Key, KeyCode, ModifierState};
 use kime_engine_backend_hangul::{HangulConfig, HangulEngine};
 use kime_engine_backend_latin::{LatinConfig, LatinEngine};
-use kime_engine_backend_math::MathEngine;
+use kime_engine_backend_math::MathMode;
 use maplit::btreemap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -14,13 +14,13 @@ use std::collections::BTreeMap;
 pub enum InputCategory {
     Latin,
     Hangul,
-    Math,
 }
 
 #[derive(Serialize, Deserialize, Debug, EnumSetType, Enum, PartialOrd, Ord)]
 #[enumset(serialize_as_list)]
 #[repr(u32)]
 pub enum InputMode {
+    Math,
     Hanja,
 }
 
@@ -109,7 +109,7 @@ impl Default for RawConfig {
                 Key::super_(KeyCode::Space) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::normal(KeyCode::Muhenkan) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::new(KeyCode::E, ModifierState::CONTROL | ModifierState::ALT) => Hotkey::new(HotkeyBehavior::Emoji, HotkeyResult::ConsumeIfProcessed),
-                Key::new(KeyCode::Backslash, ModifierState::CONTROL | ModifierState::ALT) => Hotkey::new(HotkeyBehavior::Switch(InputCategory::Math), HotkeyResult::Consume),
+                Key::new(KeyCode::Backslash, ModifierState::CONTROL | ModifierState::ALT) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Math), HotkeyResult::ConsumeIfProcessed),
             },
             category_hotkeys: btreemap! {
                 InputCategory::Hangul => btreemap! {
@@ -117,14 +117,14 @@ impl Default for RawConfig {
                     Key::normal(KeyCode::HangulHanja) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
                     Key::normal(KeyCode::ControlR) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
                 },
-                InputCategory::Math => btreemap! {
-                    Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
-                },
             },
             mode_hotkeys: btreemap! {
                 InputMode::Hanja => btreemap! {
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Consume),
-                }
+                },
+                InputMode::Math => btreemap! {
+                    Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
+                },
             },
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
         }
@@ -141,7 +141,7 @@ pub struct Config {
     pub xim_preedit_font: (String, f64),
     pub hangul_engine: HangulEngine,
     pub latin_engine: LatinEngine,
-    pub math_engine: MathEngine,
+    pub math_engine: MathMode,
 }
 
 impl Default for Config {
@@ -173,7 +173,7 @@ impl Config {
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
             latin_engine: LatinEngine::new(&raw.latin),
-            math_engine: MathEngine::new(&raw.latin),
+            math_engine: MathMode::new(&raw.latin),
             hangul_engine,
         }
     }

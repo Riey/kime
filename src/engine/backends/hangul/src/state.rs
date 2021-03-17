@@ -1,9 +1,84 @@
 use enumset::EnumSet;
+use kime_engine_backend::{Key, KeyCode};
 
 use crate::{
     characters::{Choseong, JongToCho, Jongseong, Jungseong, KeyValue},
     Addon,
 };
+
+#[derive(Debug, Clone)]
+pub struct HanjaState {
+    hanja_entires: &'static [(char, &'static str)],
+    hangul: char,
+    index: usize,
+}
+
+impl HanjaState {
+    pub fn new(hangul: char) -> Option<Self> {
+        Some(Self {
+            hanja_entires: kime_engine_dict::lookup(hangul)?,
+            index: 0,
+            hangul,
+        })
+    }
+
+    pub fn current_hanja(&self) -> char {
+        self.hanja_entires[self.index].0
+    }
+
+    fn try_index(&mut self, index: usize) {
+        self.index = index.min(self.hanja_entires.len() - 1);
+    }
+
+    pub fn press_key(&mut self, key: Key) -> bool {
+        match key.code {
+            KeyCode::Left => {
+                self.index = self
+                    .index
+                    .checked_sub(1)
+                    .unwrap_or(self.hanja_entires.len() - 1);
+                true
+            }
+            KeyCode::Right => {
+                self.try_index(self.index + 1);
+                true
+            }
+            KeyCode::One
+            | KeyCode::Two
+            | KeyCode::Three
+            | KeyCode::Four
+            | KeyCode::Five
+            | KeyCode::Six
+            | KeyCode::Seven
+            | KeyCode::Eight
+            | KeyCode::Nine => {
+                self.try_index(key.code as usize - KeyCode::One as usize);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub fn preedit_str(&self, buf: &mut String) {
+        let current_hanja = &self.hanja_entires[self.index];
+
+        for (prev_hanja, _) in self.hanja_entires[..self.index].iter() {
+            buf.push(*prev_hanja);
+        }
+
+        buf.push('/');
+        buf.push(current_hanja.0);
+        buf.push('(');
+        buf.push_str(current_hanja.1);
+        buf.push(')');
+
+        if let Some(next_hanjas) = self.hanja_entires.get(self.index + 1..) {
+            for (next_hanja, _) in next_hanjas {
+                buf.push(*next_hanja);
+            }
+        }
+    }
+}
 
 /// 한글 입력 오토마타
 #[derive(Debug, Clone)]
@@ -56,6 +131,10 @@ impl HangulState {
                 true
             }
         }
+    }
+
+    pub fn get_hanja_char(&self) -> char {
+        self.state.to_char()
     }
 
     pub fn backspace(&mut self, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {

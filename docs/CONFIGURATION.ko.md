@@ -15,24 +15,6 @@
 | 기본값 |`Latin`|
 |--------|-------|
 
-## category_layout
-
-언어별 키보드 자판을 설정합니다.
-
-### 내장된 자판들
-
-* `direct`
-* `qwerty`
-* `colmak`
-* `dubeolsik`(두벌식)
-* `sebeolsik-390`(세벌식 390)
-* `sebeolsik-391`(세벌식 최종)
-* `sebeolsik-3sin-1995`(신세벌식 1995)
-* `sebeolsik-3sin-p2`(신세벌식 p2 *옛한글은 미구현*)
-
-`$XDG_CONFIG_HOME/kime/layouts/`에 위 목록에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
-
-[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
 
 ### 기본값
 
@@ -45,13 +27,6 @@ category_layout:
 ## global_category_state
 
 언어상태를 전역에서 설정합니다.
-
-| 기본값 |`false`|
-|--------|-------|
-
-## word_commit
-
-커밋을 단어 단위로 합니다.
 
 | 기본값 |`false`|
 |--------|-------|
@@ -80,6 +55,10 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 언어별 단축키입니다 전역 단축키를 덮어씁니다
 
+### mode_hotkeys
+
+모드별 단축키입니다 전역과 언어별 단축키를 덮어씁니다
+
 ### 내용
 
 #### behavior
@@ -91,6 +70,10 @@ indicator에서 사용할 아이콘의 색을 정합니다
 ##### Switch: InputCategory
 
 해당 언어로 바꿉니다
+
+##### Mode: InputMode
+
+해당 모드를 활성화합니다
 
 ##### Commit
 
@@ -125,13 +108,63 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 | 기본값 |`[D2Coding, 15.0]`|
 |--------|------------------|
 
-## layout_addons
+## latin
 
-자판의 추가 기능을 설정 합니다
+로마자 입력기를 설정합니다.
+
+### layout
+
+로마자 자판을 설정합니다.
+
+| 기본값 |`Qwerty`|
+|--------|-------|
+
+### 가능한 자판들
+
+* `Qwerty`
+* `Dvorak`
+* `Colemak`
+
+## hangul
+
+한글 입력기를 설정합니다.
+
+### layout
+
+한글 자판을 설정합니다.
+
+| 기본값 |`dubeolsik`|
+|--------|-------|
+
+### 내장된 자판들
+
+* `direct`
+* `qwerty`
+* `colmak`
+* `dubeolsik`(두벌식)
+* `sebeolsik-390`(세벌식 390)
+* `sebeolsik-391`(세벌식 최종)
+* `sebeolsik-3sin-1995`(신세벌식 1995)
+* `sebeolsik-3sin-p2`(신세벌식 p2 *옛한글은 미구현*)
+
+`$XDG_CONFIG_HOME/kime/layouts/`에 위 목록에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
+
+[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
+
+### word_commit
+
+커밋을 단어 단위로 합니다.
+
+| 기본값 |`false`|
+|--------|-------|
+
+### addons
+
+한글 자판의 추가 기능을 설정 합니다
 
 형식은 `자판이름: [Addon]` 입니다 `all`은 모든 자판에 적용됩니다.
 
-### 기본값
+#### 기본값
 
 ```yaml
 all:
@@ -140,9 +173,9 @@ dubeolsik:
   - TreatJongseongAsChoseong
 ```
 
-### Addons
+#### Addons
 
-#### TreatJongseongAsChoseong
+##### TreatJongseongAsChoseong
 
 종성을 초성처럼 취급합니다.
 
@@ -151,7 +184,7 @@ dubeolsik:
 값 + ㅏ = 갑사
 ```
 
-#### TreatJongseongAsChoseongCompose
+##### TreatJongseongAsChoseongCompose
 
 이전 종성과 현재 초성을 조합합니다.
 
@@ -162,7 +195,7 @@ dubeolsik:
 앇 + ㅅ = 악ㅆ
 ```
 
-#### FlexibleComposeOrder
+##### FlexibleComposeOrder
 
 초성과 중성의 순서를 바꿔도 조합이 되도록 합니다 오타 교정에 도움이 될 수 있습니다.
 
@@ -171,7 +204,7 @@ dubeolsik:
 ㅚ + ㄱ = 괴
 ```
 
-#### ComposeChoseongSsang
+##### ComposeChoseongSsang
 
 같은 자음을 두 번 누를 때 쌍자음을 합성합니다.
 
@@ -183,24 +216,24 @@ dubeolsik:
 ㅈ + ㅈ = ㅉ
 ```
 
-#### DecomposeChoseongSsang
+##### DecomposeChoseongSsang
 
 쌍자음에 백스페이스를 누를 때 쌍자음을 분해시킵니다. (e.g. ㄲ -> ㄱ)
 
-#### ComposeJungseongSsang
+##### ComposeJungseongSsang
 
 ```txt
 ㅑ + ㅣ = ㅒ
 ㅕ + ㅣ = ㅖ
 ```
 
-#### DecomposeJungseongSsang
+##### DecomposeJungseongSsang
 
-#### ComposeJongseongSsang
+##### ComposeJongseongSsang
 
 ```txt
 ㄱ + ㄱ = ㄲ
 ㅅ + ㅅ = ㅆ
 ```
 
-#### DecomposeJongseongSsang
+##### DecomposeJongseongSsang

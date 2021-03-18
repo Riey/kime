@@ -43,7 +43,7 @@ impl MathMode {
     }
 }
 
-fn take_str(s:&str, n: usize) -> &str {
+fn take_str(s: &str, n: usize) -> &str {
     if s.len() >= n {
         &s[0..n]
     } else {
@@ -56,13 +56,28 @@ fn parse_style(style_str: &str) -> Style {
     let mut style = STYLE_NONE;
 
     loop {
-        let style_new = match take_str(buf,2) {
+        let style_new = match take_str(buf, 2) {
             "" => return style,
-            "sf" => {buf = &buf[2..]; STYLE_SF},
-            "bf" => {buf = &buf[2..]; STYLE_BF},
-            "it" => {buf = &buf[2..]; STYLE_IT},
-            "tt" => {buf = &buf[2..]; STYLE_TT},
-            "bb" => {buf = &buf[2..]; STYLE_BB},
+            "sf" => {
+                buf = &buf[2..];
+                STYLE_SF
+            }
+            "bf" => {
+                buf = &buf[2..];
+                STYLE_BF
+            }
+            "it" => {
+                buf = &buf[2..];
+                STYLE_IT
+            }
+            "tt" => {
+                buf = &buf[2..];
+                STYLE_TT
+            }
+            "bb" => {
+                buf = &buf[2..];
+                STYLE_BB
+            }
             "sc" => {
                 if let "r" = take_str(&buf[2..], 1) {
                     buf = &buf[3..];
@@ -70,7 +85,7 @@ fn parse_style(style_str: &str) -> Style {
                 } else {
                     return STYLE_NONE;
                 }
-            },
+            }
             "ca" => {
                 if let "l" = take_str(&buf[2..], 1) {
                     buf = &buf[3..];
@@ -78,7 +93,7 @@ fn parse_style(style_str: &str) -> Style {
                 } else {
                     return STYLE_NONE;
                 }
-            },
+            }
             "fr" => {
                 if let "ak" = take_str(&buf[2..], 2) {
                     buf = &buf[4..];
@@ -86,7 +101,7 @@ fn parse_style(style_str: &str) -> Style {
                 } else {
                     return STYLE_NONE;
                 }
-            },
+            }
             _ => return STYLE_NONE,
         };
 

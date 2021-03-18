@@ -51,7 +51,7 @@ fn parse_style(style_str: &str) -> Style {
     let mut style = Style::NONE;
 
     loop {
-        let style_new = if buf == "" {
+        let style_new = if buf.is_empty() {
             return style;
         } else if let Some(_buf) = buf.strip_prefix("sf") {
             buf = _buf;

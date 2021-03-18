@@ -1,5 +1,9 @@
+#[path = "src/math_symbol_key.rs"]
+mod math_symbol_key;
+
+use math_symbol_key::*;
 use itertools::Itertools;
-use serde::Deserialize;
+use serde::{Deserialize,Deserializer};
 use std::{
     collections::BTreeMap,
     env,
@@ -41,10 +45,39 @@ struct UnicodeEntry {
     tts: String,
 }
 
+impl<'de> Deserialize<'de> for Style {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        use serde::de::Error;
+
+        let styles: Vec<&str> = Deserialize::deserialize(deserializer)?;
+        let style = styles
+            .into_iter()
+            .map(|s| Ok(match s {
+                "sf" => STYLE_SF,
+                "bf" => STYLE_BF,
+                "it" => STYLE_IT,
+                "tt" => STYLE_TT,
+                "bb" => STYLE_BB,
+                "scr" => STYLE_SCR,
+                "cal" => STYLE_CAL,
+                "frak" => STYLE_FRAK,
+                _ => return Err(Error::custom("no matching style name")),
+            }))
+            .fold(Ok(STYLE_NONE), |sty1, sty2| Ok(sty1? | sty2?));
+        style
+    }
+}
+
+#[derive(Deserialize)]
+struct StySymPair<'a> {
+    style: Style,
+    symbol: &'a str,
+}
+
 #[derive(Deserialize)]
 struct KeySymPair<'a> {
     keyword: &'a str,
-    symbol: &'a str,
+    symbols: Vec<StySymPair<'a>>,
 }
 
 fn load_hanja_dict() -> BTreeMap<char, Vec<HanjaEntry>> {
@@ -133,6 +166,7 @@ fn main() {
         std::fs::File::create(PathBuf::from(env::var("OUT_DIR").unwrap()).join("dict.rs")).unwrap(),
     );
 
+    writeln!(out, "use crate::math_symbol_key::*;").unwrap();
     writeln!(
         out,
         "pub static HANJA_ENTRIES: &[(char, &[(char, &str)])] = &[",
@@ -153,17 +187,20 @@ fn main() {
 
     writeln!(out, "];").unwrap();
 
-    let symbol_map = include_str!("data/symbol_map.json");
-    let mut symbol_map: Vec<KeySymPair> = serde_json::from_str(symbol_map).unwrap();
-    symbol_map.sort_unstable_by_key(|pair| pair.keyword);
-
-    writeln!(out, "pub static MATH_SYMBOL_ENTRIES: &[(&str, &str)] = &[").unwrap();
-
-    for pair in &symbol_map {
-        writeln!(out, "(\"{}\", \"{}\"),", pair.keyword, pair.symbol).unwrap();
+    let symbol_map_data = include_str!("data/symbol_map.json");
+    let symbol_map_data: Vec<KeySymPair> = serde_json::from_str(symbol_map_data).unwrap();
+    let mut symbol_map: Vec<(SymbolKey,&str)> = Vec::new();
+    for key_sym_pair in &symbol_map_data {
+        let keyword = &key_sym_pair.keyword;
+        for sty_sym_pair in &key_sym_pair.symbols {
+            let style = sty_sym_pair.style;
+            let symbol = sty_sym_pair.symbol;
+            symbol_map.push((SymbolKey(keyword,style), symbol));
+        }
     }
+    symbol_map.sort_unstable_by_key(|pair| pair.0);
 
-    writeln!(out, "];").unwrap();
+    writeln!(out, "pub static MATH_SYMBOL_ENTRIES: &[(SymbolKey, &str)] = &{:?};", symbol_map).unwrap();
 
     writeln!(out, "#[derive(Clone, Copy, Debug)] pub struct UnicodeAnnotation {{ pub codepoint: &'static str, pub tts: &'static str, }}").unwrap();
     writeln!(

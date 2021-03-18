@@ -63,10 +63,7 @@ fn arrow() {
 
 #[test]
 fn ctrl_w() {
-    test_input(&[
-        (Key::normal(R), "ㄱ", ""),
-        (Key::ctrl(W), "ㄱ", "PASS"),
-    ]);
+    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::ctrl(W), "ㄱ", "PASS")]);
 }
 
 #[test]

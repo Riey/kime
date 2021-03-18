@@ -17,40 +17,12 @@ You can also change the location of config file using [`$XDG_CONFIG_DIR` or
 
 Set default InputCategory when IME starts, please select between `Latin` and `Hangul`
 
-| 기본값 |`Latin`|
-|--------|-------|
-
-## category_layout
-
-Set layout per categories
-
-### Embeded layouts
-
-* `direct`
-* `qwerty`
-* `colmak`
-* `dubeolsik`(두벌식)
-* `sebeolsik-390`(세벌식 390)
-* `sebeolsik-391`(세벌식 최종)
-* `sebeolsik-3sin-1995`(신세벌식 1995)
-* `sebeolsik-3sin-p2`(신세벌식 p2 *옛한글은 미구현*)
-
-Custom layout can be added by creating layout YAML files
-at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
-structure of keyboard layout file.
-
-[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
+| default |`Latin`|
+|---------|-------|
 
 ## global_category_state
 
 Set category state globally
-
-| default |`false`|
-|---------|-------|
-
-## word_commit
-
-Let commit by word
 
 | default |`false`|
 |---------|-------|
@@ -79,6 +51,10 @@ Global hotkey
 
 Hotkey for specific category override global hotkey
 
+### mode_hotkeys
+
+Hotkey for specific mode override global, category hotkey
+
 ### content
 
 #### behavior
@@ -90,6 +66,10 @@ Toggle Left and Right category
 ##### Switch: InputCategory
 
 Switch to specific category
+
+##### Mode: InputMode
+
+Enable specific mode
 
 ##### Commit
 
@@ -124,13 +104,65 @@ Preedit window font name and size for XIM
 | default |`[D2Coding, 15.0]`|
 |---------|------------------|
 
-## layout_addons
+## latin
+
+Set latin setting
+
+### layout
+
+Set latin layout
+
+| default |`Qwerty`|
+|---------|--------|
+
+### 가능한 자판들
+
+* `Qwerty`
+* `Dvorak`
+* `Colemak`
+
+## hangul
+
+Set hangul setting
+
+### word_commit
+
+Let commit by word
+
+| default |`false`|
+|---------|-------|
+
+### layout
+
+Set hangul layout
+
+| default |`dubeolsik`|
+|---------|-------|
+
+#### Embeded layouts
+
+* `direct`
+* `qwerty`
+* `colmak`
+* `dubeolsik`(두벌식)
+* `sebeolsik-390`(세벌식 390)
+* `sebeolsik-391`(세벌식 최종)
+* `sebeolsik-3sin-1995`(신세벌식 1995)
+* `sebeolsik-3sin-p2`(신세벌식 p2 *옛한글은 미구현*)
+
+Custom layout can be added by creating layout YAML files
+at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
+structure of keyboard layout file.
+
+[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
+
+### layout_addons
 
 Adjust layout addons
 
 format is `layout_name: [Addon]`, `all` applys all layouts
 
-### default
+#### default
 
 ```yaml
 all:
@@ -139,9 +171,9 @@ dubeolsik:
   - TreatJongseongAsChoseongg
 ```
 
-### Addons
+#### Addons
 
-#### TreatJongseongAsChoseong
+##### TreatJongseongAsChoseong
 
 Treat jongseong as choseong
 
@@ -150,7 +182,7 @@ Treat jongseong as choseong
 값 + ㅏ = 갑사
 ```
 
-#### TreatJongseongAsChoseongCompose
+##### TreatJongseongAsChoseongCompose
 
 Compose previous jongseong and current choseong
 
@@ -161,7 +193,7 @@ Note that it depends on other addons this example is only work when `ComposeChos
 앇 + ㅅ = 악ㅆ
 ```
 
-#### FlexibleComposeOrder
+##### FlexibleComposeOrder
 
 Compose choseong and jungseong even order is reversed it could be help for fix typo error.
 
@@ -170,7 +202,7 @@ Compose choseong and jungseong even order is reversed it could be help for fix t
 ㅚ + ㄱ = 괴
 ```
 
-#### ComposeChoseongSsang
+##### ComposeChoseongSsang
 
 When you press same choseong it will be ssangjaum
 
@@ -182,20 +214,20 @@ When you press same choseong it will be ssangjaum
 ㅈ + ㅈ = ㅉ
 ```
 
-#### DecomposeChoseongSsang
+##### DecomposeChoseongSsang
 
 Same as above but work on backspace(e.g. ㄲ -> ㄱ)
 
-#### ComposeJungseongSsang
+##### ComposeJungseongSsang
 
 ```txt
 ㅑ + ㅣ = ㅒ
 ㅕ + ㅣ = ㅖ
 ```
 
-#### DecomposeJungseongSsang
+##### DecomposeJungseongSsang
 
-#### ComposeJongseongSsang
+##### ComposeJongseongSsang
 
 ```txt
 ㄱ + ㄱ = ㄲ

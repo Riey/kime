@@ -6,7 +6,7 @@
 
 ### Improve
 
-* Fix arrow key bug in hangul [#373](https://github.com/Riey/kime/issues/373)
+* Make more key to commit hangul [#373](https://github.com/Riey/kime/issues/373)
 
 ## 2.0.0
 

@@ -62,6 +62,14 @@ fn arrow() {
 }
 
 #[test]
+fn ctrl_w() {
+    test_input(&[
+        (Key::normal(R), "ㄱ", ""),
+        (Key::ctrl(W), "ㄱ", "PASS"),
+    ]);
+}
+
+#[test]
 fn next_jaum() {
     test_input(&[
         (Key::normal(D), "ㅇ", ""),

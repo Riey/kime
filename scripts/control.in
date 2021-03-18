@@ -6,4 +6,3 @@ Homepage: https://github.com/Riey/kime
 Section: utils
 Priority: optional
 Architecture: %ARCH%
-Depends: libcairo2, libxcb1

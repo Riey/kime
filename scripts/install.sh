@@ -25,8 +25,8 @@ if [ -z "$KIME_CONFIG_DIR" ]; then
     KIME_CONFIG_DIR=etc/xdg/kime
 fi
 
-if [ -z "$KIME_DATA_DIR" ]; then
-    KIME_DATA_DIR=usr/share/kime
+if [ -z "$KIME_ICON_DIR" ]; then
+    KIME_ICON_DIR=usr/share/icons
 fi
 
 if [ -z "$KIME_APP_DIR" ]; then
@@ -81,7 +81,7 @@ fi
 
 install -Dm644 $KIME_OUT/default_config.yaml -T "$PREFIX/$KIME_CONFIG_DIR/config.yaml"
 install -Dm644 $KIME_OUT/*.desktop -t "$PREFIX/$KIME_APP_DIR"
-install -Dm644 $KIME_OUT/icons/* -t "$PREFIX/$KIME_DATA_DIR/icons"
+install -Dm644 $KIME_OUT/icons/64x64/*.png -t "$PREFIX/$KIME_ICON_DIR/hicolor/64x64/apps"
 install -Dm755 $KIME_OUT/libkime_engine.so -t "$PREFIX/$KIME_LIB_DIR"
 
 install_if libkime-gtk2.so 755 -T "$KIME_GTK2_DIR/im-kime.so"

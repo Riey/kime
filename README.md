@@ -125,9 +125,9 @@ if you use X it could be done in .xprofile
 
 kime install several .desktop file that you can run
 
-| `kime-xim` | `kime-wayland` | `kime-window` |
+| `kime-xim` | `kime-wayland` | `kime-indicator` |
 |------------|----------------|---------------|
-| for xim    | for wayland    | for hanja, emoji, indicator |
+| for xim    | for wayland    | for tray icon |
 
 if you use DE consider add these servers as your start application
 

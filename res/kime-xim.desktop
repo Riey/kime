@@ -7,4 +7,4 @@ Type=Application
 Terminal=false
 StartupNotify=true
 NoDisplay=true
-Icon=/usr/share/kime/icons/kime-han-black-64x64.png
+Icon=kime-han-black

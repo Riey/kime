@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13.0)
 
-project(kime VERSION 1.3.1)
+project(kime VERSION 2.0.0)
 
 option(USE_SYSTEM_ENGINE "Use system engine file" OFF)
 option(ENABLE_GTK2 "Enable GTK2 immodule" OFF)

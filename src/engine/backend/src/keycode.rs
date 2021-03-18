@@ -99,6 +99,11 @@ pub enum KeyCode {
     Hangul,
     HangulHanja,
 
+    Left,
+    Right,
+    Up,
+    Down,
+
     F1,
     F2,
     F3,
@@ -184,6 +189,11 @@ impl KeyCode {
             108 => Some(Self::AltR),
             122 | 130 => Some(Self::Hangul),
             121 | 123 | 131 => Some(Self::HangulHanja),
+
+            113 => Some(Self::Left),
+            114 => Some(Self::Right),
+            111 => Some(Self::Up),
+            116 => Some(Self::Down),
 
             67 => Some(Self::F1),
             68 => Some(Self::F2),

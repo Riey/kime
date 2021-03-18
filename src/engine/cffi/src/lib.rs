@@ -11,9 +11,9 @@ mod ffi {
 extern "C" {}
 
 pub use ffi::{
-    InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET, ModifierState,
-    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
+    InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
+    InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, ModifierState, ModifierState_ALT,
+    ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub fn check_api_version() -> bool {
@@ -31,12 +31,12 @@ impl InputEngine {
         }
     }
 
-    pub fn update_hangul_state(&self) {
-        unsafe { ffi::kime_engine_update_hangul_state(self.engine) }
+    pub fn update_layout_state(&self) {
+        unsafe { ffi::kime_engine_update_layout_state(self.engine) }
     }
 
-    pub fn set_input_category(&mut self, config: &Config, category: InputCategory) {
-        unsafe { ffi::kime_engine_set_input_category(self.engine, config.config, category) };
+    pub fn set_input_category(&mut self, category: InputCategory) {
+        unsafe { ffi::kime_engine_set_input_category(self.engine, category) };
     }
 
     pub fn press_key(
@@ -48,7 +48,7 @@ impl InputEngine {
         unsafe { ffi::kime_engine_press_key(self.engine, config.config, hardware_code, state) }
     }
 
-    pub fn preedit_str(&self) -> &str {
+    pub fn preedit_str(&mut self) -> &str {
         unsafe {
             let s = ffi::kime_engine_preedit_str(self.engine);
             core::str::from_utf8_unchecked(core::slice::from_raw_parts(s.ptr, s.len))
@@ -62,15 +62,21 @@ impl InputEngine {
         }
     }
 
+    pub fn clear_commit(&mut self) {
+        unsafe {
+            ffi::kime_engine_clear_commit(self.engine);
+        }
+    }
+
     pub fn clear_preedit(&mut self) {
         unsafe {
             ffi::kime_engine_clear_preedit(self.engine);
         }
     }
 
-    pub fn flush(&mut self) {
+    pub fn remove_preedit(&mut self) {
         unsafe {
-            ffi::kime_engine_flush(self.engine);
+            ffi::kime_engine_remove_preedit(self.engine);
         }
     }
 

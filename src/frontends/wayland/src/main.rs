@@ -37,9 +37,9 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, InputResult_NEED_FLUSH, InputResult_NEED_RESET, ModifierState,
-    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
+    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT, InputResult_HAS_PREEDIT,
+    InputResult_LANGUAGE_CHANGED, ModifierState, ModifierState_ALT, ModifierState_CONTROL,
+    ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
@@ -203,7 +203,7 @@ impl KimeContext {
             }
             ImEvent::Done => {
                 if !self.current_state.activate && self.pending_state.activate {
-                    self.engine.update_hangul_state();
+                    self.engine.update_layout_state();
                     self.grab_activate = true;
                 } else if !self.current_state.deactivate && self.pending_state.deactivate {
                     // Focus lost, reset states
@@ -244,23 +244,19 @@ impl KimeContext {
                                 .press_key(&self.config, (key + 8) as u16, self.mod_state);
 
                         if ret & InputResult_LANGUAGE_CHANGED != 0 {
-                            self.engine.update_hangul_state();
+                            self.engine.update_layout_state();
                         }
 
                         if ret & InputResult_HAS_PREEDIT != 0 {
-                            self.preedit(self.engine.preedit_str().into());
+                            let preedit = self.engine.preedit_str().into();
+                            self.preedit(preedit);
                         } else {
                             self.clear_preedit();
                         }
 
-                        if ret & InputResult_NEED_RESET | InputResult_NEED_FLUSH != 0 {
+                        if ret & InputResult_HAS_COMMIT != 0 {
                             self.commit_string(self.engine.commit_str().into());
-
-                            if ret & InputResult_NEED_RESET != 0 {
-                                self.engine.reset();
-                            } else {
-                                self.engine.flush();
-                            }
+                            self.engine.clear_commit();
                         }
 
                         self.commit();
@@ -388,7 +384,7 @@ impl KimeContext {
 }
 
 fn main() {
-    kime_version::cli_boilerplate!();
+    kime_version::cli_boilerplate!((),);
 
     assert!(
         kime_engine_cffi::check_api_version(),

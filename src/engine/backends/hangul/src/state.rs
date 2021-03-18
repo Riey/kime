@@ -1,6 +1,8 @@
+use enumset::EnumSet;
+
 use crate::{
     characters::{Choseong, JongToCho, Jongseong, Jungseong, KeyValue},
-    Addon, InputResult, LayoutContext,
+    Addon,
 };
 
 /// 한글 입력 오토마타
@@ -8,9 +10,7 @@ use crate::{
 pub struct HangulState {
     state: CharacterState,
     word_commit: bool,
-    commit_buf: String,
-    commit_characters: Vec<CharacterState>,
-    buf: String,
+    word_buf: String,
 }
 
 impl HangulState {
@@ -18,139 +18,88 @@ impl HangulState {
         Self {
             state: CharacterState::new(),
             word_commit,
-            commit_buf: String::with_capacity(64),
-            commit_characters: Vec::with_capacity(16),
-            buf: String::with_capacity(64),
+            word_buf: String::new(),
         }
     }
 
-    pub fn commit_str(&mut self) -> &str {
-        if self.word_commit {
-            self.buf.clear();
-            self.buf.push_str(&self.commit_buf);
-            self.state.write(&mut self.buf);
-            &self.buf
-        } else {
-            &self.commit_buf
-        }
+    pub fn has_preedit(&self) -> bool {
+        self.state.need_display() || !self.word_buf.is_empty()
     }
 
-    pub fn preedit_str(&mut self) -> &str {
-        if self.word_commit {
-            self.commit_str()
-        } else {
-            self.buf.clear();
-            self.state.write(&mut self.buf);
-            &self.buf
-        }
+    pub fn preedit_str(&self, buf: &mut String) {
+        buf.push_str(&self.word_buf);
+        self.state.write(buf);
     }
 
-    pub fn pass(&mut self, s: &str) {
-        self.commit_characters.clear();
-        self.clear_preedit();
-        self.commit_buf.push_str(s);
-    }
-
-    pub fn pass_replace(&mut self, s: &str) {
-        self.commit_characters.clear();
-
-        if self.word_commit {
-            self.commit_buf.clear();
-        }
-
+    pub fn clear_preedit(&mut self, commit_buf: &mut String) {
+        commit_buf.push_str(&self.word_buf);
+        self.word_buf.clear();
+        self.state.write(commit_buf);
         self.state.reset();
-        self.commit_buf.push_str(s);
-    }
-
-    pub fn clear_preedit(&mut self) {
-        self.state.write(&mut self.commit_buf);
-        self.state.reset();
-    }
-
-    pub fn flush(&mut self) {
-        self.commit_characters.clear();
-        self.commit_buf.clear();
     }
 
     pub fn reset(&mut self) {
-        self.flush();
+        self.word_buf.clear();
         self.state.reset();
     }
 
-    pub fn preedit_result(&self) -> InputResult {
-        if self.state.need_display() || self.word_commit && !self.commit_characters.is_empty() {
-            InputResult::HAS_PREEDIT
-        } else {
-            InputResult::empty()
-        }
-    }
-
-    fn convert_result(&mut self, ret: CharacterResult) -> InputResult {
+    fn convert_result(&mut self, ret: CharacterResult, commit_buf: &mut String) -> bool {
         match ret {
-            CharacterResult::Consume => self.preedit_result() | InputResult::CONSUMED,
-            CharacterResult::NewCharacter(new) => {
-                self.commit_buf.push(self.state.to_char());
-                self.commit_characters
-                    .push(std::mem::replace(&mut self.state, new));
-
+            CharacterResult::Consume => true,
+            CharacterResult::NewCharacter(new_ch) => {
                 if self.word_commit {
-                    InputResult::HAS_PREEDIT | InputResult::CONSUMED
+                    self.word_buf.push(self.state.to_char());
                 } else {
-                    InputResult::NEED_FLUSH | self.preedit_result() | InputResult::CONSUMED
+                    commit_buf.push(self.state.to_char());
                 }
+                self.state = new_ch;
+                true
             }
         }
     }
 
-    pub fn backspace(&mut self, layout_ctx: &LayoutContext) -> InputResult {
-        loop {
-            if self.state.backspace(layout_ctx) {
-                return self.preedit_result() | InputResult::CONSUMED;
-            }
+    pub fn get_hanja_char(&self) -> char {
+        self.state.to_char()
+    }
 
-            match self.commit_characters.pop() {
-                Some(new_last) => {
-                    self.commit_buf.pop();
-                    self.state = new_last;
-                }
-                None => {
-                    return InputResult::empty();
-                }
-            }
+    pub fn backspace(&mut self, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
+        if self.state.backspace(addons) {
+            true
+        } else if commit_buf.pop().is_some() {
+            true
+        } else {
+            false
         }
     }
 
-    pub fn key(&mut self, kv: &KeyValue, layout_ctx: &LayoutContext) -> InputResult {
+    pub fn key(&mut self, kv: &KeyValue, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         let ret = match kv {
             KeyValue::Pass(pass) => {
-                self.pass(pass);
-                return InputResult::NEED_RESET | InputResult::CONSUMED;
+                self.clear_preedit(commit_buf);
+                commit_buf.push_str(pass);
+                return true;
             }
-            KeyValue::Choseong { cho } => self.state.cho(*cho, layout_ctx),
-            KeyValue::Jungseong { jung, compose } => self.state.jung(*jung, *compose, layout_ctx),
-            KeyValue::Jongseong { jong } => self.state.jong(*jong, layout_ctx),
+            KeyValue::Choseong { cho } => self.state.cho(*cho, addons),
+            KeyValue::Jungseong { jung, compose } => self.state.jung(*jung, *compose, addons),
+            KeyValue::Jongseong { jong } => self.state.jong(*jong, addons),
             KeyValue::ChoJong { cho, jong, first } => {
-                self.state.cho_jong(*cho, *jong, *first, layout_ctx)
+                self.state.cho_jong(*cho, *jong, *first, addons)
             }
             KeyValue::ChoJung {
                 cho,
                 jung,
                 first,
                 compose,
-            } => self
-                .state
-                .cho_jung(*cho, *jung, *first, *compose, layout_ctx),
+            } => self.state.cho_jung(*cho, *jung, *first, *compose, addons),
             KeyValue::JungJong {
                 jung,
                 jong,
                 first,
                 compose,
-            } => self
-                .state
-                .jung_jong(*jung, *jong, *first, *compose, layout_ctx),
+            } => self.state.jung_jong(*jung, *jong, *first, *compose, addons),
         };
 
-        self.convert_result(ret)
+        self.convert_result(ret, commit_buf)
     }
 }
 
@@ -219,15 +168,15 @@ impl CharacterState {
         }
     }
 
-    pub fn backspace(&mut self, layout_ctx: &LayoutContext) -> bool {
+    pub fn backspace(&mut self, addons: EnumSet<Addon>) -> bool {
         if let Some(jong) = self.jong.as_mut() {
-            if let Some(new_jong) = jong.backspace(layout_ctx) {
+            if let Some(new_jong) = jong.backspace(addons) {
                 *jong = new_jong;
             } else {
                 self.jong = None;
             }
         } else if let Some(jung) = self.jung.as_mut() {
-            if let Some(new_jung) = jung.backspace(layout_ctx) {
+            if let Some(new_jung) = jung.backspace(addons) {
                 *jung = new_jung;
                 self.compose_jung = true;
             } else {
@@ -235,7 +184,7 @@ impl CharacterState {
                 self.compose_jung = false;
             }
         } else if let Some(cho) = self.cho.as_mut() {
-            if let Some(new_cho) = cho.backspace(layout_ctx) {
+            if let Some(new_cho) = cho.backspace(addons) {
                 *cho = new_cho;
             } else {
                 self.cho = None;
@@ -248,10 +197,10 @@ impl CharacterState {
         true
     }
 
-    fn choseong_can_compose_jongseong(&self, cho: Choseong, layout_ctx: &LayoutContext) -> bool {
-        self.jong.map_or(false, |j| match j.to_cho(layout_ctx) {
+    fn choseong_can_compose_jongseong(&self, cho: Choseong, addons: EnumSet<Addon>) -> bool {
+        self.jong.map_or(false, |j| match j.to_cho(addons) {
             JongToCho::Direct(prev_cho) | JongToCho::Compose(_, prev_cho) => {
-                prev_cho.try_add(cho, layout_ctx).is_some()
+                prev_cho.try_add(cho, addons).is_some()
             }
         })
     }
@@ -263,18 +212,18 @@ impl CharacterState {
         cho: Choseong,
         jong: Jongseong,
         first: bool,
-        layout_ctx: &LayoutContext,
+        addons: EnumSet<Addon>,
     ) -> CharacterResult {
         if self.cho.is_none()
             || self.jung.is_none()
-            || layout_ctx.check_addon(Addon::TreatJongseongAsChoseongCompose)
-                && self.choseong_can_compose_jongseong(cho, layout_ctx)
+            || addons.contains(Addon::TreatJongseongAsChoseongCompose)
+                && self.choseong_can_compose_jongseong(cho, addons)
         {
-            self.cho(cho, layout_ctx)
+            self.cho(cho, addons)
         } else if self.jung.is_some() || !first {
-            self.jong(jong, layout_ctx)
+            self.jong(jong, addons)
         } else {
-            self.cho(cho, layout_ctx)
+            self.cho(cho, addons)
         }
     }
 
@@ -284,18 +233,18 @@ impl CharacterState {
         jung: Jungseong,
         first: bool,
         compose_jung: bool,
-        layout_ctx: &LayoutContext,
+        addons: EnumSet<Addon>,
     ) -> CharacterResult {
         if self.cho.is_some()
             && self.jung.map_or(true, |j| {
-                self.compose_jung && j.try_add(jung, layout_ctx).is_some()
+                self.compose_jung && j.try_add(jung, addons).is_some()
             })
         {
-            self.jung(jung, compose_jung, layout_ctx)
+            self.jung(jung, compose_jung, addons)
         } else if self.cho.is_none() || first {
-            self.cho(cho, layout_ctx)
+            self.cho(cho, addons)
         } else {
-            self.jung(jung, compose_jung, layout_ctx)
+            self.jung(jung, compose_jung, addons)
         }
     }
 
@@ -305,37 +254,37 @@ impl CharacterState {
         jong: Jongseong,
         first: bool,
         compose_jung: bool,
-        layout_ctx: &LayoutContext,
+        addons: EnumSet<Addon>,
     ) -> CharacterResult {
         // 아 + $ㄴㅖ = 안
         // ㅇ + $ㅜ + $ㅊㅔ = 웨
         // ㅇ + ㅜ + $ㅊㅔ = 웇
         if self.jung.map_or(true, |j| {
-            self.compose_jung && j.try_add(jung, layout_ctx).is_some()
+            self.compose_jung && j.try_add(jung, addons).is_some()
         }) {
-            self.jung(jung, compose_jung, layout_ctx)
+            self.jung(jung, compose_jung, addons)
         } else if self.cho.is_some() || !first {
-            self.jong(jong, layout_ctx)
+            self.jong(jong, addons)
         } else {
-            self.jung(jung, compose_jung, layout_ctx)
+            self.jung(jung, compose_jung, addons)
         }
     }
 
     // 일반 입력
 
-    pub fn cho(&mut self, mut cho: Choseong, layout_ctx: &LayoutContext) -> CharacterResult {
+    pub fn cho(&mut self, mut cho: Choseong, addons: EnumSet<Addon>) -> CharacterResult {
         if let Some(prev_cho) = self.cho {
             if let Some(jong) = self.jong {
-                if layout_ctx.check_addon(Addon::TreatJongseongAsChoseongCompose) {
-                    match jong.to_cho(layout_ctx) {
+                if addons.contains(Addon::TreatJongseongAsChoseongCompose) {
+                    match jong.to_cho(addons) {
                         JongToCho::Direct(prev_cho) => {
-                            if let Some(new_cho) = prev_cho.try_add(cho, layout_ctx) {
+                            if let Some(new_cho) = prev_cho.try_add(cho, addons) {
                                 self.jong = None;
                                 cho = new_cho;
                             }
                         }
                         JongToCho::Compose(jong, prev_cho) => {
-                            if let Some(new_cho) = prev_cho.try_add(cho, layout_ctx) {
+                            if let Some(new_cho) = prev_cho.try_add(cho, addons) {
                                 self.jong = Some(jong);
                                 cho = new_cho;
                             }
@@ -348,10 +297,9 @@ impl CharacterState {
                     ..Default::default()
                 })
             } else {
-                match prev_cho.try_add(cho, layout_ctx) {
+                match prev_cho.try_add(cho, addons) {
                     Some(new)
-                        if layout_ctx.check_addon(Addon::FlexibleComposeOrder)
-                            || self.jung.is_none() =>
+                        if addons.contains(Addon::FlexibleComposeOrder) || self.jung.is_none() =>
                     {
                         self.cho = Some(new);
                         CharacterResult::Consume
@@ -362,7 +310,7 @@ impl CharacterState {
                     }),
                 }
             }
-        } else if layout_ctx.check_addon(Addon::FlexibleComposeOrder)
+        } else if addons.contains(Addon::FlexibleComposeOrder)
             || self.jung.is_none() && self.jong.is_none()
         {
             self.cho = Some(cho);
@@ -379,15 +327,15 @@ impl CharacterState {
         &mut self,
         jung: Jungseong,
         compose_jung: bool,
-        layout_ctx: &LayoutContext,
+        addons: EnumSet<Addon>,
     ) -> CharacterResult {
-        if layout_ctx.check_addon(Addon::TreatJongseongAsChoseong) {
+        if addons.contains(Addon::TreatJongseongAsChoseong) {
             if let Some(jong) = self.jong {
                 if self.cho.is_some() {
                     // has choseong move jongseong to next choseong
                     let new;
 
-                    match jong.to_cho(layout_ctx) {
+                    match jong.to_cho(addons) {
                         JongToCho::Direct(cho) => {
                             self.jong = None;
                             new = Self {
@@ -422,7 +370,7 @@ impl CharacterState {
         }
 
         if let Some(prev_jung) = self.jung {
-            match prev_jung.try_add(jung, layout_ctx) {
+            match prev_jung.try_add(jung, addons) {
                 Some(new) if self.compose_jung => {
                     self.jung = Some(new);
                     self.compose_jung = false;
@@ -441,9 +389,9 @@ impl CharacterState {
         }
     }
 
-    pub fn jong(&mut self, jong: Jongseong, layout_ctx: &LayoutContext) -> CharacterResult {
+    pub fn jong(&mut self, jong: Jongseong, addons: EnumSet<Addon>) -> CharacterResult {
         if let Some(prev_jong) = self.jong {
-            match prev_jong.try_add(jong, layout_ctx) {
+            match prev_jong.try_add(jong, addons) {
                 Some(new) => {
                     self.jong = Some(new);
                     CharacterResult::Consume
@@ -451,7 +399,7 @@ impl CharacterState {
                 None => {
                     let new;
 
-                    match jong.to_cho(layout_ctx) {
+                    match jong.to_cho(addons) {
                         JongToCho::Direct(cho) => {
                             new = Self {
                                 cho: Some(cho),
@@ -483,13 +431,11 @@ mod tests {
     #[test]
     fn jong() {
         let mut state = CharacterState::default();
-        let mut config = crate::Config::default();
-        config.default_category = crate::InputCategory::Hangul;
-        let layout_ctx = LayoutContext::new(&config);
+        let addons = EnumSet::only(Addon::TreatJongseongAsChoseong);
 
-        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &layout_ctx);
-        state.jung(Jungseong::A, true, &layout_ctx);
-        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, &layout_ctx);
+        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, addons);
+        state.jung(Jungseong::A, true, addons);
+        state.cho_jong(Choseong::Ieung, Jongseong::Ieung, true, addons);
 
         assert_eq!(
             CharacterResult::NewCharacter(CharacterState {
@@ -498,7 +444,7 @@ mod tests {
                 compose_jung: true,
                 jong: None
             }),
-            state.jung(Jungseong::A, true, &layout_ctx)
+            state.jung(Jungseong::A, true, addons)
         );
     }
 }

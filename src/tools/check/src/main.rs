@@ -1,7 +1,7 @@
 use ansi_term::Color;
 use kime_engine_cffi::{
-    Config, InputCategory, InputEngine, InputResult_CONSUMED, InputResult_HAS_PREEDIT,
-    InputResult_NEED_FLUSH, InputResult_NEED_RESET,
+    Config, InputCategory, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT,
+    InputResult_HAS_PREEDIT,
 };
 use pad::PadStr;
 use std::env;
@@ -160,7 +160,7 @@ fn check_input(
     config: &Config,
     tests: &[(u16, &str, &str)],
 ) -> CondResult {
-    engine.set_input_category(config, InputCategory::Hangul);
+    engine.set_input_category(InputCategory::Hangul);
 
     for (key, preedit, commit) in tests.iter().copied() {
         let ret = engine.press_key(config, key, 0);
@@ -176,8 +176,9 @@ fn check_input(
 
         if ret & InputResult_CONSUMED == 0 {
             commit_ret = commit == format!("{}PASS", engine.commit_str());
-        } else if ret & (InputResult_NEED_RESET | InputResult_NEED_FLUSH) != 0 {
+        } else if ret & InputResult_HAS_COMMIT != 0 {
             commit_ret = commit == engine.commit_str();
+            engine.clear_commit();
         } else {
             commit_ret = commit.is_empty();
         }
@@ -188,14 +189,6 @@ fn check_input(
 
         if !commit_ret {
             return CondResult::Fail("Commit result failed".into());
-        }
-
-        if ret & InputResult_NEED_FLUSH != 0 {
-            engine.flush();
-        }
-
-        if ret & InputResult_NEED_RESET != 0 {
-            engine.reset();
         }
     }
 

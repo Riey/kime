@@ -1,11 +1,12 @@
 ---
 default_category: Latin
-category_layout:
-  Latin: direct
-  Hangul: dubeolsik
 global_category_state: false
-word_commit: false
-hotkeys:
+icon_color: Black
+global_hotkeys:
+  M-C-Backslash:
+    behavior:
+      Mode: Math
+    result: ConsumeIfProcessed
   Super-Space:
     behavior:
       Toggle:
@@ -13,15 +14,16 @@ hotkeys:
         - Latin
     result: Consume
   M-C-E:
-    behavior: Emoji
+    behavior:
+      Mode: Emoji
     result: ConsumeIfProcessed
   Esc:
     behavior:
       Switch: Latin
     result: Bypass
-  ControlR:
-    behavior: Hanja
-    result: Consume
+  Tab:
+    behavior: Commit
+    result: ConsumeIfProcessed
   Muhenkan:
     behavior:
       Toggle:
@@ -40,18 +42,55 @@ hotkeys:
         - Hangul
         - Latin
     result: Consume
-  HangulHanja:
-    behavior: Hanja
-    result: Consume
-  F9:
-    behavior: Hanja
-    result: Consume
-layout_addons:
-  all:
-    - ComposeChoseongSsang
-  dubeolsik:
-    - TreatJongseongAsChoseong
+category_hotkeys:
+  Hangul:
+    Space:
+      behavior: Commit
+      result: Bypass
+    Enter:
+      behavior: Commit
+      result: Bypass
+    ControlR:
+      behavior:
+        Mode: Hanja
+      result: Consume
+    HangulHanja:
+      behavior:
+        Mode: Hanja
+      result: Consume
+    F9:
+      behavior:
+        Mode: Hanja
+      result: ConsumeIfProcessed
+mode_hotkeys:
+  Math:
+    Space:
+      behavior: Commit
+      result: Bypass
+    Enter:
+      behavior: Commit
+      result: ConsumeIfProcessed
+  Hanja:
+    Space:
+      behavior: Commit
+      result: Bypass
+    Enter:
+      behavior: Commit
+      result: ConsumeIfProcessed
+  Emoji:
+    Enter:
+      behavior: Commit
+      result: ConsumeIfProcessed
 xim_preedit_font:
   - D2Coding
   - 15.0
-
+latin:
+  layout: Qwerty
+hangul:
+  layout: dubeolsik
+  word_commit: false
+  addons:
+    all:
+      - ComposeChoseongSsang
+    dubeolsik:
+      - TreatJongseongAsChoseong

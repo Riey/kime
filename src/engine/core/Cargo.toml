@@ -6,16 +6,18 @@ edition = "2018"
 license = "GPL-3.0"
 
 [dependencies]
-kime-engine-dict = { path = "../dict" }
-ahash = { version = "0.7.0", features = ["serde"] }
-bitflags = "1.2.1"
+kime-engine-backend = { path = "../backend" }
+kime-engine-backend-hangul = { path = "../backends/hangul" }
+kime-engine-backend-hanja = { path = "../backends/hanja" }
+kime-engine-backend-latin = { path = "../backends/latin" }
+kime-engine-backend-math = { path = "../backends/math" }
+kime-engine-backend-emoji = { path = "../backends/emoji" }
+serde = { version = "1.0.124", features = ["derive"] }
+serde_yaml = "0.8.17"
 enum-map = "0.6.4"
-enumset = { version = "1.0.4", features = ["serde"] }
-num-derive = "0.3.3"
-num-traits = "0.2.14"
-serde = { version = "1.0.118", features = ["derive"] }
-serde_yaml = "0.8.15"
-strum = { version = "0.20.0", features = ["derive"] }
+enumset = "1.0.6"
+maplit = "1.0.2"
 
 [target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"
+kime-run-dir = { path = "../../tools/run_dir" }

@@ -1,83 +1,25 @@
-mod characters;
 mod config;
-mod input_result;
-mod keycode;
-mod state;
-
 mod os;
 
-use ahash::AHashMap;
+pub use config::{Config, Hotkey, InputCategory, InputMode, RawConfig};
+pub use kime_engine_backend::{InputResult, Key, KeyCode, ModifierState};
 
-use crate::characters::KeyValue;
-use crate::os::{DefaultOsContext, OsContext};
-use enumset::EnumSet;
+use config::{HotkeyBehavior, HotkeyResult, IconColor};
+use os::{DefaultOsContext, OsContext};
 
-pub use crate::config::{
-    Addon, Config, Hotkey, HotkeyBehavior, HotkeyResult, InputCategory, RawConfig, BUILTIN_LAYOUTS,
-};
-pub use crate::input_result::InputResult;
-pub use crate::keycode::{Key, KeyCode, ModifierState};
-pub use crate::state::HangulState;
-
-pub struct LayoutContext {
-    pub input_category: InputCategory,
-    pub layout_addons: EnumSet<Addon>,
-}
-
-impl Default for LayoutContext {
-    fn default() -> Self {
-        Self::new(&Config::default())
-    }
-}
-
-impl LayoutContext {
-    pub fn new(config: &Config) -> Self {
-        Self {
-            input_category: config.default_category,
-            layout_addons: config.layout_addons[config.default_category],
-        }
-    }
-
-    pub fn update_layout(&mut self, category: InputCategory, config: &Config) {
-        self.input_category = category;
-        self.layout_addons = config.layout_addons[category];
-    }
-
-    pub fn check_addon(&self, addon: Addon) -> bool {
-        self.layout_addons.contains(addon)
-    }
-}
-
-#[derive(Clone, Default)]
-pub struct Layout {
-    keymap: AHashMap<Key, KeyValue>,
-}
-
-impl Layout {
-    fn from_items(items: AHashMap<Key, String>) -> Self {
-        let mut keymap = AHashMap::new();
-
-        for (key, value) in items {
-            let value = match value.parse::<KeyValue>() {
-                Ok(value) => value,
-                Err(_) => continue,
-            };
-
-            keymap.insert(key, value);
-        }
-
-        Self { keymap }
-    }
-
-    pub fn load_from(content: &str) -> Result<Self, serde_yaml::Error> {
-        Ok(Self::from_items(serde_yaml::from_str(content)?))
-    }
-}
+use kime_engine_backend::{InputEngineBackend, InputEngineMode, InputEngineModeResult};
+use kime_engine_backend_emoji::EmojiMode;
+use kime_engine_backend_hangul::HangulEngine;
+use kime_engine_backend_hanja::HanjaMode;
+use kime_engine_backend_latin::LatinEngine;
+use kime_engine_backend_math::MathMode;
 
 pub struct InputEngine {
-    state: HangulState,
-    layout_ctx: LayoutContext,
+    engine_impl: EngineImpl,
+    commit_buf: String,
+    preedit_buf: String,
     os_ctx: DefaultOsContext,
+    icon_color: IconColor,
 }
 
 impl Default for InputEngine {
@@ -89,124 +31,122 @@ impl Default for InputEngine {
 impl InputEngine {
     pub fn new(config: &Config) -> Self {
         Self {
-            state: HangulState::new(config.word_commit),
+            engine_impl: EngineImpl::new(config),
+            commit_buf: String::with_capacity(16),
+            preedit_buf: String::with_capacity(16),
             os_ctx: DefaultOsContext::default(),
-            layout_ctx: LayoutContext::new(config),
+            icon_color: config.icon_color,
         }
     }
 
-    pub fn set_input_category(&mut self, config: &Config, category: InputCategory) {
-        self.layout_ctx.update_layout(category, config);
+    pub fn set_input_category(&mut self, category: InputCategory) {
+        // Reset previous engine
+        self.engine_impl.clear_preedit(&mut self.commit_buf);
+        self.engine_impl.mode = None;
+        self.engine_impl.category = category;
     }
 
-    pub fn is_hangul_enabled(&self) -> bool {
-        self.layout_ctx.input_category == InputCategory::Hangul
+    pub fn set_input_mode(&mut self, mode: InputMode) -> bool {
+        self.engine_impl.set_mode(mode, &mut self.commit_buf)
+    }
+
+    pub fn category(&self) -> InputCategory {
+        self.engine_impl.category
     }
 
     pub fn update_layout_state(&mut self) -> std::io::Result<()> {
-        self.os_ctx.update_layout_state(self.is_hangul_enabled())
-    }
-
-    fn bypass(&mut self) -> InputResult {
-        self.clear_preedit();
-        InputResult::NEED_RESET
+        self.os_ctx
+            .update_layout_state(self.category(), self.icon_color)
     }
 
     fn try_get_global_input_category_state(&mut self, config: &Config) {
         if config.global_category_state {
-            let global = if self
+            let global = self
                 .os_ctx
                 .read_global_hangul_state()
-                .unwrap_or(self.is_hangul_enabled())
-            {
-                InputCategory::Hangul
-            } else {
-                InputCategory::Latin
-            };
+                .unwrap_or(self.category());
 
-            if self.layout_ctx.input_category != global {
-                self.layout_ctx.update_layout(global, config);
+            if self.category() != global {
+                self.set_input_category(global);
             }
         }
     }
 
+    fn try_hotkey<'c>(&self, key: &Key, config: &'c Config) -> Option<&'c Hotkey> {
+        if let Some(mode_hotkey) = self
+            .engine_impl
+            .mode
+            .and_then(|mode| config.mode_hotkeys[mode].get(key))
+        {
+            Some(mode_hotkey)
+        } else if let Some(category_hotkey) = config.category_hotkeys[self.category()].get(key) {
+            Some(category_hotkey)
+        } else if let Some(global) = config.global_hotkeys.get(key) {
+            Some(global)
+        } else {
+            None
+        }
+    }
+
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
-        if let Some(hotkey) = config.hotkeys.get(&key) {
+        self.try_get_global_input_category_state(config);
+
+        if let Some(hotkey) = self.try_hotkey(&key, config) {
             let mut processed = false;
             let mut ret = InputResult::empty();
 
             match hotkey.behavior() {
                 HotkeyBehavior::Switch(category) => {
-                    if self.layout_ctx.input_category != category {
-                        self.layout_ctx.update_layout(category, config);
+                    if self.category() != category {
+                        self.set_input_category(category);
                         ret |= InputResult::LANGUAGE_CHANGED;
                         processed = true;
                     }
                 }
                 HotkeyBehavior::Toggle(left, right) => {
-                    let change = if self.layout_ctx.input_category == left {
+                    let change = if self.category() == left {
                         right
-                    } else if self.layout_ctx.input_category == right {
+                    } else if self.category() == right {
                         left
                     } else {
                         right
                     };
 
-                    self.layout_ctx.update_layout(change, config);
+                    self.set_input_category(change);
                     ret |= InputResult::LANGUAGE_CHANGED;
                     processed = true;
                 }
-                HotkeyBehavior::Emoji => {
-                    if self.os_ctx.emoji(&mut self.state).unwrap_or(false) {
-                        ret |= InputResult::NEED_RESET;
-                        processed = true;
-                    }
-                }
-                HotkeyBehavior::Hanja => {
-                    if self.os_ctx.hanja(&mut self.state).unwrap_or(false) {
-                        ret |= InputResult::NEED_RESET;
-                        processed = true;
-                    }
+                HotkeyBehavior::Mode(mode) => {
+                    processed = self.engine_impl.set_mode(mode, &mut self.commit_buf);
                 }
                 HotkeyBehavior::Commit => {
-                    if self
-                        .state
-                        .preedit_result()
-                        .contains(InputResult::HAS_PREEDIT)
-                    {
-                        self.state.clear_preedit();
-                        ret |= InputResult::NEED_RESET;
+                    if self.engine_impl.has_preedit() {
+                        self.engine_impl.clear_preedit(&mut self.commit_buf);
                         processed = true;
                     }
                 }
             }
 
             match (hotkey.result(), processed) {
-                (HotkeyResult::Bypass, _) | (HotkeyResult::ConsumeIfProcessed, false) => {
-                    ret |= self.bypass();
-                }
+                (HotkeyResult::Bypass, _) | (HotkeyResult::ConsumeIfProcessed, false) => {}
                 (HotkeyResult::Consume, _) | (HotkeyResult::ConsumeIfProcessed, true) => {
-                    ret |= InputResult::CONSUMED | self.state.preedit_result();
+                    ret |= InputResult::CONSUMED;
                 }
             }
+
+            ret |= self.current_result();
 
             ret
-        } else if key.code == KeyCode::Shift {
-            // Don't reset state
-            self.state.preedit_result()
         } else {
-            self.try_get_global_input_category_state(config);
+            let mut ret = InputResult::empty();
 
-            if key.code == KeyCode::Backspace {
-                self.state.backspace(&self.layout_ctx)
-            } else if let Some(v) = config.layouts[self.layout_ctx.input_category]
-                .keymap
-                .get(&key)
-            {
-                self.state.key(v, &self.layout_ctx)
-            } else {
-                self.bypass()
+            if self.engine_impl.press_key(key, &mut self.commit_buf) {
+                ret |= InputResult::CONSUMED;
             }
+
+            ret |= self.current_result();
+
+            ret
         }
     }
 
@@ -218,32 +158,176 @@ impl InputEngine {
     ) -> InputResult {
         match KeyCode::from_hardward_code(hardware_code) {
             Some(code) => self.press_key(Key::new(code, state), config),
-            None => self.bypass(),
+            None => self.current_result(),
         }
     }
 
     #[inline]
+    pub fn clear_commit(&mut self) {
+        self.commit_buf.clear();
+    }
+
+    #[inline]
     pub fn clear_preedit(&mut self) {
-        self.state.clear_preedit();
+        self.engine_impl.clear_preedit(&mut self.commit_buf);
+    }
+
+    #[inline]
+    pub fn remove_preedit(&mut self) {
+        self.engine_impl.reset();
     }
 
     #[inline]
     pub fn preedit_str(&mut self) -> &str {
-        self.state.preedit_str()
+        self.preedit_buf.clear();
+        self.engine_impl.preedit_str(&mut self.preedit_buf);
+        &self.preedit_buf
     }
 
     #[inline]
-    pub fn commit_str(&mut self) -> &str {
-        self.state.commit_str()
-    }
-
-    #[inline]
-    pub fn flush(&mut self) {
-        self.state.flush();
+    pub fn commit_str(&self) -> &str {
+        &self.commit_buf
     }
 
     #[inline]
     pub fn reset(&mut self) {
-        self.state.reset();
+        self.clear_commit();
+        self.remove_preedit();
+    }
+
+    fn current_result(&self) -> InputResult {
+        let mut ret = InputResult::empty();
+        if self.engine_impl.has_preedit() {
+            ret |= InputResult::HAS_PREEDIT;
+        }
+        if !self.commit_buf.is_empty() {
+            ret |= InputResult::HAS_COMMIT;
+        }
+        ret
+    }
+}
+
+struct EngineImpl {
+    category: InputCategory,
+    mode: Option<InputMode>,
+    latin_engine: LatinEngine,
+    hangul_engine: HangulEngine,
+    hanja_mode: HanjaMode,
+    math_mode: MathMode,
+    emoji_mode: EmojiMode,
+}
+
+impl EngineImpl {
+    pub fn new(config: &Config) -> Self {
+        Self {
+            category: config.default_category,
+            mode: None,
+            latin_engine: config.latin_engine.clone(),
+            hangul_engine: config.hangul_engine.clone(),
+            hanja_mode: HanjaMode::new(),
+            math_mode: config.math_mode.clone(),
+            emoji_mode: config.emoji_mode.clone(),
+        }
+    }
+
+    pub fn set_mode(&mut self, mode: InputMode, commit_buf: &mut String) -> bool {
+        match mode {
+            InputMode::Math | InputMode::Emoji => {
+                self.clear_preedit(commit_buf);
+                self.mode = Some(mode);
+                true
+            }
+            InputMode::Hanja => match self.category {
+                InputCategory::Hangul => {
+                    if self.hanja_mode.set_key(self.hangul_engine.get_hanja_char()) {
+                        self.hangul_engine.reset();
+                        self.mode = Some(InputMode::Hanja);
+                        true
+                    } else {
+                        false
+                    }
+                }
+                _ => false,
+            },
+        }
+    }
+}
+
+macro_rules! do_mode {
+    (@retarm $field:ident $self:expr, $func:ident($($arg:expr,)*)) => {
+        match $self.$field.$func($($arg,)*) {
+            InputEngineModeResult::Continue(ret) => {
+                return ret;
+            }
+            InputEngineModeResult::Exit => {
+                $self.mode = None;
+            }
+        }
+    };
+    (@ret $self:expr, $func:ident($($arg:expr,)*)) => {
+        match $self.mode {
+            Some(InputMode::Math) => {
+                do_mode!(@retarm math_mode $self, $func($($arg,)*));
+            }
+            Some(InputMode::Hanja) => {
+                do_mode!(@retarm hanja_mode $self, $func($($arg,)*));
+            }
+            Some(InputMode::Emoji) => {
+                do_mode!(@retarm emoji_mode $self, $func($($arg,)*));
+            }
+            None => {}
+        }
+    };
+    (@direct $self:expr, $func:ident($($arg:expr,)*)) => {
+        match $self.mode {
+            Some(InputMode::Hanja) => {
+                return $self.hanja_mode.$func($($arg,)*);
+            }
+            Some(InputMode::Math) => {
+                return $self.math_mode.$func($($arg,)*);
+            }
+            Some(InputMode::Emoji) => {
+                return $self.emoji_mode.$func($($arg,)*);
+            }
+            None => {}
+        }
+    };
+}
+
+macro_rules! do_engine {
+    ($self:expr, $func:ident($($arg:expr,)*)) => {
+        match $self.category {
+            InputCategory::Hangul => $self.hangul_engine.$func($($arg,)*),
+            InputCategory::Latin => $self.latin_engine.$func($($arg,)*),
+        }
+    };
+}
+
+macro_rules! connect {
+    (@$key:ident $self:expr, $func:ident($($arg:expr$(,)?)*)) => {{
+        do_mode!(@$key $self, $func($($arg,)*));
+        do_engine!($self, $func($($arg,)*))
+    }};
+}
+
+impl InputEngineBackend for EngineImpl {
+    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
+        connect!(@ret self, press_key(key, commit_buf))
+    }
+
+    fn clear_preedit(&mut self, commit_buf: &mut String) {
+        connect!(@ret self, clear_preedit(commit_buf));
+    }
+
+    fn reset(&mut self) {
+        connect!(@ret self, reset());
+    }
+
+    fn has_preedit(&self) -> bool {
+        connect!(@direct self, has_preedit())
+    }
+
+    fn preedit_str(&self, buf: &mut String) {
+        connect!(@direct self, preedit_str(buf));
     }
 }

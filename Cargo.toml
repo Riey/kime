@@ -1,15 +1,24 @@
 [workspace]
 members = [
-    "src/engine/core",
     "src/engine/capi",
+    "src/engine/core",
     "src/engine/cffi",
     "src/engine/dict",
+
+    "src/engine/backend",
+    "src/engine/backends/emoji",
+    "src/engine/backends/hangul",
+    "src/engine/backends/hanja",
+    "src/engine/backends/latin",
+    "src/engine/backends/math",
 
     "src/frontends/wayland",
     "src/frontends/xim",
 
     "src/tools/check",
+    "src/tools/indicator",
     "src/tools/log",
+    "src/tools/run_dir",
     "src/tools/version",
 ]
 

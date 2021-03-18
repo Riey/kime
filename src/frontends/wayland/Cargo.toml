@@ -8,7 +8,6 @@ license = "GPL-3.0"
 [dependencies]
 kime-engine-cffi = { path = "../../engine/cffi" }
 kime-version = { path = "../../tools/version" }
-kime-log = { path = "../../tools/log" }
 
 wayland-commons = "0.28.5"
 wayland-client = "0.28.5"
@@ -18,7 +17,6 @@ zwp-virtual-keyboard = "0.2.0"
 libc = "0.2.82"
 log = "0.4.13"
 pico-args = "0.4.0"
-simplelog = "0.9.0"
 mio = { version = "0.7.7", features = ["os-ext"] }
 mio-timerfd = "0.2.0"
 wayland-protocols = { version = "0.28.5", features = ["client", "unstable_protocols"] }

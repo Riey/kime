@@ -5,6 +5,8 @@
 ### Breaking
 
 * Include english layouts [#347](https://github.com/Riey/kime/issues/347)
+* Now change InputCategory clear preedit state
+* Let select hanja, emoji in preedit string
 
 ### Improve
 
@@ -14,6 +16,12 @@
 * Embed hanja dict
 * Support multiple archtectures
 * Hide desktop entries from DE menu and application launchers [#357](https://github.com/Riey/kime/pull/357)
+* Integrate kime-indicator again
+* Add `icon_color` config
+* Add dvorak layout
+* Replace `libappindicator` to `ksni`
+* Now InputEngine implementations are split several crates for support many InputCategories
+* Implement math backend
 
 ## 1.3.1
 

@@ -12,17 +12,17 @@ mod tests {
     fn test_parse_style() {
         use kime_engine_dict::math_symbol_key::*;
 
-        assert_eq!(crate::parse_style("sf"), STYLE_SF);
-        assert_eq!(crate::parse_style("bf"), STYLE_BF);
-        assert_eq!(crate::parse_style("it"), STYLE_IT);
-        assert_eq!(crate::parse_style("tt"), STYLE_TT);
-        assert_eq!(crate::parse_style("bb"), STYLE_BB);
-        assert_eq!(crate::parse_style("scr"), STYLE_SCR);
-        assert_eq!(crate::parse_style("cal"), STYLE_CAL);
-        assert_eq!(crate::parse_style("frak"), STYLE_FRAK);
-        assert_eq!(crate::parse_style("fruk"), STYLE_NONE);
-        assert_eq!(crate::parse_style("bfit"), STYLE_BF | STYLE_IT);
-        assert_eq!(crate::parse_style("bfsfit"), STYLE_SF | STYLE_BF | STYLE_IT);
+        assert_eq!(crate::parse_style("sf"), Style::SF);
+        assert_eq!(crate::parse_style("bf"), Style::BF);
+        assert_eq!(crate::parse_style("it"), Style::IT);
+        assert_eq!(crate::parse_style("tt"), Style::TT);
+        assert_eq!(crate::parse_style("bb"), Style::BB);
+        assert_eq!(crate::parse_style("scr"), Style::SCR);
+        assert_eq!(crate::parse_style("cal"), Style::CAL);
+        assert_eq!(crate::parse_style("frak"), Style::FRAK);
+        assert_eq!(crate::parse_style("fruk"), Style::NONE);
+        assert_eq!(crate::parse_style("bfit"), Style::BF | Style::IT);
+        assert_eq!(crate::parse_style("bfsfit"), Style::SF | Style::BF | Style::IT);
     }
 }
 
@@ -43,66 +43,39 @@ impl MathMode {
     }
 }
 
-fn take_str(s: &str, n: usize) -> &str {
-    if s.len() >= n {
-        &s[0..n]
-    } else {
-        s
-    }
-}
-
 fn parse_style(style_str: &str) -> Style {
     let mut buf: &str = style_str;
-    let mut style = STYLE_NONE;
+    let mut style = Style::NONE;
 
     loop {
-        let style_new = match take_str(buf, 2) {
-            "" => return style,
-            "sf" => {
-                buf = &buf[2..];
-                STYLE_SF
-            }
-            "bf" => {
-                buf = &buf[2..];
-                STYLE_BF
-            }
-            "it" => {
-                buf = &buf[2..];
-                STYLE_IT
-            }
-            "tt" => {
-                buf = &buf[2..];
-                STYLE_TT
-            }
-            "bb" => {
-                buf = &buf[2..];
-                STYLE_BB
-            }
-            "sc" => {
-                if let "r" = take_str(&buf[2..], 1) {
-                    buf = &buf[3..];
-                    STYLE_SCR
-                } else {
-                    return STYLE_NONE;
-                }
-            }
-            "ca" => {
-                if let "l" = take_str(&buf[2..], 1) {
-                    buf = &buf[3..];
-                    STYLE_CAL
-                } else {
-                    return STYLE_NONE;
-                }
-            }
-            "fr" => {
-                if let "ak" = take_str(&buf[2..], 2) {
-                    buf = &buf[4..];
-                    STYLE_FRAK
-                } else {
-                    return STYLE_NONE;
-                }
-            }
-            _ => return STYLE_NONE,
+        let style_new = if buf == "" {
+            return style;
+        } else if let Some(_buf) = buf.strip_prefix("sf") {
+            buf = _buf;
+            Style::SF
+        } else if let Some(_buf) = buf.strip_prefix("bf") {
+            buf = _buf;
+            Style::BF
+        } else if let Some(_buf) = buf.strip_prefix("it") {
+            buf = _buf;
+            Style::IT
+        } else if let Some(_buf) = buf.strip_prefix("tt") {
+            buf = _buf;
+            Style::TT
+        } else if let Some(_buf) = buf.strip_prefix("bb") {
+            buf = _buf;
+            Style::BB
+        } else if let Some(_buf) = buf.strip_prefix("scr") {
+            buf = _buf;
+            Style::SCR
+        } else if let Some(_buf) = buf.strip_prefix("cal") {
+            buf = _buf;
+            Style::CAL
+        } else if let Some(_buf) = buf.strip_prefix("frak") {
+            buf = _buf;
+            Style::FRAK
+        } else {
+            return Style::NONE;
         };
 
         style |= style_new;
@@ -153,7 +126,7 @@ impl InputEngineMode for MathMode {
                     commit_buf.push_str(symbol);
                 }
             } else {
-                if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&first, STYLE_NONE) {
+                if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&first, Style::NONE) {
                     commit_buf.push_str(symbol);
                 }
             }

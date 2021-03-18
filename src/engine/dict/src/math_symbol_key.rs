@@ -16,15 +16,17 @@ impl BitOrAssign for Style {
     }
 }
 
-pub const STYLE_NONE: Style = Style(0);
-pub const STYLE_SF: Style = Style(1);
-pub const STYLE_BF: Style = Style(2);
-pub const STYLE_IT: Style = Style(4);
-pub const STYLE_TT: Style = Style(8);
-pub const STYLE_BB: Style = Style(16);
-pub const STYLE_SCR: Style = Style(32);
-pub const STYLE_CAL: Style = Style(64);
-pub const STYLE_FRAK: Style = Style(128);
+impl Style {
+    pub const NONE: Style = Style(0);
+    pub const SF: Style = Style(1<<0);
+    pub const BF: Style = Style(1<<1);
+    pub const IT: Style = Style(1<<2);
+    pub const TT: Style = Style(1<<3);
+    pub const BB: Style = Style(1<<4);
+    pub const SCR: Style = Style(1<<5);
+    pub const CAL: Style = Style(1<<6);
+    pub const FRAK: Style = Style(1<<7);
+}
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct SymbolKey<'a>(pub &'a str, pub Style);

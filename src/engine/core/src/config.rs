@@ -102,7 +102,6 @@ impl Default for RawConfig {
             icon_color: IconColor::default(),
             global_hotkeys: btreemap! {
                 Key::normal(KeyCode::Esc) => Hotkey::new(HotkeyBehavior::Switch(InputCategory::Latin), HotkeyResult::Bypass),
-                Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                 Key::normal(KeyCode::AltR) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::normal(KeyCode::Hangul) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::super_(KeyCode::Space) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
@@ -117,18 +116,24 @@ impl Default for RawConfig {
                     Key::normal(KeyCode::ControlR) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
                     Key::normal(KeyCode::Space) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
+                    Key::normal(KeyCode::Left) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
+                    Key::normal(KeyCode::Right) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
+                    Key::normal(KeyCode::Up) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
+                    Key::normal(KeyCode::Down) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
                 },
             },
             mode_hotkeys: btreemap! {
                 InputMode::Hanja => btreemap! {
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
-                    Key::normal(KeyCode::Space) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
+                    Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                 },
                 InputMode::Emoji => btreemap! {
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
+                    Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                 },
                 InputMode::Math => btreemap! {
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
+                    Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                     Key::normal(KeyCode::Space) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
                 },
             },

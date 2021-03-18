@@ -52,17 +52,19 @@ impl<'de> Deserialize<'de> for Style {
         let styles: Vec<&str> = Deserialize::deserialize(deserializer)?;
         let style = styles
             .into_iter()
-            .map(|s| Ok(match s {
-                "sf" => STYLE_SF,
-                "bf" => STYLE_BF,
-                "it" => STYLE_IT,
-                "tt" => STYLE_TT,
-                "bb" => STYLE_BB,
-                "scr" => STYLE_SCR,
-                "cal" => STYLE_CAL,
-                "frak" => STYLE_FRAK,
-                _ => return Err(Error::custom("no matching style name")),
-            }))
+            .map(|s| {
+                Ok(match s {
+                    "sf" => STYLE_SF,
+                    "bf" => STYLE_BF,
+                    "it" => STYLE_IT,
+                    "tt" => STYLE_TT,
+                    "bb" => STYLE_BB,
+                    "scr" => STYLE_SCR,
+                    "cal" => STYLE_CAL,
+                    "frak" => STYLE_FRAK,
+                    _ => return Err(Error::custom("no matching style name")),
+                })
+            })
             .fold(Ok(STYLE_NONE), |sty1, sty2| Ok(sty1? | sty2?));
         style
     }
@@ -189,13 +191,13 @@ fn main() {
 
     let symbol_map_data = include_str!("data/symbol_map.json");
     let symbol_map_data: Vec<KeySymPair> = serde_json::from_str(symbol_map_data).unwrap();
-    let mut symbol_map: Vec<(SymbolKey,&str)> = Vec::new();
+    let mut symbol_map: Vec<(SymbolKey, &str)> = Vec::new();
     for key_sym_pair in &symbol_map_data {
         let keyword = &key_sym_pair.keyword;
         for sty_sym_pair in &key_sym_pair.symbols {
             let style = sty_sym_pair.style;
             let symbol = sty_sym_pair.symbol;
-            symbol_map.push((SymbolKey(keyword,style), symbol));
+            symbol_map.push((SymbolKey(keyword, style), symbol));
         }
     }
     symbol_map.sort_unstable_by_key(|pair| pair.0);

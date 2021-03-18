@@ -54,3 +54,13 @@ fn backspace() {
         (Key::normal(Backspace), "", ""),
     ])
 }
+
+// issue #379
+#[test]
+fn esc() {
+    test_input(&[
+        (MATH, "", ""),
+        (Key::normal(Esc), "", "PASS"),
+        (Key::normal(Backslash), "", "\\"),
+    ]);
+}

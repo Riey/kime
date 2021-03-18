@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Let Esc exit math mode [#379](https://github.com/Riey/kime/issues/379)
+
 ## 2.0.1
 
 ### Improve

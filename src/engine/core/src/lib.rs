@@ -91,10 +91,10 @@ impl InputEngine {
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         self.try_get_global_input_category_state(config);
 
+        let mut ret = InputResult::empty();
+
         if let Some(hotkey) = self.try_hotkey(&key, config) {
             let mut processed = false;
-            let mut ret = InputResult::empty();
-
             match hotkey.behavior() {
                 HotkeyBehavior::Switch(category) => {
                     if self.category() != category {
@@ -133,21 +133,13 @@ impl InputEngine {
                     ret |= InputResult::CONSUMED;
                 }
             }
-
-            ret |= self.current_result();
-
-            ret
-        } else {
-            let mut ret = InputResult::empty();
-
-            if self.engine_impl.press_key(key, &mut self.commit_buf) {
-                ret |= InputResult::CONSUMED;
-            }
-
-            ret |= self.current_result();
-
-            ret
+        } else if self.engine_impl.press_key(key, &mut self.commit_buf) {
+            ret |= InputResult::CONSUMED;
         }
+
+        ret |= self.current_result();
+
+        ret
     }
 
     pub fn press_key_code(

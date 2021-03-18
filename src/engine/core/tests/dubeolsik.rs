@@ -52,6 +52,15 @@ fn esc() {
     ]);
 }
 
+// issue #373
+#[test]
+fn arrow() {
+    test_input(&[
+        (Key::normal(R), "ㄱ", ""),
+        (Key::normal(Left), "", "ㄱPASS"),
+    ]);
+}
+
 #[test]
 fn next_jaum() {
     test_input(&[

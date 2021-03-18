@@ -54,18 +54,18 @@ impl<'de> Deserialize<'de> for Style {
             .into_iter()
             .map(|s| {
                 Ok(match s {
-                    "sf" => STYLE_SF,
-                    "bf" => STYLE_BF,
-                    "it" => STYLE_IT,
-                    "tt" => STYLE_TT,
-                    "bb" => STYLE_BB,
-                    "scr" => STYLE_SCR,
-                    "cal" => STYLE_CAL,
-                    "frak" => STYLE_FRAK,
+                    "sf" => Style::SF,
+                    "bf" => Style::BF,
+                    "it" => Style::IT,
+                    "tt" => Style::TT,
+                    "bb" => Style::BB,
+                    "scr" => Style::SCR,
+                    "cal" => Style::CAL,
+                    "frak" => Style::FRAK,
                     _ => return Err(Error::custom("no matching style name")),
                 })
             })
-            .fold(Ok(STYLE_NONE), |sty1, sty2| Ok(sty1? | sty2?));
+            .fold(Ok(Style::NONE), |sty1, sty2| Ok(sty1? | sty2?));
         style
     }
 }

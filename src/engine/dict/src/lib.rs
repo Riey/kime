@@ -18,20 +18,20 @@ mod tests {
         use crate::lookup_math_symbol;
         use crate::math_symbol_key::*;
 
-        assert_eq!(lookup_math_symbol("alpha", STYLE_NONE), Some("α"));
-        assert_eq!(lookup_math_symbol("alpha", STYLE_BF), Some("𝛂"));
-        assert_eq!(lookup_math_symbol("alpha", STYLE_IT), Some("𝛼"));
-        assert_eq!(lookup_math_symbol("alpha", STYLE_BF | STYLE_IT), Some("𝜶"));
+        assert_eq!(lookup_math_symbol("alpha", Style::NONE), Some("α"));
+        assert_eq!(lookup_math_symbol("alpha", Style::BF), Some("𝛂"));
+        assert_eq!(lookup_math_symbol("alpha", Style::IT), Some("𝛼"));
+        assert_eq!(lookup_math_symbol("alpha", Style::BF | Style::IT), Some("𝜶"));
 
         assert_eq!(
-            lookup_math_symbol("R", STYLE_SF | STYLE_BF | STYLE_IT),
+            lookup_math_symbol("R", Style::SF | Style::BF | Style::IT),
             Some("𝙍")
         );
-        assert_eq!(lookup_math_symbol("R", STYLE_TT), Some("𝚁"));
-        assert_eq!(lookup_math_symbol("R", STYLE_BB), Some("ℝ"));
-        assert_eq!(lookup_math_symbol("R", STYLE_SCR), Some("ℛ"));
-        assert_eq!(lookup_math_symbol("R", STYLE_CAL), Some("𝓡"));
-        assert_eq!(lookup_math_symbol("R", STYLE_FRAK), Some("ℜ"));
+        assert_eq!(lookup_math_symbol("R", Style::TT), Some("𝚁"));
+        assert_eq!(lookup_math_symbol("R", Style::BB), Some("ℝ"));
+        assert_eq!(lookup_math_symbol("R", Style::SCR), Some("ℛ"));
+        assert_eq!(lookup_math_symbol("R", Style::CAL), Some("𝓡"));
+        assert_eq!(lookup_math_symbol("R", Style::FRAK), Some("ℜ"));
     }
 
     #[test]

@@ -21,7 +21,10 @@ mod tests {
         assert_eq!(lookup_math_symbol("alpha", Style::NONE), Some("α"));
         assert_eq!(lookup_math_symbol("alpha", Style::BF), Some("𝛂"));
         assert_eq!(lookup_math_symbol("alpha", Style::IT), Some("𝛼"));
-        assert_eq!(lookup_math_symbol("alpha", Style::BF | Style::IT), Some("𝜶"));
+        assert_eq!(
+            lookup_math_symbol("alpha", Style::BF | Style::IT),
+            Some("𝜶")
+        );
 
         assert_eq!(
             lookup_math_symbol("R", Style::SF | Style::BF | Style::IT),

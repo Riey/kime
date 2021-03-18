@@ -97,7 +97,7 @@ impl InputEngine {
             let mut processed = false;
             match hotkey.behavior() {
                 HotkeyBehavior::Switch(category) => {
-                    if self.category() != category {
+                    if self.category() != category || self.engine_impl.mode.is_some() {
                         self.set_input_category(category);
                         ret |= InputResult::LANGUAGE_CHANGED;
                         processed = true;

@@ -22,7 +22,10 @@ mod tests {
         assert_eq!(crate::parse_style("frak"), Style::FRAK);
         assert_eq!(crate::parse_style("fruk"), Style::NONE);
         assert_eq!(crate::parse_style("bfit"), Style::BF | Style::IT);
-        assert_eq!(crate::parse_style("bfsfit"), Style::SF | Style::BF | Style::IT);
+        assert_eq!(
+            crate::parse_style("bfsfit"),
+            Style::SF | Style::BF | Style::IT
+        );
     }
 }
 

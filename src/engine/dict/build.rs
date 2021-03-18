@@ -1,9 +1,9 @@
 #[path = "src/math_symbol_key.rs"]
 mod math_symbol_key;
 
-use math_symbol_key::*;
 use itertools::Itertools;
-use serde::{Deserialize,Deserializer};
+use math_symbol_key::*;
+use serde::{Deserialize, Deserializer};
 use std::{
     collections::BTreeMap,
     env,
@@ -202,7 +202,12 @@ fn main() {
     }
     symbol_map.sort_unstable_by_key(|pair| pair.0);
 
-    writeln!(out, "pub static MATH_SYMBOL_ENTRIES: &[(SymbolKey, &str)] = &{:?};", symbol_map).unwrap();
+    writeln!(
+        out,
+        "pub static MATH_SYMBOL_ENTRIES: &[(SymbolKey, &str)] = &{:?};",
+        symbol_map
+        )
+        .unwrap();
 
     writeln!(out, "#[derive(Clone, Copy, Debug)] pub struct UnicodeAnnotation {{ pub codepoint: &'static str, pub tts: &'static str, }}").unwrap();
     writeln!(

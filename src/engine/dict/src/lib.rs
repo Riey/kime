@@ -23,7 +23,10 @@ mod tests {
         assert_eq!(lookup_math_symbol("alpha", STYLE_IT), Some("𝛼"));
         assert_eq!(lookup_math_symbol("alpha", STYLE_BF | STYLE_IT), Some("𝜶"));
 
-        assert_eq!(lookup_math_symbol("R", STYLE_SF | STYLE_BF | STYLE_IT), Some("𝙍"));
+        assert_eq!(
+            lookup_math_symbol("R", STYLE_SF | STYLE_BF | STYLE_IT),
+            Some("𝙍")
+        );
         assert_eq!(lookup_math_symbol("R", STYLE_TT), Some("𝚁"));
         assert_eq!(lookup_math_symbol("R", STYLE_BB), Some("ℝ"));
         assert_eq!(lookup_math_symbol("R", STYLE_SCR), Some("ℛ"));

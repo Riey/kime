@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Add font style specifier for math symbols
+
 ## 2.0.1
 
 ### Improve

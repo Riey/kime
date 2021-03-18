@@ -4,8 +4,6 @@ mod dict {
 }
 
 pub use dict::UnicodeAnnotation;
-use math_symbol_key::*;
-use math_symbol_key::*;
 
 #[cfg(test)]
 mod tests {

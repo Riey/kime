@@ -1,6 +1,6 @@
 use std::ops::{BitOr, BitOrAssign};
 
-#[derive(Debug,PartialEq,Eq,PartialOrd,Ord,Clone,Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct Style(pub u8);
 
 impl BitOr for Style {
@@ -26,5 +26,5 @@ pub const STYLE_SCR: Style = Style(32);
 pub const STYLE_CAL: Style = Style(64);
 pub const STYLE_FRAK: Style = Style(128);
 
-#[derive(Debug,PartialEq,Eq,PartialOrd,Ord,Clone,Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct SymbolKey<'a>(pub &'a str, pub Style);

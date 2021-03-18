@@ -3,8 +3,8 @@ mod dict {
     include!(concat!(env!("OUT_DIR"), "/dict.rs"));
 }
 
-use math_symbol_key::*;
 pub use dict::UnicodeAnnotation;
+use math_symbol_key::*;
 
 #[cfg(test)]
 mod tests {
@@ -15,18 +15,20 @@ mod tests {
 
     #[test]
     fn math_symbols() {
+        use crate::lookup_math_symbol;
         use crate::math_symbol_key::*;
-        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_NONE), Some("α"));
-        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_BF),   Some("𝛂"));
-        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_IT),   Some("𝛼"));
-        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_BF | STYLE_IT),   Some("𝜶"));
 
-        assert_eq!(crate::lookup_math_symbol("R", STYLE_SF | STYLE_BF | STYLE_IT), Some("𝙍"));
-        assert_eq!(crate::lookup_math_symbol("R", STYLE_TT), Some("𝚁"));
-        assert_eq!(crate::lookup_math_symbol("R", STYLE_BB), Some("ℝ"));
-        assert_eq!(crate::lookup_math_symbol("R", STYLE_SCR), Some("ℛ"));
-        assert_eq!(crate::lookup_math_symbol("R", STYLE_CAL), Some("𝓡"));
-        assert_eq!(crate::lookup_math_symbol("R", STYLE_FRAK), Some("ℜ"));
+        assert_eq!(lookup_math_symbol("alpha", STYLE_NONE), Some("α"));
+        assert_eq!(lookup_math_symbol("alpha", STYLE_BF), Some("𝛂"));
+        assert_eq!(lookup_math_symbol("alpha", STYLE_IT), Some("𝛼"));
+        assert_eq!(lookup_math_symbol("alpha", STYLE_BF | STYLE_IT), Some("𝜶"));
+
+        assert_eq!(lookup_math_symbol("R", STYLE_SF | STYLE_BF | STYLE_IT), Some("𝙍"));
+        assert_eq!(lookup_math_symbol("R", STYLE_TT), Some("𝚁"));
+        assert_eq!(lookup_math_symbol("R", STYLE_BB), Some("ℝ"));
+        assert_eq!(lookup_math_symbol("R", STYLE_SCR), Some("ℛ"));
+        assert_eq!(lookup_math_symbol("R", STYLE_CAL), Some("𝓡"));
+        assert_eq!(lookup_math_symbol("R", STYLE_FRAK), Some("ℜ"));
     }
 
     #[test]
@@ -49,7 +51,7 @@ pub fn lookup(hangul: char) -> Option<&'static [(char, &'static str)]> {
 }
 
 pub fn lookup_math_symbol(keyword: &str, style: Style) -> Option<&'static str> {
-    let key = SymbolKey(keyword,style);
+    let key = SymbolKey(keyword, style);
     crate::dict::MATH_SYMBOL_ENTRIES
         .binary_search_by_key(&key, |(k, _)| *k)
         .ok()

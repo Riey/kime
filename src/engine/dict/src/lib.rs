@@ -1,7 +1,9 @@
+pub mod math_symbol_key;
 mod dict {
     include!(concat!(env!("OUT_DIR"), "/dict.rs"));
 }
 
+use math_symbol_key::*;
 pub use dict::UnicodeAnnotation;
 
 #[cfg(test)]
@@ -12,8 +14,19 @@ mod tests {
     }
 
     #[test]
-    fn symbol_alpha() {
-        assert_eq!(crate::lookup_math_symbol("alpha"), Some("α"));
+    fn math_symbols() {
+        use crate::math_symbol_key::*;
+        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_NONE), Some("α"));
+        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_BF),   Some("𝛂"));
+        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_IT),   Some("𝛼"));
+        assert_eq!(crate::lookup_math_symbol("alpha", STYLE_BF | STYLE_IT),   Some("𝜶"));
+
+        assert_eq!(crate::lookup_math_symbol("R", STYLE_SF | STYLE_BF | STYLE_IT), Some("𝙍"));
+        assert_eq!(crate::lookup_math_symbol("R", STYLE_TT), Some("𝚁"));
+        assert_eq!(crate::lookup_math_symbol("R", STYLE_BB), Some("ℝ"));
+        assert_eq!(crate::lookup_math_symbol("R", STYLE_SCR), Some("ℛ"));
+        assert_eq!(crate::lookup_math_symbol("R", STYLE_CAL), Some("𝓡"));
+        assert_eq!(crate::lookup_math_symbol("R", STYLE_FRAK), Some("ℜ"));
     }
 
     #[test]
@@ -35,9 +48,10 @@ pub fn lookup(hangul: char) -> Option<&'static [(char, &'static str)]> {
         .map(|idx| crate::dict::HANJA_ENTRIES[idx].1)
 }
 
-pub fn lookup_math_symbol(keyword: &str) -> Option<&'static str> {
+pub fn lookup_math_symbol(keyword: &str, style: Style) -> Option<&'static str> {
+    let key = SymbolKey(keyword,style);
     crate::dict::MATH_SYMBOL_ENTRIES
-        .binary_search_by_key(&keyword, |(k, _)| *k)
+        .binary_search_by_key(&key, |(k, _)| *k)
         .ok()
         .map(|idx| crate::dict::MATH_SYMBOL_ENTRIES[idx].1)
 }

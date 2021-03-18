@@ -4,6 +4,7 @@ use kime_engine_backend::{
     Key, KeyCode,
 };
 use kime_engine_backend_latin::{load_layout, LatinConfig};
+use kime_engine_dict::math_symbol_key::*;
 
 #[derive(Clone)]
 pub struct MathMode {
@@ -58,7 +59,7 @@ impl InputEngineMode for MathMode {
     }
 
     fn clear_preedit(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
-        if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&self.buf) {
+        if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&self.buf, STYLE_NONE) {
             commit_buf.push_str(symbol);
         }
         self.buf.clear();

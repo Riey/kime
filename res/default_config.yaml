@@ -21,9 +21,6 @@ global_hotkeys:
     behavior:
       Switch: Latin
     result: Bypass
-  Tab:
-    behavior: Commit
-    result: ConsumeIfProcessed
   Muhenkan:
     behavior:
       Toggle:
@@ -50,14 +47,35 @@ category_hotkeys:
     Enter:
       behavior: Commit
       result: Bypass
+    Tab:
+      behavior: Commit
+      result: Bypass
+    ControlL:
+      behavior: Commit
+      result: Bypass
     ControlR:
       behavior:
         Mode: Hanja
       result: Consume
+    AltL:
+      behavior: Commit
+      result: Bypass
     HangulHanja:
       behavior:
         Mode: Hanja
       result: Consume
+    Left:
+      behavior: Commit
+      result: Bypass
+    Right:
+      behavior: Commit
+      result: Bypass
+    Up:
+      behavior: Commit
+      result: Bypass
+    Down:
+      behavior: Commit
+      result: Bypass
     F9:
       behavior:
         Mode: Hanja
@@ -70,15 +88,21 @@ mode_hotkeys:
     Enter:
       behavior: Commit
       result: ConsumeIfProcessed
-  Hanja:
-    Space:
+    Tab:
       behavior: Commit
-      result: Bypass
+      result: ConsumeIfProcessed
+  Hanja:
     Enter:
+      behavior: Commit
+      result: ConsumeIfProcessed
+    Tab:
       behavior: Commit
       result: ConsumeIfProcessed
   Emoji:
     Enter:
+      behavior: Commit
+      result: ConsumeIfProcessed
+    Tab:
       behavior: Commit
       result: ConsumeIfProcessed
 xim_preedit_font:

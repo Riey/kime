@@ -1,4 +1,4 @@
-use std::ops::BitOr;
+use std::ops::{BitOr, BitOrAssign};
 
 #[derive(Debug,PartialEq,Eq,PartialOrd,Ord,Clone,Copy)]
 pub struct Style(pub u8);
@@ -7,6 +7,12 @@ impl BitOr for Style {
     type Output = Style;
     fn bitor(self, rhs: Style) -> Style {
         Style(self.0 | rhs.0)
+    }
+}
+
+impl BitOrAssign for Style {
+    fn bitor_assign(&mut self, rhs: Style) {
+        *self = *self | rhs;
     }
 }
 

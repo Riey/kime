@@ -206,8 +206,8 @@ fn main() {
         out,
         "pub static MATH_SYMBOL_ENTRIES: &[(SymbolKey, &str)] = &{:?};",
         symbol_map
-        )
-        .unwrap();
+    )
+    .unwrap();
 
     writeln!(out, "#[derive(Clone, Copy, Debug)] pub struct UnicodeAnnotation {{ pub codepoint: &'static str, pub tts: &'static str, }}").unwrap();
     writeln!(

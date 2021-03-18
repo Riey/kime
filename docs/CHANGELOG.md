@@ -7,6 +7,7 @@
 ### Improve
 
 * Let Esc exit math mode [#379](https://github.com/Riey/kime/issues/379)
+* Add font style specifier for math symbols
 
 ## 2.0.1
 

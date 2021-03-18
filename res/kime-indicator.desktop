@@ -1,0 +1,10 @@
+[Desktop Entry]
+Exec=/usr/bin/kime-indicator
+Name=kime indicator server
+Name[ko]=kime indicator 서버
+Comment=Start kime indicator server
+Type=Application
+Terminal=false
+StartupNotify=true
+NoDisplay=true
+Icon=kime-han-black

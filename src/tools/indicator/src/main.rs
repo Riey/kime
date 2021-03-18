@@ -49,7 +49,7 @@ impl ksni::Tray for KimeTray {
 impl KimeTray {
     pub fn new() -> Self {
         Self {
-            icon_name: "kime-eng-black",
+            icon_name: "kime-latin-black",
         }
     }
     pub fn update_with_bytes(&mut self, bytes: &[u8]) {
@@ -75,12 +75,12 @@ impl KimeTray {
 
         self.icon_name = match category {
             InputCategory::Latin => match color {
-                IconColor::Black => "kime-eng-black",
-                IconColor::White => "kime-eng-white",
+                IconColor::Black => "kime-latin-black",
+                IconColor::White => "kime-latin-white",
             },
             InputCategory::Hangul => match color {
-                IconColor::Black => "kime-han-black",
-                IconColor::White => "kime-han-white",
+                IconColor::Black => "kime-hangul-black",
+                IconColor::White => "kime-hangul-white",
             },
         }
     }
@@ -91,7 +91,7 @@ fn indicator_server(file_path: &Path) -> Result<()> {
     let handle = service.handle();
     service.spawn();
 
-    std::fs::remove_file(file_path)?;
+    std::fs::remove_file(file_path).ok();
 
     let listener = UnixListener::bind(file_path)?;
 

@@ -1,5 +1,9 @@
 if [ "$IM_CONFIG_PHASE" = 2 ]; then
+    # terminate previous processes
+    killall kime-xim || true
+    killall kime-indicator || true
     kime-xim &
+    kime-indicator &
 fi
 
 if [ "$IM_CONFIG_PHASE" = 1 ]; then

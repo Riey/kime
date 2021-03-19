@@ -66,6 +66,7 @@ impl Check {
     pub fn cond(self) -> CondResult {
         match self {
             Check::ApiVersion => {
+                println!("KIME_API_VERSION: {}", kime_engine_cffi::KIME_API_VERSION);
                 if kime_engine_cffi::check_api_version() {
                     CondResult::Ok
                 } else {

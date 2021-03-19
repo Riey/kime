@@ -13,7 +13,7 @@ extern "C" {}
 pub use ffi::{
     InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
     InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, ModifierState, ModifierState_ALT,
-    ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
+    ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER, KIME_API_VERSION,
 };
 
 pub fn check_api_version() -> bool {

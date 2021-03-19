@@ -1,7 +1,7 @@
 use anyhow::Result;
 use ksni::menu::*;
 use std::net::Shutdown;
-use std::os::unix::net::UnixListener;
+use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
 use std::{
     io::{Read, Write},
@@ -86,12 +86,25 @@ impl KimeTray {
     }
 }
 
+const EXIT_MESSAGE: &[u8; 2] = b"ZZ";
+
+fn try_terminate_previous_server(file_path: &Path) -> Result<()> {
+    let mut client = UnixStream::connect(file_path)?;
+
+    client.write_all(EXIT_MESSAGE)?;
+
+    Ok(())
+}
+
 fn indicator_server(file_path: &Path) -> Result<()> {
     let service = ksni::TrayService::new(KimeTray::new());
     let handle = service.handle();
     service.spawn();
 
-    std::fs::remove_file(file_path).ok();
+    if file_path.exists() {
+        try_terminate_previous_server(file_path).ok();
+        std::fs::remove_file(file_path).ok();
+    }
 
     let listener = UnixListener::bind(file_path)?;
 
@@ -106,6 +119,11 @@ fn indicator_server(file_path: &Path) -> Result<()> {
         client.shutdown(Shutdown::Write).ok();
         match client.read_exact(&mut read_buf) {
             Ok(_) => {
+                if &read_buf == EXIT_MESSAGE {
+                    log::info!("Receive exit message");
+                    return Ok(());
+                }
+
                 current_bytes = read_buf;
 
                 handle.update(|tray| {

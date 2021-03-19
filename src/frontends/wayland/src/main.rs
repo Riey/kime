@@ -198,8 +198,8 @@ impl KimeContext {
                 self.pending_state.deactivate = true;
             }
             ImEvent::Unavailable => {
-                self.vk.destroy();
-                self.im.destroy();
+                log::error!("Receive Unavailable event is another server already running?");
+                panic!("Unavailable")
             }
             ImEvent::Done => {
                 if !self.current_state.activate && self.pending_state.activate {

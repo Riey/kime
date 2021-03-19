@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.1.1
+
+### Improve
+
 * Add more math symbol data [#385](https://github.com/Riey/kime/issues/385)
 * Terminate previous servers in deb [#387](https://github.com/Riey/kime/issues/387)
 * kime-indicator terminate previous process

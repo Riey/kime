@@ -21,12 +21,9 @@ global_hotkeys:
     behavior:
       Switch: Latin
     result: Bypass
-  Delete:
-    behavior: Commit
-    result: Bypass
-  Insert:
-    behavior: Commit
-    result: Bypass
+  Shift:
+    behavior: Ignore
+    result: Consume
   Muhenkan:
     behavior:
       Toggle:
@@ -47,50 +44,20 @@ global_hotkeys:
     result: Consume
 category_hotkeys:
   Hangul:
-    Space:
-      behavior: Commit
-      result: Bypass
-    Enter:
-      behavior: Commit
-      result: Bypass
-    Tab:
-      behavior: Commit
-      result: Bypass
-    ControlL:
-      behavior: Commit
-      result: Bypass
     ControlR:
       behavior:
         Mode: Hanja
       result: Consume
-    AltL:
-      behavior: Commit
-      result: Bypass
     HangulHanja:
       behavior:
         Mode: Hanja
       result: Consume
-    Left:
-      behavior: Commit
-      result: Bypass
-    Right:
-      behavior: Commit
-      result: Bypass
-    Up:
-      behavior: Commit
-      result: Bypass
-    Down:
-      behavior: Commit
-      result: Bypass
     F9:
       behavior:
         Mode: Hanja
       result: ConsumeIfProcessed
 mode_hotkeys:
   Math:
-    Space:
-      behavior: Commit
-      result: Bypass
     Enter:
       behavior: Commit
       result: ConsumeIfProcessed

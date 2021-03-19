@@ -32,6 +32,7 @@ pub enum HotkeyBehavior {
     Toggle(InputCategory, InputCategory),
     Mode(InputMode),
     Commit,
+    Ignore,
 }
 
 impl HotkeyBehavior {
@@ -106,8 +107,7 @@ impl Default for RawConfig {
                 Key::normal(KeyCode::Hangul) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::super_(KeyCode::Space) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::normal(KeyCode::Muhenkan) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
-                Key::normal(KeyCode::Delete) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                Key::normal(KeyCode::Insert) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
+                Key::normal(KeyCode::Shift) => Hotkey::new(HotkeyBehavior::Ignore, HotkeyResult::Consume),
                 Key::new(KeyCode::E, ModifierState::CONTROL | ModifierState::ALT) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Emoji), HotkeyResult::ConsumeIfProcessed),
                 Key::new(KeyCode::Backslash, ModifierState::CONTROL | ModifierState::ALT) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Math), HotkeyResult::ConsumeIfProcessed),
             },
@@ -116,15 +116,6 @@ impl Default for RawConfig {
                     Key::normal(KeyCode::F9) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::ConsumeIfProcessed),
                     Key::normal(KeyCode::HangulHanja) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
                     Key::normal(KeyCode::ControlR) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Hanja), HotkeyResult::Consume),
-                    Key::normal(KeyCode::AltL) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::ControlL) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::Space) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::Left) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::Right) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::Up) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
-                    Key::normal(KeyCode::Down) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
                 },
             },
             mode_hotkeys: btreemap! {
@@ -139,7 +130,6 @@ impl Default for RawConfig {
                 InputMode::Math => btreemap! {
                     Key::normal(KeyCode::Enter) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                     Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
-                    Key::normal(KeyCode::Space) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
                 },
             },
             xim_preedit_font: ("D2Coding".to_string(), 15.0),

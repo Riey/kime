@@ -75,13 +75,9 @@ Enable specific mode
 
 End current preedit state then commit
 
-##### Emoji
+##### Ignore
 
-Input emoji with kime-window
-
-##### Hanja
-
-Input hanja with kime-window
+Do nothing
 
 #### result
 
@@ -115,7 +111,7 @@ Set latin layout
 | default |`Qwerty`|
 |---------|--------|
 
-### 가능한 자판들
+### embeded layouts
 
 * `Qwerty`
 * `Dvorak`

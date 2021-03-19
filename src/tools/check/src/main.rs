@@ -73,17 +73,17 @@ impl Check {
                 }
             }
             Check::Icons => {
-                let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
+                let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
 
                 let icons = &[
-                    "kime-han-black-64x64.png",
-                    "kime-han-white-64x64.png",
-                    "kime-eng-black-64x64.png",
-                    "kime-eng-white-64x64.png",
+                    "kime-hangul-black.png",
+                    "kime-hangul-white.png",
+                    "kime-latin-black.png",
+                    "kime-latin-white.png",
                 ];
 
                 for icon in icons {
-                    match dirs.find_data_file(format!("icons/{}", icon)) {
+                    match dirs.find_data_file(format!("icons/hicolor/64x64/apps/{}", icon)) {
                         Some(path) => println!("Found icon: {}", path.display()),
                         _ => return CondResult::Fail(format!("Can't find icon {}", icon)),
                     }

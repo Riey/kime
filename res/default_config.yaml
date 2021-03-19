@@ -21,6 +21,12 @@ global_hotkeys:
     behavior:
       Switch: Latin
     result: Bypass
+  Delete:
+    behavior: Commit
+    result: Bypass
+  Insert:
+    behavior: Commit
+    result: Bypass
   Muhenkan:
     behavior:
       Toggle:

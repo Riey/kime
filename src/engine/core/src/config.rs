@@ -106,6 +106,8 @@ impl Default for RawConfig {
                 Key::normal(KeyCode::Hangul) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::super_(KeyCode::Space) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
                 Key::normal(KeyCode::Muhenkan) => Hotkey::new(HotkeyBehavior::toggle_hangul_latin(), HotkeyResult::Consume),
+                Key::normal(KeyCode::Delete) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
+                Key::normal(KeyCode::Insert) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::Bypass),
                 Key::new(KeyCode::E, ModifierState::CONTROL | ModifierState::ALT) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Emoji), HotkeyResult::ConsumeIfProcessed),
                 Key::new(KeyCode::Backslash, ModifierState::CONTROL | ModifierState::ALT) => Hotkey::new(HotkeyBehavior::Mode(InputMode::Math), HotkeyResult::ConsumeIfProcessed),
             },

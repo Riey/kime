@@ -4,6 +4,30 @@ use kime_engine_backend::{
     Key, KeyCode,
 };
 use kime_engine_backend_latin::{load_layout, LatinConfig};
+use kime_engine_dict::math_symbol_key::*;
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_parse_style() {
+        use kime_engine_dict::math_symbol_key::*;
+
+        assert_eq!(crate::parse_style("sf"), Style::SF);
+        assert_eq!(crate::parse_style("bf"), Style::BF);
+        assert_eq!(crate::parse_style("it"), Style::IT);
+        assert_eq!(crate::parse_style("tt"), Style::TT);
+        assert_eq!(crate::parse_style("bb"), Style::BB);
+        assert_eq!(crate::parse_style("scr"), Style::SCR);
+        assert_eq!(crate::parse_style("cal"), Style::CAL);
+        assert_eq!(crate::parse_style("frak"), Style::FRAK);
+        assert_eq!(crate::parse_style("fruk"), Style::NONE);
+        assert_eq!(crate::parse_style("bfit"), Style::BF | Style::IT);
+        assert_eq!(
+            crate::parse_style("bfsfit"),
+            Style::SF | Style::BF | Style::IT
+        );
+    }
+}
 
 #[derive(Clone)]
 pub struct MathMode {
@@ -19,6 +43,45 @@ impl MathMode {
             buf: String::with_capacity(16),
             layout: load_layout(config),
         }
+    }
+}
+
+fn parse_style(style_str: &str) -> Style {
+    let mut buf: &str = style_str;
+    let mut style = Style::NONE;
+
+    loop {
+        let style_new = if buf.is_empty() {
+            return style;
+        } else if let Some(_buf) = buf.strip_prefix("sf") {
+            buf = _buf;
+            Style::SF
+        } else if let Some(_buf) = buf.strip_prefix("bf") {
+            buf = _buf;
+            Style::BF
+        } else if let Some(_buf) = buf.strip_prefix("it") {
+            buf = _buf;
+            Style::IT
+        } else if let Some(_buf) = buf.strip_prefix("tt") {
+            buf = _buf;
+            Style::TT
+        } else if let Some(_buf) = buf.strip_prefix("bb") {
+            buf = _buf;
+            Style::BB
+        } else if let Some(_buf) = buf.strip_prefix("scr") {
+            buf = _buf;
+            Style::SCR
+        } else if let Some(_buf) = buf.strip_prefix("cal") {
+            buf = _buf;
+            Style::CAL
+        } else if let Some(_buf) = buf.strip_prefix("frak") {
+            buf = _buf;
+            Style::FRAK
+        } else {
+            return Style::NONE;
+        };
+
+        style |= style_new;
     }
 }
 
@@ -58,9 +121,20 @@ impl InputEngineMode for MathMode {
     }
 
     fn clear_preedit(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
-        if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&self.buf) {
-            commit_buf.push_str(symbol);
+        let mut iter = self.buf.split('.');
+        if let Some(first) = iter.next() {
+            if let Some(second) = iter.next() {
+                let style = parse_style(first);
+                if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&second, style) {
+                    commit_buf.push_str(symbol);
+                }
+            } else {
+                if let Some(symbol) = kime_engine_dict::lookup_math_symbol(&first, Style::NONE) {
+                    commit_buf.push_str(symbol);
+                }
+            }
         }
+
         self.buf.clear();
         self.math_mode = false;
         Continue(())

@@ -28,6 +28,9 @@ impl InputEngineMode for EmojiMode {
             } else {
                 Exit
             }
+        } else if key == Key::normal(KeyCode::Space) {
+            self.buf.push(' ');
+            Continue(true)
         } else if let Some(ch) = self.layout.get(&key) {
             self.buf.push(*ch);
             Continue(true)

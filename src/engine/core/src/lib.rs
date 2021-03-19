@@ -123,6 +123,9 @@ impl InputEngine {
                         processed = true;
                     }
                 }
+                HotkeyBehavior::Ignore => {
+                    processed = true;
+                }
             }
 
             match (hotkey.result(), processed) {
@@ -133,6 +136,9 @@ impl InputEngine {
             }
         } else if self.engine_impl.press_key(key, &mut self.commit_buf) {
             ret |= InputResult::CONSUMED;
+        } else {
+            // clear preedit when get unhandled key
+            self.clear_preedit();
         }
 
         ret |= self.current_result();

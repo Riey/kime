@@ -79,13 +79,9 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 현재 조합상태를 종료하고 커밋합니다
 
-##### Emoji
+##### Ignore
 
-kime-window로 이모티콘을 입력합니다
-
-##### Hanja
-
-kime-window로 한자를 입력합니다
+아무 동작도 하지 않습니다
 
 #### result
 

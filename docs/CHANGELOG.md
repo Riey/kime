@@ -6,6 +6,9 @@
 
 ### Improve
 
+* Make unhandled key `Commit` and `Bypass`
+* Add `Ignore` hotkey behaviour
+
 ## 2.1.1
 
 ### Improve

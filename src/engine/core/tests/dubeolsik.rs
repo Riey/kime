@@ -62,12 +62,17 @@ fn arrow() {
 }
 
 #[test]
-fn ctrl_w() {
+fn shift_ignore() {
     test_input(&[
         (Key::normal(R), "ㄱ", ""),
-        (Key::normal(ControlL), "", "ㄱPASS"),
-        (Key::ctrl(W), "", "PASS"),
-    ]);
+        (Key::normal(Shift), "ㄱ", ""),
+        (Key::shift(O), "걔", ""),
+    ])
+}
+
+#[test]
+fn ctrl_w() {
+    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::ctrl(W), "", "ㄱPASS")]);
 }
 
 #[test]

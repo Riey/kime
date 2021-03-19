@@ -8,6 +8,7 @@
 
 * Let Esc exit math mode [#379](https://github.com/Riey/kime/issues/379)
 * Add font style specifier for math symbols
+* Can't select hanja [#381](https://github.com/Riey/kime/issues/381)
 
 ## 2.0.1
 

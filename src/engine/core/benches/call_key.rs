@@ -13,12 +13,6 @@ fn simple(b: &mut test::Bencher) {
 
     b.bytes += 1000;
 
-    // warm up
-    for _ in 0..100 {
-        engine.press_key(Key::normal(A), &config);
-        engine.press_key(Key::normal(Backspace), &config);
-    }
-
     b.iter(|| {
         for _ in 0..1000 {
             engine.press_key(Key::normal(A), &config);

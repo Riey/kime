@@ -64,3 +64,22 @@ fn esc() {
         (Key::normal(Backslash), "", "\\"),
     ]);
 }
+
+#[test]
+fn style() {
+    test_input(&[
+        (MATH, "", ""),
+        (Key::normal(Backslash), "\\", ""),
+        (Key::normal(B), "\\b", ""),
+        (Key::normal(F), "\\bf", ""),
+        (Key::normal(I), "\\bfi", ""),
+        (Key::normal(T), "\\bfit", ""),
+        (Key::normal(Period), "\\bfit.", ""),
+        (Key::normal(A), "\\bfit.a", ""),
+        (Key::normal(L), "\\bfit.al", ""),
+        (Key::normal(P), "\\bfit.alp", ""),
+        (Key::normal(H), "\\bfit.alph", ""),
+        (Key::normal(A), "\\bfit.alpha", ""),
+        (Key::normal(Tab), "", "𝜶"),
+    ])
+}

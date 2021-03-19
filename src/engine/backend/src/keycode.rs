@@ -92,6 +92,7 @@ pub enum KeyCode {
     ControlL,
     ControlR,
     Delete,
+    Insert,
     Muhenkan,
     Henkan,
     AltL,
@@ -180,6 +181,7 @@ impl KeyCode {
             23 => Some(Self::Tab),
             37 => Some(Self::ControlL),
             105 => Some(Self::ControlR),
+            118 => Some(Self::Insert),
             119 => Some(Self::Delete),
 
             9 => Some(Self::Esc),

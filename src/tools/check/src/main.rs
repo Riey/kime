@@ -148,7 +148,10 @@ impl Check {
             }
             Check::Lang => check_var(
                 "LANG",
-                |v| v.to_ascii_lowercase().ends_with("utf-8"),
+                |v| {
+                    let v = v.to_ascii_lowercase();
+                    v.ends_with("utf-8") || v.ends_with("utf8")
+                },
                 "set LANG encoding UTF-8",
             ),
         }

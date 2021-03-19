@@ -5,6 +5,9 @@ authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
 
+[features]
+nightly = []
+
 [dependencies]
 kime-engine-backend = { path = "../backend" }
 kime-engine-backend-hangul = { path = "../backends/hangul" }

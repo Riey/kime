@@ -66,6 +66,7 @@ impl Check {
     pub fn cond(self) -> CondResult {
         match self {
             Check::ApiVersion => {
+                println!("KIME_API_VERSION: {}", kime_engine_cffi::KIME_API_VERSION);
                 if kime_engine_cffi::check_api_version() {
                     CondResult::Ok
                 } else {
@@ -73,17 +74,17 @@ impl Check {
                 }
             }
             Check::Icons => {
-                let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
+                let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
 
                 let icons = &[
-                    "kime-han-black-64x64.png",
-                    "kime-han-white-64x64.png",
-                    "kime-eng-black-64x64.png",
-                    "kime-eng-white-64x64.png",
+                    "kime-hangul-black.png",
+                    "kime-hangul-white.png",
+                    "kime-latin-black.png",
+                    "kime-latin-white.png",
                 ];
 
                 for icon in icons {
-                    match dirs.find_data_file(format!("icons/{}", icon)) {
+                    match dirs.find_data_file(format!("icons/hicolor/64x64/apps/{}", icon)) {
                         Some(path) => println!("Found icon: {}", path.display()),
                         _ => return CondResult::Fail(format!("Can't find icon {}", icon)),
                     }
@@ -148,7 +149,10 @@ impl Check {
             }
             Check::Lang => check_var(
                 "LANG",
-                |v| v.to_ascii_lowercase().ends_with("utf-8"),
+                |v| {
+                    let v = v.to_ascii_lowercase();
+                    v.ends_with("utf-8") || v.ends_with("utf8")
+                },
                 "set LANG encoding UTF-8",
             ),
         }

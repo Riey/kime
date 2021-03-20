@@ -1,16 +1,19 @@
 mod input_result;
 mod keycode;
+mod keymap;
 
-pub use ahash::AHashMap;
 pub use keycode::{Key, KeyCode, ModifierState};
+pub use keymap::KeyMap;
 
 pub use input_result::InputResult;
 
 pub trait InputEngineBackend {
+    type ConfigData;
+
     /// Press key
     /// # Return
     /// `true` means key has handled
-    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool;
+    fn press_key(&mut self, config: &Self::ConfigData, key: Key, commit_buf: &mut String) -> bool;
     /// Clear current preedit string this function may change commit string
     fn clear_preedit(&mut self, commit_buf: &mut String);
     /// Clear engine state
@@ -27,10 +30,17 @@ pub enum InputEngineModeResult<T> {
 }
 
 pub trait InputEngineMode {
+    type ConfigData;
+
     /// Press key
     /// # Return
     /// `Ok(true)` means key has handled
-    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> InputEngineModeResult<bool>;
+    fn press_key(
+        &mut self,
+        config: &Self::ConfigData,
+        key: Key,
+        commit_buf: &mut String,
+    ) -> InputEngineModeResult<bool>;
     /// Clear current preedit string this function may change commit string
     fn clear_preedit(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()>;
     /// Clear engine state

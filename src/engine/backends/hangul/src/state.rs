@@ -7,13 +7,13 @@ use crate::{
 
 /// 한글 입력 오토마타
 #[derive(Debug, Clone)]
-pub struct HangulState {
+pub struct HangulEngine {
     state: CharacterState,
     word_commit: bool,
     word_buf: String,
 }
 
-impl HangulState {
+impl HangulEngine {
     pub fn new(word_commit: bool) -> Self {
         Self {
             state: CharacterState::new(),
@@ -76,7 +76,7 @@ impl HangulState {
         let ret = match kv {
             KeyValue::Pass(pass) => {
                 self.clear_preedit(commit_buf);
-                commit_buf.push_str(pass);
+                commit_buf.push(*pass);
                 return true;
             }
             KeyValue::Choseong { cho } => self.state.cho(*cho, addons),

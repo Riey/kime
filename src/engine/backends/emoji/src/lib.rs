@@ -1,27 +1,32 @@
 use kime_engine_backend::{
-    AHashMap, InputEngineMode,
+    InputEngineMode,
     InputEngineModeResult::{self, Continue, Exit},
     Key, KeyCode,
 };
-use kime_engine_backend_latin::{load_layout, LatinConfig};
+use kime_engine_backend_latin::LatinData;
 
 #[derive(Clone)]
 pub struct EmojiMode {
     buf: String,
-    layout: AHashMap<Key, char>,
 }
 
 impl EmojiMode {
-    pub fn new(config: &LatinConfig) -> Self {
+    pub fn new() -> Self {
         Self {
             buf: String::with_capacity(16),
-            layout: load_layout(config),
         }
     }
 }
 
 impl InputEngineMode for EmojiMode {
-    fn press_key(&mut self, key: Key, _commit_buf: &mut String) -> InputEngineModeResult<bool> {
+    type ConfigData = LatinData;
+
+    fn press_key(
+        &mut self,
+        config: &LatinData,
+        key: Key,
+        _commit_buf: &mut String,
+    ) -> InputEngineModeResult<bool> {
         if key.code == KeyCode::Backspace {
             if self.buf.pop().is_some() {
                 Continue(true)
@@ -31,7 +36,7 @@ impl InputEngineMode for EmojiMode {
         } else if key == Key::normal(KeyCode::Space) {
             self.buf.push(' ');
             Continue(true)
-        } else if let Some(ch) = self.layout.get(&key) {
+        } else if let Some(ch) = config.lookup(&key) {
             self.buf.push(*ch);
             Continue(true)
         } else {

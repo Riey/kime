@@ -3,22 +3,20 @@
 
 extern crate test;
 
-use kime_engine_cffi::{check_api_version, Config, InputCategory, InputEngine};
+use kime_engine_core::{Config, InputCategory, InputEngine, Key, KeyCode::*};
 
 #[bench]
 fn simple(b: &mut test::Bencher) {
-    assert!(check_api_version());
-
     let config = Config::default();
     let mut engine = InputEngine::new(&config);
     engine.set_input_category(InputCategory::Hangul);
 
-    engine.press_key(&config, 52, 0);
+    b.bytes += 1000;
 
     b.iter(|| {
         for _ in 0..1000 {
-            engine.press_key(&config, 52, 0);
-            engine.clear_commit();
+            engine.press_key(Key::normal(A), &config);
+            engine.press_key(Key::normal(Backspace), &config);
         }
     });
 }

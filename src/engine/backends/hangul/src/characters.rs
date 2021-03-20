@@ -449,7 +449,7 @@ pub enum JongToCho {
     Compose(Jongseong, Choseong),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyValue {
     Choseong {
         cho: Choseong,
@@ -482,7 +482,7 @@ pub enum KeyValue {
         compose: bool,
     },
 
-    Pass(Box<str>),
+    Pass(char),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -534,7 +534,7 @@ impl FromStr for KeyValue {
         let mut next = move || KeyValuePart::parse(&mut chars);
 
         match next() {
-            None => Ok(Self::Pass(s.into())),
+            None => Ok(Self::Pass(s.chars().next().ok_or(())?)),
             Some(first) => match first {
                 KeyValuePart::Cho { cho } => match next() {
                     Some(KeyValuePart::Cho { .. }) => Err(()),

@@ -44,7 +44,14 @@ impl HanjaMode {
 }
 
 impl InputEngineMode for HanjaMode {
-    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> InputEngineModeResult<bool> {
+    type ConfigData = ();
+
+    fn press_key(
+        &mut self,
+        _: &(),
+        key: Key,
+        commit_buf: &mut String,
+    ) -> InputEngineModeResult<bool> {
         match key.code {
             KeyCode::Left => {
                 self.index = self

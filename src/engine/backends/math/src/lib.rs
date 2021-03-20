@@ -1,9 +1,9 @@
 use kime_engine_backend::{
-    AHashMap, InputEngineMode,
+    InputEngineMode,
     InputEngineModeResult::{self, Continue},
     Key, KeyCode,
 };
-use kime_engine_backend_latin::{load_layout, LatinConfig};
+use kime_engine_backend_latin::LatinData;
 use kime_engine_dict::math_symbol_key::*;
 
 #[cfg(test)]
@@ -33,15 +33,13 @@ mod tests {
 pub struct MathMode {
     math_mode: bool,
     buf: String,
-    layout: AHashMap<Key, char>,
 }
 
 impl MathMode {
-    pub fn new(config: &LatinConfig) -> Self {
+    pub fn new() -> Self {
         Self {
             math_mode: false,
             buf: String::with_capacity(16),
-            layout: load_layout(config),
         }
     }
 }
@@ -86,7 +84,14 @@ fn parse_style(style_str: &str) -> Style {
 }
 
 impl InputEngineMode for MathMode {
-    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> InputEngineModeResult<bool> {
+    type ConfigData = LatinData;
+
+    fn press_key(
+        &mut self,
+        config: &LatinData,
+        key: Key,
+        commit_buf: &mut String,
+    ) -> InputEngineModeResult<bool> {
         if key == Key::normal(KeyCode::Backslash) {
             if self.math_mode {
                 // double backslash
@@ -107,7 +112,7 @@ impl InputEngineMode for MathMode {
             return Continue(true);
         }
 
-        if let Some(ch) = self.layout.get(&key) {
+        if let Some(ch) = config.lookup(&key) {
             if self.math_mode {
                 self.buf.push(*ch);
             } else {

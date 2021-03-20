@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.1.2
+
+### Improve
+
 * Make unhandled key `Commit` and `Bypass`
 * Add `Ignore` hotkey behaviour
 * Optimize Layout

@@ -8,6 +8,8 @@
 
 * Make unhandled key `Commit` and `Bypass`
 * Add `Ignore` hotkey behaviour
+* Optimize Layout
+* New `array-keymap` optional feature that super fast but take more memory
 
 ## 2.1.1
 

@@ -21,9 +21,6 @@ global_hotkeys:
     behavior:
       Switch: Latin
     result: Bypass
-  Shift:
-    behavior: Ignore
-    result: Consume
   Muhenkan:
     behavior:
       Toggle:

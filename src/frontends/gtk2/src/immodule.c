@@ -144,6 +144,7 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
 gboolean on_key_input(KimeImContext *ctx, guint16 code,
                       KimeModifierState state) {
   ctx->preedit_has_ended = FALSE;
+  // debug("(%d, %d)", code, state);
 
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);

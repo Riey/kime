@@ -72,14 +72,14 @@ impl InputEngine {
         }
     }
 
-    fn try_hotkey<'c>(&self, key: &Key, config: &'c Config) -> Option<&'c Hotkey> {
+    fn try_hotkey<'c>(&self, key: Key, config: &'c Config) -> &'c Option<Hotkey> {
         if let Some(mode) = self.engine_impl.mode {
-            if let Some(mode_hotkey) = config.mode_hotkeys[mode].get(key) {
-                return Some(mode_hotkey);
+            if let mode_hotkey @ Some(_) = config.mode_hotkeys[mode].get(key) {
+                return mode_hotkey;
             }
         } else {
-            if let Some(category_hotkey) = config.category_hotkeys[self.category()].get(key) {
-                return Some(category_hotkey);
+            if let category_hotkey @ Some(_) = config.category_hotkeys[self.category()].get(key) {
+                return category_hotkey;
             }
         }
 
@@ -91,7 +91,7 @@ impl InputEngine {
 
         let mut ret = InputResult::empty();
 
-        if let Some(hotkey) = self.try_hotkey(&key, config) {
+        if let Some(hotkey) = self.try_hotkey(key, config) {
             let mut processed = false;
             match hotkey.behavior() {
                 HotkeyBehavior::Switch(category) => {
@@ -173,7 +173,6 @@ impl InputEngine {
         self.engine_impl.reset();
     }
 
-    #[inline]
     pub fn preedit_str(&mut self) -> &str {
         self.preedit_buf.clear();
         self.engine_impl.preedit_str(&mut self.preedit_buf);

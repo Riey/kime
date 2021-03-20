@@ -1,6 +1,6 @@
 use enum_map::{Enum, EnumMap};
 use enumset::EnumSetType;
-use kime_engine_backend::{AHashMap, Key, KeyCode, ModifierState};
+use kime_engine_backend::{Key, KeyCode, KeyMap, ModifierState};
 use kime_engine_backend_emoji::EmojiMode;
 use kime_engine_backend_hangul::{HangulConfig, HangulEngine};
 use kime_engine_backend_latin::{LatinConfig, LatinEngine};
@@ -140,9 +140,9 @@ impl Default for RawConfig {
 pub struct Config {
     pub default_category: InputCategory,
     pub global_category_state: bool,
-    pub global_hotkeys: AHashMap<Key, Hotkey>,
-    pub category_hotkeys: EnumMap<InputCategory, AHashMap<Key, Hotkey>>,
-    pub mode_hotkeys: EnumMap<InputMode, AHashMap<Key, Hotkey>>,
+    pub global_hotkeys: KeyMap<Hotkey>,
+    pub category_hotkeys: EnumMap<InputCategory, KeyMap<Hotkey>>,
+    pub mode_hotkeys: EnumMap<InputMode, KeyMap<Hotkey>>,
     pub icon_color: IconColor,
     pub xim_preedit_font: (String, f64),
     pub hangul_engine: HangulEngine,

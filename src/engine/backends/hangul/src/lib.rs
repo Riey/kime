@@ -137,7 +137,7 @@ impl InputEngineBackend for HangulEngine {
     fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
         if key.code == KeyCode::Backspace {
             self.state.backspace(self.addons, commit_buf)
-        } else if let Some(kv) = self.layout.lookup_kv(&key) {
+        } else if let Some(kv) = self.layout.lookup_kv(key) {
             self.state.key(kv, self.addons, commit_buf)
         } else {
             false

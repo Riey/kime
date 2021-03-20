@@ -3,12 +3,13 @@ mod layout;
 mod state;
 
 use layout::Layout;
-use state::HangulState;
 use std::{borrow::Cow, collections::BTreeMap};
 
 use enumset::{EnumSet, EnumSetType};
 use kime_engine_backend::{InputEngineBackend, Key, KeyCode};
 use serde::{Deserialize, Serialize};
+
+pub use state::HangulEngine;
 
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]
 #[enumset(serialize_as_list)]
@@ -72,20 +73,19 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
     ),
 ];
 
-#[derive(Clone)]
-pub struct HangulEngine {
+pub struct HangulData {
     layout: Layout,
     addons: EnumSet<Addon>,
-    state: HangulState,
+    word_commit: bool,
 }
 
-impl Default for HangulEngine {
+impl Default for HangulData {
     fn default() -> Self {
         Self::new(&HangulConfig::default(), builtin_layouts())
     }
 }
 
-impl HangulEngine {
+impl HangulData {
     #[cfg(unix)]
     pub fn from_config_with_dir(config: &HangulConfig, dir: &xdg::BaseDirectories) -> Self {
         let custom_layouts = dir
@@ -123,22 +123,23 @@ impl HangulEngine {
                     .copied()
                     .unwrap_or_default(),
             ),
-            state: HangulState::new(config.word_commit),
+            word_commit: config.word_commit,
         }
     }
 
-    #[inline]
-    pub fn get_hanja_char(&self) -> char {
-        self.state.get_hanja_char()
+    pub const fn word_commit(&self) -> bool {
+        self.word_commit
     }
 }
 
 impl InputEngineBackend for HangulEngine {
-    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
+    type ConfigData = HangulData;
+
+    fn press_key(&mut self, config: &HangulData, key: Key, commit_buf: &mut String) -> bool {
         if key.code == KeyCode::Backspace {
-            self.state.backspace(self.addons, commit_buf)
-        } else if let Some(kv) = self.layout.lookup_kv(&key) {
-            self.state.key(kv, self.addons, commit_buf)
+            self.backspace(config.addons, commit_buf)
+        } else if let Some(kv) = config.layout.lookup_kv(key) {
+            self.key(kv, config.addons, commit_buf)
         } else {
             false
         }
@@ -146,21 +147,21 @@ impl InputEngineBackend for HangulEngine {
 
     #[inline]
     fn clear_preedit(&mut self, commit_buf: &mut String) {
-        self.state.clear_preedit(commit_buf);
+        self.clear_preedit(commit_buf);
     }
 
     #[inline]
     fn reset(&mut self) {
-        self.state.reset();
+        self.reset();
     }
 
     #[inline]
     fn has_preedit(&self) -> bool {
-        self.state.has_preedit()
+        self.has_preedit()
     }
 
     fn preedit_str(&self, buf: &mut String) {
-        self.state.preedit_str(buf);
+        self.preedit_str(buf);
     }
 }
 

@@ -135,10 +135,7 @@ mod btreemap {
     pub type KeyMap<V> = std::collections::BTreeMap<Key, V>;
 }
 
-#[cfg(all(
-    not(feature = "array-keymap"),
-    not(feature = "btreemap-keymap"),
-))]
+#[cfg(all(not(feature = "array-keymap"), not(feature = "btreemap-keymap"),))]
 mod hashmap {
     use crate::Key;
     pub type KeyMap<V> = ahash::AHashMap<Key, V>;
@@ -150,8 +147,5 @@ pub use arraymap::KeyMap;
 #[cfg(feature = "btreemap-keymap")]
 pub use btreemap::KeyMap;
 
-#[cfg(all(
-    not(feature = "array-keymap"),
-    not(feature = "btreemap-keymap"),
-))]
+#[cfg(all(not(feature = "array-keymap"), not(feature = "btreemap-keymap"),))]
 pub use hashmap::KeyMap;

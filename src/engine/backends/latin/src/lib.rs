@@ -1,4 +1,4 @@
-use kime_engine_backend::{KeyMap, InputEngineBackend, Key};
+use kime_engine_backend::{InputEngineBackend, Key, KeyMap};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -21,7 +21,24 @@ impl Default for LatinConfig {
     }
 }
 
-pub fn load_layout(config: &LatinConfig) -> KeyMap<char> {
+pub struct LatinData {
+    keymap: KeyMap<char>,
+}
+
+impl LatinData {
+    pub fn new(config: &LatinConfig) -> Self {
+        Self {
+            keymap: load_layout(config),
+        }
+    }
+
+    #[inline]
+    pub fn lookup(&self, key: &Key) -> Option<&char> {
+        self.keymap.get(key)
+    }
+}
+
+fn load_layout(config: &LatinConfig) -> KeyMap<char> {
     let layout = match config.layout {
         LatinLayout::Qwerty => include_str!("../data/qwerty.yaml"),
         LatinLayout::Dvorak => include_str!("../data/dvorak.yaml"),
@@ -31,21 +48,19 @@ pub fn load_layout(config: &LatinConfig) -> KeyMap<char> {
 }
 
 #[derive(Clone)]
-pub struct LatinEngine {
-    layout: KeyMap<char>,
-}
+pub struct LatinEngine(());
 
 impl LatinEngine {
-    pub fn new(config: &LatinConfig) -> Self {
-        Self {
-            layout: load_layout(config),
-        }
+    pub fn new() -> Self {
+        Self(())
     }
 }
 
 impl InputEngineBackend for LatinEngine {
-    fn press_key(&mut self, key: Key, commit_buf: &mut String) -> bool {
-        if let Some(ch) = self.layout.get(&key) {
+    type ConfigData = LatinData;
+
+    fn press_key(&mut self, config: &LatinData, key: Key, commit_buf: &mut String) -> bool {
+        if let Some(ch) = config.lookup(&key) {
             commit_buf.push(*ch);
             true
         } else {

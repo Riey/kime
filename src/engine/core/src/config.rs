@@ -1,10 +1,8 @@
 use enum_map::{Enum, EnumMap};
 use enumset::EnumSetType;
 use kime_engine_backend::{Key, KeyCode, KeyMap, ModifierState};
-use kime_engine_backend_emoji::EmojiMode;
-use kime_engine_backend_hangul::{HangulConfig, HangulEngine};
-use kime_engine_backend_latin::{LatinConfig, LatinEngine};
-use kime_engine_backend_math::MathMode;
+use kime_engine_backend_hangul::{HangulConfig, HangulData};
+use kime_engine_backend_latin::{LatinConfig, LatinData};
 use maplit::btreemap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -145,10 +143,8 @@ pub struct Config {
     pub mode_hotkeys: EnumMap<InputMode, KeyMap<Hotkey>>,
     pub icon_color: IconColor,
     pub xim_preedit_font: (String, f64),
-    pub hangul_engine: HangulEngine,
-    pub latin_engine: LatinEngine,
-    pub math_mode: MathMode,
-    pub emoji_mode: EmojiMode,
+    pub hangul_data: HangulData,
+    pub latin_data: LatinData,
 }
 
 impl Default for Config {
@@ -158,7 +154,7 @@ impl Default for Config {
 }
 
 impl Config {
-    fn new_impl(raw: RawConfig, hangul_engine: HangulEngine) -> Self {
+    fn new_impl(raw: RawConfig, hangul_data: HangulData) -> Self {
         Self {
             default_category: raw.default_category,
             global_category_state: raw.global_category_state,
@@ -179,24 +175,22 @@ impl Config {
             global_hotkeys: raw.global_hotkeys.into_iter().collect(),
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
-            latin_engine: LatinEngine::new(&raw.latin),
-            math_mode: MathMode::new(&raw.latin),
-            emoji_mode: EmojiMode::new(&raw.latin),
-            hangul_engine,
+            latin_data: LatinData::new(&raw.latin),
+            hangul_data,
         }
     }
 
     pub fn new(raw: RawConfig) -> Self {
-        let hangul_engine =
-            HangulEngine::new(&raw.hangul, kime_engine_backend_hangul::builtin_layouts());
+        let hangul_data =
+            HangulData::new(&raw.hangul, kime_engine_backend_hangul::builtin_layouts());
 
-        Self::new_impl(raw, hangul_engine)
+        Self::new_impl(raw, hangul_data)
     }
 
     #[cfg(unix)]
     pub fn from_raw_config_with_dir(raw: RawConfig, dir: &xdg::BaseDirectories) -> Self {
-        let hangul_engine = HangulEngine::from_config_with_dir(&raw.hangul, dir);
-        Self::new_impl(raw, hangul_engine)
+        let hangul_data = HangulData::from_config_with_dir(&raw.hangul, dir);
+        Self::new_impl(raw, hangul_data)
     }
 
     #[cfg(unix)]

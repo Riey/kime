@@ -1,6 +1,9 @@
 use std::{fmt, str::FromStr};
 
-use serde::{Deserialize, Serialize, de::{Error, Unexpected}};
+use serde::{
+    de::{Error, Unexpected},
+    Deserialize, Serialize,
+};
 use strum::{Display, EnumCount, EnumString};
 
 bitflags::bitflags! {

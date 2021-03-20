@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.1.3
+
+### Improve
+
 * Fix shift input error [#396](https://github.com/Riey/kime/issues/396)
 
 ## 2.1.2

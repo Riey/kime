@@ -66,6 +66,9 @@ fn shift_ignore() {
     test_input(&[
         (Key::normal(R), "ㄱ", ""),
         (Key::normal(Shift), "ㄱ", ""),
+        (Key::shift(Shift), "ㄱ", ""),
+        (Key::super_(Shift), "ㄱ", ""),
+        (Key::alt(Shift), "ㄱ", ""),
         (Key::shift(O), "걔", ""),
     ])
 }

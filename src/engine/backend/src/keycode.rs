@@ -214,11 +214,17 @@ impl KeyCode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Key {
     pub code: KeyCode,
     pub state: ModifierState,
 }
+
+// impl std::hash::Hash for Key {
+//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//         state.write_u64(((self.code as u64) << 32) | self.state.bits() as u64);
+//     }
+// }
 
 impl Key {
     pub const fn new(code: KeyCode, state: ModifierState) -> Self {

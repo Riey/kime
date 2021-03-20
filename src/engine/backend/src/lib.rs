@@ -2,7 +2,6 @@ mod input_result;
 mod keycode;
 mod keymap;
 
-pub use ahash::AHashMap;
 pub use keycode::{Key, KeyCode, ModifierState};
 pub use keymap::KeyMap;
 

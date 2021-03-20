@@ -2,7 +2,7 @@ mod config;
 mod os;
 
 pub use config::{Config, Hotkey, InputCategory, InputMode, RawConfig};
-pub use kime_engine_backend::{InputResult, Key, KeyCode, ModifierState};
+pub use kime_engine_backend::{InputResult, Key, KeyCode, KeyMap, ModifierState};
 
 use config::{HotkeyBehavior, HotkeyResult, IconColor};
 use os::{DefaultOsContext, OsContext};
@@ -72,18 +72,18 @@ impl InputEngine {
         }
     }
 
-    fn try_hotkey<'c>(&self, key: Key, config: &'c Config) -> &'c Option<Hotkey> {
+    fn try_hotkey<'c>(&self, key: Key, config: &'c Config) -> Option<&'c Hotkey> {
         if let Some(mode) = self.engine_impl.mode {
-            if let mode_hotkey @ Some(_) = config.mode_hotkeys[mode].get(key) {
+            if let mode_hotkey @ Some(_) = config.mode_hotkeys[mode].get(&key) {
                 return mode_hotkey;
             }
         } else {
-            if let category_hotkey @ Some(_) = config.category_hotkeys[self.category()].get(key) {
+            if let category_hotkey @ Some(_) = config.category_hotkeys[self.category()].get(&key) {
                 return category_hotkey;
             }
         }
 
-        config.global_hotkeys.get(key)
+        config.global_hotkeys.get(&key)
     }
 
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {

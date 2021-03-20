@@ -1,4 +1,4 @@
-use kime_engine_backend::{AHashMap, InputEngineBackend, Key};
+use kime_engine_backend::{KeyMap, InputEngineBackend, Key};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -21,7 +21,7 @@ impl Default for LatinConfig {
     }
 }
 
-pub fn load_layout(config: &LatinConfig) -> AHashMap<Key, char> {
+pub fn load_layout(config: &LatinConfig) -> KeyMap<char> {
     let layout = match config.layout {
         LatinLayout::Qwerty => include_str!("../data/qwerty.yaml"),
         LatinLayout::Dvorak => include_str!("../data/dvorak.yaml"),
@@ -32,7 +32,7 @@ pub fn load_layout(config: &LatinConfig) -> AHashMap<Key, char> {
 
 #[derive(Clone)]
 pub struct LatinEngine {
-    layout: AHashMap<Key, char>,
+    layout: KeyMap<char>,
 }
 
 impl LatinEngine {

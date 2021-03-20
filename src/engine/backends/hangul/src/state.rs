@@ -76,7 +76,7 @@ impl HangulState {
         let ret = match kv {
             KeyValue::Pass(pass) => {
                 self.clear_preedit(commit_buf);
-                commit_buf.push_str(pass);
+                commit_buf.push(*pass);
                 return true;
             }
             KeyValue::Choseong { cho } => self.state.cho(*cho, addons),

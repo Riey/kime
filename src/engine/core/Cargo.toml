@@ -7,6 +7,8 @@ license = "GPL-3.0"
 
 [features]
 nightly = []
+array-keymap = ["kime-engine-backend/array-keymap"]
+btreemap-keymap = ["kime-engine-backend/btreemap-keymap"]
 
 [dependencies]
 kime-engine-backend = { path = "../backend" }

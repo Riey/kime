@@ -1,5 +1,5 @@
 use kime_engine_backend::{
-    AHashMap, InputEngineMode,
+    KeyMap, InputEngineMode,
     InputEngineModeResult::{self, Continue},
     Key, KeyCode,
 };
@@ -33,7 +33,7 @@ mod tests {
 pub struct MathMode {
     math_mode: bool,
     buf: String,
-    layout: AHashMap<Key, char>,
+    layout: KeyMap<char>,
 }
 
 impl MathMode {

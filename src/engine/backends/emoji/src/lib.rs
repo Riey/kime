@@ -1,5 +1,5 @@
 use kime_engine_backend::{
-    AHashMap, InputEngineMode,
+    KeyMap, InputEngineMode,
     InputEngineModeResult::{self, Continue, Exit},
     Key, KeyCode,
 };
@@ -8,7 +8,7 @@ use kime_engine_backend_latin::{load_layout, LatinConfig};
 #[derive(Clone)]
 pub struct EmojiMode {
     buf: String,
-    layout: AHashMap<Key, char>,
+    layout: KeyMap<char>,
 }
 
 impl EmojiMode {

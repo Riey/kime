@@ -1,7 +1,21 @@
+#pragma once
+
 #include "kime-qt5.hpp"
 
 #include <QtGui/QInputMethodEvent>
 #include <qpa/qplatforminputcontext.h>
+
+class KimeInputContext;
+
+class KimeEventFilter : public QObject {
+  Q_OBJECT
+public:
+  bool eventFilter(QObject *obj, QEvent *event);
+  void setCtx(KimeInputContext *ctx);
+
+private:
+  KimeInputContext *ctx = nullptr;
+};
 
 class KimeInputContext : public QPlatformInputContext {
   Q_OBJECT
@@ -25,7 +39,9 @@ private:
   void preedit_str(kime::RustStr s);
 
   QList<QInputMethodEvent::Attribute> attributes;
-  kime::InputEngine *engine = nullptr;
   const kime::Config *config = nullptr;
+  kime::InputEngine *engine = nullptr;
   QObject *focus_object = nullptr;
+  KimeEventFilter filter;
+  bool app_quited = false;
 };

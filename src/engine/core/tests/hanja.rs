@@ -19,9 +19,7 @@ fn ra() {
 
 #[test]
 fn empty() {
-    test_input(&[
-        (Key::normal(HangulHanja), "", ""),
-    ]);
+    test_input(&[(Key::normal(HangulHanja), "", "")]);
     test_input(&[
         (Key::normal(R), "ㄱ", ""),
         (Key::normal(HangulHanja), "ㄱ", ""),
@@ -44,6 +42,6 @@ fn ra_arrow() {
             "倮/儸(bandit, daredevil)囉摞瘰砢臝蓏覶鑼騾驘拏",
             "",
         ),
-        (Key::normal(Enter), "", "摞"),
+        (Key::normal(Enter), "", "儸"),
     ])
 }

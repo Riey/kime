@@ -17,6 +17,17 @@ fn ra() {
     ])
 }
 
+#[test]
+fn empty() {
+    test_input(&[
+        (Key::normal(HangulHanja), "", ""),
+    ]);
+    test_input(&[
+        (Key::normal(R), "ㄱ", ""),
+        (Key::normal(HangulHanja), "ㄱ", ""),
+    ]);
+}
+
 // issue #381
 #[test]
 fn ra_arrow() {

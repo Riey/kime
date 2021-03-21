@@ -12,9 +12,8 @@ KimeInputContext::KimeInputContext(kime::InputEngine *engine,
   this->config = config;
   this->filter.setCtx(this);
   qApp->installEventFilter(&this->filter);
-  QObject::connect(qApp, &QCoreApplication::aboutToQuit, [this]() {
-    this->app_quited = true;
-  });
+  QObject::connect(qApp, &QCoreApplication::aboutToQuit,
+                   [this]() { this->app_quited = true; });
 }
 
 KimeInputContext::~KimeInputContext() {

@@ -14,6 +14,13 @@ mod tests {
     }
 
     #[test]
+    fn hanja_no_empty() {
+        for (k, v) in crate::dict::HANJA_ENTRIES {
+            assert!(!v.is_empty(), "With: ({}, {:?})", k, v);
+        }
+    }
+
+    #[test]
     fn math_symbols() {
         use crate::lookup_math_symbol;
         use crate::math_symbol_key::*;

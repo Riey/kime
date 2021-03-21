@@ -1,4 +1,5 @@
 use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, Key, RawConfig};
+use pretty_assertions::assert_eq;
 
 #[track_caller]
 pub fn test_input_impl(config: RawConfig, category: InputCategory, keys: &[(Key, &str, &str)]) {

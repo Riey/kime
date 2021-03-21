@@ -5,7 +5,7 @@ define_layout_test!("dubeolsik", LatinLayout::Qwerty, InputCategory::Latin);
 
 use kime_engine_core::ModifierState;
 
-const EMOJI: Key = Key::new(E, ModifierState::from_bits_truncate(9));
+const EMOJI: Key = Key::new(E, ModifierState::from_bits_truncate(10));
 
 #[test]
 fn thinking() {

@@ -1,6 +1,6 @@
 use enum_map::{Enum, EnumMap};
 use enumset::EnumSetType;
-use kime_engine_backend::{Key, KeyCode, KeyMap, ModifierState};
+use kime_engine_backend::{Key, KeyCode, ModifierState};
 use kime_engine_backend_hangul::{HangulConfig, HangulData};
 use kime_engine_backend_latin::{LatinConfig, LatinData};
 use maplit::btreemap;
@@ -137,9 +137,8 @@ impl Default for RawConfig {
 pub struct Config {
     pub default_category: InputCategory,
     pub global_category_state: bool,
-    pub global_hotkeys: KeyMap<Hotkey>,
-    pub category_hotkeys: EnumMap<InputCategory, KeyMap<Hotkey>>,
-    pub mode_hotkeys: EnumMap<InputMode, KeyMap<Hotkey>>,
+    pub category_hotkeys: EnumMap<InputCategory, Vec<(Key, Hotkey)>>,
+    pub mode_hotkeys: EnumMap<InputMode, Vec<(Key, Hotkey)>>,
     pub icon_color: IconColor,
     pub xim_preedit_font: (String, f64),
     pub hangul_data: HangulData,
@@ -153,25 +152,30 @@ impl Default for Config {
 }
 
 impl Config {
-    fn new_impl(raw: RawConfig, hangul_data: HangulData) -> Self {
+    fn new_impl(mut raw: RawConfig, hangul_data: HangulData) -> Self {
         Self {
             default_category: raw.default_category,
             global_category_state: raw.global_category_state,
             category_hotkeys: EnumMap::from(|cat| {
-                if let Some(map) = raw.category_hotkeys.get(&cat) {
+                if let Some(map) = raw.category_hotkeys.get_mut(&cat) {
+                    for (k, v) in raw.global_hotkeys.iter() {
+                        map.entry(*k).or_insert(*v);
+                    }
                     map.iter().map(|(k, v)| (*k, *v)).collect()
                 } else {
-                    Default::default()
+                    raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                 }
             }),
             mode_hotkeys: EnumMap::from(|mode| {
-                if let Some(map) = raw.mode_hotkeys.get(&mode) {
+                if let Some(map) = raw.mode_hotkeys.get_mut(&mode) {
+                    for (k, v) in raw.global_hotkeys.iter() {
+                        map.entry(*k).or_insert(*v);
+                    }
                     map.iter().map(|(k, v)| (*k, *v)).collect()
                 } else {
-                    Default::default()
+                    raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                 }
             }),
-            global_hotkeys: raw.global_hotkeys.into_iter().collect(),
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
             latin_data: LatinData::new(&raw.latin),

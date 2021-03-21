@@ -1,26 +1,25 @@
 use std::{fmt, str::FromStr};
 
+use enum_map::Enum;
 use serde::{
     de::{Error, Unexpected},
     Deserialize, Serialize,
 };
-use strum::{Display, EnumCount, EnumString};
+use strum::{Display, EnumString};
 
 bitflags::bitflags! {
     #[repr(transparent)]
     pub struct ModifierState: u32 {
-        const CONTROL = 0x1;
-        const SUPER = 0x2;
-        const SHIFT = 0x4;
+        const SHIFT = 0x1;
+        const CONTROL = 0x2;
+        const SUPER = 0x4;
         const ALT = 0x8;
     }
 }
 
 // TODO: complete
 #[repr(u32)]
-#[derive(
-    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, EnumCount, Display,
-)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, Display, Enum)]
 pub enum KeyCode {
     #[strum(to_string = "1")]
     One,

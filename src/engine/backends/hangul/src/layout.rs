@@ -28,7 +28,8 @@ impl Layout {
         Ok(Self::from_items(serde_yaml::from_str(content)?))
     }
 
-    pub fn lookup_kv(&self, key: Key) -> Option<&KeyValue> {
-        self.keymap.get(&key)
+    #[inline]
+    pub fn lookup_kv(&self, key: Key) -> Option<KeyValue> {
+        self.keymap.get(key)
     }
 }

@@ -5,11 +5,6 @@ authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
 
-[features]
-nightly = []
-array-keymap = ["kime-engine-backend/array-keymap"]
-btreemap-keymap = ["kime-engine-backend/btreemap-keymap"]
-
 [dependencies]
 kime-engine-backend = { path = "../backend" }
 kime-engine-backend-hangul = { path = "../backends/hangul" }
@@ -28,4 +23,9 @@ xdg = "2.2.0"
 kime-run-dir = { path = "../../tools/run_dir" }
 
 [dev-dependencies]
+criterion = "0.3.4"
 pretty_assertions = "0.7.1"
+
+[[bench]]
+name = "call_key"
+harness = false

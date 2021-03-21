@@ -9,19 +9,10 @@ use std::{
     marker::PhantomData,
 };
 use enum_map::EnumMap;
-use strum::EnumCount;
-
-const KEYMAP_SIZE: usize = KeyCode::COUNT * 2;
-
-#[inline]
-const fn key_to_idx(key: Key) -> usize {
-    (key.code as u32 + (KeyCode::COUNT as u32) * key.state.bits()) as usize
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct KeyMap<V> {
     arr: EnumMap<KeyCode, [Option<V>; 2]>,
-    // arr: [Option<V>; KEYMAP_SIZE],
 }
 
 impl<V: Copy> Default for KeyMap<V> {
@@ -35,28 +26,22 @@ impl<V: Copy> KeyMap<V> {
         Self {
             arr: EnumMap::default(),
         }
-        // Self { arr: [None; KEYMAP_SIZE] }
     }
 
     pub fn get(&self, key: Key) -> Option<V> {
         if key.state.intersects(!ModifierState::SHIFT) {
             None
         } else {
-            self.arr[key.code][key.state.bits() as usize]
+            // SAFETY: key.state <= 0x1
+            unsafe {
+                *self.arr[key.code].get_unchecked(key.state.bits() as usize)
+            }
         }
-
-        // debug_assert!(key_to_idx(key) < self.arr.len());
-        // unsafe { *self.arr.get_unchecked(key_to_idx(key)) }
     }
 
     /// Key must don't have shift modifier
     pub fn insert(&mut self, key: Key, value: V) {
         self.arr[key.code][key.state.bits() as usize] = Some(value);
-        // assert!(!key.state.intersects(!ModifierState::SHIFT));
-        // debug_assert!(key_to_idx(key) < self.arr.len());
-        // unsafe {
-        //     *self.arr.get_unchecked_mut(key_to_idx(key)) = Some(value);
-        // }
     }
 }
 

@@ -23,7 +23,16 @@
         "gtkx.h": "c",
         "kime_engine.h": "c",
         "eventi.h": "c",
-        "str_buf.h": "c"
+        "str_buf.h": "c",
+        "qapplication": "cpp",
+        "qabstractnativeeventfilter": "cpp",
+        "memory": "cpp",
+        "qtextcharformat": "cpp",
+        "qmouseevent": "cpp",
+        "qcoreapplication": "cpp",
+        "qmetaenum": "cpp",
+        "random": "cpp",
+        "optional": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src",

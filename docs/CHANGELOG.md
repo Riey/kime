@@ -6,6 +6,9 @@
 
 ### Improve
 
+* Detect qt mouse click for clear preedit
+* Fix qt preedit style bug
+
 ## 2.1.3
 
 ### Improve

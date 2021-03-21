@@ -176,12 +176,13 @@ fn main() {
     .unwrap();
 
     for (k, mut values) in load_hanja_dict() {
-        write!(out, "('{}', &[", k).unwrap();
+        values.retain(|e| e.hanja != '\0');
         values.sort_unstable_by_key(|x| x.ty);
+        if values.is_empty() {
+            continue;
+        }
+        write!(out, "('{}', &[", k).unwrap();
         for value in values {
-            if value.hanja == '\0' {
-                continue;
-            }
             write!(out, "('{}', \"{}\"),", value.hanja, value.definition).unwrap();
         }
         writeln!(out, "]),").unwrap();

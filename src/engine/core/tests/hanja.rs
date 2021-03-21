@@ -10,11 +10,20 @@ fn ra() {
         (Key::normal(K), "라", ""),
         (
             Key::normal(HangulHanja),
-            "/囉(exclamatory final particle, nag)摞瘰砢儸臝蓏倮覶鑼騾驘拏",
+            "/倮(bare, naked, uncovered)儸囉摞瘰砢臝蓏覶鑼騾驘拏",
             "",
         ),
-        (Key::normal(Enter), "", "囉"),
+        (Key::normal(Enter), "", "倮"),
     ])
+}
+
+#[test]
+fn empty() {
+    test_input(&[(Key::normal(HangulHanja), "", "")]);
+    test_input(&[
+        (Key::normal(R), "ㄱ", ""),
+        (Key::normal(HangulHanja), "ㄱ", ""),
+    ]);
 }
 
 // issue #381
@@ -25,14 +34,14 @@ fn ra_arrow() {
         (Key::normal(K), "라", ""),
         (
             Key::normal(HangulHanja),
-            "/囉(exclamatory final particle, nag)摞瘰砢儸臝蓏倮覶鑼騾驘拏",
+            "/倮(bare, naked, uncovered)儸囉摞瘰砢臝蓏覶鑼騾驘拏",
             "",
         ),
         (
             Key::normal(Right),
-            "囉/摞(to pile up)瘰砢儸臝蓏倮覶鑼騾驘拏",
+            "倮/儸(bandit, daredevil)囉摞瘰砢臝蓏覶鑼騾驘拏",
             "",
         ),
-        (Key::normal(Enter), "", "摞"),
+        (Key::normal(Enter), "", "儸"),
     ])
 }

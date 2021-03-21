@@ -26,3 +26,6 @@ maplit = "1.0.2"
 [target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"
 kime-run-dir = { path = "../../tools/run_dir" }
+
+[dev-dependencies]
+pretty_assertions = "0.7.1"

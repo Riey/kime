@@ -23,7 +23,7 @@ impl RustStr {
     }
 }
 
-pub const KIME_API_VERSION: usize = 4;
+pub const KIME_API_VERSION: usize = 5;
 
 /// Return API version
 #[no_mangle]

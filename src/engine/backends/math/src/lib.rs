@@ -112,11 +112,11 @@ impl InputEngineMode for MathMode {
             return Continue(true);
         }
 
-        if let Some(ch) = config.lookup(&key) {
+        if let Some(ch) = config.lookup(key) {
             if self.math_mode {
-                self.buf.push(*ch);
+                self.buf.push(ch);
             } else {
-                commit_buf.push(*ch);
+                commit_buf.push(ch);
             }
 
             Continue(true)

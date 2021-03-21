@@ -33,7 +33,7 @@ impl LatinData {
     }
 
     #[inline]
-    pub fn lookup(&self, key: &Key) -> Option<&char> {
+    pub fn lookup(&self, key: Key) -> Option<char> {
         self.keymap.get(key)
     }
 }
@@ -60,8 +60,8 @@ impl InputEngineBackend for LatinEngine {
     type ConfigData = LatinData;
 
     fn press_key(&mut self, config: &LatinData, key: Key, commit_buf: &mut String) -> bool {
-        if let Some(ch) = config.lookup(&key) {
-            commit_buf.push(*ch);
+        if let Some(ch) = config.lookup(key) {
+            commit_buf.push(ch);
             true
         } else {
             false

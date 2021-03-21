@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.1.5
+
+### Improve
+
 * Improve keymap lookup speed +50%
 
 ## 2.1.4

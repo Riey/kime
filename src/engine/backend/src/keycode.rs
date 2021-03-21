@@ -1,10 +1,10 @@
 use std::{fmt, str::FromStr};
 
+use enum_map::Enum;
 use serde::{
     de::{Error, Unexpected},
     Deserialize, Serialize,
 };
-use enum_map::Enum;
 use strum::{Display, EnumString};
 
 bitflags::bitflags! {
@@ -19,9 +19,7 @@ bitflags::bitflags! {
 
 // TODO: complete
 #[repr(u32)]
-#[derive(
-    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, Display, Enum
-)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, Display, Enum)]
 pub enum KeyCode {
     #[strum(to_string = "1")]
     One,

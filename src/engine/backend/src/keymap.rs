@@ -1,4 +1,5 @@
 use crate::{Key, KeyCode, ModifierState};
+use enum_map::EnumMap;
 use serde::{
     de::{MapAccess, Visitor},
     Deserialize,
@@ -8,7 +9,6 @@ use std::{
     iter::{FromIterator, IntoIterator},
     marker::PhantomData,
 };
-use enum_map::EnumMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct KeyMap<V> {
@@ -33,9 +33,7 @@ impl<V: Copy> KeyMap<V> {
             None
         } else {
             // SAFETY: key.state <= 0x1
-            unsafe {
-                *self.arr[key.code].get_unchecked(key.state.bits() as usize)
-            }
+            unsafe { *self.arr[key.code].get_unchecked(key.state.bits() as usize) }
         }
     }
 

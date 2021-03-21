@@ -82,9 +82,7 @@ impl HangulEngine {
             KeyValue::Choseong { cho } => self.state.cho(cho, addons),
             KeyValue::Jungseong { jung, compose } => self.state.jung(jung, compose, addons),
             KeyValue::Jongseong { jong } => self.state.jong(jong, addons),
-            KeyValue::ChoJong { cho, jong, first } => {
-                self.state.cho_jong(cho, jong, first, addons)
-            }
+            KeyValue::ChoJong { cho, jong, first } => self.state.cho_jong(cho, jong, first, addons),
             KeyValue::ChoJung {
                 cho,
                 jung,

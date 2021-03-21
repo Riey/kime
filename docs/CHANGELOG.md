@@ -6,8 +6,13 @@
 
 ### Improve
 
-* Detect qt mouse click for clear preedit
+## 2.1.4
+
+### Improve
+
+* Detect qt mouse click for clear preedit [#400](https://github.com/Riey/kime/issues/400)
 * Fix qt preedit style bug
+* Try prevent hanja panic
 
 ## 2.1.3
 

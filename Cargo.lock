@@ -10,7 +10,6 @@ checksum = "7f200cbb1e856866d9eade941cf3aa0c5d7dd36f74311c4273b494f4ef036957"
 dependencies = [
  "getrandom",
  "once_cell",
- "serde",
  "version_check",
 ]
 
@@ -613,7 +612,6 @@ dependencies = [
 name = "kime-engine-backend"
 version = "0.1.0"
 dependencies = [
- "ahash",
  "bitflags",
  "enum-map",
  "enumset",

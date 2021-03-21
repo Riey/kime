@@ -5,13 +5,8 @@ authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
 
-[features]
-array-keymap = []
-btreemap-keymap = []
-
 [dependencies]
 bitflags = "1.2.1"
-ahash = { version = "0.7.0", features = ["serde"] }
 enum-map = "0.6.4"
 enumset = { version = "1.0.4", features = ["serde"] }
 serde = { version = "1.0.118", features = ["derive"] }

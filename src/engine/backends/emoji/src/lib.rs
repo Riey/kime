@@ -36,8 +36,8 @@ impl InputEngineMode for EmojiMode {
         } else if key == Key::normal(KeyCode::Space) {
             self.buf.push(' ');
             Continue(true)
-        } else if let Some(ch) = config.lookup(&key) {
-            self.buf.push(*ch);
+        } else if let Some(ch) = config.lookup(key) {
+            self.buf.push(ch);
             Continue(true)
         } else {
             Continue(false)

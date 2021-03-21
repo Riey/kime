@@ -72,31 +72,31 @@ impl HangulEngine {
         }
     }
 
-    pub fn key(&mut self, kv: &KeyValue, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
+    pub fn key(&mut self, kv: KeyValue, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         let ret = match kv {
             KeyValue::Pass(pass) => {
                 self.clear_preedit(commit_buf);
-                commit_buf.push(*pass);
+                commit_buf.push(pass);
                 return true;
             }
-            KeyValue::Choseong { cho } => self.state.cho(*cho, addons),
-            KeyValue::Jungseong { jung, compose } => self.state.jung(*jung, *compose, addons),
-            KeyValue::Jongseong { jong } => self.state.jong(*jong, addons),
+            KeyValue::Choseong { cho } => self.state.cho(cho, addons),
+            KeyValue::Jungseong { jung, compose } => self.state.jung(jung, compose, addons),
+            KeyValue::Jongseong { jong } => self.state.jong(jong, addons),
             KeyValue::ChoJong { cho, jong, first } => {
-                self.state.cho_jong(*cho, *jong, *first, addons)
+                self.state.cho_jong(cho, jong, first, addons)
             }
             KeyValue::ChoJung {
                 cho,
                 jung,
                 first,
                 compose,
-            } => self.state.cho_jung(*cho, *jung, *first, *compose, addons),
+            } => self.state.cho_jung(cho, jung, first, compose, addons),
             KeyValue::JungJong {
                 jung,
                 jong,
                 first,
                 compose,
-            } => self.state.jung_jong(*jung, *jong, *first, *compose, addons),
+            } => self.state.jung_jong(jung, jong, first, compose, addons),
         };
 
         self.convert_result(ret, commit_buf)

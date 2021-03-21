@@ -4,14 +4,15 @@ use serde::{
     de::{Error, Unexpected},
     Deserialize, Serialize,
 };
+use enum_map::Enum;
 use strum::{Display, EnumCount, EnumString};
 
 bitflags::bitflags! {
     #[repr(transparent)]
     pub struct ModifierState: u32 {
-        const CONTROL = 0x1;
-        const SUPER = 0x2;
-        const SHIFT = 0x4;
+        const SHIFT = 0x1;
+        const CONTROL = 0x2;
+        const SUPER = 0x4;
         const ALT = 0x8;
     }
 }
@@ -19,7 +20,7 @@ bitflags::bitflags! {
 // TODO: complete
 #[repr(u32)]
 #[derive(
-    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, EnumCount, Display,
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, EnumCount, Display, Enum
 )]
 pub enum KeyCode {
     #[strum(to_string = "1")]

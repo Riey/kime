@@ -1,14 +1,27 @@
 #include "input_context.hpp"
 
+#include <QMetaEnum>
 #include <QtCore/QCoreApplication>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QTextCharFormat>
+#include <QtWidgets/QApplication>
 
 KimeInputContext::KimeInputContext(kime::InputEngine *engine,
-                                   const kime::Config *config)
-    : engine(engine), config(config) {}
+                                   const kime::Config *config) {
+  this->engine = engine;
+  this->config = config;
+  this->filter.setCtx(this);
+  qApp->installEventFilter(&this->filter);
+  QObject::connect(qApp, &QCoreApplication::aboutToQuit, [this]() {
+    this->app_quited = true;
+  });
+}
 
-KimeInputContext::~KimeInputContext() {}
+KimeInputContext::~KimeInputContext() {
+  if (!this->app_quited) {
+    qApp->removeEventFilter(&this->filter);
+  }
+}
 
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}
 
@@ -20,14 +33,19 @@ void KimeInputContext::reset() {
              << "\n";
 #endif
   kime::kime_engine_clear_preedit(this->engine);
-  commit_str(kime::kime_engine_commit_str(this->engine));
+  if (this->focus_object) {
+    commit_str(kime::kime_engine_commit_str(this->engine));
+  }
   kime::kime_engine_reset(this->engine);
 }
 
 void KimeInputContext::setFocusObject(QObject *object) {
   if (object) {
     kime::kime_engine_update_layout_state(this->engine);
+  } else {
+    this->reset();
   }
+
   this->focus_object = object;
 }
 
@@ -42,8 +60,6 @@ void KimeInputContext::invokeAction(QInputMethod::Action action,
 #ifdef DEBUG
   KIME_DEBUG << "invokeAction: " << action << ", " << cursorPosition << "\n";
 #endif
-
-  this->reset();
 }
 
 bool KimeInputContext::filterEvent(const QEvent *event) {
@@ -113,4 +129,20 @@ void KimeInputContext::commit_str(kime::RustStr s) {
     e.setCommitString(QString::fromUtf8((const char *)(s.ptr), s.len));
   }
   QCoreApplication::sendEvent(this->focus_object, &e);
+}
+
+void KimeEventFilter::setCtx(KimeInputContext *ctx) { this->ctx = ctx; }
+
+bool KimeEventFilter::eventFilter(QObject *obj, QEvent *event) {
+  // QMetaEnum meta = QMetaEnum::fromType<decltype(event->type())>();
+  // KIME_DEBUG << meta.valueToKey(event->type()) << "\n";
+  if (event->type() == QEvent::MouseButtonPress) {
+#ifdef DEBUG
+    KIME_DEBUG << "Button"
+               << "\n";
+#endif
+    this->ctx->reset();
+  }
+
+  return QObject::eventFilter(obj, event);
 }

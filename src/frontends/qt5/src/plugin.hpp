@@ -1,3 +1,5 @@
+#pragma once
+
 #include "kime-qt5.hpp"
 
 #include <QString>

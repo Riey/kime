@@ -2029,9 +2029,9 @@ checksum = "d089681aa106a86fade1b0128fb5daf07d5867a509ab036d99988dec80429a57"
 
 [[package]]
 name = "xim"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e28aa83cec2e28f6ea3f2adc44104c8844737982ebd091fedee1d06256bb917"
+checksum = "4e8343d7ad6c74997eb6f1f6bd7dcbaa9ed64b8dfcc52da4a78d1ecc78c31586"
 dependencies = [
  "ahash",
  "log",

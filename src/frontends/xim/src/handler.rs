@@ -69,11 +69,9 @@ impl KimeHandler {
     fn preedit_draw(
         &mut self,
         server: &mut X11rbServer<XCBConnection>,
-        ic: &mut xim::InputContext<KimeData>,
+        ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        let mut buf = [0; 4];
-        let s = ch.encode_utf8(&mut buf);
-        server.preedit_update(ic, s)?;
+        server.preedit_draw(&mut ic.ic, ic.user_data.engine.preedit_str())?;
         Ok(())
     }
 
@@ -82,8 +80,12 @@ impl KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
-            self.preedit_draw(server, ic)?;
+        if user_ic
+            .ic
+            .input_style()
+            .contains(InputStyle::PREEDIT_CALLBACKS)
+        {
+            self.preedit_draw(server, user_ic)?;
             return Ok(());
         }
 
@@ -139,12 +141,16 @@ impl KimeHandler {
         server: &mut X11rbServer<XCBConnection>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
-        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
-            server.preedit_update(ic, "")?;
+        if user_ic
+            .ic
+            .input_style()
+            .contains(InputStyle::PREEDIT_CALLBACKS)
+        {
+            server.preedit_draw(&mut user_ic.ic, "")?;
             return Ok(());
         }
 
-        if let Some(pe) = ic.user_data.pe.take() {
+        if let Some(pe) = user_ic.user_data.pe.take() {
             // off-the-spot draw in server
             if let Some(w) = self.preedit_windows.remove(&pe) {
                 log::trace!("Destory PeWindow: {}", w.window());
@@ -322,23 +328,6 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             self.preedit_windows.remove(&pe).unwrap().clean(&*server)?;
         }
 
-        Ok(())
-    }
-
-    fn handle_preedit_start(
-        &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
-        _user_ic: &mut xim::UserInputContext<Self::InputContextData>,
-    ) -> Result<(), xim::ServerError> {
-        Ok(())
-    }
-
-    fn handle_caret(
-        &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
-        _user_ic: &mut xim::UserInputContext<Self::InputContextData>,
-        _position: i32,
-    ) -> Result<(), xim::ServerError> {
         Ok(())
     }
 

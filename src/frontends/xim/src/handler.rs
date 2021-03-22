@@ -175,7 +175,7 @@ impl KimeHandler {
 }
 
 impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
-    type InputStyleArray = [InputStyle; 4];
+    type InputStyleArray = [InputStyle; 6];
     type InputContextData = KimeData;
 
     fn new_ic_data(
@@ -203,12 +203,12 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn input_styles(&self) -> Self::InputStyleArray {
         [
-            // over-spot
             InputStyle::PREEDIT_NOTHING | InputStyle::STATUS_NOTHING,
-            InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,
             InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NONE,
-            // on-the-spot
+            InputStyle::PREEDIT_POSITION | InputStyle::STATUS_NOTHING,
+            InputStyle::PREEDIT_POSITION | InputStyle::STATUS_CALLBACKS,
             InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_NOTHING,
+            InputStyle::PREEDIT_CALLBACKS | InputStyle::STATUS_CALLBACKS,
         ]
     }
 
@@ -303,15 +303,17 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             user_ic.user_data.engine.update_layout_state();
         }
 
-        if ret & InputResult_HAS_PREEDIT != 0 {
-            self.preedit(server, user_ic)?;
-        } else {
+        if ret & InputResult_HAS_PREEDIT == 0 {
             self.clear_preedit(server, user_ic)?;
         }
 
         if ret & InputResult_HAS_COMMIT != 0 {
             self.commit(server, user_ic)?;
             user_ic.user_data.engine.clear_commit();
+        }
+
+        if ret & InputResult_HAS_PREEDIT != 0 {
+            self.preedit(server, user_ic)?;
         }
 
         Ok(ret & InputResult_CONSUMED != 0)

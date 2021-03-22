@@ -2029,7 +2029,9 @@ checksum = "d089681aa106a86fade1b0128fb5daf07d5867a509ab036d99988dec80429a57"
 
 [[package]]
 name = "xim"
-version = "0.1.0"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e8343d7ad6c74997eb6f1f6bd7dcbaa9ed64b8dfcc52da4a78d1ecc78c31586"
 dependencies = [
  "ahash",
  "log",
@@ -2042,10 +2044,14 @@ dependencies = [
 [[package]]
 name = "xim-ctext"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8a29901dc408159195e2efc3302cc9b6b9835126e21707773ac1aae8273a743"
 
 [[package]]
 name = "xim-parser"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbbb209fa5694d7f4db866e8393d3ce0365478dddccbb7bd24dac5f87db76607"
 dependencies = [
  "bitflags",
  "thiserror",

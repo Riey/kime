@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Support preedit string for XIM [#401](https://github.com/Riey/kime/issues/401)
+
 ## 2.1.5
 
 ### Improve

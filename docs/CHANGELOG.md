@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Install desktop files into autostart [#413](https://github.com/Riey/kime/issues/413)
+
 ## 2.2.1
 
 ### Improve

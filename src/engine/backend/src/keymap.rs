@@ -12,10 +12,12 @@ use strum::EnumCount;
 
 const MAP_SIZE: usize = KeyCode::COUNT * (ModifierState::all().bits() as usize + 1);
 
+#[inline]
 const fn key_to_idx(key: Key) -> usize {
     (key.code as u32 + (key.state.bits() * KeyCode::COUNT as u32)) as usize
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct KeyMap<V> {
     arr: [Option<V>; MAP_SIZE],

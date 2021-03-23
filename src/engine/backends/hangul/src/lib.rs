@@ -73,6 +73,7 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
     ),
 ];
 
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct HangulData {
     layout: Layout,

@@ -17,7 +17,7 @@ serde_yaml = "0.8.17"
 enum-map = "0.6.4"
 enumset = "1.0.6"
 maplit = "1.0.2"
-arraystring = { version = "0.3.0", features = ["serde-traits"] }
+arraystring = "0.3.0"
 
 [target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"

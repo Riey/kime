@@ -21,6 +21,7 @@ impl Default for LatinConfig {
     }
 }
 
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct LatinData {
     keymap: KeyMap<char>,

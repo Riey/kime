@@ -6,7 +6,7 @@ use kime_engine_backend_latin::{LatinConfig, LatinData};
 use maplit::btreemap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::num::NonZeroU32;
+use std::time::SystemTime;
 
 pub type FontString = arraystring::ArrayString<arraystring::typenum::U31>;
 
@@ -137,11 +137,14 @@ impl Default for RawConfig {
     }
 }
 
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct Config {
-    pub shm_version: Option<NonZeroU32>,
-    pub default_category: InputCategory,
+    pub is_shm: bool,
+    pub timestamp: Option<SystemTime>,
+    pub abi_version: u32,
     pub global_category_state: bool,
+    pub default_category: InputCategory,
     pub category_hotkeys: EnumMap<InputCategory, KeyMap<Hotkey>>,
     pub mode_hotkeys: EnumMap<InputMode, KeyMap<Hotkey>>,
     pub icon_color: IconColor,
@@ -157,9 +160,13 @@ impl Default for Config {
 }
 
 impl Config {
+    pub const ABI_VERSION: u32 = 1;
+
     fn new_impl(mut raw: RawConfig, hangul_data: HangulData) -> Self {
         Self {
-            shm_version: None,
+            is_shm: false,
+            timestamp: None,
+            abi_version: Self::ABI_VERSION,
             default_category: raw.default_category,
             global_category_state: raw.global_category_state,
             category_hotkeys: EnumMap::from(|cat| {
@@ -208,13 +215,22 @@ impl Config {
     }
 
     #[cfg(unix)]
+    pub fn config_file_timestamp() -> Option<SystemTime> {
+        let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
+        let path = dir.find_config_file("config.yaml")?;
+        std::fs::metadata(path).ok()?.accessed().ok()
+    }
+
+    #[cfg(unix)]
     pub fn load_from_config_dir() -> Option<Self> {
         let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
-        let raw = dir
-            .find_config_file("config.yaml")
-            .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
-            .unwrap_or_default();
-
-        Some(Self::from_raw_config_with_dir(raw, &dir))
+        dir.find_config_file("config.yaml").and_then(|config| {
+            let file = std::fs::File::open(config).ok()?;
+            let time = file.metadata().and_then(|m| m.accessed()).ok();
+            let raw = serde_yaml::from_reader(file).unwrap_or_default();
+            let mut ret = Self::from_raw_config_with_dir(raw, &dir);
+            ret.timestamp = time;
+            Some(ret)
+        })
     }
 }

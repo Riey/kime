@@ -3,6 +3,7 @@ use crate::Key;
 use kime_engine_backend::KeyMap;
 use std::collections::HashMap;
 
+#[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub struct Layout {
     keymap: KeyMap<KeyValue>,

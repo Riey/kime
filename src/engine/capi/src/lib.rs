@@ -10,7 +10,8 @@ use nix::{
     },
     unistd::ftruncate,
 };
-use std::{mem, num::NonZeroU32, ptr};
+#[cfg(unix)]
+use std::{mem, ptr};
 
 #[repr(C)]
 pub struct XimPreeditFont {
@@ -34,9 +35,7 @@ impl RustStr {
 }
 
 #[cfg(unix)]
-const KIME_SHM_NAME: &str = "kime-config";
-#[cfg(unix)]
-const KIME_SHM_VERSION: Option<NonZeroU32> = NonZeroU32::new(1);
+const KIME_SHM_NAME: &str = "/kime-config-0";
 #[cfg(unix)]
 const KIME_CONFIG_SIZE: usize = mem::size_of::<Config>();
 
@@ -51,7 +50,7 @@ pub extern "C" fn kime_api_version() -> usize {
 /// Create new engine
 #[no_mangle]
 pub extern "C" fn kime_engine_new(config: &Config) -> *mut InputEngine {
-    Box::into_raw(Box::new(InputEngine::new(config)))
+    Box::into_raw(Box::new(InputEngine::new(&config)))
 }
 
 /// Set hangul enable state
@@ -135,11 +134,11 @@ pub extern "C" fn kime_engine_press_key(
     hardware_code: u16,
     state: ModifierState,
 ) -> InputResult {
-    engine.press_key_code(hardware_code, state, config)
+    engine.press_key_code(hardware_code, state, &config)
 }
 
 #[cfg(unix)]
-fn kime_config_shm(config_factory: &dyn Fn() -> Config) -> nix::Result<*const Config> {
+fn kime_config_shm() -> nix::Result<*const Config> {
     loop {
         match shm_open(
             KIME_SHM_NAME,
@@ -157,8 +156,8 @@ fn kime_config_shm(config_factory: &dyn Fn() -> Config) -> nix::Result<*const Co
                     0,
                 )?
                 .cast::<Config>();
-                config.write(config_factory());
-                (*config).shm_version = KIME_SHM_VERSION;
+                config.write(Config::load_from_config_dir().unwrap_or_default());
+                (*config).is_shm = true;
                 break Ok(config);
             },
             // already exists
@@ -175,8 +174,11 @@ fn kime_config_shm(config_factory: &dyn Fn() -> Config) -> nix::Result<*const Co
                     )?
                     .cast::<Config>();
 
-                    // unmatched version find remove and retry
-                    if (*config).shm_version != KIME_SHM_VERSION {
+                    // check ABI version and timestamp
+                    // remove and retry
+                    if (*config).abi_version != Config::ABI_VERSION
+                        || (*config).timestamp != Config::config_file_timestamp()
+                    {
                         munmap(config.cast(), KIME_CONFIG_SIZE)?;
                         shm_unlink(KIME_SHM_NAME)?;
                         continue;
@@ -191,18 +193,18 @@ fn kime_config_shm(config_factory: &dyn Fn() -> Config) -> nix::Result<*const Co
 }
 
 /// Load config from local file
-/// If loading failed, it return NULL!
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_config_load() -> *const Config {
-    let factory = || Config::load_from_config_dir().unwrap_or_default();
-    kime_config_shm(&factory).unwrap_or_else(|_| Box::into_raw(Box::new(factory())))
+    kime_config_shm().unwrap_or_else(|_| {
+        Box::into_raw(Box::new(Config::load_from_config_dir().unwrap_or_default()))
+    })
 }
 
 /// Delete config
 #[no_mangle]
 pub unsafe extern "C" fn kime_config_delete(config: *const Config) {
-    if (*config).shm_version.is_some() {
+    if (*config).is_shm {
         #[cfg(unix)]
         munmap(
             config as *const std::ffi::c_void as *mut _,

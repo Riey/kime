@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.2.1
+
+### Improve
+
 * Fix Home, End, PageUp, PageDown don't clear preedit [#410](https://github.com/Riey/kime/issues/410)
 
 ## 2.2.0

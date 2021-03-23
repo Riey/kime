@@ -1,11 +1,10 @@
 use std::{fmt, str::FromStr};
 
-use enum_map::Enum;
 use serde::{
     de::{Error, Unexpected},
     Deserialize, Serialize,
 };
-use strum::{Display, EnumString};
+use strum::{Display, EnumCount, EnumString};
 
 bitflags::bitflags! {
     #[repr(transparent)]
@@ -19,7 +18,9 @@ bitflags::bitflags! {
 
 // TODO: complete
 #[repr(u32)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, Display, Enum)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumString, Display, EnumCount,
+)]
 pub enum KeyCode {
     #[strum(to_string = "1")]
     One,
@@ -224,7 +225,14 @@ impl KeyCode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+impl PartialEq<Self> for Key {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        (self.code == other.code) & (self.state == other.state)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialOrd, Ord, Hash)]
 pub struct Key {
     pub code: KeyCode,
     pub state: ModifierState,

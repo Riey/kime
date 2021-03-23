@@ -1,11 +1,14 @@
 use enum_map::{Enum, EnumMap};
 use enumset::EnumSetType;
-use kime_engine_backend::{Key, KeyCode, ModifierState};
+use kime_engine_backend::{Key, KeyCode, KeyMap, ModifierState};
 use kime_engine_backend_hangul::{HangulConfig, HangulData};
 use kime_engine_backend_latin::{LatinConfig, LatinData};
 use maplit::btreemap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::num::NonZeroU32;
+
+pub type FontString = arraystring::ArrayString<arraystring::typenum::U31>;
 
 #[derive(Serialize, Deserialize, Debug, EnumSetType, Enum, PartialOrd, Ord)]
 #[enumset(serialize_as_list)]
@@ -129,18 +132,20 @@ impl Default for RawConfig {
                     Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                 },
             },
-            xim_preedit_font: ("D2Coding".to_string(), 15.0),
+            xim_preedit_font: ("D2Coding".into(), 15.0),
         }
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Config {
+    pub shm_version: Option<NonZeroU32>,
     pub default_category: InputCategory,
     pub global_category_state: bool,
-    pub category_hotkeys: EnumMap<InputCategory, Vec<(Key, Hotkey)>>,
-    pub mode_hotkeys: EnumMap<InputMode, Vec<(Key, Hotkey)>>,
+    pub category_hotkeys: EnumMap<InputCategory, KeyMap<Hotkey>>,
+    pub mode_hotkeys: EnumMap<InputMode, KeyMap<Hotkey>>,
     pub icon_color: IconColor,
-    pub xim_preedit_font: (String, f64),
+    pub xim_preedit_font: (FontString, f64),
     pub hangul_data: HangulData,
     pub latin_data: LatinData,
 }
@@ -154,30 +159,36 @@ impl Default for Config {
 impl Config {
     fn new_impl(mut raw: RawConfig, hangul_data: HangulData) -> Self {
         Self {
+            shm_version: None,
             default_category: raw.default_category,
             global_category_state: raw.global_category_state,
             category_hotkeys: EnumMap::from(|cat| {
                 if let Some(map) = raw.category_hotkeys.get_mut(&cat) {
-                    for (k, v) in raw.global_hotkeys.iter() {
-                        map.entry(*k).or_insert(*v);
-                    }
-                    map.iter().map(|(k, v)| (*k, *v)).collect()
+                    raw.global_hotkeys
+                        .iter()
+                        .chain(map.iter())
+                        .map(|(k, v)| (*k, *v))
+                        .collect()
                 } else {
                     raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                 }
             }),
             mode_hotkeys: EnumMap::from(|mode| {
                 if let Some(map) = raw.mode_hotkeys.get_mut(&mode) {
-                    for (k, v) in raw.global_hotkeys.iter() {
-                        map.entry(*k).or_insert(*v);
-                    }
-                    map.iter().map(|(k, v)| (*k, *v)).collect()
+                    raw.global_hotkeys
+                        .iter()
+                        .chain(map.iter())
+                        .map(|(k, v)| (*k, *v))
+                        .collect()
                 } else {
                     raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                 }
             }),
             icon_color: raw.icon_color,
-            xim_preedit_font: raw.xim_preedit_font,
+            xim_preedit_font: (
+                FontString::from_str_truncate(raw.xim_preedit_font.0),
+                raw.xim_preedit_font.1,
+            ),
             latin_data: LatinData::new(&raw.latin),
             hangul_data,
         }

@@ -72,15 +72,11 @@ impl InputEngine {
         }
     }
 
-    fn try_hotkey<'c>(&self, key: Key, config: &'c Config) -> Option<Hotkey> {
+    pub fn try_hotkey<'c>(&self, key: Key, config: &'c Config) -> Option<Hotkey> {
         if let Some(mode) = self.engine_impl.mode {
-            config.mode_hotkeys[mode]
-                .iter()
-                .find_map(|(k, v)| if *k == key { Some(*v) } else { None })
+            config.mode_hotkeys[mode].get(key)
         } else {
-            config.category_hotkeys[self.engine_impl.category]
-                .iter()
-                .find_map(|(k, v)| if *k == key { Some(*v) } else { None })
+            config.category_hotkeys[self.engine_impl.category].get(key)
         }
     }
 

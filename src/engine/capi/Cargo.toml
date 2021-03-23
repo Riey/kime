@@ -12,3 +12,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 kime-engine-core = { path = "../core" }
+
+[target.'cfg(unix)'.dependencies]
+nix = "0.20.0"

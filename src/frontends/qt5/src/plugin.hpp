@@ -13,7 +13,7 @@ class KimePlatformInputContextPlugin : public QPlatformInputContextPlugin {
 
 private:
   kime::InputEngine *engine = nullptr;
-  kime::Config *config = nullptr;
+  const kime::Config *config = nullptr;
 
 public:
   KimePlatformInputContextPlugin();

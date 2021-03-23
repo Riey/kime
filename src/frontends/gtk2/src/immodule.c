@@ -29,7 +29,7 @@ typedef struct KimeSignals {
 typedef struct KimeImContextClass {
   GtkIMContextClass parent;
   KimeSignals signals;
-  KimeConfig *config;
+  const KimeConfig *config;
 } KimeImContextClass;
 
 typedef struct KimeImContext {
@@ -41,7 +41,7 @@ typedef struct KimeImContext {
   gboolean preedit_visible;
   // for firefox edge case
   gboolean preedit_has_ended;
-  KimeConfig *config;
+  const KimeConfig *config;
 } KimeImContext;
 
 #define KIME_IM_CONTEXT(var)                                                   \

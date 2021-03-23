@@ -96,7 +96,7 @@ impl Drop for InputEngine {
 }
 
 pub struct Config {
-    config: *mut ffi::Config,
+    config: *const ffi::Config,
 }
 
 impl Default for Config {

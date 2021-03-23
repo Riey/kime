@@ -1,5 +1,4 @@
 use crate::{Key, KeyCode, ModifierState};
-use enum_map::EnumMap;
 use serde::{
     de::{MapAccess, Visitor},
     Deserialize,
@@ -9,10 +8,17 @@ use std::{
     iter::{FromIterator, IntoIterator},
     marker::PhantomData,
 };
+use strum::EnumCount;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+const MAP_SIZE: usize = KeyCode::COUNT * (ModifierState::all().bits() as usize + 1);
+
+const fn key_to_idx(key: Key) -> usize {
+    (key.code as u32 + (key.state.bits() * KeyCode::COUNT as u32)) as usize
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct KeyMap<V> {
-    arr: EnumMap<KeyCode, [Option<V>; 2]>,
+    arr: [Option<V>; MAP_SIZE],
 }
 
 impl<V: Copy> Default for KeyMap<V> {
@@ -24,22 +30,18 @@ impl<V: Copy> Default for KeyMap<V> {
 impl<V: Copy> KeyMap<V> {
     pub fn new() -> Self {
         Self {
-            arr: EnumMap::default(),
+            arr: [None; MAP_SIZE],
         }
     }
 
     pub fn get(&self, key: Key) -> Option<V> {
-        if key.state.intersects(!ModifierState::SHIFT) {
-            None
-        } else {
-            // SAFETY: key.state <= 0x1
-            unsafe { *self.arr[key.code].get_unchecked(key.state.bits() as usize) }
-        }
+        unsafe { *self.arr.get_unchecked(key_to_idx(key)) }
     }
 
-    /// Key must don't have shift modifier
     pub fn insert(&mut self, key: Key, value: V) {
-        self.arr[key.code][key.state.bits() as usize] = Some(value);
+        unsafe {
+            *self.arr.get_unchecked_mut(key_to_idx(key)) = Some(value);
+        }
     }
 }
 

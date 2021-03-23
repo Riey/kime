@@ -73,6 +73,7 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
     ),
 ];
 
+#[derive(Clone, Copy)]
 pub struct HangulData {
     layout: Layout,
     addons: EnumSet<Addon>,

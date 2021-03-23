@@ -1,6 +1,16 @@
 #![allow(clippy::missing_safety_doc)]
 
 pub use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, ModifierState};
+#[cfg(unix)]
+use nix::{
+    fcntl::OFlag,
+    sys::{
+        mman::{mmap, munmap, shm_open, shm_unlink, MapFlags, ProtFlags},
+        stat::Mode,
+    },
+    unistd::ftruncate,
+};
+use std::{mem, num::NonZeroU32, ptr};
 
 #[repr(C)]
 pub struct XimPreeditFont {
@@ -22,6 +32,13 @@ impl RustStr {
         }
     }
 }
+
+#[cfg(unix)]
+const KIME_SHM_NAME: &str = "kime-config";
+#[cfg(unix)]
+const KIME_SHM_VERSION: Option<NonZeroU32> = NonZeroU32::new(1);
+#[cfg(unix)]
+const KIME_CONFIG_SIZE: usize = mem::size_of::<Config>();
 
 pub const KIME_API_VERSION: usize = 5;
 
@@ -121,23 +138,86 @@ pub extern "C" fn kime_engine_press_key(
     engine.press_key_code(hardware_code, state, config)
 }
 
-/// Load config from local file
 #[cfg(unix)]
-#[no_mangle]
-pub extern "C" fn kime_config_load() -> *mut Config {
-    Box::into_raw(Box::new(Config::load_from_config_dir().unwrap_or_default()))
+fn kime_config_shm(config_factory: &dyn Fn() -> Config) -> nix::Result<*const Config> {
+    loop {
+        match shm_open(
+            KIME_SHM_NAME,
+            OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_RDWR,
+            Mode::S_IRUSR | Mode::S_IWUSR | Mode::S_IRGRP | Mode::S_IROTH,
+        ) {
+            Ok(shm_fd) => unsafe {
+                ftruncate(shm_fd, KIME_CONFIG_SIZE as _)?;
+                let config = mmap(
+                    ptr::null_mut(),
+                    KIME_CONFIG_SIZE,
+                    ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
+                    MapFlags::MAP_SHARED,
+                    shm_fd,
+                    0,
+                )?
+                .cast::<Config>();
+                config.write(config_factory());
+                (*config).shm_version = KIME_SHM_VERSION;
+                break Ok(config);
+            },
+            // already exists
+            Err(nix::Error::Sys(nix::errno::Errno::EEXIST)) => {
+                let shm_fd = shm_open(KIME_SHM_NAME, OFlag::O_RDONLY, Mode::empty())?;
+                unsafe {
+                    let config = mmap(
+                        ptr::null_mut(),
+                        KIME_CONFIG_SIZE,
+                        ProtFlags::PROT_READ,
+                        MapFlags::MAP_SHARED,
+                        shm_fd,
+                        0,
+                    )?
+                    .cast::<Config>();
+
+                    // unmatched version find remove and retry
+                    if (*config).shm_version != KIME_SHM_VERSION {
+                        munmap(config.cast(), KIME_CONFIG_SIZE)?;
+                        shm_unlink(KIME_SHM_NAME)?;
+                        continue;
+                    }
+
+                    break Ok(config.cast());
+                }
+            }
+            Err(err) => break Err(err),
+        }
+    }
 }
 
-/// Create default config note that this function will not read config file
+/// Load config from local file
+/// If loading failed, it return NULL!
+#[cfg(unix)]
 #[no_mangle]
-pub extern "C" fn kime_config_default() -> *mut Config {
-    Box::into_raw(Box::new(Config::default()))
+pub extern "C" fn kime_config_load() -> *const Config {
+    let factory = || Config::load_from_config_dir().unwrap_or_default();
+    kime_config_shm(&factory).unwrap_or_else(|_| Box::into_raw(Box::new(factory())))
 }
 
 /// Delete config
 #[no_mangle]
-pub unsafe extern "C" fn kime_config_delete(config: *mut Config) {
-    drop(Box::from_raw(config));
+pub unsafe extern "C" fn kime_config_delete(config: *const Config) {
+    if (*config).shm_version.is_some() {
+        #[cfg(unix)]
+        munmap(
+            config as *const std::ffi::c_void as *mut _,
+            KIME_CONFIG_SIZE,
+        )
+        .ok();
+    } else {
+        Box::from_raw(config as *mut Config);
+    }
+}
+
+/// Create default config note that this function will not read config file and shm
+#[no_mangle]
+pub extern "C" fn kime_config_default() -> *mut Config {
+    Box::into_raw(Box::new(Config::default()))
 }
 
 /// Get xim_preedit_font config

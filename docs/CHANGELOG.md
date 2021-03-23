@@ -6,6 +6,9 @@
 
 ### Improve
 
+* Use shm for reduce config memory usage
+* Improve key press performance by replace hotkey map with array
+
 ## 2.2.1
 
 ### Improve

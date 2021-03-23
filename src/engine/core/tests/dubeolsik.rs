@@ -58,10 +58,7 @@ fn other_keys() {
     let pass_keys = [Esc, PageUp, PageDown, Home, End];
 
     for key in pass_keys.iter().copied() {
-        test_input(&[
-            (Key::normal(R), "ㄱ", ""),
-            (Key::normal(key), "", "ㄱPASS"),
-        ]);
+        test_input(&[(Key::normal(R), "ㄱ", ""), (Key::normal(key), "", "ㄱPASS")]);
     }
 }
 

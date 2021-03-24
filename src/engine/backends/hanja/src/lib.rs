@@ -6,8 +6,9 @@ use kime_engine_backend::{
 
 #[derive(Debug, Clone)]
 pub struct HanjaMode {
-    hanja_entires: &'static [(char, &'static str)],
+    hanja_entires: &'static [(&'static str, &'static str)],
     index: usize,
+    max_index: usize,
 }
 
 impl Default for HanjaMode {
@@ -21,25 +22,23 @@ impl HanjaMode {
         Self {
             hanja_entires: &[],
             index: 0,
+            max_index: 0,
         }
     }
 
-    pub fn set_key(&mut self, key: char) -> bool {
+    pub fn set_key(&mut self, key: &str) -> bool {
         if let Some(entires) = kime_engine_dict::lookup(key) {
             self.hanja_entires = entires;
             self.index = 0;
+            self.max_index = if entires.len() % 10 == 0 {
+                (entires.len() / 10) - 1
+            } else {
+                entires.len() / 10
+            };
             true
         } else {
             false
         }
-    }
-
-    fn current_hanja(&self) -> char {
-        self.hanja_entires[self.index].0
-    }
-
-    fn try_index(&mut self, index: usize) {
-        self.index = index.min(self.hanja_entires.len() - 1);
     }
 }
 
@@ -53,15 +52,16 @@ impl InputEngineMode for HanjaMode {
         commit_buf: &mut String,
     ) -> InputEngineModeResult<bool> {
         match key.code {
-            KeyCode::Left => {
-                self.index = self
-                    .index
-                    .checked_sub(1)
-                    .unwrap_or(self.hanja_entires.len() - 1);
+            KeyCode::Left | KeyCode::PageUp => {
+                self.index = self.index.checked_sub(1).unwrap_or(self.max_index);
                 Continue(true)
             }
-            KeyCode::Right => {
-                self.try_index(self.index + 1);
+            KeyCode::Right | KeyCode::PageDown => {
+                if self.index == self.max_index {
+                    self.index = 0;
+                } else {
+                    self.index += 1;
+                }
                 Continue(true)
             }
             KeyCode::One
@@ -72,40 +72,33 @@ impl InputEngineMode for HanjaMode {
             | KeyCode::Six
             | KeyCode::Seven
             | KeyCode::Eight
-            | KeyCode::Nine => {
-                self.try_index(key.code as usize - KeyCode::One as usize);
-                Continue(true)
+            | KeyCode::Nine
+            | KeyCode::Zero => {
+                let idx = key.code as usize - KeyCode::One as usize;
+                if let Some(entry) = self.hanja_entires.get(self.index * 10 + idx) {
+                    commit_buf.push_str(entry.0);
+                    Exit
+                } else {
+                    Continue(true)
+                }
             }
-            _ => {
-                commit_buf.push(self.current_hanja());
-                Exit
-            }
+            _ => Exit,
         }
     }
 
     fn preedit_str(&self, buf: &mut String) {
-        let current_hanja = &self.hanja_entires[self.index];
+        let range = (self.index * 10)..(self.index * 10 + 10).min(self.hanja_entires.len());
 
-        for (prev_hanja, _) in self.hanja_entires[..self.index].iter() {
-            buf.push(*prev_hanja);
-        }
+        use std::fmt::Write;
+        write!(buf, "{}/{} ", self.index, self.max_index).ok();
 
-        buf.push('/');
-        buf.push(current_hanja.0);
-        buf.push('(');
-        buf.push_str(current_hanja.1);
-        buf.push(')');
-
-        if let Some(next_hanjas) = self.hanja_entires.get(self.index + 1..) {
-            for (next_hanja, _) in next_hanjas {
-                buf.push(*next_hanja);
-            }
+        for (idx, entry) in self.hanja_entires[range].iter().enumerate() {
+            write!(buf, "[{}] {}({})", idx + 1, entry.0, entry.1).ok();
         }
     }
 
-    fn clear_preedit(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
-        commit_buf.push(self.current_hanja());
-        self.reset()
+    fn clear_preedit(&mut self, _commit_buf: &mut String) -> InputEngineModeResult<()> {
+        Continue(())
     }
 
     fn reset(&mut self) -> InputEngineModeResult<()> {

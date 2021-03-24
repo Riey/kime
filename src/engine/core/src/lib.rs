@@ -47,7 +47,8 @@ impl InputEngine {
     }
 
     pub fn set_input_mode(&mut self, mode: InputMode) -> bool {
-        self.engine_impl.set_mode(mode, &mut self.commit_buf)
+        self.engine_impl
+            .set_mode(mode, &mut self.preedit_buf, &mut self.commit_buf)
     }
 
     pub fn category(&self) -> InputCategory {
@@ -113,7 +114,7 @@ impl InputEngine {
                     processed = true;
                 }
                 HotkeyBehavior::Mode(mode) => {
-                    processed = self.engine_impl.set_mode(mode, &mut self.commit_buf);
+                    processed = self.set_input_mode(mode);
                 }
                 HotkeyBehavior::Commit => {
                     if self.engine_impl.has_preedit() {
@@ -232,7 +233,12 @@ impl EngineImpl {
         }
     }
 
-    pub fn set_mode(&mut self, mode: InputMode, commit_buf: &mut String) -> bool {
+    pub fn set_mode(
+        &mut self,
+        mode: InputMode,
+        preedit_buf: &mut String,
+        commit_buf: &mut String,
+    ) -> bool {
         match mode {
             InputMode::Math | InputMode::Emoji => {
                 self.clear_preedit(commit_buf);
@@ -241,7 +247,9 @@ impl EngineImpl {
             }
             InputMode::Hanja => match self.category {
                 InputCategory::Hangul => {
-                    if self.hanja_mode.set_key(self.hangul_engine.get_hanja_char()) {
+                    preedit_buf.clear();
+                    self.hangul_engine.preedit_str(preedit_buf);
+                    if self.hanja_mode.set_key(preedit_buf) {
                         self.hangul_engine.reset();
                         self.mode = Some(InputMode::Hanja);
                         true

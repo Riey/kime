@@ -6,8 +6,13 @@
 
 ### Improve
 
+## 2.3.0
+
+### Improve
+
 * Install desktop files into autostart [#413](https://github.com/Riey/kime/issues/413)
-* Improve hanja select ui with paging [#383](https://github.com/Riey/kime/issues/383)
+* Improve hanja select ui with paging [#416](https://github.com/Riey/kime/issues/416)
+* Mapping numpad numbers
 
 ## 2.2.1
 

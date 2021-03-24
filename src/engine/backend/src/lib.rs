@@ -26,6 +26,7 @@ pub trait InputEngineBackend {
 
 pub enum InputEngineModeResult<T> {
     Continue(T),
+    ExitHandled(T),
     Exit,
 }
 

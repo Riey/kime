@@ -10,7 +10,7 @@ use math_symbol_key::*;
 mod tests {
     #[test]
     fn simple() {
-        assert_eq!(crate::lookup('가').unwrap()[0].0, '家');
+        assert_eq!(crate::lookup("가").unwrap()[0].0, "可");
     }
 
     #[test]
@@ -56,7 +56,7 @@ mod tests {
     }
 }
 
-pub fn lookup(hangul: char) -> Option<&'static [(char, &'static str)]> {
+pub fn lookup(hangul: &str) -> Option<&'static [(&'static str, &'static str)]> {
     crate::dict::HANJA_ENTRIES
         .binary_search_by_key(&hangul, |(k, _)| *k)
         .ok()

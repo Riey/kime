@@ -269,6 +269,10 @@ macro_rules! do_mode {
             InputEngineModeResult::Continue(ret) => {
                 return ret;
             }
+            InputEngineModeResult::ExitHandled(ret) => {
+                $self.mode = None;
+                return ret;
+            }
             InputEngineModeResult::Exit => {
                 $self.mode = None;
             }

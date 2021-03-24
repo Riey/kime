@@ -1,6 +1,6 @@
 use kime_engine_backend::{
     InputEngineMode,
-    InputEngineModeResult::{self, Continue, Exit},
+    InputEngineModeResult::{self, Continue, Exit, ExitHandled},
     Key, KeyCode,
 };
 
@@ -77,7 +77,7 @@ impl InputEngineMode for HanjaMode {
                 let idx = key.code as usize - KeyCode::One as usize;
                 if let Some(entry) = self.hanja_entires.get(self.index * 10 + idx) {
                     commit_buf.push_str(entry.0);
-                    Exit
+                    ExitHandled(true)
                 } else {
                     Continue(true)
                 }
@@ -102,7 +102,7 @@ impl InputEngineMode for HanjaMode {
     }
 
     fn reset(&mut self) -> InputEngineModeResult<()> {
-        Exit
+        ExitHandled(())
     }
 
     fn has_preedit(&self) -> bool {

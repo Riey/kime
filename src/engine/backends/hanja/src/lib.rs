@@ -52,11 +52,11 @@ impl InputEngineMode for HanjaMode {
         commit_buf: &mut String,
     ) -> InputEngineModeResult<bool> {
         match key.code {
-            KeyCode::Left | KeyCode::PageUp => {
+            KeyCode::Up | KeyCode::Left | KeyCode::PageUp => {
                 self.index = self.index.checked_sub(1).unwrap_or(self.max_index);
                 Continue(true)
             }
-            KeyCode::Right | KeyCode::PageDown => {
+            KeyCode::Down | KeyCode::Right | KeyCode::PageDown => {
                 if self.index == self.max_index {
                     self.index = 0;
                 } else {

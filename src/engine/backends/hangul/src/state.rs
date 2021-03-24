@@ -58,10 +58,6 @@ impl HangulEngine {
         }
     }
 
-    pub fn get_hanja_char(&self) -> char {
-        self.state.to_char()
-    }
-
     pub fn backspace(&mut self, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         if self.state.backspace(addons) {
             true

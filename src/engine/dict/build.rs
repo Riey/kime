@@ -12,30 +12,10 @@ use std::{
     path::PathBuf,
 };
 
-fn parse_unich(ch: &str) -> char {
-    let ch = ch.strip_prefix("U+").unwrap();
-    std::char::from_u32(u32::from_str_radix(ch, 16).unwrap()).unwrap()
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
-enum EntryType {
-    E,
-    N,
-    X,
-    Empty,
-}
-
-impl Default for EntryType {
-    fn default() -> Self {
-        Self::Empty
-    }
-}
-
 #[derive(Default, Debug, Clone, Copy)]
 struct HanjaEntry {
-    hanja: char,
-    definition: &'static str,
-    ty: EntryType,
+    hanja: &'static str,
+    description: &'static str,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -82,47 +62,58 @@ struct KeySymPair<'a> {
     symbols: Vec<StySymPair<'a>>,
 }
 
-fn load_hanja_dict() -> BTreeMap<char, Vec<HanjaEntry>> {
-    let mut dict: BTreeMap<char, Vec<HanjaEntry>> = BTreeMap::new();
-    let unihan = include_str!("data/Unihan_Readings.txt");
-    let mut entry = HanjaEntry::default();
-    for line in unihan.lines() {
+type Dict = BTreeMap<&'static str, Vec<HanjaEntry>>;
+
+fn load_hanja_dict() -> Dict {
+    let hanja_data = include_str!("data/hanja.txt");
+    let hanja_freq = include_str!("data/freq-hanja.txt");
+
+    let mut freq_dict: BTreeMap<char, u32> = BTreeMap::new();
+
+    for line in hanja_freq.lines() {
+        match line.split(':').next_tuple() {
+            Some((hanja, freq)) => {
+                if let Some(hanja) = hanja.chars().next() {
+                    if let Ok(freq) = freq.parse() {
+                        freq_dict.insert(hanja, freq);
+                    }
+                }
+            }
+            None => continue,
+        }
+    }
+
+    let mut dict = Dict::new();
+
+    for line in hanja_data.lines() {
         if line.starts_with('#') {
             continue;
         }
 
-        let line = line.trim_end();
-
-        if let Some((ch, field, data)) = line.split('\t').next_tuple::<(&str, &str, &str)>() {
-            let ch = parse_unich(ch);
-
-            match field {
-                "kDefinition" => {
-                    entry.hanja = ch;
-                    entry.definition = data;
+        match line.split(':').next_tuple() {
+            Some((hangul, hanja, description)) => {
+                // skip unused hanja
+                if description.is_empty() {
+                    continue;
                 }
-                "kHangul" => {
-                    if entry.definition.is_empty() || entry.hanja == '\0' {
-                        continue;
-                    }
-                    for data in data.split(' ') {
-                        let (hangul, ty) = data.split(':').next_tuple::<(&str, &str)>().unwrap();
 
-                        entry.ty = match ty.as_bytes().last().unwrap() {
-                            b'E' => EntryType::E,
-                            b'N' => EntryType::N,
-                            b'X' => EntryType::X,
-                            _ => EntryType::Empty,
-                        };
-
-                        dict.entry(hangul.chars().next().unwrap())
-                            .or_default()
-                            .push(std::mem::take(&mut entry));
-                    }
-                }
-                _ => {}
+                dict.entry(hangul)
+                    .or_default()
+                    .push(HanjaEntry { hanja, description });
             }
+            None => continue,
         }
+    }
+
+    for (_, entries) in dict.iter_mut() {
+        entries.sort_by_key(|e| {
+            std::cmp::Reverse(
+                e.hanja
+                    .chars()
+                    .map(|c| freq_dict.get(&c).map_or(0, |n| *n))
+                    .sum::<u32>(),
+            )
+        })
     }
 
     dict
@@ -171,19 +162,14 @@ fn main() {
     writeln!(out, "use crate::math_symbol_key::*;").unwrap();
     writeln!(
         out,
-        "pub static HANJA_ENTRIES: &[(char, &[(char, &str)])] = &[",
+        "pub static HANJA_ENTRIES: &[(&str, &[(&str, &str)])] = &[",
     )
     .unwrap();
 
-    for (k, mut values) in load_hanja_dict() {
-        values.retain(|e| e.hanja != '\0');
-        values.sort_unstable_by_key(|x| x.ty);
-        if values.is_empty() {
-            continue;
-        }
-        write!(out, "('{}', &[", k).unwrap();
+    for (k, values) in load_hanja_dict() {
+        write!(out, "(\"{}\", &[", k).unwrap();
         for value in values {
-            write!(out, "('{}', \"{}\"),", value.hanja, value.definition).unwrap();
+            write!(out, "(\"{}\", \"{}\"),", value.hanja, value.description).unwrap();
         }
         writeln!(out, "]),").unwrap();
     }

@@ -1,6 +1,6 @@
 use kime_engine_backend::{
     InputEngineMode,
-    InputEngineModeResult::{self, Continue, Exit},
+    InputEngineModeResult::{self, Continue, Exit, ExitHandled},
     Key, KeyCode,
 };
 use kime_engine_backend_latin::LatinData;
@@ -52,12 +52,12 @@ impl InputEngineMode for EmojiMode {
             self.buf.clear();
         }
 
-        Exit
+        ExitHandled(())
     }
 
     fn reset(&mut self) -> InputEngineModeResult<()> {
         self.buf.clear();
-        Exit
+        ExitHandled(())
     }
 
     fn preedit_str(&self, buf: &mut String) {

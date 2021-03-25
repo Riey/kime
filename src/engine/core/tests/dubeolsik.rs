@@ -71,14 +71,15 @@ fn arrow() {
     ]);
 }
 
+// issue #418
 #[test]
-fn shift_ignore() {
+fn shift_bypass() {
     test_input(&[
         (Key::normal(R), "ㄱ", ""),
-        (Key::normal(Shift), "ㄱ", ""),
-        (Key::shift(Shift), "ㄱ", ""),
-        (Key::super_(Shift), "ㄱ", ""),
-        (Key::alt(Shift), "ㄱ", ""),
+        (Key::normal(Shift), "ㄱ", "PASS"),
+        (Key::shift(Shift), "ㄱ", "PASS"),
+        (Key::super_(Shift), "ㄱ", "PASS"),
+        (Key::alt(Shift), "ㄱ", "PASS"),
         (Key::shift(O), "걔", ""),
     ])
 }

@@ -140,7 +140,6 @@ impl InputEngine {
             ret |= InputResult::CONSUMED;
         } else if key.code == KeyCode::Shift {
             // ignore shift key
-            ret |= InputResult::CONSUMED;
         } else {
             // clear preedit when get unhandled key
             self.clear_preedit();

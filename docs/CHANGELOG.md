@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Bypass shift input for shortcut [#418](https://github.com/Riey/kime/issues/418)
+
 ## 2.3.0
 
 ### Improve

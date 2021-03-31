@@ -224,7 +224,7 @@ impl EngineImpl {
         Self {
             category: config.default_category,
             mode: None,
-            latin_engine: LatinEngine::new(),
+            latin_engine: LatinEngine::new(config.preferred_direct),
             hangul_engine: HangulEngine::new(config.hangul_data.word_commit()),
             hanja_mode: HanjaMode::new(),
             math_mode: MathMode::new(),

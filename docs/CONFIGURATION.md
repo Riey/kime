@@ -104,6 +104,10 @@ Preedit window font name and size for XIM
 
 Set latin setting
 
+### preferred_direct
+
+Handling key event by external as possible
+
 ### layout
 
 Set latin layout

@@ -185,7 +185,7 @@ jobs:
     strategy:
       matrix:
         qt6:
-          - 6.0.1
+          - 6.0.2
 
     steps:
       - name: Download engine
@@ -265,7 +265,7 @@ jobs:
             pkg: deb
             name: debian-buster
           - qt5: 5.15.2
-            qt6: 6.0.1
+            qt6: 6.0.2
             pkg: zst
             name: latest
 

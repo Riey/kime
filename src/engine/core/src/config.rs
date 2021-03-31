@@ -142,6 +142,7 @@ pub struct Config {
     pub icon_color: IconColor,
     pub xim_preedit_font: (String, f64),
     pub hangul_data: HangulData,
+    pub preferred_direct: bool,
     pub latin_data: LatinData,
 }
 
@@ -178,6 +179,7 @@ impl Config {
             }),
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
+            preferred_direct: raw.latin.preferred_direct,
             latin_data: LatinData::new(&raw.latin),
             hangul_data,
         }

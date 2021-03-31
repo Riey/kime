@@ -8,15 +8,24 @@ pub enum LatinLayout {
     Colemak,
 }
 
+impl Default for LatinLayout {
+    fn default() -> Self {
+        Self::Qwerty
+    }
+}
+
 #[derive(Serialize, Deserialize)]
+#[serde(default)]
 pub struct LatinConfig {
     pub layout: LatinLayout,
+    pub preferred_direct: bool,
 }
 
 impl Default for LatinConfig {
     fn default() -> Self {
         Self {
             layout: LatinLayout::Qwerty,
+            preferred_direct: true,
         }
     }
 }
@@ -48,11 +57,13 @@ fn load_layout(config: &LatinConfig) -> KeyMap<char> {
 }
 
 #[derive(Clone)]
-pub struct LatinEngine(());
+pub struct LatinEngine {
+    preferred_direct: bool,
+}
 
 impl LatinEngine {
-    pub fn new() -> Self {
-        Self(())
+    pub fn new(preferred_direct: bool) -> Self {
+        Self { preferred_direct }
     }
 }
 
@@ -60,11 +71,15 @@ impl InputEngineBackend for LatinEngine {
     type ConfigData = LatinData;
 
     fn press_key(&mut self, config: &LatinData, key: Key, commit_buf: &mut String) -> bool {
-        if let Some(ch) = config.lookup(key) {
-            commit_buf.push(ch);
-            true
-        } else {
+        if self.preferred_direct {
             false
+        } else {
+            if let Some(ch) = config.lookup(key) {
+                commit_buf.push(ch);
+                true
+            } else {
+                false
+            }
         }
     }
 

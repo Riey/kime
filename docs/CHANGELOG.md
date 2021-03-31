@@ -7,6 +7,7 @@
 ### Improve
 
 * Bypass shift input for shortcut [#418](https://github.com/Riey/kime/issues/418)
+* Add `preferred_direct` config for some bugs [#425](https://github.com/Riey/kime/issues/425)
 
 ## 2.3.0
 

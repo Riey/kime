@@ -61,7 +61,7 @@ fn esc() {
     test_input(&[
         (MATH, "", ""),
         (Key::normal(Esc), "", "PASS"),
-        (Key::normal(Backslash), "", "\\"),
+        (Key::normal(Backslash), "", "PASS"),
     ]);
 }
 

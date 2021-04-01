@@ -8,4 +8,4 @@ license = "GPL-3.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-simplelog = "0.9.0"
+simplelog = "0.10.0"

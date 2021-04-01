@@ -10,5 +10,5 @@ fn config() -> Config {
 }
 
 pub fn enable_logger(level: LevelFilter) -> bool {
-    TermLogger::init(level, config(), TerminalMode::Stderr).is_ok()
+    TermLogger::init(level, config(), TerminalMode::Stderr, ColorChoice::Auto).is_ok()
 }

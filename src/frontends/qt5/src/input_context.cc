@@ -97,7 +97,16 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
     kime::kime_engine_clear_commit(this->engine);
   }
 
-  this->preedit_str(kime::kime_engine_preedit_str(this->engine));
+  bool visible = ret & kime::InputResult_HAS_PREEDIT;
+
+  if (!this->visible && !visible) {
+    // skip send preedit when invisible
+    // issue #425
+  } else {
+    this->preedit_str(kime::kime_engine_preedit_str(this->engine));
+  }
+
+  this->visible = visible;
 
   return !!(ret & kime::InputResult_CONSUMED);
 }

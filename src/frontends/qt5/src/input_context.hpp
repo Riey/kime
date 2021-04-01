@@ -38,6 +38,7 @@ private:
   void commit_str(kime::RustStr s);
   void preedit_str(kime::RustStr s);
 
+  bool visible = false;
   QList<QInputMethodEvent::Attribute> attributes;
   const kime::Config *config = nullptr;
   kime::InputEngine *engine = nullptr;

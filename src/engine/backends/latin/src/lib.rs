@@ -18,14 +18,12 @@ impl Default for LatinLayout {
 #[serde(default)]
 pub struct LatinConfig {
     pub layout: LatinLayout,
-    pub preferred_direct: bool,
 }
 
 impl Default for LatinConfig {
     fn default() -> Self {
         Self {
             layout: LatinLayout::Qwerty,
-            preferred_direct: true,
         }
     }
 }
@@ -57,13 +55,11 @@ fn load_layout(config: &LatinConfig) -> KeyMap<char> {
 }
 
 #[derive(Clone)]
-pub struct LatinEngine {
-    preferred_direct: bool,
-}
+pub struct LatinEngine {}
 
 impl LatinEngine {
-    pub fn new(preferred_direct: bool) -> Self {
-        Self { preferred_direct }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -71,15 +67,11 @@ impl InputEngineBackend for LatinEngine {
     type ConfigData = LatinData;
 
     fn press_key(&mut self, config: &LatinData, key: Key, commit_buf: &mut String) -> bool {
-        if self.preferred_direct {
-            false
+        if let Some(ch) = config.lookup(key) {
+            commit_buf.push(ch);
+            true
         } else {
-            if let Some(ch) = config.lookup(key) {
-                commit_buf.push(ch);
-                true
-            } else {
-                false
-            }
+            false
         }
     }
 

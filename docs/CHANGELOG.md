@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.3.2
+
+### Improve
+
 * Rollback `preferred_direct` config
 * Fix qt preedit handling [#425](https://github.com/Riey/kime/issues/425)
 

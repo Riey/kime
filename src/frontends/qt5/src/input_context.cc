@@ -32,9 +32,7 @@ void KimeInputContext::reset() {
              << "\n";
 #endif
   kime::kime_engine_clear_preedit(this->engine);
-  if (this->focus_object) {
-    commit_str(kime::kime_engine_commit_str(this->engine));
-  }
+  this->commit_str(kime::kime_engine_commit_str(this->engine));
   kime::kime_engine_reset(this->engine);
 }
 
@@ -99,19 +97,16 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
     kime::kime_engine_clear_commit(this->engine);
   }
 
-  if (ret & kime::InputResult_HAS_PREEDIT) {
-    preedit_str(kime::kime_engine_preedit_str(this->engine));
-  } else {
-    kime::RustStr null_s;
-    null_s.ptr = nullptr;
-    null_s.len = 0;
-    commit_str(null_s);
-  }
+  this->preedit_str(kime::kime_engine_preedit_str(this->engine));
 
   return !!(ret & kime::InputResult_CONSUMED);
 }
 
 void KimeInputContext::preedit_str(kime::RustStr s) {
+  if (!this->focus_object) {
+    return;
+  }
+
   QTextCharFormat fmt;
   fmt.setFontUnderline(true);
   QString qs = QString::fromUtf8((const char *)(s.ptr), s.len);
@@ -123,6 +118,10 @@ void KimeInputContext::preedit_str(kime::RustStr s) {
 }
 
 void KimeInputContext::commit_str(kime::RustStr s) {
+  if (!this->focus_object) {
+    return;
+  }
+
   QInputMethodEvent e;
   if (s.len) {
     e.setCommitString(QString::fromUtf8((const char *)(s.ptr), s.len));

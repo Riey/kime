@@ -48,7 +48,7 @@ fn esc() {
     test_input(&[
         (Key::normal(R), "ㄱ", ""),
         (Key::normal(Esc), "", "ㄱPASS"),
-        (Key::normal(R), "", "PASS"),
+        (Key::normal(R), "", "r"),
     ]);
 }
 

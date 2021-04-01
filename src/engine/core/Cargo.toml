@@ -14,7 +14,7 @@ kime-engine-backend-math = { path = "../backends/math" }
 kime-engine-backend-emoji = { path = "../backends/emoji" }
 serde = { version = "1.0.124", features = ["derive"] }
 serde_yaml = "0.8.17"
-enum-map = "1.0.0"
+enum-map = "0.6.4"
 enumset = "1.0.6"
 maplit = "1.0.2"
 

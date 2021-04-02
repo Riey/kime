@@ -92,17 +92,31 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
     kime::kime_engine_update_layout_state(this->engine);
   }
 
+  bool visible = !!(ret & kime::InputResult_HAS_PREEDIT);
+
+  if (!visible) {
+    // only send preedit when invisible
+    // issue #425
+    if (this->visible) {
+#ifdef DEBUG
+      KIME_DEBUG << "Clear preedit\n";
+#endif
+      this->preedit_str(kime::kime_engine_preedit_str(this->engine));
+    }
+  }
+
   if (ret & (kime::InputResult_HAS_COMMIT)) {
+#ifdef DEBUG
+    KIME_DEBUG << "Commit\n";
+#endif
     commit_str(kime::kime_engine_commit_str(this->engine));
     kime::kime_engine_clear_commit(this->engine);
   }
 
-  bool visible = ret & kime::InputResult_HAS_PREEDIT;
-
-  if (!this->visible && !visible) {
-    // skip send preedit when invisible
-    // issue #425
-  } else {
+  if (visible) {
+#ifdef DEBUG
+    KIME_DEBUG << "Update preedit\n";
+#endif
     this->preedit_str(kime::kime_engine_preedit_str(this->engine));
   }
 

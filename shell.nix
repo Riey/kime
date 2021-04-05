@@ -1,7 +1,5 @@
 {
-  moz_overlay ? import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz),
-  nixpkgs ? <nixpkgs>,
-  pkgs ? import nixpkgs { overlays = [ moz_overlay ]; },
+  pkgs ? import <nixpkgs> { },
 }:
 with pkgs;
 llvmPackages_11.stdenv.mkDerivation {
@@ -43,13 +41,15 @@ llvmPackages_11.stdenv.mkDerivation {
     clang_11
     llvmPackages_11.libclang
     llvmPackages_11.bintools
-    pkgs.latest.rustChannels.stable.rust
+    cargo
+    rustc
     dpkg
     gnutar
     zstd
     git
     cmake
     extra-cmake-modules
+    qt5.wrapQtAppsHook
   ];
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
 }

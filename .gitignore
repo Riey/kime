@@ -11,4 +11,5 @@ kime_engine.hpp
 massif.out*
 flamegraph.svg
 
+result
 .DS_Store

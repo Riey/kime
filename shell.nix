@@ -6,33 +6,51 @@
 with pkgs;
 llvmPackages_11.stdenv.mkDerivation {
   name = "kime-shell";
+
+  dontUseCmakeConfigure = true;
+
   buildInputs = [
     dbus
     dbus_libs
     libdbusmenu
-    glib
-    xorg.libxcb
-    pcre
-    cairo
 
+    xorg.libxcb
+    xlibs.libpthreadstubs
+    xlibs.libXdmcp.dev
+
+    cairo
+    pcre
+
+
+    glib
+    libselinux.dev
+    libsepol.dev
+    utillinux.dev
     gtk2
     gtk3
+    at_spi2_core.dev
+    epoxy.dev
+    xlibs.libXtst
+
     # gtk4
 
     qt5.qtbase
     # qt6.qtbase
   ];
   nativeBuildInputs = [
-    pkgconfig
+    bash
+    pkg-config
     clang_11
     llvmPackages_11.libclang
     llvmPackages_11.bintools
     pkgs.latest.rustChannels.stable.rust
+    dpkg
+    gnutar
+    zstd
+    git
     cmake
     extra-cmake-modules
   ];
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
-  CC = "${clang_11}/bin/clang";
-  CXX = "${clang_11}/bin/clang++";
 }
 

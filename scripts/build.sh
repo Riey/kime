@@ -61,20 +61,18 @@ while getopts hrda opt; do
     esac
 done
 
+echo Build rust pkgs
+
+KIME_RUST_PKGS=()
+
 if [ "$KIME_SKIP_ENGINE" -eq "1" ]; then
     _KIME_CMAKE_ARGS="${_KIME_CMAKE_ARGS} -DUSE_SYSTEM_ENGINE=ON"
     unset KIME_BUILD_CHECK
     echo Use system engine
 else
     LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PWD}/${TARGET_DIR}"
-    echo Build core...
-    cargo_build -p kime-engine-capi
-    cp $TARGET_DIR/libkime_engine.so $KIME_OUT
+    KIME_RUST_PKGS+=("-pkime-engine-capi")
 fi
-
-echo Build rust pkgs
-
-KIME_RUST_PKGS=()
 
 if [ "$KIME_BUILD_CHECK" -eq "1" ]; then
     KIME_RUST_PKGS+=("-pkime-check")
@@ -94,6 +92,7 @@ fi
 
 cargo_build "${KIME_RUST_PKGS[@]}"
 
+cp $TARGET_DIR/libkime_engine.so $KIME_OUT || true
 cp $TARGET_DIR/kime-check $KIME_OUT || true
 cp $TARGET_DIR/kime-indicator $KIME_OUT || true
 cp $TARGET_DIR/kime-xim $KIME_OUT || true
@@ -114,7 +113,7 @@ cmake ../../src $_KIME_CMAKE_ARGS $KIME_CMAKE_ARGS
 
 make $KIME_MAKE_ARGS
 
-cp lib/* $KIME_OUT
+cp lib/* $KIME_OUT || true
 
 if [ $NEED_STRIP -eq "1" ]; then
     strip -s $KIME_OUT/* 2&>/dev/null || true

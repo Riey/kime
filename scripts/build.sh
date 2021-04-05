@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 source $(dirname $0)/tool.sh
 
@@ -10,6 +10,22 @@ fi
 
 if [ -z "$KIME_SKIP_ENGINE" ]; then
     KIME_SKIP_ENGINE=0
+fi
+
+if [ -z "$KIME_BUILD_CHECK" ]; then
+    KIME_BUILD_CHECK=0
+fi
+
+if [ -z "$KIME_BUILD_XIM" ]; then
+    KIME_BUILD_XIM=0
+fi
+
+if [ -z "$KIME_BUILD_WAYLAND" ]; then
+    KIME_BUILD_WAYLAND=0
+fi
+
+if [ -z "$KIME_BUILD_INDICATOR" ]; then
+    KIME_BUILD_INDICATOR=0
 fi
 
 set_release() {
@@ -67,7 +83,7 @@ KIME_RUST_PKGS=()
 
 if [ "$KIME_SKIP_ENGINE" -eq "1" ]; then
     _KIME_CMAKE_ARGS="${_KIME_CMAKE_ARGS} -DUSE_SYSTEM_ENGINE=ON"
-    unset KIME_BUILD_CHECK
+    KIME_BUILD_CHECK=0
     echo Use system engine
 else
     LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PWD}/${TARGET_DIR}"

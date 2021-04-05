@@ -6,6 +6,8 @@
 #include <QtGui/QTextCharFormat>
 #include <QtWidgets/QApplication>
 
+static bool APP_QUITED = false;
+
 KimeInputContext::KimeInputContext(kime::InputEngine *engine,
                                    const kime::Config *config) {
   this->engine = engine;
@@ -13,12 +15,16 @@ KimeInputContext::KimeInputContext(kime::InputEngine *engine,
   this->filter.setCtx(this);
   qApp->installEventFilter(&this->filter);
   QObject::connect(qApp, &QCoreApplication::aboutToQuit,
-                   [this]() { this->app_quited = true; });
+                   []() { APP_QUITED = true; });
 }
 
 KimeInputContext::~KimeInputContext() {
-  if (!this->app_quited) {
+  if (!APP_QUITED) {
     qApp->removeEventFilter(&this->filter);
+  } else {
+#ifdef DEBUG
+    KIME_DEBUG << "Remove skipped\n";
+#endif
   }
 }
 
@@ -39,7 +45,7 @@ void KimeInputContext::reset() {
 void KimeInputContext::setFocusObject(QObject *object) {
   if (object) {
     kime::kime_engine_update_layout_state(this->engine);
-  } else {
+  } else if (this->focus_object) {
     this->reset();
   }
 
@@ -92,17 +98,31 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
     kime::kime_engine_update_layout_state(this->engine);
   }
 
+  bool visible = !!(ret & kime::InputResult_HAS_PREEDIT);
+
+  if (!visible) {
+    // only send preedit when invisible
+    // issue #425
+    if (this->visible) {
+#ifdef DEBUG
+      KIME_DEBUG << "Clear preedit\n";
+#endif
+      this->preedit_str(kime::kime_engine_preedit_str(this->engine));
+    }
+  }
+
   if (ret & (kime::InputResult_HAS_COMMIT)) {
+#ifdef DEBUG
+    KIME_DEBUG << "Commit\n";
+#endif
     commit_str(kime::kime_engine_commit_str(this->engine));
     kime::kime_engine_clear_commit(this->engine);
   }
 
-  bool visible = ret & kime::InputResult_HAS_PREEDIT;
-
-  if (!this->visible && !visible) {
-    // skip send preedit when invisible
-    // issue #425
-  } else {
+  if (visible) {
+#ifdef DEBUG
+    KIME_DEBUG << "Update preedit\n";
+#endif
     this->preedit_str(kime::kime_engine_preedit_str(this->engine));
   }
 

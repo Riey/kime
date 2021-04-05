@@ -44,5 +44,4 @@ private:
   kime::InputEngine *engine = nullptr;
   QObject *focus_object = nullptr;
   KimeEventFilter filter;
-  bool app_quited = false;
 };

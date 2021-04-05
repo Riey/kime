@@ -4,10 +4,10 @@ mod shared;
 define_layout_test!("dubeolsik", LatinLayout::Qwerty, InputCategory::Latin);
 
 #[test]
-fn qwert() {
+fn qwerty() {
     test_input(&[
-        (Key::normal(A), "", "a"),
-        (Key::normal(S), "", "s"),
-        (Key::shift(SemiColon), "", ":"),
+        (Key::normal(A), "", "PASS"),
+        (Key::normal(S), "", "PASS"),
+        (Key::shift(SemiColon), "", "PASS"),
     ]);
 }

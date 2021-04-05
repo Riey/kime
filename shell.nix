@@ -32,7 +32,7 @@ llvmPackages_11.stdenv.mkDerivation {
     extra-cmake-modules
   ];
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
-  CC = "clang";
-  CXX = "clang++";
+  CC = "${clang_11}/bin/clang";
+  CXX = "${clang_11}/bin/clang++";
 }
 

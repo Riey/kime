@@ -80,6 +80,7 @@ xim_preedit_font:
   - 15.0
 latin:
   layout: Qwerty
+  preferred_direct: true
 hangul:
   layout: dubeolsik
   word_commit: false

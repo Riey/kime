@@ -1,6 +1,5 @@
 {
-  moz_overlay ? import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz),
-  pkgs ? import <nixpkgs> { overlays = [ moz_overlay ]; },
+  pkgs ? import <nixpkgs> {},
   gis ? import (fetchTarball {
     url = https://github.com/icetan/nix-git-ignore-source/archive/v1.0.0.tar.gz;
     sha256 = "1mnpab6x0bnshpp0acddylpa3dslhzd2m1kk3n0k23jqf9ddz57k";
@@ -21,7 +20,6 @@ let
     cairo
     pcre
 
-
     glib
     libselinux.dev
     libsepol.dev
@@ -41,9 +39,10 @@ let
     bash
     pkg-config
     clang_11
+    qt5.wrapQtAppsHook
     llvmPackages_11.libclang
     llvmPackages_11.bintools
-    pkgs.latest.rustChannels.stable.rust
+    rustc cargo
     git
     cmake
     extra-cmake-modules

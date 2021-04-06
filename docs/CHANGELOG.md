@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.3.3
+
+### Improve
+
 * Really fix [#425](https://github.com/Riey/kime/issues/425)
 * Support nix `shell.nix`, `default.nix`
 

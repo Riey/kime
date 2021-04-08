@@ -21,6 +21,10 @@ jobs:
     - uses: cachix/install-nix-action@v13
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+    - name: Fix nix store permission
+      run: |
+          sudo mkdir -pv /nix/store
+          sudo chmod -R a+rw /nix/store
     - name: Caching nix
       uses: actions/cache@v2
       with:

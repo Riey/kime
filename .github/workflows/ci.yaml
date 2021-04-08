@@ -25,14 +25,14 @@ jobs:
       with:
         path: |
           /nix/store
-        key: ${{ runner.os }}-nix-store-${{ hashFile('deps.nix') }}
+        key: ${{ runner.os }}-nix-store-${{ hashFiles('deps.nix') }}
     - uses: actions/cache@v2
       with:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-nix-cargo-${{ hashFile('Cargo.lock') }}
+        key: ${{ runner.os }}-nix-cargo-${{ hashFiles('Cargo.lock') }}
     - run: nix-shell --pure --run "bash scripts/build.sh -ad"
     - run: nix-shell --pure --run "cargo test"
 

@@ -19,11 +19,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    # Cached install dependencies
+    # Cached install shell
     - uses: rikhuijzer/cache-install@v1.0.8
       with:
         key: ${{ runner.os }}-nix-${{ hashFiles('nix/deps.nix') }}
-        nix_file: nix/deps-only.nix
+        nix_file: shell.nix
     - name: Caching cargo
       uses: actions/cache@v2
       with:

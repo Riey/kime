@@ -18,7 +18,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: rikhuijzer/cache-install@v1
+    - uses: rikhuijzer/cache-install@v1.0.8
       with:
         nix_version: nixos-unstable
         nix_file: default.nix

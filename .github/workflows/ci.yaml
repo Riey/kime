@@ -32,7 +32,10 @@ jobs:
           ${{ runner.os }}-nix-store
     - name: Restore nix-store
       if: steps.restore-nix-store.outputs.cache-hit == 'true'
-      run: sudo mv ~/nix-store/* /nix/store/
+      run: |
+        for f in ~/nix-store/*; do
+            sudo mv $f /nix/store/
+        done
     - name: Caching cargo
       uses: actions/cache@v2
       with:
@@ -47,7 +50,10 @@ jobs:
     - run: nix-shell --pure --run "cargo test"
     - name: Backup nix-store
       if: steps.restore-nix-store.outputs.cache-hit != 'true'
-      run: sudo mv /nix/store/* ~/nix-store
+      run: |
+        for f in /nix/store/*; do
+            sudo mv $f ~/nix-store/
+        done
 
   cargo-deny:
     runs-on: ubuntu-20.04

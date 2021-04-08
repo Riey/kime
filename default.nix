@@ -9,7 +9,7 @@
 with pkgs;
 let
   kimeVersion = builtins.readFile ./VERSION;
-  deps = import ./deps.nix { pkgs = pkgs; };
+  deps = import ./nix/deps.nix { pkgs = pkgs; };
 in
 rustPlatform.buildRustPackage rec {
   src = gis.gitIgnoreSource ./.;

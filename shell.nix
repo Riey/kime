@@ -3,7 +3,7 @@
 }:
 with pkgs;
 let
-  deps = import ./deps.nix { pkgs = pkgs; };
+  deps = import ./nix/deps.nix { pkgs = pkgs; };
 in
 stdenv.mkDerivation {
   name = "kime-shell";

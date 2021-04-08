@@ -3,7 +3,7 @@ pub use kime_log;
 
 #[doc(hidden)]
 pub mod build {
-    include!(concat!(env!("OUT_DIR"), "/shadow.rs"));
+    pub const VERSION: &str = include_str!("../../../../VERSION");
 }
 
 #[macro_export]
@@ -25,7 +25,6 @@ macro_rules! cli_boilerplate {
             $crate::print_version!();
             return $ok;
         }
-
         let level = if args.contains("--verbose") {
             $crate::kime_log::LevelFilter::Trace
         } else {
@@ -41,23 +40,8 @@ macro_rules! cli_boilerplate {
 #[macro_export]
 macro_rules! print_version {
     () => {
-        if $crate::build::TAG.is_empty() {
-            println!(
-                "kime(git) {} {}",
-                $crate::build::COMMIT_DATE,
-                $crate::build::SHORT_COMMIT
-            );
-        } else {
-            println!("kime(release) {}", $crate::build::TAG);
-        }
+        println!("kime {}", $crate::build::VERSION);
         println!("`{}` {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
     };
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}

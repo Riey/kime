@@ -46,7 +46,6 @@ llvmPackages_11.stdenv.mkDerivation {
     dpkg
     gnutar
     zstd
-    git
     cmake
     extra-cmake-modules
     qt5.wrapQtAppsHook

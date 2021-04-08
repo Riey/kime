@@ -1,12 +1,8 @@
 {
-  moz_overlay ? import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz),
-  pkgs ? import <nixpkgs> { overlays = [ moz_overlay ]; },
+  pkgs ? import <nixpkgs> {},
 }:
 with pkgs;
-let
-  rust-toolchain = pkgs.rustChannelOf { version = "1.51.0"; channel = "stable"; };
-in
-llvmPackages_11.stdenv.mkDerivation {
+stdenv.mkDerivation {
   name = "kime-shell";
 
   dontUseCmakeConfigure = true;
@@ -22,7 +18,6 @@ llvmPackages_11.stdenv.mkDerivation {
 
     cairo
     pcre
-
 
     glib
     libselinux.dev
@@ -43,16 +38,16 @@ llvmPackages_11.stdenv.mkDerivation {
     bash
     pkg-config
     clang_11
+    qt5.wrapQtAppsHook
     llvmPackages_11.libclang
     llvmPackages_11.bintools
     dpkg
     gnutar
     zstd
+    rustc cargo
     cmake
     extra-cmake-modules
     qt5.wrapQtAppsHook
-
-    rust-toolchain.rust
   ];
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
 }

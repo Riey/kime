@@ -28,8 +28,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nix-
     - name: Restore nix-store
-      if: ${{ restore-nix-store.outputs.cache-hit }}
-      run: if [ -d ~/ ] sudo mv ~/nix-store/* /nix/store/*
+      if: steps.restore-nix-store.outputs.cache-hit == 'true'
+      run: sudo mv ~/nix-store/* /nix/store/*
     - name: Caching cargo
       uses: actions/cache@v2
       with:
@@ -43,6 +43,7 @@ jobs:
     - run: nix-shell --pure --run "bash scripts/build.sh -ad"
     - run: nix-shell --pure --run "cargo test"
     - name: Backup nix-store
+      if: steps.restore-nix-store.outputs.cache-hit != 'true'
       run: sudo mv /nix/store/* ~/nix-store/*
 
   cargo-deny:

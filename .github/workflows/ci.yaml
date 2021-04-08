@@ -18,15 +18,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: cachix/install-nix-action@v13
+    - uses: rikhuijzer/cache-install@v1
       with:
-        nix_path: nixpkgs=channel:nixos-unstable
-    - name: Caching nix
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/nix/store
-        key: ${{ runner.os }}-nix-store-${{ hashFiles('deps.nix') }}
+        nix_version: nixos-unstable
+        nix_file: default.nix
+        key: ${{ runner.os }}-nix-${{ hashFiles('deps.nix') }}
     - name: Caching cargo
       uses: actions/cache@v2
       with:
@@ -35,8 +31,8 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-nix-cargo-${{ hashFiles('Cargo.lock') }}
-    - run: nix-shell --store $HOME --pure --run "bash scripts/build.sh -ad"
-    - run: nix-shell --store $HOME --pure --run "cargo test"
+    - run: nix-shell --pure --run "bash scripts/build.sh -ad"
+    - run: nix-shell --pure --run "cargo test"
 
   cargo-deny:
     runs-on: ubuntu-20.04

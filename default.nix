@@ -53,7 +53,7 @@ rustPlatform.buildRustPackage rec {
   buildInputs = kimeBuildInputs;
   nativeBuildInputs = kimeNativeBuildInputs;
   version = kimeVersion;
-  cargoSha256 = "19jya8zwh5k0ldzq51n9xxm2baalmjif6w87g16p071mk5h5p0hp";
+  cargoSha256 = "146m1kg83bmlf6sxi20yawksp47qp0byrh07wkv56vyl5p02fsz1";
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;
   buildPhase = "bash scripts/build.sh -ar";

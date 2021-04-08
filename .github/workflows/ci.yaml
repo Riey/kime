@@ -30,6 +30,7 @@ jobs:
     - name: Restore nix-store
       if: steps.restore-nix-store.outputs.cache-hit == 'true'
       run: |
+        sudo mkdir -pv /nix/store
         for f in ~/nix-store/*; do
             sudo mv $f /nix/store/
         done

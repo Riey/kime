@@ -25,7 +25,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ~/nix-store
+          ~/nix/store
         key: ${{ runner.os }}-nix-store-${{ hashFiles('deps.nix') }}
     - name: Caching cargo
       uses: actions/cache@v2
@@ -35,8 +35,8 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-nix-cargo-${{ hashFiles('Cargo.lock') }}
-    - run: nix-shell --store ~/nix-store --pure --run "bash scripts/build.sh -ad"
-    - run: nix-shell --store ~/nix-store --pure --run "cargo test"
+    - run: nix-shell --store $HOME --pure --run "bash scripts/build.sh -ad"
+    - run: nix-shell --store $HOME --pure --run "cargo test"
 
   cargo-deny:
     runs-on: ubuntu-20.04

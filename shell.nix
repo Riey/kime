@@ -1,8 +1,8 @@
 {
-  pkgs ? import <nixpkgs> { },
+  pkgs ? import <nixpkgs> {},
 }:
 with pkgs;
-llvmPackages_11.stdenv.mkDerivation {
+stdenv.mkDerivation {
   name = "kime-shell";
 
   dontUseCmakeConfigure = true;
@@ -18,7 +18,6 @@ llvmPackages_11.stdenv.mkDerivation {
 
     cairo
     pcre
-
 
     glib
     libselinux.dev
@@ -39,13 +38,13 @@ llvmPackages_11.stdenv.mkDerivation {
     bash
     pkg-config
     clang_11
+    qt5.wrapQtAppsHook
     llvmPackages_11.libclang
     llvmPackages_11.bintools
-    cargo
-    rustc
     dpkg
     gnutar
     zstd
+    rustc cargo
     cmake
     extra-cmake-modules
     qt5.wrapQtAppsHook

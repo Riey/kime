@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    # Cached install shell
+    - run: mkdir -pv ~/nix-store
     - uses: actions/cache@v2
       with:
         path: ~/nix-store

@@ -20,10 +20,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     # Cached install shell
-    - uses: rikhuijzer/cache-install@v1.0.8
+    - uses: actions/cache@v2
       with:
+        path: ~/nix-store
         key: ${{ runner.os }}-nix-${{ hashFiles('nix/deps.nix') }}
-        nix_file: shell.nix
+        restore-keys: |
+          ${{ runner.os }}-nix-
+    - name: Restore nix-store
+      run: sudo mv ~/nix-store/* /nix/store/*
     - name: Caching cargo
       uses: actions/cache@v2
       with:
@@ -32,8 +36,12 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-nix-cargo-${{ hashFiles('Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-nix-cargo-
     - run: nix-shell --pure --run "bash scripts/build.sh -ad"
     - run: nix-shell --pure --run "cargo test"
+    - name: Backup nix-store
+      run: sudo mv /nix/store/* ~/nix-store/*
 
   cargo-deny:
     runs-on: ubuntu-20.04

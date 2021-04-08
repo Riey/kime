@@ -28,8 +28,8 @@ jobs:
     - uses: cachix/install-nix-action@v13
       with:
         nix_path: nixpkgs=channel:nixos-unstable
-    - run: nix-shell --arg debug true --pure --run "bash scripts/build.sh -ad"
-    - run: nix-shell --arg debug true --pure --run "cargo test"
+    - run: nix-shell --pure --run "bash scripts/build.sh -ad"
+    - run: nix-shell --pure --run "cargo test"
 
   cargo-deny:
     runs-on: ubuntu-20.04

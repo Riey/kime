@@ -19,9 +19,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: mkdir -pv ~/nix-store
-    - uses: cachix/install-nix-action@v13
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
     - name: Caching nix-store
       uses: actions/cache@v2
       id: restore-nix-store
@@ -46,6 +43,9 @@ jobs:
         key: ${{ runner.os }}-nix-cargo-${{ hashFiles('Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-nix-cargo-
+    - uses: cachix/install-nix-action@v13
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
     - run: nix-shell --pure --run "bash scripts/build.sh -ad"
     - run: nix-shell --pure --run "cargo test"
     - name: Backup nix-store

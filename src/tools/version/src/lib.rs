@@ -44,4 +44,3 @@ macro_rules! print_version {
         println!("`{}` {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
     };
 }
-

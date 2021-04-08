@@ -787,6 +787,7 @@ dependencies = [
  "bindgen",
  "cbindgen",
  "cty",
+ "kime-engine-capi",
 ]
 
 [[package]]

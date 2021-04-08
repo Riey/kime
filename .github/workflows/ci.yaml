@@ -11,6 +11,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  NIX_PATH: nixpkgs=channel:nixos-unstable
 
 jobs:
   build:
@@ -20,8 +21,6 @@ jobs:
     - uses: actions/checkout@v2
     - uses: rikhuijzer/cache-install@v1.0.8
       with:
-        nix_version: nixos-unstable
-        nix_file: default.nix
         key: ${{ runner.os }}-nix-${{ hashFiles('deps.nix') }}
     - name: Caching cargo
       uses: actions/cache@v2

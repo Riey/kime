@@ -22,13 +22,14 @@ jobs:
     - uses: cachix/install-nix-action@v13
       with:
         nix_path: nixpkgs=channel:nixos-unstable
-    - uses: actions/cache@v2
+    - name: Caching nix-store
+      uses: actions/cache@v2
       id: restore-nix-store
       with:
         path: ~/nix-store
-        key: ${{ runner.os }}-nix-${{ hashFiles('nix/deps.nix') }}
+        key: ${{ runner.os }}-nix-store-${{ hashFiles('nix/deps.nix') }}
         restore-keys: |
-          ${{ runner.os }}-nix-
+          ${{ runner.os }}-nix-store
     - name: Restore nix-store
       if: steps.restore-nix-store.outputs.cache-hit == 'true'
       run: sudo mv ~/nix-store/* /nix/store/*
@@ -46,7 +47,7 @@ jobs:
     - run: nix-shell --pure --run "cargo test"
     - name: Backup nix-store
       if: steps.restore-nix-store.outputs.cache-hit != 'true'
-      run: sudo mv /nix/store/* ~/nix-store/*
+      run: sudo mv /nix/store/* ~/nix-store
 
   cargo-deny:
     runs-on: ubuntu-20.04

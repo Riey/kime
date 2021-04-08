@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Don't use git for check version [#441](https://github.com/Riey/kime/issues/441)
+
 ## 2.3.3
 
 ### Improve

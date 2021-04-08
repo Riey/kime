@@ -18,16 +18,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v13
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - uses: actions/cache@v2
+      with:
+        path: |
+          /nix/store
+        key: ${{ runner.os }}-nix-store-${{ hashFile('deps.nix') }}
     - uses: actions/cache@v2
       with:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-nix-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - uses: cachix/install-nix-action@v13
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
+        key: ${{ runner.os }}-nix-cargo-${{ hashFile('Cargo.lock') }}
     - run: nix-shell --pure --run "bash scripts/build.sh -ad"
     - run: nix-shell --pure --run "cargo test"
 

@@ -7,7 +7,7 @@
 }:
 with pkgs;
 let
-  kimeVersion = "2.3.2";
+  kimeVersion = builtins.readFile ./VERSION;
   kimeBuildInputs = [
     dbus
     dbus_libs
@@ -43,7 +43,6 @@ let
     llvmPackages_11.libclang
     llvmPackages_11.bintools
     rustc cargo
-    git
     cmake
     extra-cmake-modules
   ];

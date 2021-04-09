@@ -20,7 +20,7 @@ llvmPackages_11.stdenv.mkDerivation {
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
     src = gis.gitIgnoreSource ./.;
-    sha256 = "0fxfzbb1vm6q6n1k14zin8lklqgfnm40553lch4p5yy0smf6pnd4";
+    sha256 = "1ykyd097pwz5xbqxlsq0845pg06g394g1jqwv7ipr6dpbh7r3xqa";
   };
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;

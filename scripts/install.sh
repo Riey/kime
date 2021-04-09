@@ -80,6 +80,7 @@ if [ $KIME_INSTALL_HEADER -eq "1" ]; then
 fi
 
 install -Dm644 $KIME_OUT/default_config.yaml -T "$PREFIX/$KIME_CONFIG_DIR/config.yaml"
+install -Dm644 $KIME_OUT/default_daemon.yaml -T "$PREFIX/$KIME_CONFIG_DIR/daemon.yaml"
 install -Dm644 $KIME_OUT/*.desktop -t "$PREFIX/$KIME_AUTOSTART_DIR"
 install -Dm644 $KIME_OUT/icons/64x64/*.png -t "$PREFIX/$KIME_ICON_DIR/hicolor/64x64/apps"
 install -Dm755 $KIME_OUT/libkime_engine.so -t "$PREFIX/$KIME_LIB_DIR"

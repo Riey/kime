@@ -1,4 +1,14 @@
-# 설정
+# daemon.yaml
+
+## modules
+
+데몬의 모듈 목록입니다 기본값은 *전부*입니다
+
+* Xim
+* Wayland
+* Indicator
+
+# config.yaml
 
 [English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
 

@@ -1,12 +1,12 @@
 [Desktop Entry]
-Exec=/usr/bin/kime-indicator
-Name=kime indicator server
-Name[ko]=kime indicator 서버
-Comment=Start kime indicator server
+Exec=/usr/bin/kime
+Name=kime daemon
+Name[ko]=kime 데몬
+Comment=Start kime daemon
 Type=Application
 Terminal=false
-StartupNotify=false
 NoDisplay=true
+StartupNotify=false
 X-GNOME-Autostart-Phase=Applications
 X-GNOME-AutoRestart=false
 X-GNOME-Autostart-Notify=false

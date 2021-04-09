@@ -123,13 +123,9 @@ if you use X it could be done in .xprofile
 
 ### Start additional servers
 
-kime install several .desktop file into /etc/xdg/autostart
+kime install kime.desktop file into /etc/xdg/autostart for kime daemon
 
-| `kime-xim` | `kime-wayland` | `kime-indicator` |
-|------------|----------------|---------------|
-| for xim    | for wayland    | for tray icon |
-
-if you doesn't have `start application` such as `i3` or `sway` that just run this commands in your config file
+if you doesn't have `start application` such as `i3` or `sway` that just run `kime` or other server commands in your config file
 
 ### Configuration
 

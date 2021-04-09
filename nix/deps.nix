@@ -14,6 +14,8 @@ with pkgs;
     pcre
 
     glib
+    libthai
+    libdatrie
     libselinux.dev
     libsepol.dev
     utillinux.dev
@@ -38,8 +40,6 @@ with pkgs;
     rustc cargo
     cmake
     extra-cmake-modules
-    gnutar
-    zstd
   ];
 }
 

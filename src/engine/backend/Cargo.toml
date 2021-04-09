@@ -7,7 +7,7 @@ license = "GPL-3.0"
 
 [dependencies]
 bitflags = "1.2.1"
-enum-map = "0.6.4"
+enum-map = "1.0.0"
 enumset = { version = "1.0.4", features = ["serde"] }
 serde = { version = "1.0.118", features = ["derive"] }
 serde_yaml = "0.8.15"

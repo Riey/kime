@@ -19,8 +19,8 @@ llvmPackages_11.stdenv.mkDerivation {
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustPlatform.cargoSetupHook ];
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
-    src = ./Cargo.lock;
-    sha256 = "1lh3pjax9f7xqhh5y8pn1iqzj5pacw3qwn4mk8by3j4hpnqqkrcq";
+    src = gis.gitIgnoreSource ./.;
+    sha256 = "0fxfzbb1vm6q6n1k14zin8lklqgfnm40553lch4p5yy0smf6pnd4";
   };
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;

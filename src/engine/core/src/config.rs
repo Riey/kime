@@ -1,4 +1,4 @@
-use enum_map::{Enum, EnumMap};
+use enum_map::{enum_map, Enum, EnumMap};
 use enumset::EnumSetType;
 use kime_engine_backend::{Key, KeyCode, ModifierState};
 use kime_engine_backend_hangul::{HangulConfig, HangulData};
@@ -157,26 +157,29 @@ impl Config {
         Self {
             default_category: raw.default_category,
             global_category_state: raw.global_category_state,
-            category_hotkeys: EnumMap::from(|cat| {
-                if let Some(map) = raw.category_hotkeys.get_mut(&cat) {
-                    for (k, v) in raw.global_hotkeys.iter() {
-                        map.entry(*k).or_insert(*v);
+            category_hotkeys: enum_map! {
+                cat => {
+                    if let Some(map) = raw.category_hotkeys.get_mut(&cat) { for (k, v) in raw.global_hotkeys.iter() {
+                            map.entry(*k).or_insert(*v);
+                        }
+                        map.iter().map(|(k, v)| (*k, *v)).collect()
+                    } else {
+                        raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                     }
-                    map.iter().map(|(k, v)| (*k, *v)).collect()
-                } else {
-                    raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                 }
-            }),
-            mode_hotkeys: EnumMap::from(|mode| {
-                if let Some(map) = raw.mode_hotkeys.get_mut(&mode) {
-                    for (k, v) in raw.global_hotkeys.iter() {
-                        map.entry(*k).or_insert(*v);
+            },
+            mode_hotkeys: enum_map! {
+                mode => {
+                    if let Some(map) = raw.mode_hotkeys.get_mut(&mode) {
+                        for (k, v) in raw.global_hotkeys.iter() {
+                            map.entry(*k).or_insert(*v);
+                        }
+                        map.iter().map(|(k, v)| (*k, *v)).collect()
+                    } else {
+                        raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                     }
-                    map.iter().map(|(k, v)| (*k, *v)).collect()
-                } else {
-                    raw.global_hotkeys.iter().map(|(k, v)| (*k, *v)).collect()
                 }
-            }),
+            },
             icon_color: raw.icon_color,
             xim_preedit_font: raw.xim_preedit_font,
             preferred_direct: raw.latin.preferred_direct,

@@ -5,7 +5,7 @@ with pkgs;
 let
   deps = import ./nix/deps.nix { pkgs = pkgs; };
 in
-stdenv.mkDerivation {
+mkShell {
   name = "kime-shell";
   dontUseCmakeConfigure = true;
   buildInputs = deps.kimeBuildInputs;

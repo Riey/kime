@@ -18,21 +18,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - run: mkdir -pv ~/nix
+    - run: mkdir -pv ~/nix-store
     - uses: cachix/install-nix-action@v13
       with:
         nix_path: nixpkgs=channel:nixos-unstable
-    - name: Caching nix
+    - name: Caching nix-store
       uses: actions/cache@v2
-      id: restore-nix
+      id: restore-nix-store
       with:
-        path: ~/nix
-        key: ${{ runner.os }}-nix-${{ hashFiles('nix/deps.nix') }}
+        path: ~/nix-store
+        key: ${{ runner.os }}-nix-closure-${{ hashFiles('nix/deps.nix') }}
         restore-keys: |
-          ${{ runner.os }}-nix
-    - name: Restore nix
+          ${{ runner.os }}-nix-closure-
+        run: nix-store --import < ~/nix-store/cache
+    - name: Restore nix-store
       if: steps.restore-nix-store.outputs.cache-hit == 'true'
-      run: sudo mv ~/nix /nix
     - name: Caching cargo
       uses: actions/cache@v2
       with:
@@ -47,8 +47,7 @@ jobs:
     - run: nix-shell --pure --run "cargo test"
     - name: Backup nix-store
       if: steps.restore-nix-store.outputs.cache-hit != 'true'
-      run: |
-        sudo mv /nix ~/nix
+      run: nix-store --export $(nix-store -q --references `echo $buildInputs` `echo $nativeBuildInputs`) > ~/nix-store/cache
 
   cargo-deny:
     runs-on: ubuntu-20.04

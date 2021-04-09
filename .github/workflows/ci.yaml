@@ -32,7 +32,7 @@ jobs:
           ${{ runner.os }}-nix-cache-
     - name: Restore nix-store
       if: steps.restore-nix-store.outputs.cache-hit == 'true'
-      run: sudo nix-store --import < ~/nix-store/cache
+      run: nix-store --import < ~/nix-store/cache
     - name: Caching cargo
       uses: actions/cache@v2
       with:

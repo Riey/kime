@@ -27,12 +27,12 @@ jobs:
       id: restore-nix-store
       with:
         path: ~/nix-store
-        key: ${{ runner.os }}-nix-closure-${{ hashFiles('nix/deps.nix') }}
+        key: ${{ runner.os }}-nix-cache-${{ hashFiles('nix/deps.nix') }}
         restore-keys: |
-          ${{ runner.os }}-nix-closure-
+          ${{ runner.os }}-nix-cache-
     - name: Restore nix-store
       if: steps.restore-nix-store.outputs.cache-hit == 'true'
-      run: nix-store --import < ~/nix-store/cache
+      run: sudo nix-store --import < ~/nix-store/cache
     - name: Caching cargo
       uses: actions/cache@v2
       with:
@@ -47,7 +47,7 @@ jobs:
     - run: nix-shell --pure --run "cargo test"
     - name: Backup nix-store
       if: steps.restore-nix-store.outputs.cache-hit != 'true'
-      run: nix-store --export $(nix-store -q --references `echo $buildInputs` `echo $nativeBuildInputs`) > ~/nix-store/cache
+      run: nix-shell --run 'nix-store --export $(nix-store -q --references `echo $buildInputs` `echo $nativeBuildInputs`) > ~/nix-store/cache'
 
   cargo-deny:
     runs-on: ubuntu-20.04

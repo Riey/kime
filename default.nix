@@ -10,17 +10,20 @@ with pkgs;
 let
   kimeVersion = builtins.readFile ./VERSION;
   deps = import ./nix/deps.nix { pkgs = pkgs; };
+  testArgs = if debug then "" else "--release";
 in
-rustPlatform.buildRustPackage rec {
+llvmPackages_11.stdenv.mkDerivation {
+  name = "kime";
   src = gis.gitIgnoreSource ./.;
-  pname = "kime";
   buildInputs = deps.kimeBuildInputs;
-  nativeBuildInputs = deps.kimeNativeBuildInputs;
+  nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustPlatform.cargoSetupHook ];
   version = kimeVersion;
-  cargoSha256 = "146m1kg83bmlf6sxi20yawksp47qp0byrh07wkv56vyl5p02fsz1";
+  cargoDeps = rustPlatform.fetchCargoTarball {
+    src = ./Cargo.lock;
+    sha256 = "1lh3pjax9f7xqhh5y8pn1iqzj5pacw3qwn4mk8by3j4hpnqqkrcq";
+  };
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;
-  checkType = if debug then "debug" else "release";
   buildPhase = if debug then "bash scripts/build.sh -ad" else "bash scripts/build.sh -ar";
   installPhase = ''
     KIME_BIN_DIR=bin \
@@ -30,6 +33,10 @@ rustPlatform.buildRustPackage rec {
     KIME_LIB_DIR=lib \
     KIME_QT5_DIR=lib/qt-${pkgs.qt5.qtbase.version} \
     bash scripts/install.sh "$out"
+  '';
+  doCheck = true;
+  checkPhase = ''
+    cargo test ${testArgs}
   '';
 }
 

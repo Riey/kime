@@ -7,6 +7,7 @@
 ### Improve
 
 * Don't use git for check version [#441](https://github.com/Riey/kime/issues/441)
+* Support `kime` daemon [#440](https://github.com/Riey/kime/issues/440)
 
 ## 2.3.3
 

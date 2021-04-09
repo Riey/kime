@@ -30,9 +30,9 @@ jobs:
         key: ${{ runner.os }}-nix-closure-${{ hashFiles('nix/deps.nix') }}
         restore-keys: |
           ${{ runner.os }}-nix-closure-
-        run: nix-store --import < ~/nix-store/cache
     - name: Restore nix-store
       if: steps.restore-nix-store.outputs.cache-hit == 'true'
+      run: nix-store --import < ~/nix-store/cache
     - name: Caching cargo
       uses: actions/cache@v2
       with:

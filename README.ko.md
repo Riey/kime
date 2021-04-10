@@ -120,13 +120,9 @@ export XMODIFIERS=@im=kime
 
 ### 추가적인 서버를 실행
 
-kime은 여러 .desktop 파일을 /etc/xdg/autostart에 설치합니다
+kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설치합니다
 
-| `kime-xim` | `kime-wayland` | `kime-indicator` |
-|------------|----------------|---------------|
-| xim용      | wayland용      | 표시기용 |
-
-혹시 `i3`나 `sway`처럼 `시작 프로그램`을 지원하지 않는다면 해당 WM의 설정파일에서 커맨드를 실행해주세요
+혹시 `i3`나 `sway`처럼 `시작 프로그램`을 지원하지 않는다면 해당 WM의 설정파일에서 `kime` 혹은 원하시는 서버 커맨드를 실행해주세요
 
 ### Configuration
 

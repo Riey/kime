@@ -80,6 +80,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
+name = "boxfnonce"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5988cb1d626264ac94100be357308f29ff7cbdd3b36bda27f450a4ee3f713426"
+
+[[package]]
 name = "bstr"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -329,10 +335,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctrlc"
+version = "3.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c15b8ec3b5755a188c141c1f6a98e76de31b936209bf066b647979e2a84764a9"
+dependencies = [
+ "nix",
+ "winapi",
+]
+
+[[package]]
 name = "cty"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7313c0d620d0cb4dbd9d019e461a4beb501071ff46ec0ab933efb4daa76d73e3"
+
+[[package]]
+name = "daemonize"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70c24513e34f53b640819f0ac9f705b673fcf4006d7aab8778bee72ebfc89815"
+dependencies = [
+ "boxfnonce",
+ "libc",
+]
 
 [[package]]
 name = "darling"
@@ -691,6 +717,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d99f9e3e84b8f67f846ef5b4cbbc3b1c29f6c759fcbce6f01aa0e73d932a24c"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kime"
+version = "0.1.0"
+dependencies = [
+ "ctrlc",
+ "daemonize",
+ "kime-run-dir",
+ "kime-version",
+ "log",
+ "pico-args",
+ "serde",
+ "serde_yaml",
+ "xdg",
 ]
 
 [[package]]

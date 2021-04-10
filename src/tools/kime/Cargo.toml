@@ -1,0 +1,18 @@
+[package]
+name = "kime"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+ctrlc = { version = "3.1.8", features = ["termination"] }
+daemonize = "0.4.1"
+kime-run-dir = { path = "../run_dir" }
+kime-version = { path = "../version" }
+log = "0.4.14"
+pico-args = "0.4.0"
+serde = { version = "1.0.125", features = ["derive"] }
+serde_yaml = "0.8.17"
+xdg = "2.2.0"
+

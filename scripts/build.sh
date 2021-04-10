@@ -72,6 +72,7 @@ while getopts hrda opt; do
             if (pkg-config --exists xcb && pkg-config --exists cairo); then
                 KIME_BUILD_XIM=1
             fi
+            KIME_BUILD_KIME=1
             KIME_CMAKE_ARGS="-DENABLE_GTK2=ON -DENABLE_GTK3=ON -DENABLE_GTK4=ON -DENABLE_QT5=ON -DENABLE_QT6=ON $KIME_CMAKE_ARGS"
             ;;
     esac
@@ -106,6 +107,10 @@ if [ "$KIME_BUILD_WAYLAND" -eq "1" ]; then
     KIME_RUST_PKGS+=("-pkime-wayland")
 fi
 
+if [ "$KIME_BUILD_KIME" -eq "1" ]; then
+    KIME_RUST_PKGS+=("-pkime")
+fi
+
 cargo_build "${KIME_RUST_PKGS[@]}"
 
 cp $TARGET_DIR/libkime_engine.so $KIME_OUT || true
@@ -113,6 +118,7 @@ cp $TARGET_DIR/kime-check $KIME_OUT || true
 cp $TARGET_DIR/kime-indicator $KIME_OUT || true
 cp $TARGET_DIR/kime-xim $KIME_OUT || true
 cp $TARGET_DIR/kime-wayland $KIME_OUT || true
+cp $TARGET_DIR/kime $KIME_OUT || true
 
 cp src/engine/cffi/kime_engine.h $KIME_OUT
 cp src/engine/cffi/kime_engine.hpp $KIME_OUT

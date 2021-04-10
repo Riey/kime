@@ -5,23 +5,14 @@
 #include <QtGui/QInputMethodEvent>
 #include <qpa/qplatforminputcontext.h>
 
-class KimeInputContext;
-
-class KimeEventFilter : public QObject {
-  Q_OBJECT
-public:
-  bool eventFilter(QObject *obj, QEvent *event);
-  void setCtx(KimeInputContext *ctx);
-
-private:
-  KimeInputContext *ctx = nullptr;
-};
+class KimeEventFilter;
 
 class KimeInputContext : public QPlatformInputContext {
   Q_OBJECT
 
 public:
-  KimeInputContext(kime::InputEngine *engine, const kime::Config *config);
+  KimeInputContext(kime::InputEngine *engine, const kime::Config *config, KimeEventFilter* filter);
+  ~KimeInputContext();
 
   bool isValid() const override;
   Qt::LayoutDirection inputDirection() const override;
@@ -42,5 +33,5 @@ private:
   const kime::Config *config = nullptr;
   kime::InputEngine *engine = nullptr;
   QObject *focus_object = nullptr;
-  KimeEventFilter filter;
+  KimeEventFilter* filter = nullptr;
 };

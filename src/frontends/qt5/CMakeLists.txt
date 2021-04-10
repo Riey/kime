@@ -10,7 +10,7 @@ if(NOT Qt5_FOUND)
     return()
 endif()
 
-add_library(kime-qt5 SHARED src/plugin.cc src/input_context.cc)
+add_library(kime-qt5 SHARED src/plugin.cc src/input_context.cc src/event_filter.cc)
 
 target_include_directories(kime-qt5 PRIVATE ${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${KIME_INCLUDE})
 target_link_directories(kime-qt5 PRIVATE ${KIME_LIB_DIRS})

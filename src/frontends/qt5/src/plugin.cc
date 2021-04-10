@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 #include "input_context.hpp"
+#include <QtWidgets/QApplication>
 
 KimePlatformInputContextPlugin::KimePlatformInputContextPlugin() {
   if (kime::kime_api_version() != kime::KIME_API_VERSION) {
@@ -8,15 +9,18 @@ KimePlatformInputContextPlugin::KimePlatformInputContextPlugin() {
 
   this->config = kime::kime_config_load();
   this->engine = kime::kime_engine_new(this->config);
+  this->filter = new KimeEventFilter();
+  qApp->installEventFilter(this->filter);
 }
 
 KimePlatformInputContextPlugin::~KimePlatformInputContextPlugin() {
   kime::kime_engine_delete(this->engine);
   kime::kime_config_delete(this->config);
+  delete this->filter;
 }
 
 QPlatformInputContext *
 KimePlatformInputContextPlugin::create(const QString &key,
                                        const QStringList &param_list) {
-  return new KimeInputContext(this->engine, this->config);
+  return new KimeInputContext(this->engine, this->config, this->filter);
 }

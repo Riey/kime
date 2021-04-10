@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kime-qt5.hpp"
+#include "event_filter.hpp"
 
 #include <QString>
 #include <QtPlugin>
@@ -14,6 +15,8 @@ class KimePlatformInputContextPlugin : public QPlatformInputContextPlugin {
 private:
   kime::InputEngine *engine = nullptr;
   kime::Config *config = nullptr;
+  KimeEventFilter *filter = nullptr;
+  
 
 public:
   KimePlatformInputContextPlugin();

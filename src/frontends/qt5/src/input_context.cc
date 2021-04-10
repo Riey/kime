@@ -1,17 +1,22 @@
 #include "input_context.hpp"
+#include "event_filter.hpp"
 
 #include <QMetaEnum>
 #include <QtCore/QCoreApplication>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QTextCharFormat>
-#include <QtWidgets/QApplication>
 
 KimeInputContext::KimeInputContext(kime::InputEngine *engine,
-                                   const kime::Config *config) {
+                                   const kime::Config *config,
+                                   KimeEventFilter *filter) {
   this->engine = engine;
   this->config = config;
-  this->filter.setCtx(this);
-  qApp->installEventFilter(&this->filter);
+  this->filter = filter;
+  filter->addCtx(this);
+}
+
+KimeInputContext::~KimeInputContext() {
+  filter->removeCtx(this);
 }
 
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}
@@ -142,20 +147,4 @@ void KimeInputContext::commit_str(kime::RustStr s) {
     e.setCommitString(QString::fromUtf8((const char *)(s.ptr), s.len));
   }
   QCoreApplication::sendEvent(this->focus_object, &e);
-}
-
-void KimeEventFilter::setCtx(KimeInputContext *ctx) { this->ctx = ctx; }
-
-bool KimeEventFilter::eventFilter(QObject *obj, QEvent *event) {
-  // QMetaEnum meta = QMetaEnum::fromType<decltype(event->type())>();
-  // KIME_DEBUG << meta.valueToKey(event->type()) << "\n";
-  if (event->type() == QEvent::MouseButtonPress) {
-#ifdef DEBUG
-    KIME_DEBUG << "Button"
-               << "\n";
-#endif
-    this->ctx->reset();
-  }
-
-  return QObject::eventFilter(obj, event);
 }

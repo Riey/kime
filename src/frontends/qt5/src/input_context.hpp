@@ -32,5 +32,5 @@ private:
   const kime::Config *config = nullptr;
   kime::InputEngine *engine = nullptr;
   QObject *focus_object = nullptr;
-  KimeEventFilter* filter = nullptr;
+  KimeEventFilter *filter = nullptr;
 };

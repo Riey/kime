@@ -13,9 +13,7 @@ KimeInputContext::KimeInputContext(kime::InputEngine *engine,
 
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}
 
-void KimeInputContext::commit() {
-  this->reset();
-}
+void KimeInputContext::commit() { this->reset(); }
 
 void KimeInputContext::reset() {
 #ifdef DEBUG

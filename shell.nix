@@ -2,10 +2,8 @@
   packging ? false,
 }:
 let
-  pkgs = import (builtins.fetchTarball {
-    url    = "https://github.com/NixOS/nixpkgs/archive/ae09772927566314ad11e366ddb46a9c7ffb666a.tar.gz";
-    sha256 = "17dvi648znl87ddcl63f4j59vwd82cggckfnll4c6wgg25q6ygnh";
-  }) {};
+  sources = import ./nix/sources.nix;
+  pkgs = import sources.nixpkgs {};
   deps = import ./nix/deps.nix { pkgs = pkgs; };
 in
 with pkgs;

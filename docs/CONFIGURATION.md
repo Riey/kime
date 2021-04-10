@@ -1,4 +1,14 @@
-# Options
+# daemon.yaml
+
+## modules
+
+List of daemon modules default is *all*
+
+* Xim
+* Wayland
+* Indicator
+
+# config.yaml
 
 [English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
 

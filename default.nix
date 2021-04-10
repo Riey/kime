@@ -1,17 +1,15 @@
 {
-  pkgs ? import <nixpkgs> {},
-  gis ? import (fetchTarball {
-    url = https://github.com/icetan/nix-git-ignore-source/archive/v1.0.0.tar.gz;
-    sha256 = "1mnpab6x0bnshpp0acddylpa3dslhzd2m1kk3n0k23jqf9ddz57k";
-  }) {},
+  sources ? import ./nix/sources.nix,
   debug ? false,
 }:
-with pkgs;
 let
-  kimeVersion = builtins.readFile ./VERSION;
+  pkgs = import sources.nixpkgs {};
+  gis = import sources.nix-git-ignore-source {};
   deps = import ./nix/deps.nix { pkgs = pkgs; };
+  kimeVersion = builtins.readFile ./VERSION;
   testArgs = if debug then "" else "--release";
 in
+with pkgs;
 llvmPackages_11.stdenv.mkDerivation {
   name = "kime";
   src = gis.gitIgnoreSource ./.;
@@ -19,8 +17,8 @@ llvmPackages_11.stdenv.mkDerivation {
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustPlatform.cargoSetupHook ];
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
-    src = gis.gitIgnoreSource ./.;
-    sha256 = "0fxfzbb1vm6q6n1k14zin8lklqgfnm40553lch4p5yy0smf6pnd4";
+    src = ./Cargo.lock;
+    sha256 = "1ykyd097pwz5xbqxlsq0845pg06g394g1jqwv7ipr6dpbh7r3xqa";
   };
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;

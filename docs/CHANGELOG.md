@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.4.0
+
+### Improve
+
 * Don't use git for check version [#441](https://github.com/Riey/kime/issues/441)
 * Remove click event filter for Qt
 * Support `kime` daemon [#440](https://github.com/Riey/kime/issues/440)

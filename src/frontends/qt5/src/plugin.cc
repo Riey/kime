@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 #include "input_context.hpp"
+#include <QtWidgets/QApplication>
 
 KimePlatformInputContextPlugin::KimePlatformInputContextPlugin() {
   if (kime::kime_api_version() != kime::KIME_API_VERSION) {

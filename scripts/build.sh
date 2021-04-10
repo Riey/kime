@@ -29,14 +29,12 @@ if [ -z "$KIME_BUILD_INDICATOR" ]; then
 fi
 
 set_release() {
-    NEED_STRIP=1
     TARGET_DIR=./target/release
     _KIME_CARGO_ARGS="--release"
     _KIME_CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
 }
 
 set_debug() {
-    NEED_STRIP=0
     TARGET_DIR=./target/debug
     _KIME_CARGO_ARGS=""
     _KIME_CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Debug"
@@ -137,6 +135,3 @@ make $KIME_MAKE_ARGS
 
 cp lib/* $KIME_OUT || true
 
-if [ $NEED_STRIP -eq "1" ]; then
-    strip -s $KIME_OUT/* 2&>/dev/null || true
-fi

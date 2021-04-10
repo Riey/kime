@@ -6,26 +6,12 @@
 #include <QtGui/QTextCharFormat>
 #include <QtWidgets/QApplication>
 
-static bool APP_QUITED = false;
-
 KimeInputContext::KimeInputContext(kime::InputEngine *engine,
                                    const kime::Config *config) {
   this->engine = engine;
   this->config = config;
   this->filter.setCtx(this);
   qApp->installEventFilter(&this->filter);
-  QObject::connect(qApp, &QCoreApplication::aboutToQuit,
-                   []() { APP_QUITED = true; });
-}
-
-KimeInputContext::~KimeInputContext() {
-  if (!APP_QUITED) {
-    qApp->removeEventFilter(&this->filter);
-  } else {
-#ifdef DEBUG
-    KIME_DEBUG << "Remove skipped\n";
-#endif
-  }
 }
 
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}

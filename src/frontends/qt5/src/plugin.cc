@@ -9,18 +9,15 @@ KimePlatformInputContextPlugin::KimePlatformInputContextPlugin() {
 
   this->config = kime::kime_config_load();
   this->engine = kime::kime_engine_new(this->config);
-  this->filter = new KimeEventFilter();
-  qApp->installEventFilter(this->filter);
 }
 
 KimePlatformInputContextPlugin::~KimePlatformInputContextPlugin() {
   kime::kime_engine_delete(this->engine);
   kime::kime_config_delete(this->config);
-  delete this->filter;
 }
 
 QPlatformInputContext *
 KimePlatformInputContextPlugin::create(const QString &key,
                                        const QStringList &param_list) {
-  return new KimeInputContext(this->engine, this->config, this->filter);
+  return new KimeInputContext(this->engine, this->config);
 }

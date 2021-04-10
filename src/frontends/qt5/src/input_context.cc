@@ -1,5 +1,4 @@
 #include "input_context.hpp"
-#include "event_filter.hpp"
 
 #include <QMetaEnum>
 #include <QtCore/QCoreApplication>
@@ -7,12 +6,9 @@
 #include <QtGui/QTextCharFormat>
 
 KimeInputContext::KimeInputContext(kime::InputEngine *engine,
-                                   const kime::Config *config,
-                                   KimeEventFilter *filter) {
+                                   const kime::Config *config) {
   this->engine = engine;
   this->config = config;
-  this->filter = filter;
-  filter->addCtx(this);
 }
 
 KimeInputContext::~KimeInputContext() {
@@ -21,7 +17,9 @@ KimeInputContext::~KimeInputContext() {
 
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}
 
-void KimeInputContext::commit() {}
+void KimeInputContext::commit() {
+  this->reset();
+}
 
 void KimeInputContext::reset() {
 #ifdef DEBUG

@@ -12,6 +12,7 @@ llvmPackages_11.stdenv.mkDerivation {
   dontUseCmakeConfigure = true;
   buildInputs = deps.kimeBuildInputs;
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ (lib.optionals packging [ gnutar zstd dpkg ]);
+  CMAKE_EXPORT_COMPILE_COMMANDS = 1;
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   RUST_BACKTRACE = 1;
 }

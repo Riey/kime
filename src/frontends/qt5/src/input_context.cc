@@ -4,33 +4,16 @@
 #include <QtCore/QCoreApplication>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QTextCharFormat>
-#include <QtWidgets/QApplication>
-
-static bool APP_QUITED = false;
 
 KimeInputContext::KimeInputContext(kime::InputEngine *engine,
                                    const kime::Config *config) {
   this->engine = engine;
   this->config = config;
-  this->filter.setCtx(this);
-  qApp->installEventFilter(&this->filter);
-  QObject::connect(qApp, &QCoreApplication::aboutToQuit,
-                   []() { APP_QUITED = true; });
-}
-
-KimeInputContext::~KimeInputContext() {
-  if (!APP_QUITED) {
-    qApp->removeEventFilter(&this->filter);
-  } else {
-#ifdef DEBUG
-    KIME_DEBUG << "Remove skipped\n";
-#endif
-  }
 }
 
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}
 
-void KimeInputContext::commit() {}
+void KimeInputContext::commit() { this->reset(); }
 
 void KimeInputContext::reset() {
 #ifdef DEBUG
@@ -156,20 +139,4 @@ void KimeInputContext::commit_str(kime::RustStr s) {
     e.setCommitString(QString::fromUtf8((const char *)(s.ptr), s.len));
   }
   QCoreApplication::sendEvent(this->focus_object, &e);
-}
-
-void KimeEventFilter::setCtx(KimeInputContext *ctx) { this->ctx = ctx; }
-
-bool KimeEventFilter::eventFilter(QObject *obj, QEvent *event) {
-  // QMetaEnum meta = QMetaEnum::fromType<decltype(event->type())>();
-  // KIME_DEBUG << meta.valueToKey(event->type()) << "\n";
-  if (event->type() == QEvent::MouseButtonPress) {
-#ifdef DEBUG
-    KIME_DEBUG << "Button"
-               << "\n";
-#endif
-    this->ctx->reset();
-  }
-
-  return QObject::eventFilter(obj, event);
 }

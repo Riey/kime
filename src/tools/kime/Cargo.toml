@@ -3,6 +3,7 @@ name = "kime"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
+license = "GPL-3.0"
 
 [dependencies]
 ctrlc = { version = "3.1.8", features = ["termination"] }

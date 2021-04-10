@@ -73,6 +73,7 @@ install_bin kime-check
 install_bin kime-indicator
 install_bin kime-xim
 install_bin kime-wayland
+install_bin kime
 
 if [ $KIME_INSTALL_HEADER -eq "1" ]; then
     install -Dm644 $KIME_OUT/kime_engine.h -t "$PREFIX/$KIME_INCLUDE_DIR"

@@ -4,7 +4,7 @@ description = "Kime engine library"
 version = "0.5.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2018"
-license = "GPL-3.0"
+license = "GPL-3.0-or-later"
 
 [lib]
 name = "kime_engine"

@@ -11,10 +11,6 @@ KimeInputContext::KimeInputContext(kime::InputEngine *engine,
   this->config = config;
 }
 
-KimeInputContext::~KimeInputContext() {
-  filter->removeCtx(this);
-}
-
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}
 
 void KimeInputContext::commit() {

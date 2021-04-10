@@ -11,8 +11,7 @@ class KimeInputContext : public QPlatformInputContext {
   Q_OBJECT
 
 public:
-  KimeInputContext(kime::InputEngine *engine, const kime::Config *config, KimeEventFilter* filter);
-  ~KimeInputContext();
+  KimeInputContext(kime::InputEngine *engine, const kime::Config *config);
 
   bool isValid() const override;
   Qt::LayoutDirection inputDirection() const override;

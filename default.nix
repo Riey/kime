@@ -22,6 +22,7 @@ llvmPackages_11.stdenv.mkDerivation {
   };
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;
+  dontWrapQtApps = true;
   buildPhase = if debug then "bash scripts/build.sh -ad" else "bash scripts/build.sh -ar";
   installPhase = ''
     KIME_BIN_DIR=bin \

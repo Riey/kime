@@ -34,7 +34,6 @@ with pkgs;
     bash
     pkg-config
     clang_11
-    qt5.wrapQtAppsHook
     llvmPackages_11.libclang
     llvmPackages_11.bintools
     rustc cargo

@@ -7,8 +7,8 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 cty = "0.2.1"
+kime-engine-capi = { path = "../capi" }
 
 [build-dependencies]
-kime-engine-capi = { path = "../capi" }
 bindgen = { version = "0.58.1", default-features = false }
 cbindgen = { version = "0.19.0", default-features = false }

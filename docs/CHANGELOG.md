@@ -8,6 +8,8 @@
 
 ### Improve
 
+* Add `--kill` flag in kime daemon
+
 ## 2.4.0
 
 ### Improve

@@ -49,11 +49,7 @@ impl KimeTray {
             color,
         }
     }
-    pub fn update_with_bytes(&mut self, bytes: &[u8]) {
-        if bytes.len() < 2 {
-            return;
-        }
-
+    pub fn update_with_bytes(&mut self, bytes: &[u8; 1]) {
         let category = match bytes[0] {
             1 => InputCategory::Hangul,
             _ => InputCategory::Latin,
@@ -78,7 +74,7 @@ impl KimeTray {
     }
 }
 
-const EXIT_MESSAGE: &[u8; 2] = b"ZZ";
+const EXIT_MESSAGE: &[u8; 1] = b"Z";
 
 fn try_terminate_previous_server(file_path: &Path) -> Result<()> {
     let mut client = UnixStream::connect(file_path)?;
@@ -100,8 +96,8 @@ fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
 
     let listener = UnixListener::bind(file_path)?;
 
-    let mut current_bytes = [0; 2];
-    let mut read_buf = [0; 2];
+    let mut current_bytes = [0; 1];
+    let mut read_buf = [0; 1];
 
     loop {
         let mut client = listener.accept()?.0;

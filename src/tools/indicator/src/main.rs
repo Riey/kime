@@ -1,4 +1,5 @@
 use anyhow::Result;
+use kime_config::{IconColor, RawConfig};
 use ksni::menu::*;
 use std::net::Shutdown;
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -14,14 +15,9 @@ enum InputCategory {
     Hangul,
 }
 
-#[derive(Clone, Copy, Debug)]
-enum IconColor {
-    Black,
-    White,
-}
-
 struct KimeTray {
     icon_name: &'static str,
+    color: IconColor,
 }
 
 impl ksni::Tray for KimeTray {
@@ -47,9 +43,10 @@ impl ksni::Tray for KimeTray {
 }
 
 impl KimeTray {
-    pub fn new() -> Self {
+    pub fn new(color: IconColor) -> Self {
         Self {
             icon_name: "kime-latin-black",
+            color,
         }
     }
     pub fn update_with_bytes(&mut self, bytes: &[u8]) {
@@ -62,23 +59,18 @@ impl KimeTray {
             _ => InputCategory::Latin,
         };
 
-        let color = match bytes[1] {
-            1 => IconColor::White,
-            _ => IconColor::Black,
-        };
-
-        self.update(category, color);
+        self.update(category);
     }
 
-    pub fn update(&mut self, category: InputCategory, color: IconColor) {
-        log::debug!("Update: ({:?}, {:?})", category, color);
+    pub fn update(&mut self, category: InputCategory) {
+        log::debug!("Update: {:?}", category);
 
         self.icon_name = match category {
-            InputCategory::Latin => match color {
+            InputCategory::Latin => match self.color {
                 IconColor::Black => "kime-latin-black",
                 IconColor::White => "kime-latin-white",
             },
-            InputCategory::Hangul => match color {
+            InputCategory::Hangul => match self.color {
                 IconColor::Black => "kime-hangul-black",
                 IconColor::White => "kime-hangul-white",
             },
@@ -96,8 +88,8 @@ fn try_terminate_previous_server(file_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn indicator_server(file_path: &Path) -> Result<()> {
-    let service = ksni::TrayService::new(KimeTray::new());
+fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
+    let service = ksni::TrayService::new(KimeTray::new(color));
     let handle = service.handle();
     service.spawn();
 
@@ -138,7 +130,15 @@ fn indicator_server(file_path: &Path) -> Result<()> {
 fn main() {
     kime_version::cli_boilerplate!((),);
 
+    let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
+    let config = dirs
+        .find_config_file("config.yaml")
+        .and_then(|c| {
+            let config: RawConfig = serde_yaml::from_reader(std::fs::File::open(c).ok()?).ok()?;
+            Some(config.indicator)
+        })
+        .unwrap_or_default();
     let run_dir = kime_run_dir::get_run_dir();
     let file_path = run_dir.join("kime-indicator.sock");
-    indicator_server(&file_path).unwrap();
+    indicator_server(&file_path, config.icon_color).unwrap();
 }

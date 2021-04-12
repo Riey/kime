@@ -1,9 +1,9 @@
-use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, Key, RawConfig};
+use kime_engine_core::{Config, EngineConfig, InputCategory, InputEngine, InputResult, Key};
 use pretty_assertions::assert_eq;
 
 #[track_caller]
-pub fn test_input_impl(config: RawConfig, category: InputCategory, keys: &[(Key, &str, &str)]) {
-    let config = Config::new(config);
+pub fn test_input_impl(engine: EngineConfig, category: InputCategory, keys: &[(Key, &str, &str)]) {
+    let config = Config::new(engine);
     let mut engine = InputEngine::new(&config);
     engine.set_input_category(category);
 
@@ -55,12 +55,12 @@ macro_rules! define_layout_test {
         use enumset::EnumSet;
         use kime_engine_backend_hangul::Addon;
         use kime_engine_backend_latin::LatinLayout;
-        use kime_engine_core::{Hotkey, InputCategory, Key, KeyCode::*, RawConfig};
+        use kime_engine_core::{EngineConfig, Hotkey, InputCategory, Key, KeyCode::*};
         use shared::test_input_impl;
 
         #[allow(dead_code)]
-        fn default_config() -> RawConfig {
-            let mut config = RawConfig::default();
+        fn default_config() -> EngineConfig {
+            let mut config = EngineConfig::default();
             config.hangul.layout = $layout.into();
             config.latin.layout = $latin_layout;
             config

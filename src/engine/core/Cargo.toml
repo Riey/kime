@@ -6,6 +6,7 @@ edition = "2018"
 license = "GPL-3.0-or-later"
 
 [dependencies]
+kime-config = { path = "../../tools/config" }
 kime-engine-backend = { path = "../backend" }
 kime-engine-backend-hangul = { path = "../backends/hangul" }
 kime-engine-backend-hanja = { path = "../backends/hanja" }

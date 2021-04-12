@@ -1,10 +1,10 @@
 mod config;
 mod os;
 
-pub use config::{Config, Hotkey, InputCategory, InputMode, RawConfig};
+pub use config::{Config, EngineConfig, Hotkey, InputCategory, InputMode, RawConfig};
 pub use kime_engine_backend::{InputResult, Key, KeyCode, KeyMap, ModifierState};
 
-use config::{HotkeyBehavior, HotkeyResult, IconColor};
+use config::{HotkeyBehavior, HotkeyResult};
 use os::{DefaultOsContext, OsContext};
 
 use kime_engine_backend::{InputEngineBackend, InputEngineMode, InputEngineModeResult};
@@ -19,7 +19,6 @@ pub struct InputEngine {
     commit_buf: String,
     preedit_buf: String,
     os_ctx: DefaultOsContext,
-    icon_color: IconColor,
 }
 
 impl Default for InputEngine {
@@ -35,7 +34,6 @@ impl InputEngine {
             commit_buf: String::with_capacity(16),
             preedit_buf: String::with_capacity(16),
             os_ctx: DefaultOsContext::default(),
-            icon_color: config.icon_color,
         }
     }
 
@@ -56,8 +54,7 @@ impl InputEngine {
     }
 
     pub fn update_layout_state(&mut self) -> std::io::Result<()> {
-        self.os_ctx
-            .update_layout_state(self.category(), self.icon_color)
+        self.os_ctx.update_layout_state(self.category())
     }
 
     fn try_get_global_input_category_state(&mut self, config: &Config) {

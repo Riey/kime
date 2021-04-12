@@ -11,6 +11,10 @@ if [ -z "$KIME_INSTALL_HEADER" ]; then
     KIME_INSTALL_HEADER=0
 fi
 
+if [ -z "$KIME_INSTALL_DOC" ]; then
+    KIME_INSTALL_DOC=1
+fi
+
 PREFIX=$1
 
 if [ -z "$KIME_BIN_DIR" ]; then
@@ -21,8 +25,8 @@ if [ -z "$KIME_INCLUDE_DIR" ]; then
     KIME_INCLUDE_DIR=usr/include
 fi
 
-if [ -z "$KIME_CONFIG_DIR" ]; then
-    KIME_CONFIG_DIR=etc/xdg/kime
+if [ -z "$KIME_DOC_DIR" ]; then
+    KIME_DOC_DIR=usr/share/doc/kime
 fi
 
 if [ -z "$KIME_ICON_DIR" ]; then
@@ -69,19 +73,30 @@ install_bin () {
     install_if $1 755 -t "$KIME_BIN_DIR"
 }
 
+install_doc () {
+    install -Dm644 $KIME_OUT/$1 -t "$PREFIX/$KIME_DOC_DIR"
+}
+
 install_bin kime-check
 install_bin kime-indicator
 install_bin kime-xim
 install_bin kime-wayland
 install_bin kime
 
-if [ $KIME_INSTALL_HEADER -eq "1" ]; then
+if [ "${KIME_INSTALL_HEADER}" -eq "1" ]; then
     install -Dm644 $KIME_OUT/kime_engine.h -t "$PREFIX/$KIME_INCLUDE_DIR"
     install -Dm644 $KIME_OUT/kime_engine.hpp -t "$PREFIX/$KIME_INCLUDE_DIR"
 fi
 
-install -Dm644 $KIME_OUT/default_config.yaml -T "$PREFIX/$KIME_CONFIG_DIR/config.yaml"
-install -Dm644 $KIME_OUT/default_daemon.yaml -T "$PREFIX/$KIME_CONFIG_DIR/daemon.yaml"
+if [ "${KIME_INSTALL_DOC}" -eq "1" ]; then
+    install_doc default_config.yaml
+    install_doc LICENSE
+    install_doc NOTICE.md
+    install_doc README.md
+    install_doc README.ko.md
+    install_doc CHANGELOG.md
+fi
+
 install -Dm644 $KIME_OUT/*.desktop -t "$PREFIX/$KIME_AUTOSTART_DIR"
 install -Dm644 $KIME_OUT/icons/64x64/*.png -t "$PREFIX/$KIME_ICON_DIR/hicolor/64x64/apps"
 install -Dm755 $KIME_OUT/libkime_engine.so -t "$PREFIX/$KIME_LIB_DIR"

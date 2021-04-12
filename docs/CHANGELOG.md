@@ -5,10 +5,12 @@
 ### Breaking
 
 * Change config file layout
+* Default config is no more installed just in the doc folder
 
 ### Improve
 
 * Add `--kill` flag in kime daemon
+* Install docs
 
 ## 2.4.0
 

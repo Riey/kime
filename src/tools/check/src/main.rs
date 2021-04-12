@@ -115,7 +115,11 @@ impl Check {
                 let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
                 let config_path = match dirs.find_config_file("config.yaml") {
                     Some(path) => path,
-                    _ => return CondResult::Fail("Can't find config.yaml".into()),
+                    _ => {
+                        return CondResult::Ignore(
+                            "User config not exists will use default config".into(),
+                        )
+                    }
                 };
 
                 println!("Loading config path: {}", config_path.display());

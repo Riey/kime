@@ -1,13 +1,3 @@
-# daemon.yaml
-
-## modules
-
-List of daemon modules default is *all*
-
-* Xim
-* Wayland
-* Indicator
-
 # config.yaml
 
 [English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
@@ -23,6 +13,38 @@ You can also change the location of config file using [`$XDG_CONFIG_DIR` or
 
 [xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
 
+# daemon
+
+`kime` daemon setting
+
+## modules
+
+List of daemon modules default is *all*
+
+* Xim
+* Wayland
+* Indicator
+
+# indicator
+
+`kime-indicator` setting
+
+## icon_color
+
+Set icon color for indicator
+
+### Possible values
+
+* Black
+* White
+
+| default |`Black`|
+|---------|-------|
+
+# engine
+
+`kime-engine` setting
+
 ## default_category
 
 Set default InputCategory when IME starts, please select between `Latin` and `Hangul`
@@ -35,18 +57,6 @@ Set default InputCategory when IME starts, please select between `Latin` and `Ha
 Set category state globally
 
 | default |`false`|
-|---------|-------|
-
-## icon_color
-
-Set icon color for indicator
-
-### Possible values
-
-* Black
-* White
-
-| default |`Black`|
 |---------|-------|
 
 ## hotkeys

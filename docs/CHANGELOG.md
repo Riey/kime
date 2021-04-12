@@ -4,6 +4,8 @@
 
 ### Breaking
 
+* Change config file layout
+
 ### Improve
 
 ## 2.4.0

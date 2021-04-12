@@ -725,6 +725,7 @@ version = "0.1.0"
 dependencies = [
  "ctrlc",
  "daemonize",
+ "kime-config",
  "kime-run-dir",
  "kime-version",
  "log",
@@ -748,6 +749,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "kime-config"
+version = "0.1.0"
+dependencies = [
+ "enum-map",
+ "enumset",
+ "kime-engine-backend",
+ "kime-engine-backend-hangul",
+ "kime-engine-backend-hanja",
+ "kime-engine-backend-latin",
+ "maplit",
+ "serde",
+ "serde_yaml",
+]
+
+[[package]]
 name = "kime-engine-backend"
 version = "0.1.0"
 dependencies = [
@@ -755,7 +771,6 @@ dependencies = [
  "enum-map",
  "enumset",
  "serde",
- "serde_yaml",
  "strum 0.20.0",
 ]
 
@@ -831,6 +846,7 @@ dependencies = [
  "criterion",
  "enum-map",
  "enumset",
+ "kime-config",
  "kime-engine-backend",
  "kime-engine-backend-emoji",
  "kime-engine-backend-hangul",
@@ -860,11 +876,15 @@ name = "kime-indicator"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "kime-config",
  "kime-run-dir",
  "kime-version",
  "ksni",
  "log",
  "pico-args",
+ "serde",
+ "serde_yaml",
+ "xdg",
 ]
 
 [[package]]

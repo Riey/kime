@@ -10,5 +10,4 @@ bitflags = "1.2.1"
 enum-map = "1.0.0"
 enumset = { version = "1.0.4", features = ["serde"] }
 serde = { version = "1.0.118", features = ["derive"] }
-serde_yaml = "0.8.15"
 strum = { version = "0.20.0", features = ["derive"] }

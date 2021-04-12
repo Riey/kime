@@ -1,0 +1,21 @@
+[package]
+name = "kime-config"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+kime-engine-backend = { path = "../../engine/backend" }
+kime-engine-backend-hangul = { path = "../../engine/backends/hangul" }
+kime-engine-backend-hanja = { path = "../../engine/backends/hanja" }
+kime-engine-backend-latin = { path = "../../engine/backends/latin" }
+
+enum-map = "1.0.0"
+enumset = "1.0.6"
+maplit = "1.0.2"
+serde = { version = "1.0.125", features = ["derive"] }
+
+[dev-dependencies]
+serde_yaml = "0.8.17"
+

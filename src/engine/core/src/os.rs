@@ -1,14 +1,14 @@
-use crate::{IconColor, InputCategory};
+use crate::InputCategory;
 use std::io;
 
 pub trait OsContext {
     fn read_global_hangul_state(&mut self) -> io::Result<InputCategory>;
-    fn update_layout_state(&mut self, category: InputCategory, color: IconColor) -> io::Result<()>;
+    fn update_layout_state(&mut self, category: InputCategory) -> io::Result<()>;
 }
 
 #[cfg(unix)]
 mod unix {
-    use crate::{IconColor, InputCategory};
+    use crate::InputCategory;
     use std::{
         io::{self, Read, Write},
         os::unix::net::UnixStream,
@@ -46,30 +46,22 @@ mod unix {
             }
         }
 
-        fn update_layout_state(
-            &mut self,
-            category: InputCategory,
-            color: IconColor,
-        ) -> io::Result<()> {
+        fn update_layout_state(&mut self, category: InputCategory) -> io::Result<()> {
             let category = match category {
                 InputCategory::Hangul => 1,
                 InputCategory::Latin => 0,
-            };
-            let color = match color {
-                IconColor::Black => 0,
-                IconColor::White => 1,
             };
 
             let mut client = UnixStream::connect(&self.sock_path)?;
             client.set_read_timeout(Some(Duration::from_secs(2))).ok();
             client.set_write_timeout(Some(Duration::from_secs(2))).ok();
-            client.write_all(&[category, color])
+            client.write_all(&[category])
         }
     }
 }
 
 mod fallback {
-    use crate::{IconColor, InputCategory};
+    use crate::InputCategory;
     use std::io;
 
     #[derive(Default)]
@@ -80,11 +72,7 @@ mod fallback {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
 
-        fn update_layout_state(
-            &mut self,
-            _category: InputCategory,
-            _color: IconColor,
-        ) -> io::Result<()> {
+        fn update_layout_state(&mut self, _category: InputCategory) -> io::Result<()> {
             Err(io::Error::new(io::ErrorKind::Other, "Unsupported platform"))
         }
     }

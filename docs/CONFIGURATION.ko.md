@@ -1,13 +1,3 @@
-# daemon.yaml
-
-## modules
-
-데몬의 모듈 목록입니다 기본값은 *전부*입니다
-
-* Xim
-* Wayland
-* Indicator
-
 # config.yaml
 
 [English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
@@ -17,6 +7,38 @@
 [`$XDG_CONFIG_DIR`이나 `$XDG_CONFIG_HOME`][xdg] 환경 변수를 이용해 설정 파일의 위치를 바꿀 수도 있습니다. kime는 `$XDG_CONFIG_DIR/kime/config.yaml`과 `$XDG_CONFIG_HOME/kime/config.yaml`에 있는 설정 파일도 읽으려고 시도할 것입니다.
 
 [xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
+
+# daemon
+
+`kime` 데몬의 설정입니다
+
+## modules
+
+데몬의 모듈 목록입니다 기본값은 *전부*입니다
+
+* Xim
+* Wayland
+* Indicator
+
+# indicator
+
+`kime-indicator`의 설정입니다
+
+### icon_color
+
+indicator에서 사용할 아이콘의 색을 정합니다
+
+#### 가능한 값
+
+* Black
+* White
+
+| 기본값 |`Black`|
+|--------|-------|
+
+# engine
+
+`kime-engine`의 설정입니다
 
 ## default_category
 
@@ -41,17 +63,6 @@ category_layout:
 | 기본값 |`false`|
 |--------|-------|
 
-## icon_color
-
-indicator에서 사용할 아이콘의 색을 정합니다
-
-### 가능한 값
-
-* Black
-* White
-
-| 기본값 |`Black`|
-|--------|-------|
 
 ## hotkeys
 

@@ -1,4 +1,5 @@
 use daemonize::Daemonize;
+use kime_config::{Module, RawConfig};
 use std::fs::File;
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::{
@@ -6,33 +7,11 @@ use std::{
     process::{Command, Stdio},
 };
 
-#[derive(serde::Deserialize)]
-struct Config {
-    modules: Vec<Module>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            modules: vec![Module::Wayland, Module::Xim, Module::Indicator],
-        }
-    }
-}
-
-#[derive(serde::Deserialize, Clone, Copy)]
-enum Module {
-    Xim,
-    Wayland,
-    Indicator,
-}
-
-impl Module {
-    pub const fn process_name(self) -> &'static str {
-        match self {
-            Self::Xim => "kime-xim",
-            Self::Wayland => "kime-wayland",
-            Self::Indicator => "kime-indicator",
-        }
+const fn process_name(module: Module) -> &'static str {
+    match module {
+        Module::Xim => "kime-xim",
+        Module::Wayland => "kime-wayland",
+        Module::Indicator => "kime-indicator",
     }
 }
 
@@ -68,12 +47,16 @@ fn main() -> Result<(), ()> {
         log::error!("Can't get xdg dirs: {}", err);
         ()
     })?;
-    let config = match dir.find_config_file("daemon.yaml") {
-        Some(path) => serde_yaml::from_reader(File::open(path).expect("Can't open config file"))
-            .expect("Can't read config file"),
+    let config = match dir.find_config_file("config.yaml") {
+        Some(path) => {
+            let config: RawConfig =
+                serde_yaml::from_reader(File::open(path).expect("Can't open config file"))
+                    .expect("Can't read config file");
+            config.daemon
+        }
         None => {
             log::warn!("Can't find config file use default config");
-            Config::default()
+            Default::default()
         }
     };
 
@@ -91,7 +74,7 @@ fn main() -> Result<(), ()> {
         .modules
         .into_iter()
         .filter_map(|module| {
-            let name = module.process_name();
+            let name = process_name(module);
             match Command::new(name)
                 .stdin(Stdio::null())
                 .stdout(Stdio::inherit())

@@ -4,6 +4,12 @@
 
 ### Breaking
 
+### Improve
+
+## 2.5.0
+
+### Breaking
+
 * Change config file layout
 * Default config is no more installed just in the doc folder
 

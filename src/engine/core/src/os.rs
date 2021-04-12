@@ -35,7 +35,7 @@ mod unix {
 
     impl super::OsContext for OsContext {
         fn read_global_hangul_state(&mut self) -> io::Result<InputCategory> {
-            let mut buf = [0; 2];
+            let mut buf = [0; 1];
             let mut client = UnixStream::connect(&self.sock_path)?;
             client.set_read_timeout(Some(Duration::from_secs(2))).ok();
             client.set_write_timeout(Some(Duration::from_secs(2))).ok();

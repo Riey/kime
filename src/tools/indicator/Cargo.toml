@@ -7,9 +7,13 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 kime-version = { path = "../version" }
+kime-config = { path = "../config" }
 kime-run-dir = { path = "../run_dir" }
 
 anyhow = "1.0.38"
 pico-args = "0.4.0"
 log = "0.4.14"
 ksni = "0.1.2"
+xdg = "2.2.0"
+serde_yaml = "0.8.17"
+serde = { version = "1.0.125", features = ["derive"] }

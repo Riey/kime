@@ -7,23 +7,12 @@ with pkgs;
     libdbusmenu
 
     xorg.libxcb
-    xlibs.libpthreadstubs
-    xlibs.libXdmcp.dev
 
     cairo
     pcre
 
-    glib
-    libthai
-    libdatrie
-    libselinux.dev
-    libsepol.dev
-    utillinux.dev
     gtk2
     gtk3
-    at_spi2_core.dev
-    epoxy.dev
-    xlibs.libXtst
 
     # gtk4
 

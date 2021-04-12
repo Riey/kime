@@ -1,5 +1,6 @@
 {
-  packging ? false,
+  packaging ? false,
+  develop ? false,
 }:
 let
   sources = import ./nix/sources.nix;
@@ -12,7 +13,9 @@ llvmPackages_11.stdenv.mkDerivation {
   dontUseCmakeConfigure = true;
   dontWrapQtApps = true;
   buildInputs = deps.kimeBuildInputs;
-  nativeBuildInputs = deps.kimeNativeBuildInputs ++ (lib.optionals packging [ gnutar zstd dpkg ]);
+  nativeBuildInputs = deps.kimeNativeBuildInputs
+                      ++ lib.optionals packaging [ gnutar zstd dpkg ]
+                      ++ lib.optionals develop [ rust-analyzer ];
   CMAKE_EXPORT_COMPILE_COMMANDS = 1;
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   RUST_BACKTRACE = 1;

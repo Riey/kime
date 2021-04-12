@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Fix indicator doesn't change icon properly [#457](https://github.com/Riey/kime/issues/457)
+
 ## 2.5.0
 
 ### Breaking

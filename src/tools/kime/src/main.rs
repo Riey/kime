@@ -1,11 +1,11 @@
 use daemonize::Daemonize;
 use kime_config::{Module, RawConfig};
-use std::fs::File;
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::{
-    env,
+    env, io,
     process::{Command, Stdio},
 };
+use std::{fs::File, path::Path};
 
 const fn process_name(module: Module) -> &'static str {
     match module {
@@ -15,11 +15,40 @@ const fn process_name(module: Module) -> &'static str {
     }
 }
 
+fn kill_daemon(pid: &Path) -> io::Result<()> {
+    let pid = std::fs::read_to_string(pid)?;
+
+    let ret = Command::new("kill")
+        .arg(pid)
+        .spawn()?
+        .wait_with_output()?
+        .status;
+
+    if ret.success() {
+        Ok(())
+    } else {
+        log::error!("kill return: {}", ret);
+        Err(io::Error::new(io::ErrorKind::Other, "kill command failed"))
+    }
+}
+
 fn main() -> Result<(), ()> {
-    let mut args = kime_version::cli_boilerplate!(Ok(()),);
+    let mut args = kime_version::cli_boilerplate!(
+        Ok(()),
+        "-k or --kill: kill daemon then exit",
+        "-D or --no-daemon: don't start as daemon",
+    );
+
+    let run_dir = kime_run_dir::get_run_dir();
+    let pid = run_dir.join("kime.pid");
+
+    if args.contains(["-k", "--kill"]) {
+        return kill_daemon(&pid).map_err(|err| {
+            log::error!("Can't kill daemon: {}", err);
+        });
+    }
 
     if !args.contains(["-D", "--no-daemon"]) {
-        let run_dir = kime_run_dir::get_run_dir();
         let stderr = run_dir.join("kime.err");
         let stderr_file = match File::create(stderr) {
             Ok(file) => file,
@@ -28,7 +57,6 @@ fn main() -> Result<(), ()> {
                 return Err(());
             }
         };
-        let pid = run_dir.join("kime.pid");
         match Daemonize::new()
             .working_directory("/tmp")
             .stderr(stderr_file)

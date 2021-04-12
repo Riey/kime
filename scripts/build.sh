@@ -120,7 +120,11 @@ cp $TARGET_DIR/kime $KIME_OUT || true
 
 cp src/engine/cffi/kime_engine.h $KIME_OUT
 cp src/engine/cffi/kime_engine.hpp $KIME_OUT
+cp docs/CHANGELOG.md $KIME_OUT
 cp LICENSE $KIME_OUT
+cp NOTICE.md $KIME_OUT
+cp README.md $KIME_OUT
+cp README.ko.md $KIME_OUT
 cp -R res/* $KIME_OUT
 
 mkdir -pv build/cmake

@@ -17,8 +17,8 @@ llvmPackages_11.stdenv.mkDerivation {
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustPlatform.cargoSetupHook ];
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
-    src = ./Cargo.lock;
-    sha256 = "1ykyd097pwz5xbqxlsq0845pg06g394g1jqwv7ipr6dpbh7r3xqa";
+    src = gis.gitIgnoreSource ./.;
+    sha256 = "0ian6jkay9a1pprxd09ky2sslgg7r5lrclfdzjzksakidfsqqil4";
   };
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;
@@ -30,6 +30,7 @@ llvmPackages_11.stdenv.mkDerivation {
     KIME_INCLUDE_DIR=include \
     KIME_ICON_DIR=share/icons \
     KIME_LIB_DIR=lib \
+    KIME_DOC_DIR=share/doc/kime \
     KIME_QT5_DIR=lib/qt-${pkgs.qt5.qtbase.version} \
     bash scripts/install.sh "$out"
   '';

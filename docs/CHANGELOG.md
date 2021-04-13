@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Fix wrong symbol name (Gammma -> Gamma)
+
 ## 2.5.1
 
 ### Improve

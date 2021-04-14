@@ -2,10 +2,10 @@
 
 [English](CONFIGURATION.md), [한국어](CONFIGURATION.ko.md)
 
-Default config file is located at `/etc/xdg/kime/config.yaml`. Check
+Sample config file is located at `/usr/share/doc/kime/default_config.yaml`. Check
 [default_config.yaml](../res/default_config.yaml) to see the default configuration
-file. You edit `/etc/xdg/kime/config.yaml` or create a new config file at
-`~/.config/kime/config.yaml`.
+file. Copy this file to `/etc/xdg/kime/config.yaml` for global default configuration.
+You may create per user file at `~/.config/kime/config.yaml`.
 
 You can also change the location of config file using [`$XDG_CONFIG_DIR` or
 `$XDG_CONFIG_HOME`][xdg] environment variable. kime will try to read

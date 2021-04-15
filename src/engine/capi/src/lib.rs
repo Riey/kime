@@ -174,7 +174,8 @@ pub extern "C" fn kime_daemon_config_load() -> *mut DaemonConfig {
 
 /// Get daemon `modules`
 #[no_mangle]
-pub extern "C" fn kime_daemon_config_modules(config: &DaemonConfig) -> u32 /* enumset doesn't have transparent yet -> EnumSet<DaemonModule> */ {
+pub extern "C" fn kime_daemon_config_modules(config: &DaemonConfig) -> u32 /* enumset doesn't have transparent yet -> EnumSet<DaemonModule> */
+{
     config.modules.as_u32()
 }
 
@@ -214,9 +215,7 @@ pub unsafe extern "C" fn kime_indicator_config_delete(config: *mut IndicatorConf
 
 /// Get indicator `icon_color`
 #[no_mangle]
-pub extern "C" fn kime_indicator_config_icon_color(config: &IndicatorConfig) -> IconColor /* enumset doesn't have transparent yet -> EnumSet<DaemonModule> */ {
+pub extern "C" fn kime_indicator_config_icon_color(config: &IndicatorConfig) -> IconColor /* enumset doesn't have transparent yet -> EnumSet<DaemonModule> */
+{
     config.icon_color
 }
-
-
-

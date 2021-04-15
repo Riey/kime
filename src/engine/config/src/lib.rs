@@ -181,4 +181,3 @@ pub struct RawConfig {
     pub indicator: IndicatorConfig,
     pub engine: EngineConfig,
 }
-

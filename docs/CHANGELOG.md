@@ -7,7 +7,8 @@
 ### Improve
 
 * Fix wrong symbol name (Gammma -> Gamma)
-* Fix config loading in capi [#465](https://github.com/Riey/kime/pull/465)
+* Fix config loading in capi [#465](https://github.com/Riey/kime/issues/465)
+* Fix key repeat bug on XIM [#467](https://github.com/Riey/kime/issues/467)
 
 ## 2.5.1
 

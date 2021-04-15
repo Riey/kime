@@ -174,6 +174,9 @@ impl KimeHandler {
     }
 }
 
+// PRESS | RELEASE
+const EVENT_MASK: u32 = 3;
+
 impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     type InputStyleArray = [InputStyle; 6];
     type InputContextData = KimeData;
@@ -213,7 +216,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
     }
 
     fn filter_events(&self) -> u32 {
-        x11rb::protocol::xproto::EventMask::KEY_PRESS.into()
+        EVENT_MASK
     }
 
     fn handle_connect(
@@ -247,7 +250,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
             user_ic.ic.preedit_spot()
         );
 
-        server.set_event_mask(&user_ic.ic, 1, 0)?;
+        server.set_event_mask(&user_ic.ic, EVENT_MASK, 0)?;
 
         Ok(())
     }

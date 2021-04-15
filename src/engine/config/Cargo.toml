@@ -2,6 +2,7 @@
 name = "kime-engine-config"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
+license = "GPL-3.0-or-later"
 edition = "2018"
 
 [features]

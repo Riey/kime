@@ -52,10 +52,9 @@ pub fn test_input_impl(engine: EngineConfig, category: InputCategory, keys: &[(K
 #[allow(unused_macros)]
 macro_rules! define_layout_test {
     ($layout:expr, $latin_layout:expr, $category:expr) => {
-        use enumset::EnumSet;
         use kime_engine_backend_hangul::Addon;
         use kime_engine_backend_latin::LatinLayout;
-        use kime_engine_core::{EngineConfig, Hotkey, InputCategory, Key, KeyCode::*};
+        use kime_engine_core::{EngineConfig, EnumSet, Hotkey, InputCategory, Key, KeyCode::*};
         use shared::test_input_impl;
 
         #[allow(dead_code)]

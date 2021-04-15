@@ -28,9 +28,9 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-nix-rustc-1.51.0-${{ hashFiles('Cargo.lock') }}
+        key: ${{ runner.os }}-nix-rustc-v2-1.51.0-${{ hashFiles('Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-nix-rustc-1.51.0-
+          ${{ runner.os }}-nix-rustc-v2-1.51.0-
     - run: nix-shell --pure --run "bash scripts/build.sh -ad"
     - run: nix-shell --pure --run "cargo test"
 

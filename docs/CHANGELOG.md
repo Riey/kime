@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.5.2
+
+### Improve
+
 * Fix wrong symbol name (Gammma -> Gamma)
 * Fix config loading in capi [#465](https://github.com/Riey/kime/issues/465)
 * Fix key repeat bug on XIM [#467](https://github.com/Riey/kime/issues/467)

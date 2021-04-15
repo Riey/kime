@@ -1,5 +1,5 @@
 use daemonize::Daemonize;
-use kime_config::{Module, RawConfig};
+use kime_engine_cffi::{DaemonConfig as Config, DaemonModule as Module};
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::{
     env, io,
@@ -71,22 +71,7 @@ fn main() -> Result<(), ()> {
         }
     }
 
-    let dir = xdg::BaseDirectories::with_prefix("kime").map_err(|err| {
-        log::error!("Can't get xdg dirs: {}", err);
-        ()
-    })?;
-    let config = match dir.find_config_file("config.yaml") {
-        Some(path) => {
-            let config: RawConfig =
-                serde_yaml::from_reader(File::open(path).expect("Can't open config file"))
-                    .expect("Can't read config file");
-            config.daemon
-        }
-        None => {
-            log::warn!("Can't find config file use default config");
-            Default::default()
-        }
-    };
+    let config = Config::load();
 
     static RUN: AtomicBool = AtomicBool::new(true);
 
@@ -99,8 +84,8 @@ fn main() -> Result<(), ()> {
     log::info!("Initialized");
 
     let mut processes = config
-        .modules
-        .into_iter()
+        .modules()
+        .iter()
         .filter_map(|module| {
             let name = process_name(module);
             match Command::new(name)

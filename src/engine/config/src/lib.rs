@@ -1,26 +1,29 @@
 use enum_map::Enum;
-use enumset::EnumSetType;
+use enumset::{enum_set, EnumSetType};
 use maplit::btreemap;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 pub use kime_engine_backend::{Key, KeyCode, ModifierState};
-pub use kime_engine_backend_hangul::HangulConfig;
-pub use kime_engine_backend_latin::LatinConfig;
+pub use kime_engine_backend_hangul::{HangulConfig, HangulData};
+pub use kime_engine_backend_latin::{LatinConfig, LatinData};
 
 pub use enum_map::{enum_map, EnumMap};
 pub use enumset::EnumSet;
 
-#[derive(Serialize, Deserialize, Debug, EnumSetType, Enum, PartialOrd, Ord)]
-#[enumset(serialize_as_list)]
+#[derive(Debug, EnumSetType, Enum, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", enumset(serialize_as_list))]
 #[repr(u32)]
 pub enum InputCategory {
     Latin,
     Hangul,
 }
 
-#[derive(Serialize, Deserialize, Debug, EnumSetType, Enum, PartialOrd, Ord)]
-#[enumset(serialize_as_list)]
+#[derive(Debug, EnumSetType, Enum, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", enumset(serialize_as_list))]
 #[repr(u32)]
 pub enum InputMode {
     Math,
@@ -28,7 +31,8 @@ pub enum InputMode {
     Emoji,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug)]
 pub enum HotkeyBehavior {
     Switch(InputCategory),
     Toggle(InputCategory, InputCategory),
@@ -43,14 +47,16 @@ impl HotkeyBehavior {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug)]
 pub enum HotkeyResult {
     Consume,
     Bypass,
     ConsumeIfProcessed,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug)]
 pub struct Hotkey {
     behavior: HotkeyBehavior,
     result: HotkeyResult,
@@ -69,7 +75,9 @@ impl Hotkey {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy)]
+#[repr(C)]
 pub enum IconColor {
     White,
     Black,
@@ -81,33 +89,37 @@ impl Default for IconColor {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Module {
+#[derive(EnumSetType)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", enumset(serialize_as_list))]
+pub enum DaemonModule {
     Xim,
     Wayland,
     Indicator,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct IndicatorConfig {
     pub icon_color: IconColor,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DaemonConfig {
-    pub modules: Vec<Module>,
+    pub modules: EnumSet<DaemonModule>,
 }
 
 impl Default for DaemonConfig {
     fn default() -> Self {
         Self {
-            modules: vec![Module::Xim, Module::Wayland, Module::Indicator],
+            modules: enum_set![DaemonModule::Xim | DaemonModule::Wayland | DaemonModule::Indicator],
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 pub struct EngineConfig {
     pub default_category: InputCategory,
     pub global_category_state: bool,
@@ -161,10 +173,12 @@ impl Default for EngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Default)]
-#[serde(default)]
+#[derive(Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 pub struct RawConfig {
     pub daemon: DaemonConfig,
     pub indicator: IndicatorConfig,
     pub engine: EngineConfig,
 }
+

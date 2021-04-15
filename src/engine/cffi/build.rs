@@ -28,8 +28,6 @@ fn main() {
         .allowlist_var("kime::.+")
         .allowlist_type("kime::.+")
         .allowlist_function("kime::.+")
-        .use_core()
-        .ctypes_prefix("cty")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .unwrap();

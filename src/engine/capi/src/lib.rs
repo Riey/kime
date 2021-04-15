@@ -5,7 +5,7 @@ pub use kime_engine_core::{
     InputCategory, InputEngine, InputResult, ModifierState,
 };
 
-pub const KIME_API_VERSION: usize = 5;
+pub const KIME_API_VERSION: usize = 6;
 
 #[repr(C)]
 pub struct RustStr {

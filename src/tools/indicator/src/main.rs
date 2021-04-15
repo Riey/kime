@@ -1,5 +1,5 @@
 use anyhow::Result;
-use kime_config::{IconColor, RawConfig};
+use kime_engine_cffi::{IconColor, IndicatorConfig as Config};
 use ksni::menu::*;
 use std::net::Shutdown;
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -126,15 +126,8 @@ fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
 fn main() {
     kime_version::cli_boilerplate!((),);
 
-    let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
-    let config = dirs
-        .find_config_file("config.yaml")
-        .and_then(|c| {
-            let config: RawConfig = serde_yaml::from_reader(std::fs::File::open(c).ok()?).ok()?;
-            Some(config.indicator)
-        })
-        .unwrap_or_default();
+    let config = Config::load();
     let run_dir = kime_run_dir::get_run_dir();
     let file_path = run_dir.join("kime-indicator.sock");
-    indicator_server(&file_path, config.icon_color).unwrap();
+    indicator_server(&file_path, config.icon_color()).unwrap();
 }

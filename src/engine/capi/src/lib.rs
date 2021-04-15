@@ -1,12 +1,11 @@
 #![allow(clippy::missing_safety_doc)]
 
-pub use kime_engine_core::{Config, InputCategory, InputEngine, InputResult, ModifierState};
+pub use kime_engine_core::{
+    config_load_from_config_dir, Config, DaemonConfig, DaemonModule, IconColor, IndicatorConfig,
+    InputCategory, InputEngine, InputResult, ModifierState,
+};
 
-#[repr(C)]
-pub struct XimPreeditFont {
-    name: RustStr,
-    size: f64,
-}
+pub const KIME_API_VERSION: usize = 6;
 
 #[repr(C)]
 pub struct RustStr {
@@ -23,7 +22,11 @@ impl RustStr {
     }
 }
 
-pub const KIME_API_VERSION: usize = 5;
+#[repr(C)]
+pub struct XimPreeditFont {
+    name: RustStr,
+    size: f64,
+}
 
 /// Return API version
 #[no_mangle]
@@ -125,7 +128,10 @@ pub extern "C" fn kime_engine_press_key(
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_config_load() -> *mut Config {
-    Box::into_raw(Box::new(Config::load_from_config_dir().unwrap_or_default()))
+    let config = config_load_from_config_dir()
+        .map(|c| c.0)
+        .unwrap_or_default();
+    Box::into_raw(Box::new(config))
 }
 
 /// Create default config note that this function will not read config file
@@ -154,4 +160,62 @@ pub extern "C" fn kime_config_xim_preedit_font(config: &Config) -> XimPreeditFon
         name: RustStr::new(font),
         size,
     }
+}
+
+/// Load daemon config
+#[cfg(unix)]
+#[no_mangle]
+pub extern "C" fn kime_daemon_config_load() -> *mut DaemonConfig {
+    let config = config_load_from_config_dir()
+        .map(|c| c.1)
+        .unwrap_or_default();
+    Box::into_raw(Box::new(config))
+}
+
+/// Get daemon `modules`
+#[no_mangle]
+pub extern "C" fn kime_daemon_config_modules(config: &DaemonConfig) -> u32 /* enumset doesn't have transparent yet -> EnumSet<DaemonModule> */
+{
+    config.modules.as_u32()
+}
+
+/// Get default daemon config
+#[no_mangle]
+pub extern "C" fn kime_daemon_config_default() -> *mut DaemonConfig {
+    Box::into_raw(Box::new(DaemonConfig::default()))
+}
+
+/// Delete daemon config
+#[no_mangle]
+pub unsafe extern "C" fn kime_daemon_config_delete(config: *mut DaemonConfig) {
+    Box::from_raw(config);
+}
+
+/// Load indicator config
+#[cfg(unix)]
+#[no_mangle]
+pub extern "C" fn kime_indicator_config_load() -> *mut IndicatorConfig {
+    let config = config_load_from_config_dir()
+        .map(|c| c.2)
+        .unwrap_or_default();
+    Box::into_raw(Box::new(config))
+}
+
+/// Get default indicator config
+#[no_mangle]
+pub extern "C" fn kime_indicator_config_default() -> *mut IndicatorConfig {
+    Box::into_raw(Box::new(IndicatorConfig::default()))
+}
+
+/// Delete indicator config
+#[no_mangle]
+pub unsafe extern "C" fn kime_indicator_config_delete(config: *mut IndicatorConfig) {
+    Box::from_raw(config);
+}
+
+/// Get indicator `icon_color`
+#[no_mangle]
+pub extern "C" fn kime_indicator_config_icon_color(config: &IndicatorConfig) -> IconColor /* enumset doesn't have transparent yet -> EnumSet<DaemonModule> */
+{
+    config.icon_color
 }

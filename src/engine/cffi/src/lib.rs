@@ -1,5 +1,4 @@
-#![no_std]
-
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 #[allow(non_upper_case_globals)]
@@ -10,8 +9,10 @@ mod ffi {
 #[link(name = "kime_engine", kind = "dylib")]
 extern "C" {}
 
+pub use kime_engine_config::{DaemonModule, EnumSet};
+
 pub use ffi::{
-    InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
+    IconColor, InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
     InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, ModifierState, ModifierState_ALT,
     ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER, KIME_API_VERSION,
 };
@@ -108,6 +109,7 @@ impl Default for Config {
 }
 
 impl Config {
+    #[cfg(unix)]
     pub fn load() -> Self {
         Self {
             config: unsafe { ffi::kime_config_load() },
@@ -133,6 +135,72 @@ impl Drop for Config {
     fn drop(&mut self) {
         unsafe {
             ffi::kime_config_delete(self.config);
+        }
+    }
+}
+
+pub struct DaemonConfig {
+    config: *mut ffi::DaemonConfig,
+}
+
+impl DaemonConfig {
+    #[cfg(unix)]
+    pub fn load() -> Self {
+        Self {
+            config: unsafe { ffi::kime_daemon_config_load() },
+        }
+    }
+
+    pub fn modules(&self) -> EnumSet<DaemonModule> {
+        EnumSet::from_u32(unsafe { ffi::kime_daemon_config_modules(self.config) })
+    }
+}
+
+impl Default for DaemonConfig {
+    fn default() -> Self {
+        Self {
+            config: unsafe { ffi::kime_daemon_config_default() },
+        }
+    }
+}
+
+impl Drop for DaemonConfig {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::kime_daemon_config_delete(self.config);
+        }
+    }
+}
+
+pub struct IndicatorConfig {
+    config: *mut ffi::IndicatorConfig,
+}
+
+impl IndicatorConfig {
+    #[cfg(unix)]
+    pub fn load() -> Self {
+        Self {
+            config: unsafe { ffi::kime_indicator_config_load() },
+        }
+    }
+
+    pub fn icon_color(&self) -> IconColor {
+        unsafe { ffi::kime_indicator_config_icon_color(self.config) }
+    }
+}
+
+impl Default for IndicatorConfig {
+    fn default() -> Self {
+        Self {
+            config: unsafe { ffi::kime_indicator_config_default() },
+        }
+    }
+}
+
+impl Drop for IndicatorConfig {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::kime_indicator_config_delete(self.config);
         }
     }
 }

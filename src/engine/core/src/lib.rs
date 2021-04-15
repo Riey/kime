@@ -1,7 +1,12 @@
 mod config;
 mod os;
 
-pub use config::{Config, EngineConfig, Hotkey, InputCategory, InputMode, RawConfig};
+#[cfg(unix)]
+pub use config::load_from_config_dir as config_load_from_config_dir;
+pub use config::{
+    Config, DaemonConfig, DaemonModule, EngineConfig, EnumSet, Hotkey, IconColor, IndicatorConfig,
+    InputCategory, InputMode, RawConfig,
+};
 pub use kime_engine_backend::{InputResult, Key, KeyCode, KeyMap, ModifierState};
 
 use config::{HotkeyBehavior, HotkeyResult};

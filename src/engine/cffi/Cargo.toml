@@ -6,8 +6,8 @@ edition = "2018"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-cty = "0.2.1"
 kime-engine-capi = { path = "../capi" }
+kime-engine-config = { path = "../config" }
 
 [build-dependencies]
 bindgen = { version = "0.58.1", default-features = false }

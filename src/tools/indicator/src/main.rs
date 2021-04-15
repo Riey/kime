@@ -42,10 +42,21 @@ impl ksni::Tray for KimeTray {
     }
 }
 
+const fn icon_name(category: InputCategory, color: IconColor) -> &'static str {
+    match (category, color) {
+        (InputCategory::Latin, IconColor::Black) => "kime-latin-black",
+        (InputCategory::Latin, IconColor::White) => "kime-latin-white",
+        (InputCategory::Hangul, IconColor::Black) => "kime-hangul-black",
+        (InputCategory::Hangul, IconColor::White) => "kime-hangul-white",
+    }
+}
+
 impl KimeTray {
     pub fn new(color: IconColor) -> Self {
         Self {
-            icon_name: "kime-latin-black",
+            // Set init category Latin
+            // TODO: should consider `default_category` config?
+            icon_name: icon_name(InputCategory::Latin, color),
             color,
         }
     }
@@ -60,17 +71,7 @@ impl KimeTray {
 
     pub fn update(&mut self, category: InputCategory) {
         log::debug!("Update: {:?}", category);
-
-        self.icon_name = match category {
-            InputCategory::Latin => match self.color {
-                IconColor::Black => "kime-latin-black",
-                IconColor::White => "kime-latin-white",
-            },
-            InputCategory::Hangul => match self.color {
-                IconColor::Black => "kime-hangul-black",
-                IconColor::White => "kime-hangul-white",
-            },
-        }
+        self.icon_name = icon_name(category, self.color);
     }
 }
 

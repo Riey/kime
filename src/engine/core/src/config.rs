@@ -73,11 +73,11 @@ impl Config {
     #[cfg(unix)]
     pub fn load_from_config_dir() -> Option<Self> {
         let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
-        let engine = dir
+        let config: RawConfig = dir
             .find_config_file("config.yaml")
             .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
             .unwrap_or_default();
 
-        Some(Self::from_engine_config_with_dir(engine, &dir))
+        Some(Self::from_engine_config_with_dir(config.engine, &dir))
     }
 }

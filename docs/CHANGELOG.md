@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Now indicator initial icon_color follow user config [#461](https://github.com/Riey/kime/issues/461)
+
 ## 2.5.2
 
 ### Improve

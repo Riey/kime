@@ -7,6 +7,7 @@
 ### Improve
 
 * Fix wrong symbol name (Gammma -> Gamma)
+* Fix config loading in capi [#465](https://github.com/Riey/kime/pull/465)
 
 ## 2.5.1
 

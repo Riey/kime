@@ -6,18 +6,14 @@ edition = "2018"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-kime-config = { path = "../../tools/config" }
+kime-engine-config = { path = "../config", features = ["config-serde"] }
 kime-engine-backend = { path = "../backend" }
 kime-engine-backend-hangul = { path = "../backends/hangul" }
 kime-engine-backend-hanja = { path = "../backends/hanja" }
 kime-engine-backend-latin = { path = "../backends/latin" }
 kime-engine-backend-math = { path = "../backends/math" }
 kime-engine-backend-emoji = { path = "../backends/emoji" }
-serde = { version = "1.0.124", features = ["derive"] }
 serde_yaml = "0.8.17"
-enum-map = "1.0.0"
-enumset = "1.0.6"
-maplit = "1.0.2"
 
 [target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"

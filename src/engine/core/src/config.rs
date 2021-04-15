@@ -1,6 +1,4 @@
-pub use kime_config::*;
-pub use kime_engine_backend_hangul::HangulData;
-pub use kime_engine_backend_latin::LatinData;
+pub use kime_engine_config::*;
 
 /// Preprocessed engine config
 pub struct Config {
@@ -69,15 +67,19 @@ impl Config {
         let hangul_data = HangulData::from_config_with_dir(&engine.hangul, dir);
         Self::new_impl(engine, hangul_data)
     }
+}
 
-    #[cfg(unix)]
-    pub fn load_from_config_dir() -> Option<Self> {
-        let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
-        let config: RawConfig = dir
-            .find_config_file("config.yaml")
-            .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
-            .unwrap_or_default();
+#[cfg(unix)]
+pub fn load_from_config_dir() -> Option<(Config, DaemonConfig, IndicatorConfig)> {
+    let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
+    let config: RawConfig = dir
+        .find_config_file("config.yaml")
+        .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
+        .unwrap_or_default();
 
-        Some(Self::from_engine_config_with_dir(config.engine, &dir))
-    }
+    Some((
+        Config::from_engine_config_with_dir(config.engine, &dir),
+        config.daemon,
+        config.indicator,
+    ))
 }

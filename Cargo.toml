@@ -2,6 +2,7 @@
 members = [
     "src/engine/capi",
     "src/engine/core",
+    "src/engine/config",
     "src/engine/cffi",
     "src/engine/dict",
 
@@ -16,7 +17,6 @@ members = [
     "src/frontends/xim",
 
     "src/tools/check",
-    "src/tools/config",
     "src/tools/kime",
     "src/tools/indicator",
     "src/tools/log",

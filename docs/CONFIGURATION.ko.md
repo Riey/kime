@@ -50,15 +50,6 @@ indicator에서 사용할 아이콘의 색을 정합니다
 | 기본값 |`Latin`|
 |--------|-------|
 
-
-### 기본값
-
-```yaml
-category_layout:
-  Latin: direct
-  Hangul: dubeolsi
-```
-
 ## global_category_state
 
 언어상태를 전역에서 설정합니다.

@@ -22,14 +22,14 @@ Korean IME
 ## Why kime
 
 * Well tested input engine
-* Very [fast](https://github.com/Riey/kime/wiki/Performance)
-* Low memory footprint
-* Write in mostly Rust no segfaults
-* Allow custom layouts
+* Blazing [fast](https://github.com/Riey/kime/wiki/Performance)
+* Small memory footprint
+* Written in Rust, no segmentation fault
+* Custom layouts
 
 ## Have a question?
 
-Please contact with [Discord](https://discord.gg/YPnEfZqC6y) or post issue
+Please contact us on [Discord](https://discord.gg/YPnEfZqC6y) or create github issue.
 
 ## Supported frontend
 
@@ -45,18 +45,19 @@ Please contact with [Discord](https://discord.gg/YPnEfZqC6y) or post issue
 
 ### Arch Linux
 
-you can install from AUR package [kime](https://aur.archlinux.org/packages/kime) for latest release
-or [kime-git](https://aur.archlinux.org/packages/kime-git) if you want to build from source.
+Latest release of kime is available on [`kime` AUR package](https://aur.archlinux.org/packages/kime).
+
+Developing version is available on [`kime-git`](https://aur.archlinux.org/packages/kime-git).
 
 ### Debian, Ubuntu
 
-you can install from .deb file at [releases](https://github.com/Riey/kime/releases) tab.
+`.deb` package is available on github [releases](https://github.com/Riey/kime/releases) tab.
 
 ### Build from source
 
 #### Docker
 
-It's convenient because you don't need install other dependencies
+Building with docker does not requires any other dependencies.
 
 ```sh
 git clone https://github.com/riey/kime
@@ -65,13 +66,13 @@ cd kime
 docker build --file build-docker/<distro path>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
 docker cp kime:/opt/kime-out/kime.tar.xz .
-# if you want deb file try this command instead
+# if you want to build deb package try this command instead
 # docker cp kime:/opt/kime-out/kime_amd64.deb .
 ```
 
-#### Manually build
+#### Manual build
 
-make sure **cargo** and other dependencies listed below are installed before build.
+Make sure that **cargo** and other dependencies listed below are installed before build.
 
 ```sh
 git clone https://github.com/Riey/kime
@@ -80,38 +81,36 @@ cd kime
 scripts/build.sh -ar
 ```
 
-Now all files are in build/out if you want manual install go ahead
+Every files needed for manual install is in `build/out` directory.
 
-you can also use `scripts/install.sh <install-prefix>` useful script for packaging
+`scripts/install.sh <install-prefix>` can be used for packaging.
 
-and there is `scripts/release-deb.sh <deb-out-path>` it make `deb` file.
+`scripts/release-deb.sh <deb-out-path>` can be used for packaging `deb` package.
 
 #### GTK
 
-you may don't need to do this when you install with package
-
-because most distros doing this themselves.
+Typically, this step is not necessary when kime is installed from binary package because most Linux distros does these steps themselves.
 
 ```sh
-# If you install gtk2
+# for gtk2
 sudo gtk-query-immodules-2.0 --update-cache
-# If you install gtk3
+# for gtk3
 sudo gtk-query-immodules-3.0 --update-cache
-# If you install gtk4
+# for gtk4
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
 
 ## Configuration
 
-### Setup environment variables
+### environment variables setup
 
 #### Debian-like
 
-Set input method `kime` in language setting
+Set input method as `kime` in language setting
 
-#### Other
+#### Others
 
-Add the following to your init script
+Append following lines to your init script
 
 ```sh
 export GTK_IM_MODULE=kime
@@ -119,24 +118,21 @@ export QT_IM_MODULE=kime
 export XMODIFIERS=@im=kime
 ```
 
-if you use X it could be done in .xprofile
+if you use X, append above lines to file `~/.xprofile`
 
-### Start additional servers
+### Start additional server
 
-kime install kime.desktop file into /etc/xdg/autostart for kime daemon
-
-if you doesn't have `start application` such as `i3` or `sway` that just run `kime` or other server commands in your config file
+kime.desktop file is installed in /etc/xdg/autostart when installing kime.
 
 ### Configuration
 
-Read [CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
+Read [CONFIGURATION.md](docs/CONFIGURATION.md) for detail options.
 
 ## Dependencies
 
 ### Run time
 
-Note that you only need deps what you need
-for example, if you don't use qt6 it won't required.
+These dependencies are optional depending on your environments. For example, qt6 is not required when it is not used.
 
 * gtk2
 * gtk3
@@ -147,7 +143,7 @@ for example, if you don't use qt6 it won't required.
 * libxcb (xim)
 * cairo (xim)
 
-### Build time (you don't need when run compiled binary)
+### Build time (you don't need this on running compiled binary)
 
 #### Required
 

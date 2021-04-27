@@ -11,6 +11,7 @@ pub use kime_engine_backend_latin::{LatinConfig, LatinData};
 
 pub use enum_map::{enum_map, EnumMap};
 pub use enumset::EnumSet;
+pub use log::LevelFilter;
 
 #[derive(Debug, EnumSetType, Enum, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -106,6 +107,7 @@ pub struct IndicatorConfig {
 
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 pub struct DaemonConfig {
     pub modules: EnumSet<DaemonModule>,
 }
@@ -114,6 +116,20 @@ impl Default for DaemonConfig {
     fn default() -> Self {
         Self {
             modules: enum_set![DaemonModule::Xim | DaemonModule::Wayland | DaemonModule::Indicator],
+        }
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
+pub struct LogConfig {
+    pub global_level: log::LevelFilter,
+}
+
+impl Default for LogConfig {
+    fn default() -> Self {
+        Self {
+            global_level: log::LevelFilter::Debug,
         }
     }
 }
@@ -179,5 +195,6 @@ impl Default for EngineConfig {
 pub struct RawConfig {
     pub daemon: DaemonConfig,
     pub indicator: IndicatorConfig,
+    pub log: LogConfig,
     pub engine: EngineConfig,
 }

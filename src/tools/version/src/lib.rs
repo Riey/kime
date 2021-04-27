@@ -2,6 +2,9 @@
 pub use kime_log;
 
 #[doc(hidden)]
+pub use kime_engine_cffi;
+
+#[doc(hidden)]
 pub mod build {
     pub const VERSION: &str = include_str!("../../../../VERSION");
 }
@@ -14,7 +17,7 @@ macro_rules! cli_boilerplate {
         if args.contains(["-h", "--help"]) {
             println!("-h or --help: show help");
             println!("-v or --version: show version");
-            println!("--verbose: more verbose log");
+            println!("--log <level>: set logging level");
             $(
                 println!($help);
             )*
@@ -25,13 +28,14 @@ macro_rules! cli_boilerplate {
             $crate::print_version!();
             return $ok;
         }
-        let level = if args.contains("--verbose") {
-            $crate::kime_log::LevelFilter::Trace
-        } else {
-            $crate::kime_log::LevelFilter::Info
-        };
 
-        $crate::kime_log::enable_logger(level);
+        let log_level = args.opt_value_from_str("--log")
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| {
+                $crate::kime_engine_cffi::LogConfig::load().global_level().parse().unwrap()
+            });
+        $crate::kime_log::enable_logger(log_level);
 
         args
     }};

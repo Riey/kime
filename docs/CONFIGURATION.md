@@ -13,6 +13,14 @@ You can also change the location of config file using [`$XDG_CONFIG_DIR` or
 
 [xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
 
+# log
+
+Set kime programs logging level
+
+Please select one of `OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE`
+
+## global_level
+
 # daemon
 
 `kime` daemon setting

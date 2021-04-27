@@ -2,7 +2,7 @@
 
 pub use kime_engine_core::{
     config_load_from_config_dir, Config, DaemonConfig, DaemonModule, IconColor, IndicatorConfig,
-    InputCategory, InputEngine, InputResult, ModifierState,
+    InputCategory, InputEngine, InputResult, LogConfig, ModifierState,
 };
 
 pub const KIME_API_VERSION: usize = 6;
@@ -218,4 +218,32 @@ pub unsafe extern "C" fn kime_indicator_config_delete(config: *mut IndicatorConf
 pub extern "C" fn kime_indicator_config_icon_color(config: &IndicatorConfig) -> IconColor /* enumset doesn't have transparent yet -> EnumSet<DaemonModule> */
 {
     config.icon_color
+}
+
+/// Load log config
+#[cfg(unix)]
+#[no_mangle]
+pub extern "C" fn kime_log_config_load() -> *mut LogConfig {
+    let config = config_load_from_config_dir()
+        .map(|c| c.3)
+        .unwrap_or_default();
+    Box::into_raw(Box::new(config))
+}
+
+/// Get default log config
+#[no_mangle]
+pub extern "C" fn kime_log_config_default() -> *mut LogConfig {
+    Box::into_raw(Box::new(LogConfig::default()))
+}
+
+/// Delete log config
+#[no_mangle]
+pub unsafe extern "C" fn kime_log_config_delete(config: *mut LogConfig) {
+    Box::from_raw(config);
+}
+
+/// Get log `icon_color`
+#[no_mangle]
+pub extern "C" fn kime_log_config_global_level(config: &LogConfig) -> RustStr {
+    RustStr::new(config.global_level.as_str())
 }

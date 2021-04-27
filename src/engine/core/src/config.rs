@@ -70,7 +70,7 @@ impl Config {
 }
 
 #[cfg(unix)]
-pub fn load_from_config_dir() -> Option<(Config, DaemonConfig, IndicatorConfig)> {
+pub fn load_from_config_dir() -> Option<(Config, DaemonConfig, IndicatorConfig, LogConfig)> {
     let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
     let config: RawConfig = dir
         .find_config_file("config.yaml")
@@ -81,5 +81,6 @@ pub fn load_from_config_dir() -> Option<(Config, DaemonConfig, IndicatorConfig)>
         Config::from_engine_config_with_dir(config.engine, &dir),
         config.daemon,
         config.indicator,
+        config.log,
     ))
 }

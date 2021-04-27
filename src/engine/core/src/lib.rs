@@ -5,7 +5,7 @@ mod os;
 pub use config::load_from_config_dir as config_load_from_config_dir;
 pub use config::{
     Config, DaemonConfig, DaemonModule, EngineConfig, EnumSet, Hotkey, IconColor, IndicatorConfig,
-    InputCategory, InputMode, RawConfig,
+    InputCategory, InputMode, LevelFilter, LogConfig, RawConfig,
 };
 pub use kime_engine_backend::{InputResult, Key, KeyCode, KeyMap, ModifierState};
 

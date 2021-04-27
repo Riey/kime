@@ -14,7 +14,11 @@ llvmPackages_11.stdenv.mkDerivation {
   dontWrapQtApps = true;
   buildInputs = deps.kimeBuildInputs;
   nativeBuildInputs = deps.kimeNativeBuildInputs
-                      ++ lib.optionals packaging [ gnutar zstd dpkg ]
+                      ++ lib.optionals packaging [
+                        gnutar
+                        zstd
+                        dpkg
+                      ]
                       ++ lib.optionals develop [
                         rust-analyzer
                         cargo-deny

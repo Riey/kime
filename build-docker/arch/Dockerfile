@@ -14,7 +14,6 @@ COPY .git ./.git
 
 COPY Cargo.toml .
 COPY Cargo.lock .
-COPY LICENSE .
 
 RUN cargo fetch
 
@@ -22,5 +21,10 @@ COPY res ./res
 COPY ci ./ci
 COPY docs ./docs
 COPY scripts ./scripts
+COPY LICENSE .
+COPY NOTICE.md .
+COPY README.ko.md .
+COPY README.md .
+COPY VERSION .
 
 ENTRYPOINT [ "ci/build_xz.sh" ]

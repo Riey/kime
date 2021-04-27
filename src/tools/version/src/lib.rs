@@ -17,6 +17,7 @@ macro_rules! cli_boilerplate {
         if args.contains(["-h", "--help"]) {
             println!("-h or --help: show help");
             println!("-v or --version: show version");
+            println!("--log <level>: set logging level");
             $(
                 println!($help);
             )*
@@ -28,8 +29,13 @@ macro_rules! cli_boilerplate {
             return $ok;
         }
 
-        let log_config = $crate::kime_engine_cffi::LogConfig::load();
-        $crate::kime_log::enable_logger(log_config.global_level().parse().unwrap());
+        let log_level = args.opt_value_from_str("--log")
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| {
+                $crate::kime_engine_cffi::LogConfig::load().global_level().parse().unwrap()
+            });
+        $crate::kime_log::enable_logger(log_level);
 
         args
     }};

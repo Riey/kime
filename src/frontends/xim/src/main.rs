@@ -2,13 +2,13 @@ use x11rb::{
     connection::Connection,
     protocol::{ErrorKind, Event},
 };
-use xim::{x11rb::HasConnection, ServerError, XimConnections};
+use xim::{x11rb::HasConnection, XimConnections};
 
 mod handler;
 mod pe_window;
 
-fn main() -> Result<(), ServerError> {
-    kime_version::cli_boilerplate!(Ok(()),);
+fn main() {
+    kime_version::cli_boilerplate!((),);
 
     assert!(
         kime_engine_cffi::check_api_version(),
@@ -17,22 +17,26 @@ fn main() -> Result<(), ServerError> {
 
     let config = kime_engine_cffi::Config::load();
 
-    let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None)?;
-    let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime", xim::ALL_LOCALES)?;
+    let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None).expect("Connect X");
+    let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime", xim::ALL_LOCALES)
+        .expect("Init XIM server");
     let mut connections = XimConnections::new();
     let mut handler = self::handler::KimeHandler::new(screen_num, config);
 
     loop {
-        let e = server.conn().wait_for_event()?;
-        if !server.filter_event(&e, &mut connections, &mut handler)? {
-            match e {
+        let e = server.conn().wait_for_event().expect("Wait event");
+        match server.filter_event(&e, &mut connections, &mut handler) {
+            // event has filtered
+            Ok(true) => {}
+            // event hasn't filtered
+            Ok(false) => match e {
                 Event::Expose(e) => {
                     handler.expose(e.window);
-                    server.conn().flush()?;
+                    server.conn().flush().expect("Flush connection");
                 }
                 Event::ConfigureNotify(e) => {
                     handler.configure_notify(e);
-                    server.conn().flush()?;
+                    server.conn().flush().expect("Flush connection");
                 }
                 Event::UnmapNotify(..) => {}
                 Event::DestroyNotify(..) => {}
@@ -44,6 +48,10 @@ fn main() -> Result<(), ServerError> {
                 e => {
                     log::trace!("Unfiltered event: {:?}", e);
                 }
+            },
+            Err(err) => {
+                // Don't stop server just logging
+                log::error!("ServerError occured while process event: {}", err);
             }
         }
     }

@@ -6,6 +6,8 @@ daemon:
     - Indicator
 indicator:
   icon_color: Black
+log:
+  global_level: DEBUG
 engine:
   default_category: Latin
   global_category_state: false

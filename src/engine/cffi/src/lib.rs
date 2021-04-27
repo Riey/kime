@@ -204,3 +204,39 @@ impl Drop for IndicatorConfig {
         }
     }
 }
+
+pub struct LogConfig {
+    config: *mut ffi::LogConfig,
+}
+
+impl LogConfig {
+    #[cfg(unix)]
+    pub fn load() -> Self {
+        Self {
+            config: unsafe { ffi::kime_log_config_load() },
+        }
+    }
+
+    pub fn global_level(&self) -> &'static str {
+        unsafe {
+            let s = ffi::kime_log_config_global_level(self.config);
+            core::str::from_utf8_unchecked(core::slice::from_raw_parts(s.ptr, s.len))
+        }
+    }
+}
+
+impl Default for LogConfig {
+    fn default() -> Self {
+        Self {
+            config: unsafe { ffi::kime_log_config_default() },
+        }
+    }
+}
+
+impl Drop for LogConfig {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::kime_log_config_delete(self.config);
+        }
+    }
+}

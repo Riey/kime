@@ -8,6 +8,7 @@
 
 * Now indicator initial icon_color follow user config [#461](https://github.com/Riey/kime/issues/461)
 * Don't exit xim when get `ServerError` [#23](https://github.com/Riey/kime/issues/23)
+* Can set logging level in config file
 
 ## 2.5.2
 

@@ -11,6 +11,16 @@
 
 [xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
 
+# log
+
+kime 프로그램들의 로그 레벨을 설정합니다
+
+`OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE` 중에서 선택해주세요.
+
+## global_level
+
+전역 로깅 레벨입니다
+
 # daemon
 
 `kime` 데몬의 설정입니다

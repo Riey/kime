@@ -12,7 +12,7 @@ fi
 TARGET_PATH=$1
 TMP_PATH=$(mktemp -d)
 ARCH=$(dpkg --print-architecture)
-VER=$(git tag --sort=v:refname | tail -1 | cut -b2-)
+VER=$(cat ./VERSION)
 
 mkdir -pv $TMP_PATH/DEBIAN
 mkdir -pv $TMP_PATH/usr/share/im-config/data

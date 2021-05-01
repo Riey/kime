@@ -167,8 +167,8 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 * `qwerty`
 * `colmak`
 * `dubeolsik`(두벌식)
-* `sebeolsik-390`(세벌식 390)
-* `sebeolsik-391`(세벌식 최종)
+* `sebeolsik-3-90`(세벌식 390)
+* `sebeolsik-3-91`(세벌식 최종)
 * `sebeolsik-3sin-1995`(신세벌식 1995)
 * `sebeolsik-3sin-p2`(신세벌식 p2 *옛한글은 미구현*)
 

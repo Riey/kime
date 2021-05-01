@@ -4,6 +4,12 @@
 
 ### Breaking
 
+### Improve
+
+## 2.5.3
+
+### Breaking
+
 * `--verbose` argument now deleted use `--log`
 
 ### Improve

@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Fix indicator crash in autostart [#471](https://github.com/Riey/kime/issues/471)
+
 ## 2.5.3
 
 ### Breaking

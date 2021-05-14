@@ -1,24 +1,22 @@
 {
-  sources ? import ./nix/sources.nix,
+  pkgs ? import <nixpkgs> {  },
   debug ? false,
 }:
 let
-  pkgs = import sources.nixpkgs {};
-  gis = import sources.nix-git-ignore-source {};
   deps = import ./nix/deps.nix { pkgs = pkgs; };
   kimeVersion = builtins.readFile ./VERSION;
   testArgs = if debug then "" else "--release";
 in
 with pkgs;
-llvmPackages_11.stdenv.mkDerivation {
+llvmPackages_11.stdenv.mkDerivation rec {
   name = "kime";
-  src = gis.gitIgnoreSource ./.;
+  src = ./.;
   buildInputs = deps.kimeBuildInputs;
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustPlatform.cargoSetupHook ];
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
-    src = gis.gitIgnoreSource ./.;
-    sha256 = "0ian6jkay9a1pprxd09ky2sslgg7r5lrclfdzjzksakidfsqqil4";
+    inherit src;
+    sha256 = "czmIhCMQ1UA6LwgA4MH6GhTHPiewVVY4DoArF+1OaxY=";
   };
   LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
   dontUseCmakeConfigure = true;

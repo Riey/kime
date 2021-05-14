@@ -20,7 +20,10 @@ jobs:
     - uses: actions/checkout@v2
     - uses: cachix/install-nix-action@v13
       with:
-        nix_path: nixpkgs=channel:nixos-unstable
+        install_url: https://nixos-nix-install-tests.cachix.org/serve/lb41az54kzk6j12p81br4bczary7m145/install
+        install_options: '--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve'
+        extra_nix_config: |
+          experimental-features = nix-command flakes
     - name: Caching cargo
       uses: actions/cache@v2
       with:
@@ -31,8 +34,8 @@ jobs:
         key: ${{ runner.os }}-nix-rustc-v2-1.51.0-${{ hashFiles('Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-nix-rustc-v2-1.51.0-
-    - run: nix-shell --pure --run "bash scripts/build.sh -ad"
-    - run: nix-shell --pure --run "cargo test"
+    - run: nix build
+    - run: nix flake check
 
   cargo-deny:
     runs-on: ubuntu-20.04

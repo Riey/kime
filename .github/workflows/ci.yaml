@@ -34,8 +34,8 @@ jobs:
         key: ${{ runner.os }}-nix-rustc-v2-1.51.0-${{ hashFiles('Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-nix-rustc-v2-1.51.0-
-    - run: nix build
-    - run: nix flake check
+    - run: nix develop -c bash scripts/build.sh -ad
+    - run: nix develop -c cargo test
 
   cargo-deny:
     runs-on: ubuntu-20.04

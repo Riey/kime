@@ -4,7 +4,7 @@
 
 `/usr/share/doc/kime/default_config.yaml`에 기본 설정 파일 샘플이 있습니다.
 [default_config.yaml](../res/default_config.yaml)에서 기본 설정 파일을 온라인으로 볼 수도 있습니다.
-이 파일을 `/etc/xdf/kime/config.yaml`로 복사하여 전역 설정으로 사용하세요.
+이 파일을 `/etc/xdg/kime/config.yaml`로 복사하여 전역 설정으로 사용하세요.
 `~/.config/kime/config.yaml`에 사용자마다 각각 적용되는 설정 파일을 만들 수도 있습니다.
 
 [`$XDG_CONFIG_DIR`이나 `$XDG_CONFIG_HOME`][xdg] 환경 변수를 이용해 설정 파일의 위치를 바꿀 수도 있습니다. kime는 `$XDG_CONFIG_DIR/kime/config.yaml`과 `$XDG_CONFIG_HOME/kime/config.yaml`에 있는 설정 파일도 읽으려고 시도할 것입니다.

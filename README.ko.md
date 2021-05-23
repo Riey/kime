@@ -43,6 +43,22 @@
 
 ## 설치
 
+### NixOS
+
+이 코드를 configuration.nix에 추가해주세요
+
+```nix
+i18n = {
+  defaultLocale = "en_US.UTF-8";
+  inputMethod = {
+    enabled = "kime";
+    kime.config = {
+      indicator.icon_color = "White";
+    };
+  };
+};
+```
+
 ### 아치 리눅스
 
 최신 릴리스는 [kime](https://aur.archlinux.org/packages/kime) 만약 소스에서 빌드하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치할 수 있습니다.

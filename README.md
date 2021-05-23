@@ -43,6 +43,22 @@ Please contact us on [Discord](https://discord.gg/YPnEfZqC6y) or create github i
 
 ## Installation
 
+### NixOS
+
+Add this code to your configuration.nix
+
+```nix
+i18n = {
+  defaultLocale = "en_US.UTF-8";
+  inputMethod = {
+    enabled = "kime";
+    kime.config = {
+      indicator.icon_color = "White";
+    };
+  };
+};
+```
+
 ### Arch Linux
 
 Latest release of kime is available on [`kime` AUR package](https://aur.archlinux.org/packages/kime).

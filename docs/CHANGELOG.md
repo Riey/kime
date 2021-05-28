@@ -7,6 +7,7 @@
 ### Improve
 
 * Fix indicator crash in autostart [#471](https://github.com/Riey/kime/issues/471)
+* Fix ownership of files in deb package
 
 ## 2.5.3
 

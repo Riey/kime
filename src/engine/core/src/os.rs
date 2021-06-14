@@ -41,7 +41,7 @@ mod unix {
             client.set_write_timeout(Some(Duration::from_secs(2))).ok();
             client.read_exact(&mut buf)?;
             match buf[0] {
-                b'1' => Ok(InputCategory::Hangul),
+                1 => Ok(InputCategory::Hangul),
                 _ => Ok(InputCategory::Latin),
             }
         }

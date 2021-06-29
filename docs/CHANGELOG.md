@@ -6,8 +6,13 @@
 
 ### Improve
 
+## 2.5.4
+
+### Improve
+
 * Fix indicator crash in autostart [#471](https://github.com/Riey/kime/issues/471)
-* Fix ownership of files in deb package
+* Fix ownership of files in deb package [#499](https://github.com/Riey/kime/issues/499)
+* Fix sebeolsik-3sin-p2 'ㅌ' jongsung [#503](https://github.com/Riey/kime/issues/503)
 
 ## 2.5.3
 

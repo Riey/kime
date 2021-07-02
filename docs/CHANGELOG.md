@@ -6,6 +6,12 @@
 
 ### Improve
 
+## 2.5.5
+
+### Improve
+
+* Fix kime print outdated version [#506](https://github.com/Riey/kime/issues/506)
+
 ## 2.5.4
 
 ### Improve

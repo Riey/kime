@@ -101,13 +101,13 @@ impl PeWindow {
             size.0 as _,
             size.1 as _,
         )
-        .unwrap();
+        .expect("Create XCB Surface");
 
         conn.map_window(preedit_window)?.check()?;
 
         conn.flush()?;
 
-        let cr = cairo::Context::new(&surface);
+        let cr = cairo::Context::new(&surface).expect("Create Cairo Context");
 
         cr.select_font_face(&font, cairo::FontSlant::Normal, cairo::FontWeight::Normal);
         cr.set_font_size(font_size);
@@ -138,12 +138,12 @@ impl PeWindow {
     fn redraw(&mut self) {
         log::trace!("Redraw: {}", self.preedit);
         self.cr.set_source_rgb(1.0, 1.0, 1.0);
-        self.cr.paint();
+        self.cr.paint().expect("Cairo paint");
 
         if !self.preedit.is_empty() {
             self.cr.set_source_rgb(0.0, 0.0, 0.0);
             self.cr.move_to(self.text_pos.0, self.text_pos.1);
-            self.cr.show_text(&self.preedit);
+            self.cr.show_text(&self.preedit).expect("Cairo show text");
         }
 
         self.surface.flush();

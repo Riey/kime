@@ -177,8 +177,7 @@ skip = [
 # dependencies starting at the specified crate, up to a certain depth, which is
 # by default infinite
 skip-tree = [
-    # wait for new release
-    { name = "wayland-client", version = "=0.28.3" },
+    { name = "criterion", version = "=0.3.4" }
 ]
 
 # This section is considered when running `cargo deny check sources`.

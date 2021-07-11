@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Update dependencies [#508](https://github.com/Riey/kime/issues/508)
+
 ## 2.5.5
 
 ### Improve

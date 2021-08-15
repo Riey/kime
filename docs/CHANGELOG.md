@@ -7,6 +7,7 @@
 ### Improve
 
 * Update dependencies [#508](https://github.com/Riey/kime/issues/508)
+* Fix sebeolsik-3sin-p2 '"' character [#509](https://github.com/Riey/kime/pull/509)
 
 ## 2.5.5
 

@@ -116,6 +116,12 @@ sudo gtk-query-immodules-3.0 --update-cache
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
 
+## Development
+
+### C/C++
+
+Run `./scripts/generate_properties.sh` for using intellisense C/C++ in vscode
+
 ## Configuration
 
 ### environment variables setup

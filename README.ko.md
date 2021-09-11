@@ -116,6 +116,12 @@ sudo gtk-query-immodules-3.0 --update-cache
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
 
+## 개발
+
+### C/C++
+
+`./scripts/generate_properties.sh`을 실행해서 vscode에서 C/C++ 코드의 인텔리센스 기능을 사용할수 있습니다
+
 ## 설정
 
 ### 데비안계열

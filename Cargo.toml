@@ -9,7 +9,6 @@ members = [
     "src/engine/backend",
     "src/engine/backends/emoji",
     "src/engine/backends/hangul",
-    "src/engine/backends/hanja",
     "src/engine/backends/latin",
     "src/engine/backends/math",
 
@@ -17,9 +16,10 @@ members = [
     "src/frontends/xim",
 
     "src/tools/check",
-    "src/tools/kime",
     "src/tools/indicator",
+    "src/tools/kime",
     "src/tools/log",
+    "src/tools/properties_writer",
     "src/tools/run_dir",
     "src/tools/version",
 ]

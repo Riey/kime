@@ -17,9 +17,10 @@ members = [
     "src/frontends/xim",
 
     "src/tools/check",
-    "src/tools/kime",
     "src/tools/indicator",
+    "src/tools/kime",
     "src/tools/log",
+    "src/tools/properties_writer",
     "src/tools/run_dir",
     "src/tools/version",
 ]

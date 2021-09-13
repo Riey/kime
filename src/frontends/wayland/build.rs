@@ -10,4 +10,7 @@ fn main() {
         out.join("input_method_api.rs"),
         Side::Client,
     );
+
+    println!("cargo:rerun-if-changed=Cargo.toml");
+    println!("cargo:rerun-if-changed=./protocols/");
 }

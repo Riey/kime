@@ -292,9 +292,7 @@ impl CharacterState {
                 })
             } else {
                 match prev_cho.try_add(cho, addons) {
-                    Some(new)
-                        if addons.contains(Addon::FlexibleComposeOrder) || self.jung.is_none() =>
-                    {
+                    Some(new) if self.jung.is_none() => {
                         self.cho = Some(new);
                         CharacterResult::Consume
                     }

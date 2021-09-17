@@ -50,3 +50,16 @@ fn issue_521() {
 fn colon() {
     test_input(&[(Key::normal(Backslash), "", ":")]);
 }
+
+// https://github.com/Riey/kime/issues/520
+#[test]
+fn flexible_compose_check_jungseong() {
+    test_input_with_addon(
+        &[
+            (Key::normal(N), "ㅅ", ""),
+            (Key::normal(F), "사", ""),
+            (Key::normal(N), "ㅅ", "사"),
+        ],
+        Addon::FlexibleComposeOrder | Addon::ComposeChoseongSsang,
+    );
+}

@@ -8,7 +8,8 @@
 
 * Update dependencies [#508](https://github.com/Riey/kime/issues/508)
 * Fix sebeolsik-3sin-p2 '"' character [#509](https://github.com/Riey/kime/issues/509)
-* Fix sebeolsik-391 "S-F" key [#509](https://github.com/Riey/kime/issues/521)
+* Fix sebeolsik-391 "S-F" key [#521](https://github.com/Riey/kime/issues/521)
+* Don't compose choseong when FlexibleComposeOrder is on [#520](https://github.com/Riey/kime/issues/520)
 
 ## 2.5.5
 

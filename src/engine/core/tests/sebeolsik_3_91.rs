@@ -33,7 +33,17 @@ fn good() {
         (Key::normal(K), "ㄲ", ""),
         (Key::normal(B), "꾸", ""),
         (Key::normal(W), "꿀", ""),
-    ])
+    ]);
+}
+
+// https://github.com/Riey/kime/issues/521
+#[test]
+fn issue_521() {
+    test_input(&[
+        (Key::normal(J), "ㅇ", ""),
+        (Key::normal(F), "아", ""),
+        (Key::shift(F), "앎", ""),
+    ]);
 }
 
 #[test]

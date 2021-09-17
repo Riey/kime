@@ -6,6 +6,7 @@
 /.idea
 /.cache
 /.ccls-cache
+/.vscode/c_cpp_properties.json
 compile_commands.json
 kime_engine.h
 kime_engine.hpp

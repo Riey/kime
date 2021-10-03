@@ -10,6 +10,7 @@
 * Fix sebeolsik-3sin-p2 '"' character [#509](https://github.com/Riey/kime/issues/509)
 * Fix sebeolsik-391 "S-F" key [#521](https://github.com/Riey/kime/issues/521)
 * Don't compose choseong when FlexibleComposeOrder is on [#520](https://github.com/Riey/kime/issues/520)
+* Fix choseong converted into jongseong even `TreatJongseongAsChoseong` is off [#529](https://github.com/Riey/kime/issues/529)
 
 ## 2.5.5
 

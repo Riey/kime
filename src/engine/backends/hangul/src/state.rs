@@ -374,6 +374,14 @@ impl CharacterState {
                     ..Default::default()
                 }),
             }
+        } else if let Some(_) = self.jong {
+            // $ㅁ + ㅏ = ㅁㅏ
+            // 초성없이 중성과 종성만 있는 경우를 배제
+            CharacterResult::NewCharacter(Self {
+                jung: Some(jung),
+                compose_jung,
+                ..Default::default()
+            })
         } else {
             self.jung = Some(jung);
             self.compose_jung = compose_jung;
@@ -391,19 +399,26 @@ impl CharacterState {
                 None => {
                     let new;
 
-                    match jong.to_cho(addons) {
-                        JongToCho::Direct(cho) => {
-                            new = Self {
-                                cho: Some(cho),
-                                ..Default::default()
-                            };
+                    if addons.contains(Addon::TreatJongseongAsChoseong) {
+                        match jong.to_cho(addons) {
+                            JongToCho::Direct(cho) => {
+                                new = Self {
+                                    cho: Some(cho),
+                                    ..Default::default()
+                                };
+                            }
+                            JongToCho::Compose(..) => {
+                                new = Self {
+                                    jong: Some(jong),
+                                    ..Default::default()
+                                };
+                            }
                         }
-                        JongToCho::Compose(..) => {
-                            new = Self {
-                                jong: Some(jong),
-                                ..Default::default()
-                            };
-                        }
+                    } else {
+                        new = Self {
+                            jong: Some(jong),
+                            ..Default::default()
+                        };
                     }
 
                     CharacterResult::NewCharacter(new)

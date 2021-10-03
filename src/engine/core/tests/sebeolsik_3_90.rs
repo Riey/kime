@@ -15,6 +15,18 @@ fn hello() {
     ]);
 }
 
+// issue #529
+#[test]
+fn dont_convert_jongseong() {
+    test_input(&[
+        (Key::normal(K), "ㄱ", ""),
+        (Key::normal(F), "가", ""),
+        (Key::normal(Z), "감", ""),
+        (Key::normal(Z), "ㅁ", "감"),
+        (Key::normal(F), "ㅏ", "ㅁ"),
+    ]);
+}
+
 // issue #263
 #[test]
 fn compose_choseong_ssang() {
@@ -24,7 +36,7 @@ fn compose_choseong_ssang() {
         (Key::normal(X), "각", ""),
         (Key::normal(K), "ㄱ", "각"),
         (Key::normal(D), "기", ""),
-    ])
+    ]);
 }
 
 #[test]

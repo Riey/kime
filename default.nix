@@ -8,7 +8,7 @@ let
   testArgs = if debug then "" else "--release";
 in
 with pkgs;
-llvmPackages_11.stdenv.mkDerivation rec {
+llvmPackages_13.stdenv.mkDerivation rec {
   name = "kime";
   src = ./.;
   buildInputs = deps.kimeBuildInputs;
@@ -16,9 +16,9 @@ llvmPackages_11.stdenv.mkDerivation rec {
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
     inherit src;
-    sha256 = "sha256-j3S457qDgHEcKC9FraiYsj/ykHB/cJVNLI2H/XcRDUk=";
+    sha256 = "sha256-GvBnNPY51RPt+I73oet5tB/EE2UsEPKbelJZkSY3xNw=";
   };
-  LIBCLANG_PATH = "${pkgs.llvmPackages_11.libclang}/lib";
+  LIBCLANG_PATH = "${pkgs.llvmPackages_13.libclang.lib}/lib";
   dontUseCmakeConfigure = true;
   dontWrapQtApps = true;
   buildPhase = if debug then "bash scripts/build.sh -ad" else "bash scripts/build.sh -ar";

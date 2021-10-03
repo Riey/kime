@@ -22,9 +22,9 @@ with pkgs;
   kimeNativeBuildInputs = [
     bash
     pkg-config
-    clang_11
-    llvmPackages_11.libclang
-    llvmPackages_11.bintools
+    llvmPackages_13.clang
+    llvmPackages_13.libclang.lib
+    llvmPackages_13.bintools
     rustc cargo
     cmake
     extra-cmake-modules

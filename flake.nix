@@ -2,7 +2,7 @@
   description = "A very basic flake";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs?rev=ae09772927566314ad11e366ddb46a9c7ffb666a;
+    nixpkgs.url = github:NixOS/nixpkgs?rev=22374e17050f0a4453a3256c6473177b553a72be;
     flake-utils.url = github:numtide/flake-utils;
   };
 

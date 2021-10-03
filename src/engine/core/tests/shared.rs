@@ -29,11 +29,7 @@ pub fn test_input_impl(engine: EngineConfig, category: InputCategory, keys: &[(K
 
         eprintln!("Ret: {:?}", ret);
 
-        if ret.contains(InputResult::HAS_PREEDIT) {
-            test_preedit!(preedit);
-        } else {
-            assert!(preedit.is_empty());
-        }
+        test_preedit!(preedit);
 
         if ret.contains(InputResult::HAS_COMMIT) {
             if ret.contains(InputResult::CONSUMED) {

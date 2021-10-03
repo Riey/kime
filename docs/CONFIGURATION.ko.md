@@ -174,7 +174,7 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 
 `$XDG_CONFIG_HOME/kime/layouts/`에 위 목록에 없는 키보드 자판을 YAML 파일로 직접 만들 수도 있습니다. [dubeolsik.yaml]을 참고해 보세요.
 
-[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
+[dubeolsik.yaml]: ../src/engine/backends/hangul/data/dubeolsik.yaml
 
 ### word_commit
 

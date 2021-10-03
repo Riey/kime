@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 2.5.6
+
+### Improve
+
 * Update dependencies [#508](https://github.com/Riey/kime/issues/508)
 * Fix sebeolsik-3sin-p2 '"' character [#509](https://github.com/Riey/kime/issues/509)
 * Fix sebeolsik-391 "S-F" key [#521](https://github.com/Riey/kime/issues/521)

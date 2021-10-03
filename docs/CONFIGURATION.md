@@ -182,7 +182,7 @@ Custom layout can be added by creating layout YAML files
 at `$XDG_CONFIG_HOME/kime/layouts/` directory. See [dubeolsik.yaml] for the
 structure of keyboard layout file.
 
-[dubeolsik.yaml]: ../src/engine/core/data/dubeolsik.yaml
+[dubeolsik.yaml]: ../src/engine/backends/hangul/data/dubeolsik.yaml
 
 ### layout_addons
 

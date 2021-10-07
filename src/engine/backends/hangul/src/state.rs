@@ -10,14 +10,16 @@ use crate::{
 pub struct HangulEngine {
     state: CharacterState,
     word_commit: bool,
+    preedit_filler: bool,
     word_buf: String,
 }
 
 impl HangulEngine {
-    pub fn new(word_commit: bool) -> Self {
+    pub fn new(word_commit: bool, preedit_filler: bool) -> Self {
         Self {
             state: CharacterState::new(),
             word_commit,
+            preedit_filler,
             word_buf: String::new(),
         }
     }
@@ -28,7 +30,7 @@ impl HangulEngine {
 
     pub fn preedit_str(&self, buf: &mut String) {
         buf.push_str(&self.word_buf);
-        self.state.write(buf);
+        self.state.display(self.preedit_filler, buf);
     }
 
     pub fn clear_preedit(&mut self, commit_buf: &mut String) {
@@ -129,17 +131,44 @@ impl CharacterState {
         self.jong = None;
     }
 
+    pub fn display(&self, preedit_filler: bool, out: &mut String) {
+        if preedit_filler {
+            self.johab_str(out);
+        } else {
+            self.write(out);
+        }
+    }
+
+    pub fn johab_str(&self, out: &mut String) {
+        match (self.cho, self.jung, self.jong) {
+            (None, None, None) => {}
+            (None, Some(jung), Some(jong)) => {
+                out.push(Choseong::FILLER);
+                out.push(jung.into());
+                out.push(jong.into());
+            }
+            (Some(cho), None, Some(jong)) => {
+                out.push(cho.into());
+                out.push(Jungseong::FILLER);
+                out.push(jong.into());
+            }
+
+            (Some(cho), Some(jung), jong) => out.push(cho.compose(jung, jong)),
+
+            (Some(cho), None, None) => out.push(cho.jamo()),
+            (None, Some(jung), None) => out.push(jung.jamo()),
+            (None, None, Some(jong)) => out.push(jong.jamo()),
+        }
+    }
+
     pub fn to_char(&self) -> char {
         match (self.cho, self.jung, self.jong) {
-            (None, None, None) |
-            // can't be char
-            (None, Some(_), Some(_)) |
-            (Some(_), None, Some(_)) => '\0',
+            (None, None, None) => '\0',
 
             (Some(cho), Some(jung), jong) => cho.compose(jung, jong),
 
-            (Some(cho), None, None) => cho.jamo(),
-            (None, Some(jung), None) => jung.jamo(),
+            (Some(cho), None, _) => cho.jamo(),
+            (None, Some(jung), _) => jung.jamo(),
             (None, None, Some(jong)) => jong.jamo(),
         }
     }
@@ -453,5 +482,18 @@ mod tests {
             }),
             state.jung(Jungseong::A, true, addons)
         );
+    }
+
+    #[test]
+    fn filler() {
+        let state = CharacterState {
+            cho: Some(Choseong::Nieun),
+            jung: None,
+            compose_jung: false,
+            jong: Some(Jongseong::Digeut),
+        };
+        let mut out = String::new();
+        state.display(true, &mut out);
+        assert_eq!(out, "ᄂᅠᆮ");
     }
 }

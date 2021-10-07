@@ -260,6 +260,8 @@ impl_jamo!(
 );
 
 impl Choseong {
+    pub const FILLER: char = '\u{115F}';
+
     pub fn compose(self, jung: Jungseong, jong: Option<Jongseong>) -> char {
         unsafe {
             std::char::from_u32_unchecked(
@@ -310,6 +312,8 @@ impl Choseong {
 }
 
 impl Jungseong {
+    pub const FILLER: char = '\u{1160}';
+
     pub fn try_add(self, other: Self, addons: EnumSet<Addon>) -> Option<Self> {
         let compose_jungseong_ssang = addons.contains(Addon::ComposeJungseongSsang);
         match (self, other) {

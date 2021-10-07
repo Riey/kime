@@ -227,7 +227,10 @@ impl EngineImpl {
             category: config.default_category,
             mode: None,
             latin_engine: LatinEngine::new(config.preferred_direct),
-            hangul_engine: HangulEngine::new(config.hangul_data.word_commit()),
+            hangul_engine: HangulEngine::new(
+                config.hangul_data.word_commit(),
+                config.hangul_data.preedit_filler(),
+            ),
             hanja_mode: HanjaMode::new(),
             math_mode: MathMode::new(),
             emoji_mode: EmojiMode::new(),

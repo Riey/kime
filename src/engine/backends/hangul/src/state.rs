@@ -36,7 +36,9 @@ impl HangulEngine {
     pub fn clear_preedit(&mut self, commit_buf: &mut String) {
         commit_buf.push_str(&self.word_buf);
         self.word_buf.clear();
-        self.state.write(commit_buf);
+        if let Some(prev_ch) = self.state.to_char() {
+            commit_buf.push(prev_ch);
+        }
         self.state.reset();
     }
 
@@ -49,10 +51,12 @@ impl HangulEngine {
         match ret {
             CharacterResult::Consume => true,
             CharacterResult::NewCharacter(new_ch) => {
-                if self.word_commit {
-                    self.word_buf.push(self.state.to_char());
-                } else {
-                    commit_buf.push(self.state.to_char());
+                if let Some(prev_ch) = self.state.to_char() {
+                    if self.word_commit {
+                        self.word_buf.push(prev_ch);
+                    } else {
+                        commit_buf.push(prev_ch);
+                    }
                 }
                 self.state = new_ch;
                 true
@@ -135,7 +139,9 @@ impl CharacterState {
         if preedit_filler {
             self.johab_str(out);
         } else {
-            self.write(out);
+            if let Some(ch) = self.to_char() {
+                out.push(ch);
+            }
         }
     }
 
@@ -161,23 +167,13 @@ impl CharacterState {
         }
     }
 
-    pub fn to_char(&self) -> char {
+    pub fn to_char(&self) -> Option<char> {
         match (self.cho, self.jung, self.jong) {
-            (None, None, None) => '\0',
-
-            (Some(cho), Some(jung), jong) => cho.compose(jung, jong),
-
-            (Some(cho), None, _) => cho.jamo(),
-            (None, Some(jung), _) => jung.jamo(),
-            (None, None, Some(jong)) => jong.jamo(),
-        }
-    }
-
-    pub fn write(&self, out: &mut String) {
-        let ch = self.to_char();
-
-        if ch != '\0' {
-            out.push(ch);
+            (None, None, None) => None,
+            (Some(cho), Some(jung), jong) => Some(cho.compose(jung, jong)),
+            (Some(cho), None, _) => Some(cho.jamo()),
+            (None, Some(jung), _) => Some(jung.jamo()),
+            (None, None, Some(jong)) => Some(jong.jamo()),
         }
     }
 

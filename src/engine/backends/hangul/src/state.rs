@@ -183,10 +183,7 @@ impl CharacterState {
 
     pub const fn need_display(&self) -> bool {
         match (self.cho, self.jung, self.jong) {
-            (None, None, None) |
-            // can't be char
-            (None, Some(_), Some(_)) |
-            (Some(_), None, Some(_)) => false,
+            (None, None, None) => false,
             _ => true,
         }
     }

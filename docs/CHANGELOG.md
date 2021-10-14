@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Fix preedit character error on chromium family [#535](https://github.com/Riey/kime/issues/535)
+
 ## 2.5.6
 
 ### Improve

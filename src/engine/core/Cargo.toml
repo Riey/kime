@@ -21,7 +21,7 @@ kime-run-dir = { path = "../../tools/run_dir" }
 
 [dev-dependencies]
 criterion = "0.3.4"
-pretty_assertions = "0.7.1"
+pretty_assertions = "1.0.0"
 
 [[bench]]
 name = "call_key"

@@ -16,7 +16,7 @@ llvmPackages_13.stdenv.mkDerivation rec {
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
     inherit src;
-    sha256 = "sha256-GvBnNPY51RPt+I73oet5tB/EE2UsEPKbelJZkSY3xNw=";
+    sha256 = "sha256-qaBzqJHwFR6sSbrfsNARwBw9wJuR7xvKyqM2/LVZybE=";
   };
   LIBCLANG_PATH = "${pkgs.llvmPackages_13.libclang.lib}/lib";
   dontUseCmakeConfigure = true;

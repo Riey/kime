@@ -6,19 +6,17 @@ with pkgs;
     dbus_libs
     libdbusmenu
 
-    xorg.libxcb
-
-    cairo
-    pcre
+    fontconfig
+    freetype
 
     gtk2
     gtk3
-
-    # gtk4
+    gtk4
 
     qt5.qtbase
     # qt6.qtbase
   ];
+
   kimeNativeBuildInputs = [
     bash
     pkg-config

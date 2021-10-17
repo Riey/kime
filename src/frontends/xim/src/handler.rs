@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::{convert::TryInto, num::NonZeroU32, sync::Arc};
 
 use crate::pe_window::PeWindow;
 use ahash::AHashMap;
@@ -35,16 +35,33 @@ impl KimeData {
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
+    font: (Arc<rusttype::Font<'static>>, f64),
     config: Config,
     screen_num: usize,
 }
 
 impl KimeHandler {
     pub fn new(screen_num: usize, config: Config) -> Self {
+        let (font_family, font_size) = config.xim_font();
+        let font = font_loader::system_fonts::get(
+            &font_loader::system_fonts::FontPropertyBuilder::new()
+                .family(font_family)
+                .build(),
+        )
+        .and_then(|(data, index)| {
+            rusttype::Font::try_from_vec_and_index(data, index.try_into().unwrap_or_default())
+        })
+        .map(Arc::new)
+        .unwrap_or_else(|| {
+            log::error!("Font {} load failed!", font_family);
+            panic!("Font {} load failed!", font_family)
+        });
+
         Self {
             preedit_windows: AHashMap::new(),
             config,
             screen_num,
+            font: (font, font_size),
         }
     }
 }
@@ -114,7 +131,7 @@ impl KimeHandler {
             // Draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
-                self.config.xim_font(),
+                self.font.clone(),
                 user_ic.ic.app_win(),
                 user_ic.ic.preedit_spot(),
                 self.screen_num,
@@ -336,7 +353,10 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         log::info!("destroy_ic");
 
         if let Some(pe) = user_ic.user_data.pe {
-            self.preedit_windows.remove(&pe).unwrap().clean(server.conn())?;
+            self.preedit_windows
+                .remove(&pe)
+                .unwrap()
+                .clean(server.conn())?;
         }
 
         Ok(())

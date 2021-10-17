@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, sync::Arc};
 
 use image::ImageBuffer;
 use rusttype::Font;
@@ -17,14 +17,14 @@ pub struct PeWindow {
     gc: u32,
     text_pos: (u32, u32),
     text_scale: rusttype::Scale,
-    font: Font<'static>,
+    font: Arc<Font<'static>>,
     image_buffer: ImageBuffer<image::Bgra<u8>, Vec<u8>>,
 }
 
 impl PeWindow {
     pub fn new(
         conn: &impl Connection,
-        (font, font_size): (&str, f64),
+        (font, font_size): (Arc<Font<'static>>, f64),
         app_win: Option<NonZeroU32>,
         spot_location: xim::Point,
         screen_num: usize,
@@ -36,7 +36,6 @@ impl PeWindow {
         // let colormap = conn.generate_id()?;
         // let (depth, visual_id) = choose_visual(conn, screen_num)?;
 
-        let font = Font::try_from_bytes(include_bytes!("/nix/store/imnk1n6llkh089xgzqyqpr6yw9qz9b3z-d2codingfont-1.3.2/share/fonts/truetype/D2Coding-Ver1.3.2-20180524-all.ttc")).unwrap();
         let screen = &conn.setup().roots[screen_num];
         let pos = find_position(conn, screen.root, app_win, spot_location)?;
 

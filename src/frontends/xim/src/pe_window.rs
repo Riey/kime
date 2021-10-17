@@ -10,7 +10,6 @@ use x11rb::{
     },
     wrapper::ConnectionExt as _,
 };
-use xim::x11rb::HasConnection;
 
 pub struct PeWindow {
     preedit_window: NonZeroU32,
@@ -108,8 +107,7 @@ impl PeWindow {
         })
     }
 
-    pub fn clean<C: HasConnection>(self, c: C) -> Result<(), xim::ServerError> {
-        let conn = c.conn();
+    pub fn clean(self, conn: &impl Connection) -> Result<(), xim::ServerError> {
         conn.destroy_window(self.preedit_window.get())?
             .ignore_error();
         conn.flush()?;

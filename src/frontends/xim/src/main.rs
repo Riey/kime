@@ -17,7 +17,8 @@ fn main() {
 
     let config = kime_engine_cffi::Config::load();
 
-    let (conn, screen_num) = x11rb::xcb_ffi::XCBConnection::connect(None).expect("Connect X");
+    let (conn, screen_num) =
+        x11rb::rust_connection::RustConnection::connect(None).expect("Connect X");
     let mut server = xim::x11rb::X11rbServer::init(conn, screen_num, "kime", xim::ALL_LOCALES)
         .expect("Init XIM server");
     let mut connections = XimConnections::new();
@@ -31,11 +32,11 @@ fn main() {
             // event hasn't filtered
             Ok(false) => match e {
                 Event::Expose(e) => {
-                    handler.expose(e.window);
+                    handler.expose(e.window, server.conn()).unwrap();
                     server.conn().flush().expect("Flush connection");
                 }
                 Event::ConfigureNotify(e) => {
-                    handler.configure_notify(e);
+                    handler.configure_notify(e, server.conn()).unwrap();
                     server.conn().flush().expect("Flush connection");
                 }
                 Event::UnmapNotify(..) => {}

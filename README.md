@@ -162,8 +162,8 @@ These dependencies are optional depending on your environments. For example, qt6
 * qt5
 * qt6
 * libdbus (indicator)
-* libxcb (xim)
-* cairo (xim)
+* fontconfig (xim)
+* freetype (xim)
 
 ### Build time (you don't need this on running compiled binary)
 
@@ -182,5 +182,5 @@ These dependencies are optional depending on your environments. For example, qt6
 * qtbase5-private
 * qtbase6-private
 * libdbus
-* libxcb
-* cairo
+* fontconfig
+* freetype

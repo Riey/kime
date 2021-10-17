@@ -163,8 +163,8 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 * qt5
 * qt6
 * libdbus (indicator)
-* libxcb (xim)
-* cairo (xim)
+* fontconfig (xim)
+* freetype (xim)
 
 ### 빌드타임 종속성 (바이너리 실행시엔 필요 없습니다)
 
@@ -183,5 +183,5 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 * qtbase5-private
 * qtbase6-private
 * libdbus
-* libxcb
-* cairo
+* fontconfig
+* freetype

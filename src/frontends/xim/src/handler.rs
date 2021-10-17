@@ -1,10 +1,10 @@
-use std::num::NonZeroU32;
+use std::{convert::TryInto, num::NonZeroU32, sync::Arc};
 
 use crate::pe_window::PeWindow;
 use ahash::AHashMap;
 use x11rb::{
+    connection::Connection,
     protocol::xproto::{ConfigureNotifyEvent, KeyPressEvent, KEY_PRESS_EVENT},
-    xcb_ffi::XCBConnection,
 };
 use xim::{
     x11rb::{HasConnection, X11rbServer},
@@ -35,49 +35,74 @@ impl KimeData {
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
+    font: (Arc<rusttype::Font<'static>>, f64),
     config: Config,
     screen_num: usize,
 }
 
 impl KimeHandler {
     pub fn new(screen_num: usize, config: Config) -> Self {
+        let (font_family, font_size) = config.xim_font();
+        let font = font_loader::system_fonts::get(
+            &font_loader::system_fonts::FontPropertyBuilder::new()
+                .family(font_family)
+                .build(),
+        )
+        .and_then(|(data, index)| {
+            rusttype::Font::try_from_vec_and_index(data, index.try_into().unwrap_or_default())
+        })
+        .map(Arc::new)
+        .unwrap_or_else(|| {
+            log::error!("Font {} load failed!", font_family);
+            panic!("Font {} load failed!", font_family)
+        });
+
         Self {
             preedit_windows: AHashMap::new(),
             config,
             screen_num,
+            font: (font, font_size),
         }
     }
 }
 
 impl KimeHandler {
-    pub fn expose(&mut self, window: u32) {
+    pub fn expose(&mut self, window: u32, conn: &impl Connection) -> Result<(), xim::ServerError> {
         if let Some(win) = NonZeroU32::new(window) {
             if let Some(pe) = self.preedit_windows.get_mut(&win) {
-                pe.expose();
+                pe.expose(conn)?;
             }
         }
+
+        Ok(())
     }
 
-    pub fn configure_notify(&mut self, e: ConfigureNotifyEvent) {
+    pub fn configure_notify(
+        &mut self,
+        e: ConfigureNotifyEvent,
+        conn: &impl Connection,
+    ) -> Result<(), xim::ServerError> {
         if let Some(win) = NonZeroU32::new(e.window) {
             if let Some(pe) = self.preedit_windows.get_mut(&win) {
-                pe.configure_notify(e);
+                pe.configure_notify(e, conn)?;
             }
         }
+
+        Ok(())
     }
 
-    fn preedit_draw(
+    fn preedit_draw<C: HasConnection>(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         server.preedit_draw(&mut ic.ic, ic.user_data.engine.preedit_str())?;
         Ok(())
     }
 
-    fn preedit(
+    fn preedit<C: HasConnection>(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         if user_ic
@@ -106,7 +131,7 @@ impl KimeHandler {
             // Draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
-                self.config.xim_font(),
+                self.font.clone(),
                 user_ic.ic.app_win(),
                 user_ic.ic.preedit_spot(),
                 self.screen_num,
@@ -121,9 +146,9 @@ impl KimeHandler {
         Ok(())
     }
 
-    fn reset(
+    fn reset<C: HasConnection>(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         user_ic.user_data.engine.clear_preedit();
@@ -136,9 +161,9 @@ impl KimeHandler {
         Ok(())
     }
 
-    fn clear_preedit(
+    fn clear_preedit<C: HasConnection>(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         if user_ic
@@ -161,9 +186,9 @@ impl KimeHandler {
         Ok(())
     }
 
-    fn commit(
+    fn commit<C: HasConnection>(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         let s = user_ic.user_data.engine.commit_str();
@@ -177,13 +202,13 @@ impl KimeHandler {
 // PRESS | RELEASE
 const EVENT_MASK: u32 = 3;
 
-impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
+impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
     type InputStyleArray = [InputStyle; 6];
     type InputContextData = KimeData;
 
     fn new_ic_data(
         &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
+        _server: &mut X11rbServer<C>,
         input_style: InputStyle,
     ) -> Result<Self::InputContextData, xim::ServerError> {
         let mut show_preedit_window = true;
@@ -194,9 +219,10 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         }
 
         // Don't show preedit window on Xwayland see #137
-        if std::env::var("XDG_SESSION_TYPE")
-            .map(|v| v == "wayland")
-            .unwrap_or(false)
+        if !cfg!(debug_assertions)
+            && std::env::var("XDG_SESSION_TYPE")
+                .map(|v| v == "wayland")
+                .unwrap_or(false)
         {
             show_preedit_window = false;
         }
@@ -219,16 +245,13 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
         EVENT_MASK
     }
 
-    fn handle_connect(
-        &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
-    ) -> Result<(), xim::ServerError> {
+    fn handle_connect(&mut self, _server: &mut X11rbServer<C>) -> Result<(), xim::ServerError> {
         Ok(())
     }
 
     fn handle_set_ic_values(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         log::debug!("spot: {:?}", user_ic.ic.preedit_spot());
@@ -241,7 +264,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_create_ic(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
         log::info!(
@@ -257,7 +280,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_reset_ic(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<String, xim::ServerError> {
         log::trace!("reset_ic");
@@ -266,7 +289,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_forward_event(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
         xev: &KeyPressEvent,
     ) -> Result<bool, xim::ServerError> {
@@ -324,13 +347,16 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_destory_ic(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         log::info!("destroy_ic");
 
         if let Some(pe) = user_ic.user_data.pe {
-            self.preedit_windows.remove(&pe).unwrap().clean(&*server)?;
+            self.preedit_windows
+                .remove(&pe)
+                .unwrap()
+                .clean(server.conn())?;
         }
 
         Ok(())
@@ -338,7 +364,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_set_focus(
         &mut self,
-        _server: &mut X11rbServer<XCBConnection>,
+        _server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         user_ic.user_data.engine.update_layout_state();
@@ -347,7 +373,7 @@ impl ServerHandler<X11rbServer<XCBConnection>> for KimeHandler {
 
     fn handle_unset_focus(
         &mut self,
-        server: &mut X11rbServer<XCBConnection>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         self.reset(server, user_ic)

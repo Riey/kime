@@ -11,5 +11,5 @@ kime-engine-cffi = { path = "../../engine/cffi" }
 kime-engine-core = { path = "../../engine/core" }
 pad = "0.1.6"
 serde_yaml = "0.8.17"
-strum = { version = "0.21.0", features = ["derive"] }
+strum = { version = "0.22.0", features = ["derive"] }
 xdg = "2.2.0"

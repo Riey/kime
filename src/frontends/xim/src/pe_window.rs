@@ -1,50 +1,46 @@
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, sync::Arc};
 
+use image::ImageBuffer;
+use rusttype::Font;
 use x11rb::{
     connection::Connection,
-    protocol::{
-        render::{self, ConnectionExt as _, PictType},
-        xproto::{
-            AtomEnum, ColormapAlloc, ConfigureNotifyEvent, ConnectionExt as _, CreateWindowAux,
-            EventMask, ExposeEvent, PropMode, Visualid, Visualtype, WindowClass, EXPOSE_EVENT,
-        },
+    protocol::xproto::{
+        AtomEnum, ConfigureNotifyEvent, ConnectionExt as _, CreateGCAux, CreateWindowAux,
+        EventMask, ExposeEvent, ImageFormat, PropMode, WindowClass, EXPOSE_EVENT,
     },
-    rust_connection::ReplyError,
     wrapper::ConnectionExt as _,
-    xcb_ffi::XCBConnection,
 };
-use xim::x11rb::HasConnection;
 
 pub struct PeWindow {
     preedit_window: NonZeroU32,
     preedit: String,
-    surface: cairo::XCBSurface,
-    cr: cairo::Context,
-    text_pos: (f64, f64),
+    gc: u32,
+    text_pos: (u32, u32),
+    text_scale: rusttype::Scale,
+    font: Arc<Font<'static>>,
+    image_buffer: ImageBuffer<image::Bgra<u8>, Vec<u8>>,
 }
 
 impl PeWindow {
     pub fn new(
-        conn: &XCBConnection,
-        (font, font_size): (&str, f64),
+        conn: &impl Connection,
+        (font, font_size): (Arc<Font<'static>>, f64),
         app_win: Option<NonZeroU32>,
         spot_location: xim::Point,
         screen_num: usize,
     ) -> Result<Self, xim::ServerError> {
         let size = (font_size * 1.7) as u16;
         let size = (size, size);
+        let gc = conn.generate_id()?;
         let preedit_window = conn.generate_id()?;
-        let colormap = conn.generate_id()?;
-        let (depth, visual_id) = choose_visual(conn, screen_num)?;
+        // let colormap = conn.generate_id()?;
+        // let (depth, visual_id) = choose_visual(conn, screen_num)?;
 
         let screen = &conn.setup().roots[screen_num];
         let pos = find_position(conn, screen.root, app_win, spot_location)?;
 
-        conn.create_colormap(ColormapAlloc::NONE, colormap, screen.root, visual_id)?
-            .check()?;
-
         conn.create_window(
-            depth,
+            screen.root_depth,
             preedit_window,
             screen.root,
             pos.0,
@@ -53,17 +49,22 @@ impl PeWindow {
             size.1,
             0,
             WindowClass::INPUT_OUTPUT,
-            visual_id,
+            0,
             &CreateWindowAux::default()
                 .background_pixel(x11rb::NONE)
                 .border_pixel(x11rb::NONE)
                 .override_redirect(1u32)
-                .event_mask(EventMask::EXPOSURE | EventMask::STRUCTURE_NOTIFY)
-                .colormap(colormap),
+                .event_mask(EventMask::EXPOSURE | EventMask::STRUCTURE_NOTIFY),
         )?
         .check()?;
 
-        conn.free_colormap(colormap)?;
+        conn.create_gc(
+            gc,
+            preedit_window,
+            &CreateGCAux::new()
+                .background(screen.white_pixel)
+                .foreground(screen.black_pixel),
+        )?;
 
         let window_type = conn
             .intern_atom(false, b"_NET_WM_WINDOW_TYPE\0")?
@@ -90,40 +91,22 @@ impl PeWindow {
             b"kime\0kime\0",
         )?;
 
-        let mut visual = find_xcb_visualtype(conn, visual_id).unwrap();
-        let cairo_conn =
-            unsafe { cairo::XCBConnection::from_raw_none(conn.get_raw_xcb_connection() as _) };
-        let visual = unsafe { cairo::XCBVisualType::from_raw_none(&mut visual as *mut _ as _) };
-        let surface = cairo::XCBSurface::create(
-            &cairo_conn,
-            &cairo::XCBDrawable(preedit_window),
-            &visual,
-            size.0 as _,
-            size.1 as _,
-        )
-        .expect("Create XCB Surface");
-
         conn.map_window(preedit_window)?.check()?;
 
         conn.flush()?;
 
-        let cr = cairo::Context::new(&surface).expect("Create Cairo Context");
-
-        cr.select_font_face(&font, cairo::FontSlant::Normal, cairo::FontWeight::Normal);
-        cr.set_font_size(font_size);
-
         Ok(Self {
-            surface,
-            cr,
             preedit_window: NonZeroU32::new(preedit_window).unwrap(),
             preedit: String::with_capacity(10),
-            text_pos: (font_size * 0.36, font_size * 1.10),
+            gc,
+            font,
+            text_pos: ((font_size * 0.36) as _, (font_size * 0.36) as _),
+            text_scale: rusttype::Scale::uniform(font_size as f32),
+            image_buffer: ImageBuffer::new(size.0 as _, size.1 as _),
         })
     }
 
-    pub fn clean<C: HasConnection>(self, c: C) -> Result<(), xim::ServerError> {
-        let conn = c.conn();
-        self.surface.finish();
+    pub fn clean(self, conn: &impl Connection) -> Result<(), xim::ServerError> {
         conn.destroy_window(self.preedit_window.get())?
             .ignore_error();
         conn.flush()?;
@@ -135,30 +118,57 @@ impl PeWindow {
         self.preedit_window
     }
 
-    fn redraw(&mut self) {
+    fn redraw(&mut self, conn: &impl Connection) -> Result<(), xim::ServerError> {
+        const BACKGROUND: image::Bgra<u8> = image::Bgra([255, 255, 255, 255]);
+        const FOREGROUND: image::Bgra<u8> = image::Bgra([0, 0, 0, 255]);
+
         log::trace!("Redraw: {}", self.preedit);
-        self.cr.set_source_rgb(1.0, 1.0, 1.0);
-        self.cr.paint().expect("Cairo paint");
 
-        if !self.preedit.is_empty() {
-            self.cr.set_source_rgb(0.0, 0.0, 0.0);
-            self.cr.move_to(self.text_pos.0, self.text_pos.1);
-            self.cr.show_text(&self.preedit).expect("Cairo show text");
-        }
+        let rect = imageproc::rect::Rect::at(0, 0)
+            .of_size(self.image_buffer.width(), self.image_buffer.height());
+        imageproc::drawing::draw_filled_rect_mut(&mut self.image_buffer, rect, BACKGROUND);
+        imageproc::drawing::draw_text_mut(
+            &mut self.image_buffer,
+            FOREGROUND,
+            self.text_pos.0,
+            self.text_pos.1,
+            self.text_scale,
+            &self.font,
+            &self.preedit,
+        );
 
-        self.surface.flush();
+        conn.put_image(
+            ImageFormat::Z_PIXMAP,
+            self.preedit_window.get(),
+            self.gc,
+            self.image_buffer.width() as _,
+            self.image_buffer.height() as _,
+            0,
+            0,
+            0,
+            24,
+            self.image_buffer.as_raw(),
+        )?;
+
+        Ok(())
     }
 
-    pub fn expose(&mut self) {
-        self.redraw();
+    pub fn expose(&mut self, conn: &impl Connection) -> Result<(), xim::ServerError> {
+        self.redraw(conn)?;
+        Ok(())
     }
 
-    pub fn configure_notify(&mut self, e: ConfigureNotifyEvent) {
-        self.surface.set_size(e.width as _, e.height as _).unwrap();
-        self.redraw();
+    pub fn configure_notify(
+        &mut self,
+        e: ConfigureNotifyEvent,
+        conn: &impl Connection,
+    ) -> Result<(), xim::ServerError> {
+        self.image_buffer = ImageBuffer::new(e.width as _, e.height as _);
+        self.redraw(conn)?;
+        Ok(())
     }
 
-    pub fn refresh(&self, conn: &XCBConnection) -> Result<(), xim::ServerError> {
+    pub fn refresh(&self, conn: &impl Connection) -> Result<(), xim::ServerError> {
         conn.send_event(
             false,
             self.preedit_window.get(),
@@ -183,89 +193,6 @@ impl PeWindow {
         self.preedit.clear();
         self.preedit.push_str(s);
     }
-}
-
-/// Choose a visual to use. This function tries to find a depth=32 visual and falls back to the
-/// screen's default visual.
-fn choose_visual(conn: &impl Connection, screen_num: usize) -> Result<(u8, Visualid), ReplyError> {
-    let depth = 32;
-    let screen = &conn.setup().roots[screen_num];
-
-    // Try to use XRender to find a visual with alpha support
-    let has_render = conn
-        .extension_information(render::X11_EXTENSION_NAME)?
-        .is_some();
-    if has_render {
-        let formats = conn.render_query_pict_formats()?.reply()?;
-        // Find the ARGB32 format that must be supported.
-        let format = formats
-            .formats
-            .iter()
-            .filter(|info| (info.type_, info.depth) == (PictType::DIRECT, depth))
-            .filter(|info| {
-                let d = info.direct;
-                (d.red_mask, d.green_mask, d.blue_mask, d.alpha_mask) == (0xff, 0xff, 0xff, 0xff)
-            })
-            .find(|info| {
-                let d = info.direct;
-                (d.red_shift, d.green_shift, d.blue_shift, d.alpha_shift) == (16, 8, 0, 24)
-            });
-        if let Some(format) = format {
-            // Now we need to find the visual that corresponds to this format
-            if let Some(visual) = formats.screens[screen_num]
-                .depths
-                .iter()
-                .flat_map(|d| &d.visuals)
-                .find(|v| v.format == format.id)
-            {
-                return Ok((format.depth, visual.visual));
-            }
-        }
-    }
-    Ok((screen.root_depth, screen.root_visual))
-}
-
-/// A rust version of XCB's `xcb_visualtype_t` struct. This is used in a FFI-way.
-#[derive(Clone, Copy)]
-#[repr(C)]
-struct xcb_visualtype_t {
-    pub visual_id: u32,
-    pub class: u8,
-    pub bits_per_rgb_value: u8,
-    pub colormap_entries: u16,
-    pub red_mask: u32,
-    pub green_mask: u32,
-    pub blue_mask: u32,
-    pub pad0: [u8; 4],
-}
-
-impl From<Visualtype> for xcb_visualtype_t {
-    fn from(value: Visualtype) -> xcb_visualtype_t {
-        xcb_visualtype_t {
-            visual_id: value.visual_id,
-            class: value.class.into(),
-            bits_per_rgb_value: value.bits_per_rgb_value,
-            colormap_entries: value.colormap_entries,
-            red_mask: value.red_mask,
-            green_mask: value.green_mask,
-            blue_mask: value.blue_mask,
-            pad0: [0; 4],
-        }
-    }
-}
-
-/// Find a `xcb_visualtype_t` based on its ID number
-fn find_xcb_visualtype(conn: &impl Connection, visual_id: u32) -> Option<xcb_visualtype_t> {
-    for root in &conn.setup().roots {
-        for depth in &root.allowed_depths {
-            for visual in &depth.visuals {
-                if visual.visual_id == visual_id {
-                    return Some((*visual).into());
-                }
-            }
-        }
-    }
-    None
 }
 
 fn find_position(

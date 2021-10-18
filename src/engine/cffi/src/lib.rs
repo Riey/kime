@@ -13,8 +13,9 @@ pub use kime_engine_config::{DaemonModule, EnumSet};
 
 pub use ffi::{
     IconColor, InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
-    InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, ModifierState, ModifierState_ALT,
-    ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER, KIME_API_VERSION,
+    InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, InputResult_NOT_READY, ModifierState,
+    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
+    KIME_API_VERSION,
 };
 
 pub fn check_api_version() -> bool {
@@ -34,6 +35,10 @@ impl InputEngine {
 
     pub fn update_layout_state(&self) {
         unsafe { ffi::kime_engine_update_layout_state(self.engine) }
+    }
+
+    pub fn check_ready(&mut self) -> bool {
+        unsafe { ffi::kime_engine_check_ready(self.engine) }
     }
 
     pub fn set_input_category(&mut self, category: InputCategory) {

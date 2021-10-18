@@ -13,14 +13,15 @@ use xim::{
 
 use kime_engine_cffi::{
     Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT,
-    ModifierState_SUPER,
+    InputResult_LANGUAGE_CHANGED, InputResult_NOT_READY, ModifierState_ALT, ModifierState_CONTROL,
+    ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub struct KimeData {
     engine: InputEngine,
     pe: Option<NonZeroU32>,
     show_preedit_window: bool,
+    engine_ready: bool,
 }
 
 impl KimeData {
@@ -29,6 +30,7 @@ impl KimeData {
             engine: InputEngine::new(config),
             pe: None,
             show_preedit_window,
+            engine_ready: true,
         }
     }
 }
@@ -342,6 +344,12 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
             self.preedit(server, user_ic)?;
         }
 
+        user_ic.user_data.engine_ready = ret & InputResult_NOT_READY == 0;
+
+        if !user_ic.user_data.engine_ready {
+            log::warn!("not ready");
+        }
+
         Ok(ret & InputResult_CONSUMED != 0)
     }
 
@@ -376,6 +384,14 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        self.reset(server, user_ic)
+        if !user_ic.user_data.engine_ready {
+            user_ic.user_data.engine_ready = user_ic.user_data.engine.check_ready();
+        }
+
+        if user_ic.user_data.engine_ready {
+            self.reset(server, user_ic)
+        } else {
+            Ok(())
+        }
     }
 }

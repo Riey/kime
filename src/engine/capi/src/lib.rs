@@ -59,6 +59,12 @@ pub unsafe extern "C" fn kime_engine_delete(engine: &mut InputEngine) {
     drop(Box::from_raw(engine));
 }
 
+/// Check engine ready state
+#[no_mangle]
+pub unsafe extern "C" fn kime_engine_check_ready(engine: &mut InputEngine) -> bool {
+    engine.check_ready()
+}
+
 /// Update layout state
 #[no_mangle]
 pub extern "C" fn kime_engine_update_layout_state(engine: &mut InputEngine) {

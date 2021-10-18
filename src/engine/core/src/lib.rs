@@ -199,13 +199,21 @@ impl InputEngine {
         self.remove_preedit();
     }
 
-    fn current_result(&self) -> InputResult {
+    #[inline]
+    pub fn check_ready(&mut self) -> bool {
+        self.engine_impl.check_ready(&mut self.commit_buf)
+    }
+
+    fn current_result(&mut self) -> InputResult {
         let mut ret = InputResult::empty();
         if self.engine_impl.has_preedit() {
             ret |= InputResult::HAS_PREEDIT;
         }
         if !self.commit_buf.is_empty() {
             ret |= InputResult::HAS_COMMIT;
+        }
+        if !self.engine_impl.check_ready(&mut self.commit_buf) {
+            ret |= InputResult::NOT_READY;
         }
         ret
     }
@@ -274,10 +282,12 @@ macro_rules! do_mode {
                 return ret;
             }
             InputEngineModeResult::ExitHandled(ret) => {
+                $self.$field.reset();
                 $self.mode = None;
                 return ret;
             }
             InputEngineModeResult::Exit => {
+                $self.$field.reset();
                 $self.mode = None;
             }
         }
@@ -326,6 +336,14 @@ macro_rules! connect {
         do_mode!(@$key $self, $func($($arg,)*));
         do_engine!($self, $func($($arg,)*))
     }};
+}
+
+impl EngineImpl {
+    pub fn check_ready(&mut self, commit_buf: &mut String) -> bool {
+        do_mode!(@ret self, check_ready(commit_buf,));
+
+        true
+    }
 }
 
 impl InputEngineBackend for EngineImpl {

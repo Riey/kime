@@ -113,7 +113,6 @@ void focus_out(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
   debug("focus_out");
-
   kime_reset(ctx);
 }
 
@@ -151,6 +150,14 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
 
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
+
+  if (ret & KimeInputResult_NOT_READY) {
+    bool is_ready = false;
+    while (!is_ready) {
+      is_ready = kime_engine_check_ready(ctx->engine);
+    }
+    ret |= KimeInputResult_HAS_COMMIT;
+  }
 
   if (ret & KimeInputResult_LANGUAGE_CHANGED) {
     kime_engine_update_layout_state(ctx->engine);

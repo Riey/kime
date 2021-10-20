@@ -59,12 +59,24 @@ fn dont_change_jongseong() {
 }
 
 #[test]
-fn flexible_compose_order() {
+fn flexible_compose_order_jong_cho() {
     test_input_with_addon(
         &[
             (Key::normal(S), "ㄴ", ""),
             (Key::normal(J), "ᄋᅠᆫ", ""),
             (Key::normal(F), "안", ""),
+        ],
+        Addon::FlexibleComposeOrder,
+    );
+}
+
+#[test]
+fn flexible_compose_order_jong_jung() {
+    test_input_with_addon(
+        &[
+            (Key::normal(S), "ㄴ", ""),
+            (Key::normal(F), "ᅟᅡᆫ", ""),
+            (Key::normal(J), "안", ""),
         ],
         Addon::FlexibleComposeOrder,
     );

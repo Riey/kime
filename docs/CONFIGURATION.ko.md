@@ -176,6 +176,13 @@ XIM에서 쓸 편집창 글꼴과 크기입니다.
 
 [dubeolsik.yaml]: ../src/engine/backends/hangul/data/dubeolsik.yaml
 
+### preedit_johab
+
+편집상태에 조합형을 어느정도로 사용할지 설정합니다.
+
+| default |`Needed`|
+|---------|-------|
+
 ### word_commit
 
 커밋을 단어 단위로 합니다.
@@ -222,7 +229,7 @@ dubeolsik:
 
 ##### FlexibleComposeOrder
 
-초성 중성 종성의 순서를 바꿔도 조합이 되도록 합니다 오타 교정에 도움이 될 수 있습니다.
+초성, 중성, 종성의 순서를 바꿔도 조합이 되도록 합니다 오타 교정에 도움이 될 수 있습니다.
 
 ```txt
 ㅏ + ㄱ = 가

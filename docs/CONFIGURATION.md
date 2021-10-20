@@ -153,6 +153,13 @@ Set latin layout
 
 Set hangul setting
 
+### preedit_johab
+
+Set preedit johab encoding level
+
+| default |`Needed`|
+|---------|-------|
+
 ### word_commit
 
 Let commit by word

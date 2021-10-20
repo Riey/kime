@@ -229,7 +229,7 @@ impl EngineImpl {
             latin_engine: LatinEngine::new(config.preferred_direct),
             hangul_engine: HangulEngine::new(
                 config.hangul_data.word_commit(),
-                config.hangul_data.preedit_filler(),
+                config.hangul_data.preedit_johab(),
             ),
             hanja_mode: HanjaMode::new(),
             math_mode: MathMode::new(),

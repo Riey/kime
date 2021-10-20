@@ -35,7 +35,7 @@ pub enum Addon {
 pub struct HangulConfig {
     pub layout: String,
     pub word_commit: bool,
-    pub preedit_filler: bool,
+    pub preedit_johab: bool,
     pub addons: BTreeMap<String, EnumSet<Addon>>,
 }
 
@@ -44,7 +44,7 @@ impl Default for HangulConfig {
         Self {
             layout: "dubeolsik".into(),
             word_commit: false,
-            preedit_filler: true,
+            preedit_johab: true,
             addons: vec![
                 ("all".into(), Addon::ComposeChoseongSsang.into()),
                 ("dubeolsik".into(), Addon::TreatJongseongAsChoseong.into()),
@@ -78,7 +78,7 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
 pub struct HangulData {
     layout: Layout,
     addons: EnumSet<Addon>,
-    preedit_filler: bool,
+    preedit_johab: bool,
     word_commit: bool,
 }
 
@@ -126,13 +126,13 @@ impl HangulData {
                     .copied()
                     .unwrap_or_default(),
             ),
-            preedit_filler: config.preedit_filler,
+            preedit_johab: config.preedit_johab,
             word_commit: config.word_commit,
         }
     }
 
-    pub const fn preedit_filler(&self) -> bool {
-        self.preedit_filler
+    pub const fn preedit_johab(&self) -> bool {
+        self.preedit_johab
     }
 
     pub const fn word_commit(&self) -> bool {

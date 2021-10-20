@@ -10,16 +10,16 @@ use crate::{
 pub struct HangulEngine {
     state: CharacterState,
     word_commit: bool,
-    preedit_filler: bool,
+    preedit_johab: bool,
     word_buf: String,
 }
 
 impl HangulEngine {
-    pub fn new(word_commit: bool, preedit_filler: bool) -> Self {
+    pub fn new(word_commit: bool, preedit_johab: bool) -> Self {
         Self {
             state: CharacterState::new(),
             word_commit,
-            preedit_filler,
+            preedit_johab,
             word_buf: String::new(),
         }
     }
@@ -49,9 +49,9 @@ impl HangulEngine {
         match ret {
             CharacterResult::Consume => true,
             CharacterResult::NewCharacter(new_ch) => {
-                    if self.word_commit {
+                if self.word_commit {
                     self.state.to_str(&mut self.word_buf);
-                    } else {
+                } else {
                     self.state.to_str(commit_buf);
                 }
                 self.state = new_ch;

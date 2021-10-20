@@ -1,14 +1,14 @@
 use kime_engine_backend::{
     InputEngineMode,
     InputEngineModeResult::{self, Continue, Exit, ExitHandled},
-    Key, KeyCode,
+    Key,
 };
 
-#[derive(Debug, Clone)]
+use kime_engine_candidate::client::Client;
+
+#[derive(Debug)]
 pub struct HanjaMode {
-    hanja_entires: &'static [(&'static str, &'static str)],
-    index: usize,
-    max_index: usize,
+    client: Option<Client>,
 }
 
 impl Default for HanjaMode {
@@ -19,23 +19,13 @@ impl Default for HanjaMode {
 
 impl HanjaMode {
     pub fn new() -> Self {
-        Self {
-            hanja_entires: &[],
-            index: 0,
-            max_index: 0,
-        }
+        Self { client: None }
     }
 
     pub fn set_key(&mut self, key: &str) -> bool {
         if let Some(entires) = kime_engine_dict::lookup(key) {
-            self.hanja_entires = entires;
-            self.index = 0;
-            self.max_index = if entires.len() % 10 == 0 {
-                (entires.len() / 10) - 1
-            } else {
-                entires.len() / 10
-            };
-            true
+            self.client = Client::new(entires).ok();
+            self.client.is_some()
         } else {
             false
         }
@@ -48,60 +38,29 @@ impl InputEngineMode for HanjaMode {
     fn press_key(
         &mut self,
         _: &(),
-        key: Key,
+        _: Key,
         commit_buf: &mut String,
     ) -> InputEngineModeResult<bool> {
-        match key.code {
-            KeyCode::Up | KeyCode::Left | KeyCode::PageUp => {
-                self.index = self.index.checked_sub(1).unwrap_or(self.max_index);
-                Continue(true)
-            }
-            KeyCode::Down | KeyCode::Right | KeyCode::PageDown => {
-                if self.index == self.max_index {
-                    self.index = 0;
-                } else {
-                    self.index += 1;
-                }
-                Continue(true)
-            }
-            KeyCode::One
-            | KeyCode::Two
-            | KeyCode::Three
-            | KeyCode::Four
-            | KeyCode::Five
-            | KeyCode::Six
-            | KeyCode::Seven
-            | KeyCode::Eight
-            | KeyCode::Nine
-            | KeyCode::Zero => {
-                let idx = key.code as usize - KeyCode::One as usize;
-                if let Some(entry) = self.hanja_entires.get(self.index * 10 + idx) {
-                    commit_buf.push_str(entry.0);
-                    ExitHandled(true)
-                } else {
-                    Continue(true)
-                }
-            }
-            _ => Exit,
-        }
+        self.clear_preedit(commit_buf);
+
+        Exit
     }
 
-    fn preedit_str(&self, buf: &mut String) {
-        let range = (self.index * 10)..(self.index * 10 + 10).min(self.hanja_entires.len());
+    fn preedit_str(&self, _: &mut String) {}
 
-        use std::fmt::Write;
-        write!(buf, "{}/{} ", self.index, self.max_index).ok();
-
-        for (idx, entry) in self.hanja_entires[range].iter().enumerate() {
-            write!(buf, "[{}] {}({})", idx + 1, entry.0, entry.1).ok();
+    fn clear_preedit(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
+        if let Some(mut client) = self.client.take() {
+            if let Some(res) = client.close().ok().flatten() {
+                commit_buf.push_str(&res);
+            }
         }
-    }
 
-    fn clear_preedit(&mut self, _commit_buf: &mut String) -> InputEngineModeResult<()> {
-        Continue(())
+        Exit
     }
 
     fn reset(&mut self) -> InputEngineModeResult<()> {
+        self.client.take().and_then(|mut c| c.close().ok());
+
         ExitHandled(())
     }
 

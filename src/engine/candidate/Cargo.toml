@@ -1,0 +1,16 @@
+[package]
+name = "kime-engine-candidate"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = "1.0.68"
+timeout-readwrite = "0.3.1"
+
+[dev-dependencies]
+kime-engine-dict = { path = "../dict" }

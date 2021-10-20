@@ -5,6 +5,8 @@ with pkgs;
     dbus
     dbus_libs
     libdbusmenu
+    libGL
+    wayland
 
     fontconfig
     freetype

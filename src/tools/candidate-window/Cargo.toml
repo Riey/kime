@@ -1,0 +1,13 @@
+[package]
+name = "kime-candidate-window"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+kime-engine-candidate = { path = "../../engine/candidate" }
+eframe = "0.14.0"
+egui = "0.14.2"

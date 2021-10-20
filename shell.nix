@@ -13,6 +13,7 @@ llvmPackages_13.stdenv.mkDerivation {
   nativeBuildInputs = deps.kimeNativeBuildInputs;
   CMAKE_EXPORT_COMPILE_COMMANDS = 1;
   LIBCLANG_PATH = "${pkgs.llvmPackages_13.libclang.lib}/lib";
+  LD_LIBRARY_PATH = "${pkgs.wayland}/lib:${pkgs.libGL}/lib";
   RUST_BACKTRACE = 1;
 }
 

@@ -59,6 +59,18 @@ fn dont_change_jongseong() {
 }
 
 #[test]
+fn flexible_compose_order() {
+    test_input_with_addon(
+        &[
+            (Key::normal(S), "ㄴ", ""),
+            (Key::normal(J), "ᄋᅠᆫ", ""),
+            (Key::normal(F), "안", ""),
+        ],
+        Addon::FlexibleComposeOrder,
+    );
+}
+
+#[test]
 fn s_number() {
     test_input(&[
         (Key::shift(Two), "", "@"),

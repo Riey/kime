@@ -51,8 +51,12 @@ pub trait InputEngineMode {
     /// Is have preedit
     fn has_preedit(&self) -> bool;
     /// Is now ready
+    fn check_ready(&self) -> bool {
+        true
+    }
+    /// End ready state
     #[allow(unused_variables)]
-    fn check_ready(&mut self, commit_buf: &mut String) -> InputEngineModeResult<bool> {
-        InputEngineModeResult::Continue(true)
+    fn end_ready(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
+        InputEngineModeResult::Continue(())
     }
 }

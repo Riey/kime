@@ -4,7 +4,7 @@ use kime_engine_backend::{
     Key,
 };
 
-use kime_engine_candidate::{client::Client, server::Response};
+use kime_engine_candidate::client::Client;
 
 #[derive(Debug)]
 pub struct HanjaMode {
@@ -57,7 +57,7 @@ impl InputEngineMode for HanjaMode {
     }
 
     fn reset(&mut self) -> InputEngineModeResult<()> {
-        self.client.take().and_then(|mut c| c.close().ok());
+        self.client.take().and_then(|c| c.close().ok());
 
         ExitHandled(())
     }
@@ -66,18 +66,16 @@ impl InputEngineMode for HanjaMode {
         true
     }
 
-    fn check_ready(&mut self, commit_buf: &mut String) -> InputEngineModeResult<bool> {
-        match self.client.as_mut() {
+    fn check_ready(&self) -> bool {
+        self.client.as_ref().map(Client::is_ready).unwrap_or(true)
+    }
+
+    fn end_ready(&mut self, commit_buf: &mut String) -> InputEngineModeResult<()> {
+        match self.client.take() {
             Some(client) => {
-                if let Ok(msg) = client.try_recv_msg() {
-                    match msg {
-                        Some(Response::Quit) => ExitHandled(true),
-                        Some(Response::Selected(res)) => {
-                            commit_buf.push_str(&res);
-                            ExitHandled(true)
-                        }
-                        None => Continue(false),
-                    }
+                if let Ok(Some(res)) = client.close() {
+                    commit_buf.push_str(&res);
+                    ExitHandled(())
                 } else {
                     Exit
                 }

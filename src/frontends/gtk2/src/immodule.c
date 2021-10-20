@@ -85,6 +85,39 @@ void commit(KimeImContext *ctx) {
   g_signal_emit(ctx, ctx->signals.commit, 0, ctx->buf.ptr);
 }
 
+gboolean process_input_result(KimeImContext *ctx, KimeInputResult ret) {
+  gboolean bypassed = (ret & KimeInputResult_CONSUMED) != 0;
+
+  if (ret & KimeInputResult_NOT_READY) {
+    bool is_ready = false;
+    while (!is_ready) {
+      is_ready = kime_engine_check_ready(ctx->engine);
+    }
+    ret = kime_engine_end_ready(ctx->engine);
+  }
+
+  if (ret & KimeInputResult_LANGUAGE_CHANGED) {
+    kime_engine_update_layout_state(ctx->engine);
+  }
+
+  if (!(ret & KimeInputResult_HAS_PREEDIT)) {
+    ctx->preedit_has_ended = ctx->preedit_visible;
+    update_preedit(ctx, FALSE);
+  }
+
+  if (ret & KimeInputResult_HAS_COMMIT) {
+    str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
+    commit(ctx);
+    kime_engine_clear_commit(ctx->engine);
+  }
+
+  if (ret & KimeInputResult_HAS_PREEDIT) {
+    update_preedit(ctx, TRUE);
+  }
+
+  return bypassed;
+}
+
 void focus_in(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
@@ -94,7 +127,6 @@ void focus_in(GtkIMContext *im) {
 }
 
 void kime_reset(KimeImContext *ctx) {
-  update_preedit(ctx, FALSE);
   kime_engine_clear_preedit(ctx->engine);
   str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
   commit(ctx);
@@ -113,7 +145,9 @@ void focus_out(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
   debug("focus_out");
-  kime_reset(ctx);
+  if (kime_engine_check_ready(ctx->engine)) {
+    kime_reset(ctx);
+  }
 }
 
 void put_event(KimeImContext *ctx, EventType *key) {
@@ -151,34 +185,7 @@ gboolean on_key_input(KimeImContext *ctx, guint16 code,
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
 
-  if (ret & KimeInputResult_NOT_READY) {
-    bool is_ready = false;
-    while (!is_ready) {
-      is_ready = kime_engine_check_ready(ctx->engine);
-    }
-    ret |= KimeInputResult_HAS_COMMIT;
-  }
-
-  if (ret & KimeInputResult_LANGUAGE_CHANGED) {
-    kime_engine_update_layout_state(ctx->engine);
-  }
-
-  if (!(ret & KimeInputResult_HAS_PREEDIT)) {
-    ctx->preedit_has_ended = ctx->preedit_visible;
-    update_preedit(ctx, FALSE);
-  }
-
-  if (ret & KimeInputResult_HAS_COMMIT) {
-    str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
-    commit(ctx);
-    kime_engine_clear_commit(ctx->engine);
-  }
-
-  if (ret & KimeInputResult_HAS_PREEDIT) {
-    update_preedit(ctx, TRUE);
-  }
-
-  return (ret & KimeInputResult_CONSUMED) != 0;
+  return process_input_result(ctx, ret);
 }
 
 gboolean filter_keypress(GtkIMContext *im, EventType *key) {

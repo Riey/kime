@@ -1,19 +1,16 @@
-use kime_engine_candidate::server::{from_slice, to_writer, InitRequest, Response};
 use std::{
     borrow::Cow,
     collections::BTreeMap,
-    io::{self, BufRead, Stdin, Stdout, Write},
+    io::{self, BufRead, Stdout, Write},
 };
 
 const PAGE_SIZE: usize = 10;
 
 struct CandidateApp {
-    stdin: Stdin,
     stdout: Stdout,
     page_index: usize,
     max_page_index: usize,
     candidate_list: Vec<(String, String)>,
-    buf: Vec<u8>,
 }
 
 impl eframe::epi::App for CandidateApp {
@@ -40,10 +37,7 @@ impl eframe::epi::App for CandidateApp {
                         .inner;
 
                     if quitted {
-                        self.buf.clear();
-                        to_writer(&mut self.buf, &Response::Selected(key.into())).unwrap();
-                        self.buf.push(b'\n');
-                        self.stdout.write_all(&self.buf).unwrap();
+                        self.stdout.write_all(key.as_bytes()).unwrap();
                         frame.quit();
                         return;
                     }
@@ -131,24 +125,40 @@ impl eframe::epi::App for CandidateApp {
 }
 
 fn main() -> io::Result<()> {
-    let mut buf = Vec::with_capacity(4096);
+    let mut buf = String::with_capacity(4096);
     let stdin = io::stdin();
     let stdout = io::stdout();
-    stdin.lock().read_until(b'\n', &mut buf)?;
-    let init: InitRequest = from_slice(&buf)?;
+
+    let mut candidate_list = Vec::new();
+    let mut stdin_lock = stdin.lock();
+
+    macro_rules! read {
+        ($ret:ident) => {
+            let len = stdin_lock.read_line(&mut buf)?;
+            if len == 0 {
+                break;
+            }
+            let $ret = buf.trim_end_matches('\n').to_string();
+            buf.clear();
+        };
+    }
+
+    loop {
+        read!(key);
+        read!(value);
+        candidate_list.push((key, value));
+    }
 
     eframe::run_native(
         Box::new(CandidateApp {
-            buf,
-            stdin,
             stdout,
             page_index: 0,
-            max_page_index: if init.candidate_list.len() % PAGE_SIZE == 0 {
-                (init.candidate_list.len() / PAGE_SIZE) - 1
+            max_page_index: if candidate_list.len() % PAGE_SIZE == 0 {
+                (candidate_list.len() / PAGE_SIZE) - 1
             } else {
-                init.candidate_list.len() / PAGE_SIZE
+                candidate_list.len() / PAGE_SIZE
             },
-            candidate_list: init.candidate_list,
+            candidate_list,
         }),
         eframe::NativeOptions {
             always_on_top: true,

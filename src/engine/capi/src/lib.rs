@@ -61,8 +61,14 @@ pub unsafe extern "C" fn kime_engine_delete(engine: &mut InputEngine) {
 
 /// Check engine ready state
 #[no_mangle]
-pub unsafe extern "C" fn kime_engine_check_ready(engine: &mut InputEngine) -> bool {
+pub unsafe extern "C" fn kime_engine_check_ready(engine: &InputEngine) -> bool {
     engine.check_ready()
+}
+
+/// End engine ready state
+#[no_mangle]
+pub unsafe extern "C" fn kime_engine_end_ready(engine: &mut InputEngine) -> InputResult {
+    engine.end_ready()
 }
 
 /// Update layout state

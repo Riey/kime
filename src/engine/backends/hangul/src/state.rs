@@ -2,7 +2,7 @@ use enumset::EnumSet;
 
 use crate::{
     characters::{Choseong, JongToCho, Jongseong, Jungseong, KeyValue},
-    Addon,
+    Addon, PreeditJohabLevel,
 };
 
 /// 한글 입력 오토마타
@@ -10,12 +10,12 @@ use crate::{
 pub struct HangulEngine {
     state: CharacterState,
     word_commit: bool,
-    preedit_johab: bool,
+    preedit_johab: PreeditJohabLevel,
     word_buf: String,
 }
 
 impl HangulEngine {
-    pub fn new(word_commit: bool, preedit_johab: bool) -> Self {
+    pub fn new(word_commit: bool, preedit_johab: PreeditJohabLevel) -> Self {
         Self {
             state: CharacterState::new(),
             word_commit,
@@ -30,13 +30,13 @@ impl HangulEngine {
 
     pub fn preedit_str(&self, buf: &mut String) {
         buf.push_str(&self.word_buf);
-        self.state.display(self.preedit_johab, buf);
+        self.state.preedit(self.preedit_johab, buf);
     }
 
     pub fn clear_preedit(&mut self, commit_buf: &mut String) {
         commit_buf.push_str(&self.word_buf);
         self.word_buf.clear();
-        self.state.to_str(commit_buf);
+        self.state.commit(commit_buf);
         self.state.reset();
     }
 
@@ -50,9 +50,9 @@ impl HangulEngine {
             CharacterResult::Consume => true,
             CharacterResult::NewCharacter(new_ch) => {
                 if self.word_commit {
-                    self.state.to_str(&mut self.word_buf);
+                    self.state.commit(&mut self.word_buf);
                 } else {
-                    self.state.to_str(commit_buf);
+                    self.state.commit(commit_buf);
                 }
                 self.state = new_ch;
                 true
@@ -131,37 +131,61 @@ impl CharacterState {
         self.jong = None;
     }
 
-    pub fn display(&self, preedit_johab: bool, out: &mut String) {
-        if preedit_johab {
-            self.johab_str(out);
-        } else {
-            self.to_str(out);
+    pub fn preedit(&self, preedit_johab: PreeditJohabLevel, out: &mut String) {
+        macro_rules! to_char {
+            ($jamo:expr) => {
+                match preedit_johab {
+                    PreeditJohabLevel::Always => char::from($jamo),
+                    _ => $jamo.jamo(),
+                }
+            };
         }
-    }
 
-    pub fn johab_str(&self, out: &mut String) {
-        match (self.cho, self.jung, self.jong) {
-            (None, None, None) => {}
-            (None, Some(jung), Some(jong)) => {
+        match (self.cho, self.jung, self.jong, preedit_johab) {
+            (None, None, None, _) => {}
+            (Some(cho), None, _, PreeditJohabLevel::Never) => {
+                out.push(cho.jamo());
+            }
+            (None, Some(jung), _, PreeditJohabLevel::Never) => {
+                out.push(jung.jamo());
+            }
+            (
+                None,
+                Some(jung),
+                Some(jong),
+                PreeditJohabLevel::Always | PreeditJohabLevel::Needed,
+            ) => {
                 out.push(Choseong::FILLER);
                 out.push(jung.into());
                 out.push(jong.into());
             }
-            (Some(cho), None, Some(jong)) => {
+            (
+                Some(cho),
+                None,
+                Some(jong),
+                PreeditJohabLevel::Always | PreeditJohabLevel::Needed,
+            ) => {
                 out.push(cho.into());
                 out.push(Jungseong::FILLER);
                 out.push(jong.into());
             }
-
-            (Some(cho), Some(jung), jong) => out.push(cho.compose(jung, jong)),
-
-            (Some(cho), None, None) => out.push(cho.jamo()),
-            (None, Some(jung), None) => out.push(jung.jamo()),
-            (None, None, Some(jong)) => out.push(jong.jamo()),
+            (Some(cho), Some(jung), jong, PreeditJohabLevel::Needed | PreeditJohabLevel::Never) => {
+                out.push(cho.compose(jung, jong))
+            }
+            (Some(cho), Some(jung), jong, PreeditJohabLevel::Always) => {
+                out.push(cho.into());
+                out.push(jung.into());
+                if let Some(jong) = jong {
+                    out.push(jong.into());
+                }
+            }
+            (Some(cho), None, None, _) => out.push(to_char!(cho)),
+            (None, Some(jung), None, _) => out.push(to_char!(jung)),
+            (None, None, Some(jong), _) => out.push(to_char!(jong)),
         }
     }
 
-    pub fn to_str(&self, out: &mut String) {
+    pub fn commit(&self, out: &mut String) {
         match (self.cho, self.jung, self.jong) {
             (None, None, None) => {}
             (None, Some(jung), Some(jong)) => {
@@ -488,7 +512,7 @@ mod tests {
             jong: Some(Jongseong::Digeut),
         };
         let mut out = String::new();
-        state.display(true, &mut out);
+        state.preedit(PreeditJohabLevel::Needed, &mut out);
         assert_eq!(out, "ᄂᅠᆮ");
     }
 }

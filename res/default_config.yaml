@@ -93,7 +93,7 @@ engine:
   hangul:
     layout: dubeolsik
     word_commit: false
-    preedit_johab: true
+    preedit_johab: Needed
     addons:
       all:
         - ComposeChoseongSsang

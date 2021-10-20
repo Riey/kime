@@ -223,11 +223,12 @@ Note that it depends on other addons this example is only work when `ComposeChos
 
 ##### FlexibleComposeOrder
 
-Compose choseong and jungseong even order is reversed it could be help for fix typo error.
+Compose choseong, jungseong, and jongseong even order is reversed it could be help for fix typo error.
 
 ```txt
 ㅏ + ㄱ = 가
 ㅚ + ㄱ = 괴
+ㅏ + $ㅁ + ㅁ = 맘
 ```
 
 ##### ComposeChoseongSsang

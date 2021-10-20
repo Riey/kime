@@ -130,9 +130,9 @@ void focus_in(GtkIMContext *im) {
   kime_engine_update_layout_state(ctx->engine);
 
   if (!ctx->is_ready) {
-    debug("check ready");
     if (kime_engine_check_ready(ctx->engine)) {
       process_input_result(ctx, kime_engine_end_ready(ctx->engine));
+      ctx->is_ready = TRUE;
     }
   }
 }

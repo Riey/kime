@@ -41,7 +41,7 @@ typedef struct KimeImContext {
   gboolean preedit_visible;
   // for firefox edge case
   gboolean preedit_has_ended;
-  gboolean is_ready;
+  gboolean engine_ready;
   KimeConfig *config;
 } KimeImContext;
 
@@ -90,12 +90,12 @@ gboolean process_input_result(KimeImContext *ctx, KimeInputResult ret) {
   gboolean bypassed = (ret & KimeInputResult_CONSUMED) != 0;
 
   if (ret & KimeInputResult_NOT_READY) {
-    ctx->is_ready = FALSE;
+    ctx->engine_ready = FALSE;
 
     // blocking mode
-    // bool is_ready = false;
-    // while (!is_ready) {
-    //   is_ready = kime_engine_check_ready(ctx->engine);
+    // bool engine_ready = false;
+    // while (!engine_ready) {
+    //   engine_ready = kime_engine_check_ready(ctx->engine);
     // }
     // ret = kime_engine_end_ready(ctx->engine);
   }
@@ -129,10 +129,10 @@ void focus_in(GtkIMContext *im) {
 
   kime_engine_update_layout_state(ctx->engine);
 
-  if (!ctx->is_ready) {
+  if (!ctx->engine_ready) {
     if (kime_engine_check_ready(ctx->engine)) {
       process_input_result(ctx, kime_engine_end_ready(ctx->engine));
-      ctx->is_ready = TRUE;
+      ctx->engine_ready = TRUE;
     }
   }
 }
@@ -158,7 +158,7 @@ void focus_out(GtkIMContext *im) {
   debug("focus_out");
 
   // Don't do reset when engine is not ready
-  if (ctx->is_ready) {
+  if (ctx->engine_ready) {
     kime_reset(ctx);
   }
 }
@@ -335,7 +335,7 @@ void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->widget = NULL;
   ctx->preedit_visible = FALSE;
   ctx->preedit_has_ended = FALSE;
-  ctx->is_ready = TRUE;
+  ctx->engine_ready = TRUE;
   ctx->signals = klass->signals;
   ctx->engine = kime_engine_new(klass->config);
   ctx->config = klass->config;

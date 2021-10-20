@@ -4,7 +4,7 @@
 
 ### Breaking
 
-* Change `FlexibleComposeOrder` can also change jongseong order
+* Change `FlexibleComposeOrder` can also change jongseong order [#534](https://github.com/Riey/kime/issues/534)
 
 ### Improve
 

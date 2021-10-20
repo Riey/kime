@@ -30,12 +30,28 @@ pub enum Addon {
     TreatJongseongAsChoseongCompose,
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum PreeditJohabLevel {
+    /// Always use johab encoding
+    Always,
+    /// Use johab encoding when it's needed
+    Needed,
+    /// Never use johab encoding
+    Never,
+}
+
+impl Default for PreeditJohabLevel {
+    fn default() -> Self {
+        PreeditJohabLevel::Needed
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct HangulConfig {
     pub layout: String,
     pub word_commit: bool,
-    pub preedit_johab: bool,
+    pub preedit_johab: PreeditJohabLevel,
     pub addons: BTreeMap<String, EnumSet<Addon>>,
 }
 
@@ -44,7 +60,7 @@ impl Default for HangulConfig {
         Self {
             layout: "dubeolsik".into(),
             word_commit: false,
-            preedit_johab: true,
+            preedit_johab: PreeditJohabLevel::default(),
             addons: vec![
                 ("all".into(), Addon::ComposeChoseongSsang.into()),
                 ("dubeolsik".into(), Addon::TreatJongseongAsChoseong.into()),
@@ -78,7 +94,7 @@ pub const BUILTIN_LAYOUTS: &'static [(&'static str, &'static str)] = &[
 pub struct HangulData {
     layout: Layout,
     addons: EnumSet<Addon>,
-    preedit_johab: bool,
+    preedit_johab: PreeditJohabLevel,
     word_commit: bool,
 }
 
@@ -131,7 +147,7 @@ impl HangulData {
         }
     }
 
-    pub const fn preedit_johab(&self) -> bool {
+    pub const fn preedit_johab(&self) -> PreeditJohabLevel {
         self.preedit_johab
     }
 

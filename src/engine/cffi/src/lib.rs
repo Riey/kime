@@ -37,7 +37,11 @@ impl InputEngine {
         unsafe { ffi::kime_engine_update_layout_state(self.engine) }
     }
 
-    pub fn check_ready(&mut self) -> bool {
+    pub fn end_ready(&mut self) -> InputResult {
+        unsafe { ffi::kime_engine_end_ready(self.engine) }
+    }
+
+    pub fn check_ready(&self) -> bool {
         unsafe { ffi::kime_engine_check_ready(self.engine) }
     }
 

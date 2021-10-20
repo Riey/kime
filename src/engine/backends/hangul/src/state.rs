@@ -422,7 +422,7 @@ impl CharacterState {
                     ..Default::default()
                 }),
             }
-        } else if let Some(_) = self.jong {
+        } else if self.jong.is_some() && !addons.contains(Addon::FlexibleComposeOrder) {
             // $ㅁ + ㅏ = ㅁㅏ
             // 초성없이 중성과 종성만 있는 경우를 배제
             CharacterResult::NewCharacter(Self {

@@ -4,6 +4,8 @@
 
 ### Breaking
 
+* Change `FlexibleComposeOrder` can also change jongseong order
+
 ### Improve
 
 * Fix preedit character error on chromium family [#535](https://github.com/Riey/kime/issues/535)

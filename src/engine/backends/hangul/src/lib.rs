@@ -22,6 +22,7 @@ pub enum Addon {
     DecomposeJongseongSsang,
 
     /// ㅏ + ㄱ = 가
+    /// ㄱ + $ㄱ + ㅏ = 각
     FlexibleComposeOrder,
 
     /// 안 + ㅣ = 아니

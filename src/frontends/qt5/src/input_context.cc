@@ -28,7 +28,14 @@ void KimeInputContext::reset() {
 void KimeInputContext::setFocusObject(QObject *object) {
   if (object) {
     kime::kime_engine_update_layout_state(this->engine);
-  } else if (this->focus_object) {
+    if (!this->engine_ready) {
+      if (kime::kime_engine_check_ready(this->engine)) {
+        kime::InputResult ret = kime::kime_engine_end_ready(this->engine);
+        this->process_input_result(ret);
+        this->engine_ready = true;
+      }
+    }
+  } else if (this->focus_object && this->engine_ready) {
     this->reset();
   }
 
@@ -77,6 +84,37 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   kime::InputResult ret = kime_engine_press_key(
       this->engine, this->config, (uint16_t)keyevent->nativeScanCode(), state);
 
+  return this->process_input_result(ret);
+}
+
+void KimeInputContext::preedit_str(kime::RustStr s) {
+  if (!this->focus_object) {
+    return;
+  }
+
+  QTextCharFormat fmt;
+  fmt.setFontUnderline(true);
+  QString qs = QString::fromUtf8((const char *)(s.ptr), s.len);
+  this->attributes.push_back(QInputMethodEvent::Attribute{
+      QInputMethodEvent::AttributeType::TextFormat, 0, qs.length(), fmt});
+  QInputMethodEvent e(qs, this->attributes);
+  this->attributes.clear();
+  QCoreApplication::sendEvent(this->focus_object, &e);
+}
+
+void KimeInputContext::commit_str(kime::RustStr s) {
+  if (!this->focus_object) {
+    return;
+  }
+
+  QInputMethodEvent e;
+  if (s.len) {
+    e.setCommitString(QString::fromUtf8((const char *)(s.ptr), s.len));
+  }
+  QCoreApplication::sendEvent(this->focus_object, &e);
+}
+
+bool KimeInputContext::process_input_result(kime::InputResult ret) {
   if (ret & kime::InputResult_LANGUAGE_CHANGED) {
     kime::kime_engine_update_layout_state(this->engine);
   }
@@ -112,31 +150,4 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   this->visible = visible;
 
   return !!(ret & kime::InputResult_CONSUMED);
-}
-
-void KimeInputContext::preedit_str(kime::RustStr s) {
-  if (!this->focus_object) {
-    return;
-  }
-
-  QTextCharFormat fmt;
-  fmt.setFontUnderline(true);
-  QString qs = QString::fromUtf8((const char *)(s.ptr), s.len);
-  this->attributes.push_back(QInputMethodEvent::Attribute{
-      QInputMethodEvent::AttributeType::TextFormat, 0, qs.length(), fmt});
-  QInputMethodEvent e(qs, this->attributes);
-  this->attributes.clear();
-  QCoreApplication::sendEvent(this->focus_object, &e);
-}
-
-void KimeInputContext::commit_str(kime::RustStr s) {
-  if (!this->focus_object) {
-    return;
-  }
-
-  QInputMethodEvent e;
-  if (s.len) {
-    e.setCommitString(QString::fromUtf8((const char *)(s.ptr), s.len));
-  }
-  QCoreApplication::sendEvent(this->focus_object, &e);
 }

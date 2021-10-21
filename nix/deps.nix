@@ -6,6 +6,10 @@ with pkgs;
     dbus_libs
     libdbusmenu
 
+    xlibs.libxcb
+    libGL
+    wayland
+
     fontconfig
     freetype
 
@@ -19,6 +23,7 @@ with pkgs;
 
   kimeNativeBuildInputs = [
     bash
+    python3 # xcb 0.9.0
     pkg-config
     llvmPackages_13.clang
     llvmPackages_13.libclang.lib

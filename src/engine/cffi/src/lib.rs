@@ -13,8 +13,9 @@ pub use kime_engine_config::{DaemonModule, EnumSet};
 
 pub use ffi::{
     IconColor, InputCategory, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
-    InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, ModifierState, ModifierState_ALT,
-    ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER, KIME_API_VERSION,
+    InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, InputResult_NOT_READY, ModifierState,
+    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
+    KIME_API_VERSION,
 };
 
 pub fn check_api_version() -> bool {
@@ -34,6 +35,14 @@ impl InputEngine {
 
     pub fn update_layout_state(&self) {
         unsafe { ffi::kime_engine_update_layout_state(self.engine) }
+    }
+
+    pub fn end_ready(&mut self) -> InputResult {
+        unsafe { ffi::kime_engine_end_ready(self.engine) }
+    }
+
+    pub fn check_ready(&self) -> bool {
+        unsafe { ffi::kime_engine_check_ready(self.engine) }
     }
 
     pub fn set_input_category(&mut self, category: InputCategory) {
@@ -116,15 +125,24 @@ impl Config {
         }
     }
 
-    pub fn xim_font(&self) -> (&str, f64) {
+    pub fn candidate_font(&self) -> (&[u8], u32) {
+        unsafe {
+            let font = ffi::kime_config_candidate_font(self.config);
+
+            (
+                core::slice::from_raw_parts(font.font_data.ptr, font.font_data.len),
+                font.index,
+            )
+        }
+    }
+
+    pub fn xim_font(&self) -> (&[u8], u32, f32) {
         unsafe {
             let font = ffi::kime_config_xim_preedit_font(self.config);
 
             (
-                core::str::from_utf8_unchecked(core::slice::from_raw_parts(
-                    font.name.ptr,
-                    font.name.len,
-                )),
+                core::slice::from_raw_parts(font.font_data.ptr, font.font_data.len),
+                font.index,
                 font.size,
             )
         }

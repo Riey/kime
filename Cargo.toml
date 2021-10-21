@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "src/engine/capi",
+    "src/engine/candidate",
     "src/engine/core",
     "src/engine/config",
     "src/engine/cffi",
@@ -16,6 +17,7 @@ members = [
     "src/frontends/wayland",
     "src/frontends/xim",
 
+    "src/tools/candidate-window",
     "src/tools/check",
     "src/tools/indicator",
     "src/tools/kime",

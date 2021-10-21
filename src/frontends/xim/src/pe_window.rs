@@ -24,7 +24,7 @@ pub struct PeWindow {
 impl PeWindow {
     pub fn new(
         conn: &impl Connection,
-        (font, font_size): (Arc<Font<'static>>, f64),
+        (font, font_size): (Arc<Font<'static>>, f32),
         app_win: Option<NonZeroU32>,
         spot_location: xim::Point,
         screen_num: usize,
@@ -33,8 +33,6 @@ impl PeWindow {
         let size = (size, size);
         let gc = conn.generate_id()?;
         let preedit_window = conn.generate_id()?;
-        // let colormap = conn.generate_id()?;
-        // let (depth, visual_id) = choose_visual(conn, screen_num)?;
 
         let screen = &conn.setup().roots[screen_num];
         let pos = find_position(conn, screen.root, app_win, spot_location)?;

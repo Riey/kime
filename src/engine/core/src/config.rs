@@ -1,3 +1,4 @@
+use font_loader::system_fonts::{self, FontPropertyBuilder};
 pub use kime_engine_config::*;
 
 /// Preprocessed engine config
@@ -6,7 +7,8 @@ pub struct Config {
     pub global_category_state: bool,
     pub category_hotkeys: EnumMap<InputCategory, Vec<(Key, Hotkey)>>,
     pub mode_hotkeys: EnumMap<InputMode, Vec<(Key, Hotkey)>>,
-    pub xim_preedit_font: (String, f64),
+    pub candidate_font: (Vec<u8>, u32),
+    pub xim_preedit_font: (Vec<u8>, u32, f32),
     pub hangul_data: HangulData,
     pub preferred_direct: bool,
     pub latin_data: LatinData,
@@ -46,7 +48,25 @@ impl Config {
                     }
                 }
             },
-            xim_preedit_font: engine.xim_preedit_font,
+            xim_preedit_font: {
+                let (font, index) = system_fonts::get(
+                    &FontPropertyBuilder::new()
+                        .family(&engine.xim_preedit_font.0)
+                        .build(),
+                )
+                .map(|(d, i)| (d, i as u32))
+                .unwrap_or_default();
+                (font, index, engine.xim_preedit_font.1)
+            },
+            candidate_font: {
+                system_fonts::get(
+                    &FontPropertyBuilder::new()
+                        .family(&engine.candidate_font)
+                        .build(),
+                )
+                .map(|(d, i)| (d, i as u32))
+                .unwrap_or_default()
+            },
             preferred_direct: engine.latin.preferred_direct,
             latin_data: LatinData::new(&engine.latin),
             hangul_data,

@@ -74,7 +74,10 @@ allow = [
     "Apache-2.0",
     "BSD-3-Clause",
     "Apache-2.0 WITH LLVM-exception",
+    "CC0-1.0",
     "Zlib",
+    "ISC",
+    "BSL-1.0",
     "GPL-3.0",
     "Unlicense",
 ]

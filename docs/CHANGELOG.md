@@ -5,6 +5,7 @@
 ### Breaking
 
 * Change `FlexibleComposeOrder` can also change jongseong order [#534](https://github.com/Riey/kime/issues/534)
+* Implement hanja candidate window [#383](https://github.com/Riey/kime/issues/383)
 
 ### Improve
 

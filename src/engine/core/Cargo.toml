@@ -14,6 +14,7 @@ kime-engine-backend-latin = { path = "../backends/latin" }
 kime-engine-backend-math = { path = "../backends/math" }
 kime-engine-backend-emoji = { path = "../backends/emoji" }
 serde_yaml = "0.8.17"
+font-loader = "0.11.0"
 
 [target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"

@@ -4,7 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "type": "lldb",
             "request": "attach",
@@ -18,18 +17,12 @@
             "program": "/nix/store/xayryd4aps8pw1v3xwq5g2pzw3lif6kk-gedit-40.1/bin/.gedit-wrapped"
         },
         {
-            "type": "lldb",
+            "type": "gdb",
             "request": "launch",
             "name": "Cargo test",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib"
-                ]
-            },
-            "program": "${cargo:program}",
-            "args": []
+            "target": "/home/riey/repos/kime/target/debug/deps/sebeolsik_3sin_p2-b3402d3703139896",
+            "cwd": "${workspaceRoot}"
+            // "arguments": "double_jongseong --exact --nocapture",
         },
         {
             "type": "lldb",

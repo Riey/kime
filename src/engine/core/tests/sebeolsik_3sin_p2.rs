@@ -14,6 +14,11 @@ fn cu() {
 }
 
 #[test]
+fn double_jongseong() {
+    test_input(&[(Key::normal(T), "ㅋ", ""), (Key::normal(T), "ㅋ", "ㅋ")]);
+}
+
+#[test]
 fn hello() {
     test_input(&[
         (Key::normal(J), "ㅇ", ""),

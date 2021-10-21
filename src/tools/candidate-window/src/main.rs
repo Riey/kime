@@ -4,10 +4,19 @@ use std::{
     io::{self, BufRead, Stdout, Write},
 };
 
+use egui::Widget;
+
 const PAGE_SIZE: usize = 10;
+
+#[derive(Default)]
+struct KeyState {
+    left: bool,
+    right: bool,
+}
 
 struct CandidateApp {
     stdout: Stdout,
+    key_state: KeyState,
     page_index: usize,
     max_page_index: usize,
     candidate_list: Vec<(String, String)>,
@@ -15,9 +24,30 @@ struct CandidateApp {
 
 impl eframe::epi::App for CandidateApp {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut eframe::epi::Frame<'_>) {
-        // egui::TopBottomPanel::top("top-panel").show(ctx, |ui| {
-        //     ui.heading("Candiate");
-        // });
+        if ctx.input().key_down(egui::Key::ArrowLeft) || ctx.input().key_down(egui::Key::H) {
+            if !self.key_state.left {
+                self.page_index = self.page_index.saturating_sub(1);
+                self.key_state.left = true;
+            }
+        }
+
+        if ctx.input().key_released(egui::Key::ArrowLeft) || ctx.input().key_released(egui::Key::H)
+        {
+            self.key_state.left = false;
+        }
+
+        if ctx.input().key_down(egui::Key::ArrowRight) || ctx.input().key_down(egui::Key::L) {
+            if !self.key_state.right {
+                self.page_index = self.page_index.saturating_add(1).min(self.max_page_index);
+                self.key_state.right = true;
+            }
+        }
+
+        if ctx.input().key_released(egui::Key::ArrowRight) || ctx.input().key_released(egui::Key::L)
+        {
+            self.key_state.right = false;
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 let from = self.page_index * PAGE_SIZE;
@@ -46,19 +76,18 @@ impl eframe::epi::App for CandidateApp {
         });
 
         egui::TopBottomPanel::bottom("candidate-footer").show(ctx, |ui| {
-            ui.vertical_centered_justified(|ui| {
-                ui.horizontal(|ui| {
-                    if ui.button("<").clicked() {
-                        self.page_index = self.page_index.saturating_sub(1);
-                    }
-
-                    ui.label(format!("page {}", self.page_index + 1));
-
-                    if ui.button(">").clicked() {
-                        self.page_index =
-                            self.page_index.saturating_add(1).min(self.max_page_index);
-                    }
-                });
+            ui.horizontal(|ui| {
+                for i in 0..self.max_page_index + 1 {
+                    if i == self.page_index {
+                        egui::Button::new(format!("[{}]", i + 1))
+                            .text_color(egui::Color32::YELLOW)
+                            .ui(ui);
+                    } else {
+                        if ui.button(format!("{}", i + 1)).clicked() {
+                            self.page_index = i;
+                        }
+                    };
+                }
             });
         });
     }
@@ -144,6 +173,7 @@ fn main() -> io::Result<()> {
         Box::new(CandidateApp {
             stdout,
             page_index: 0,
+            key_state: KeyState::default(),
             max_page_index: if candidate_list.len() % PAGE_SIZE == 0 {
                 (candidate_list.len() / PAGE_SIZE) - 1
             } else {

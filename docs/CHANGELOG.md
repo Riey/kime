@@ -6,6 +6,7 @@
 
 * `FlexibleComposeOrder` can change jongseong order [#534](https://github.com/Riey/kime/issues/534)
 * Implement hanja candidate window [#383](https://github.com/Riey/kime/issues/383)
+* Builtin sebeolsik `3-90` and `3-91` changed with all jungseong to uncomposable except for `ㅑ`, `ㅕ`,`ㅡ`, `ㅜ(9)`, `ㅗ(/)` [#542](https://github.com/Riey/kime/issues/542)
 
 ### Improve
 

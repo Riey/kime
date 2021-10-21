@@ -79,6 +79,7 @@ install_doc () {
 
 install_bin kime-check
 install_bin kime-indicator
+install_bin kime-candidate-window
 install_bin kime-xim
 install_bin kime-wayland
 install_bin kime

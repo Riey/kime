@@ -4,11 +4,12 @@
 
 ### Breaking
 
-* Change `FlexibleComposeOrder` can also change jongseong order [#534](https://github.com/Riey/kime/issues/534)
+* `FlexibleComposeOrder` can change jongseong order [#534](https://github.com/Riey/kime/issues/534)
 * Implement hanja candidate window [#383](https://github.com/Riey/kime/issues/383)
 
 ### Improve
 
+* `FlexibleComposeOrder` can change compose jungseong order [#542](https://github.com/Riey/kime/issues/542)
 * Fix preedit character error on chromium family [#535](https://github.com/Riey/kime/issues/535)
 * Let incomplete character can commit multiple jamos
 * Support johab encoding for preedit string

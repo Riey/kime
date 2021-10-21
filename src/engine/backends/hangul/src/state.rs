@@ -301,14 +301,20 @@ impl CharacterState {
         // 아 + $ㄴㅖ = 안
         // ㅇ + $ㅜ + $ㅊㅔ = 웨
         // ㅇ + ㅜ + $ㅊㅔ = 웇
-        if self.jung.map_or(true, |j| {
+        // $ㅋ + $ㅋ$ㅕ = ㅋㅋ
+
+        if self.cho.is_none() && self.jung.is_none() {
+            if first {
+                self.jung(jung, compose_jung, addons)
+            } else {
+                self.jong(jong, addons)
+            }
+        } else if self.jung.map_or(true, |j| {
             self.compose_jung && j.try_add(jung, addons).is_some()
         }) {
             self.jung(jung, compose_jung, addons)
-        } else if self.cho.is_some() || !first {
-            self.jong(jong, addons)
         } else {
-            self.jung(jung, compose_jung, addons)
+            self.jong(jong, addons)
         }
     }
 

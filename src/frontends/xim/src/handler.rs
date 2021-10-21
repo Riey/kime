@@ -1,4 +1,4 @@
-use std::{convert::TryInto, num::NonZeroU32, sync::Arc};
+use std::{num::NonZeroU32, sync::Arc};
 
 use crate::pe_window::PeWindow;
 use ahash::AHashMap;
@@ -13,14 +13,15 @@ use xim::{
 
 use kime_engine_cffi::{
     Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT,
-    ModifierState_SUPER,
+    InputResult_LANGUAGE_CHANGED, InputResult_NOT_READY, ModifierState_ALT, ModifierState_CONTROL,
+    ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 pub struct KimeData {
     engine: InputEngine,
     pe: Option<NonZeroU32>,
     show_preedit_window: bool,
+    engine_ready: bool,
 }
 
 impl KimeData {
@@ -29,33 +30,26 @@ impl KimeData {
             engine: InputEngine::new(config),
             pe: None,
             show_preedit_window,
+            engine_ready: true,
         }
     }
 }
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
-    font: (Arc<rusttype::Font<'static>>, f64),
+    font: (Arc<rusttype::Font<'static>>, f32),
     config: Config,
     screen_num: usize,
 }
 
 impl KimeHandler {
     pub fn new(screen_num: usize, config: Config) -> Self {
-        let (font_family, font_size) = config.xim_font();
-        let font = font_loader::system_fonts::get(
-            &font_loader::system_fonts::FontPropertyBuilder::new()
-                .family(font_family)
-                .build(),
-        )
-        .and_then(|(data, index)| {
-            rusttype::Font::try_from_vec_and_index(data, index.try_into().unwrap_or_default())
-        })
-        .map(Arc::new)
-        .unwrap_or_else(|| {
-            log::error!("Font {} load failed!", font_family);
-            panic!("Font {} load failed!", font_family)
-        });
+        let (font_data, index, font_size) = config.xim_font();
+        let font = Arc::new(
+            rusttype::Font::try_from_vec_and_index(font_data.to_vec(), index)
+                .unwrap()
+                .to_owned(),
+        );
 
         Self {
             preedit_windows: AHashMap::new(),
@@ -161,6 +155,36 @@ impl KimeHandler {
         Ok(())
     }
 
+    fn process_input_result<C: HasConnection>(
+        &mut self,
+        server: &mut X11rbServer<C>,
+        user_ic: &mut xim::UserInputContext<KimeData>,
+        ret: kime_engine_cffi::InputResult,
+    ) -> Result<bool, xim::ServerError> {
+        log::trace!("{:?}", ret);
+
+        if ret & InputResult_LANGUAGE_CHANGED != 0 {
+            user_ic.user_data.engine.update_layout_state();
+        }
+
+        if ret & InputResult_HAS_PREEDIT == 0 {
+            self.clear_preedit(server, user_ic)?;
+        }
+
+        if ret & InputResult_HAS_COMMIT != 0 {
+            self.commit(server, user_ic)?;
+            user_ic.user_data.engine.clear_commit();
+        }
+
+        if ret & InputResult_HAS_PREEDIT != 0 {
+            self.preedit(server, user_ic)?;
+        }
+
+        user_ic.user_data.engine_ready = ret & InputResult_NOT_READY == 0;
+
+        Ok(ret & InputResult_CONSUMED != 0)
+    }
+
     fn clear_preedit<C: HasConnection>(
         &mut self,
         server: &mut X11rbServer<C>,
@@ -191,6 +215,7 @@ impl KimeHandler {
         server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
     ) -> Result<(), xim::ServerError> {
+        self.clear_preedit(server, user_ic)?;
         let s = user_ic.user_data.engine.commit_str();
         if !s.is_empty() {
             server.commit(&user_ic.ic, s)?;
@@ -323,26 +348,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
             .engine
             .press_key(&self.config, xev.detail as u16, state);
 
-        log::trace!("{:?}", ret);
-
-        if ret & InputResult_LANGUAGE_CHANGED != 0 {
-            user_ic.user_data.engine.update_layout_state();
-        }
-
-        if ret & InputResult_HAS_PREEDIT == 0 {
-            self.clear_preedit(server, user_ic)?;
-        }
-
-        if ret & InputResult_HAS_COMMIT != 0 {
-            self.commit(server, user_ic)?;
-            user_ic.user_data.engine.clear_commit();
-        }
-
-        if ret & InputResult_HAS_PREEDIT != 0 {
-            self.preedit(server, user_ic)?;
-        }
-
-        Ok(ret & InputResult_CONSUMED != 0)
+        self.process_input_result(server, user_ic, ret)
     }
 
     fn handle_destory_ic(
@@ -364,10 +370,19 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
     fn handle_set_focus(
         &mut self,
-        _server: &mut X11rbServer<C>,
+        server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
         user_ic.user_data.engine.update_layout_state();
+
+        if !user_ic.user_data.engine_ready {
+            if user_ic.user_data.engine.check_ready() {
+                let ret = user_ic.user_data.engine.end_ready();
+                self.process_input_result(server, user_ic, ret)?;
+                user_ic.user_data.engine_ready = true;
+            }
+        }
+
         Ok(())
     }
 
@@ -376,6 +391,10 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        self.reset(server, user_ic)
+        if user_ic.user_data.engine_ready {
+            self.reset(server, user_ic)
+        } else {
+            Ok(())
+        }
     }
 }

@@ -163,6 +163,7 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 * qt5
 * qt6
 * libdbus (indicator)
+* xcb (candidate)
 * fontconfig (xim)
 * freetype (xim)
 
@@ -183,5 +184,6 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 * qtbase5-private
 * qtbase6-private
 * libdbus
+* xcb
 * fontconfig
 * freetype

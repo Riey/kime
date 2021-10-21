@@ -8,3 +8,4 @@ license = "GPL-3.0-or-later"
 [dependencies]
 kime-engine-backend = { path = "../../backend" }
 kime-engine-dict = { path = "../../dict" }
+kime-engine-candidate = { path = "../../candidate" }

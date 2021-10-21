@@ -17,9 +17,9 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
 };
 
 use kime_engine_cffi::{
-    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, ModifierState, ModifierState_ALT, ModifierState_CONTROL,
-    ModifierState_SHIFT, ModifierState_SUPER,
+    Config, InputEngine, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
+    InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, InputResult_NOT_READY, ModifierState,
+    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
@@ -99,6 +99,7 @@ struct KimeContext {
     vk: Main<ZwpVirtualKeyboardV1>,
     im: Main<ZwpInputMethodV2>,
     grab: Main<ZwpInputMethodKeyboardGrabV2>,
+    engine_ready: bool,
     keymap_init: bool,
     grab_activate: bool,
     serial: u32,
@@ -135,6 +136,7 @@ impl KimeContext {
             current_state: InputMethodState::default(),
             pending_state: InputMethodState::default(),
             serial: 0,
+            engine_ready: true,
             keymap_init: false,
             grab_activate: false,
             vk,
@@ -147,6 +149,32 @@ impl KimeContext {
 
     pub fn new_data<'a>(data: &'a mut DispatchData) -> &'a mut Self {
         data.get::<Self>().unwrap()
+    }
+
+    fn process_input_result(&mut self, ret: InputResult) -> bool {
+        if ret & InputResult_NOT_READY != 0 {
+            self.engine_ready = false;
+        }
+
+        if ret & InputResult_LANGUAGE_CHANGED != 0 {
+            self.engine.update_layout_state();
+        }
+
+        if ret & InputResult_HAS_PREEDIT != 0 {
+            let preedit = self.engine.preedit_str().into();
+            self.preedit(preedit);
+        } else {
+            self.clear_preedit();
+        }
+
+        if ret & InputResult_HAS_COMMIT != 0 {
+            self.commit_string(self.engine.commit_str().into());
+            self.engine.clear_commit();
+        }
+
+        self.commit();
+
+        ret & InputResult_CONSUMED == 0
     }
 
     fn commit(&mut self) {
@@ -184,10 +212,19 @@ impl KimeContext {
             ImEvent::Done => {
                 if !self.current_state.activate && self.pending_state.activate {
                     self.engine.update_layout_state();
+                    if !self.engine_ready {
+                        if self.engine.check_ready() {
+                            let ret = self.engine.end_ready();
+                            self.process_input_result(ret);
+                            self.engine_ready = true;
+                        }
+                    }
                     self.grab_activate = true;
                 } else if !self.current_state.deactivate && self.pending_state.deactivate {
                     // Focus lost, reset states
-                    self.engine.reset();
+                    if self.engine_ready {
+                        self.engine.reset();
+                    }
                     self.grab_activate = false;
 
                     // Input deactivated, stop repeating
@@ -223,25 +260,9 @@ impl KimeContext {
                             self.engine
                                 .press_key(&self.config, (key + 8) as u16, self.mod_state);
 
-                        if ret & InputResult_LANGUAGE_CHANGED != 0 {
-                            self.engine.update_layout_state();
-                        }
+                        let bypassed = self.process_input_result(ret);
 
-                        if ret & InputResult_HAS_PREEDIT != 0 {
-                            let preedit = self.engine.preedit_str().into();
-                            self.preedit(preedit);
-                        } else {
-                            self.clear_preedit();
-                        }
-
-                        if ret & InputResult_HAS_COMMIT != 0 {
-                            self.commit_string(self.engine.commit_str().into());
-                            self.engine.clear_commit();
-                        }
-
-                        self.commit();
-
-                        if ret & InputResult_CONSUMED == 0 {
+                        if bypassed {
                             // Bypassed key's repeat will be handled by the clients.
                             //
                             // Reference:

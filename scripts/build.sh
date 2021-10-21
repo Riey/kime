@@ -12,6 +12,10 @@ if [ -z "$KIME_SKIP_ENGINE" ]; then
     KIME_SKIP_ENGINE=0
 fi
 
+if [ -z "$KIME_BUILD_CANDIDATE_WINDOW" ]; then
+    KIME_BUILD_CANDIDATE_WINDOW=0
+fi
+
 if [ -z "$KIME_BUILD_CHECK" ]; then
     KIME_BUILD_CHECK=0
 fi
@@ -65,6 +69,7 @@ while getopts hrda opt; do
             ;;
         a)
             KIME_BUILD_CHECK=1
+            KIME_BUILD_CANDIDATE_WINDOW=1
             KIME_BUILD_INDICATOR=1
             KIME_BUILD_WAYLAND=1
             if (pkg-config --exists xcb && pkg-config --exists cairo); then
@@ -97,6 +102,10 @@ if [ "$KIME_BUILD_INDICATOR" -eq "1" ]; then
     KIME_RUST_PKGS+=("-pkime-indicator")
 fi
 
+if [ "$KIME_BUILD_CANDIDATE_WINDOW" -eq "1" ]; then
+    KIME_RUST_PKGS+=("-pkime-candidate-window")
+fi
+
 if [ "$KIME_BUILD_XIM" -eq "1" ]; then
     KIME_RUST_PKGS+=("-pkime-xim")
 fi
@@ -113,6 +122,7 @@ cargo_build "${KIME_RUST_PKGS[@]}"
 
 cp $TARGET_DIR/libkime_engine.so $KIME_OUT || true
 cp $TARGET_DIR/kime-check $KIME_OUT || true
+cp $TARGET_DIR/kime-candidate-window $KIME_OUT || true
 cp $TARGET_DIR/kime-indicator $KIME_OUT || true
 cp $TARGET_DIR/kime-xim $KIME_OUT || true
 cp $TARGET_DIR/kime-wayland $KIME_OUT || true

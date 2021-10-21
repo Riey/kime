@@ -13,6 +13,12 @@
         },
         {
             "type": "lldb",
+            "request": "attach",
+            "name": "Attach Gedit(Nix)",
+            "program": "/nix/store/xayryd4aps8pw1v3xwq5g2pzw3lif6kk-gedit-40.1/bin/.gedit-wrapped"
+        },
+        {
+            "type": "lldb",
             "request": "launch",
             "name": "Cargo test",
             "cargo": {

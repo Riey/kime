@@ -199,13 +199,27 @@ impl InputEngine {
         self.remove_preedit();
     }
 
-    fn current_result(&self) -> InputResult {
+    #[inline]
+    pub fn check_ready(&self) -> bool {
+        self.engine_impl.check_ready()
+    }
+
+    #[inline]
+    pub fn end_ready(&mut self) -> InputResult {
+        self.engine_impl.end_ready(&mut self.commit_buf);
+        self.current_result()
+    }
+
+    fn current_result(&mut self) -> InputResult {
         let mut ret = InputResult::empty();
         if self.engine_impl.has_preedit() {
             ret |= InputResult::HAS_PREEDIT;
         }
         if !self.commit_buf.is_empty() {
             ret |= InputResult::HAS_COMMIT;
+        }
+        if !self.engine_impl.check_ready() {
+            ret |= InputResult::NOT_READY;
         }
         ret
     }
@@ -274,10 +288,12 @@ macro_rules! do_mode {
                 return ret;
             }
             InputEngineModeResult::ExitHandled(ret) => {
+                $self.$field.reset();
                 $self.mode = None;
                 return ret;
             }
             InputEngineModeResult::Exit => {
+                $self.$field.reset();
                 $self.mode = None;
             }
         }
@@ -326,6 +342,21 @@ macro_rules! connect {
         do_mode!(@$key $self, $func($($arg,)*));
         do_engine!($self, $func($($arg,)*))
     }};
+}
+
+impl EngineImpl {
+    pub fn check_ready(&self) -> bool {
+        match self.mode {
+            Some(InputMode::Hanja) => self.hanja_mode.check_ready(),
+            Some(InputMode::Emoji) => self.emoji_mode.check_ready(),
+            Some(InputMode::Math) => self.math_mode.check_ready(),
+            None => true,
+        }
+    }
+
+    pub fn end_ready(&mut self, commit_buf: &mut String) {
+        do_mode!(@ret self, end_ready(commit_buf,));
+    }
 }
 
 impl InputEngineBackend for EngineImpl {

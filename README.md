@@ -162,6 +162,7 @@ These dependencies are optional depending on your environments. For example, qt6
 * qt5
 * qt6
 * libdbus (indicator)
+* xcb (candidate)
 * fontconfig (xim)
 * freetype (xim)
 
@@ -182,5 +183,6 @@ These dependencies are optional depending on your environments. For example, qt6
 * qtbase5-private
 * qtbase6-private
 * libdbus
+* xcb
 * fontconfig
 * freetype

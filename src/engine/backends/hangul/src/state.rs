@@ -247,6 +247,30 @@ impl CharacterState {
         })
     }
 
+    fn try_add_jungseong(
+        ori_jung: Jungseong,
+        ori_compose_jung: bool,
+        jung: Jungseong,
+        compose_jung: bool,
+        addons: EnumSet<Addon>,
+    ) -> Option<Jungseong> {
+        if addons.contains(Addon::FlexibleComposeOrder) {
+            if ori_compose_jung || compose_jung {
+                ori_jung
+                    .try_add(jung, addons)
+                    .or_else(|| jung.try_add(ori_jung, addons))
+            } else {
+                None
+            }
+        } else {
+            if ori_compose_jung {
+                ori_jung.try_add(jung, addons)
+            } else {
+                None
+            }
+        }
+    }
+
     // 갈마들이 입력
 
     pub fn cho_jong(
@@ -279,7 +303,7 @@ impl CharacterState {
     ) -> CharacterResult {
         if self.cho.is_some()
             && self.jung.map_or(true, |j| {
-                self.compose_jung && j.try_add(jung, addons).is_some()
+                Self::try_add_jungseong(j, self.compose_jung, jung, compose_jung, addons).is_some()
             })
         {
             self.jung(jung, compose_jung, addons)
@@ -416,8 +440,9 @@ impl CharacterState {
         }
 
         if let Some(prev_jung) = self.jung {
-            match prev_jung.try_add(jung, addons) {
-                Some(new) if self.compose_jung => {
+            match Self::try_add_jungseong(prev_jung, self.compose_jung, jung, compose_jung, addons)
+            {
+                Some(new) => {
                     self.jung = Some(new);
                     self.compose_jung = false;
                     CharacterResult::Consume

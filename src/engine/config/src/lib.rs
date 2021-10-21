@@ -142,7 +142,8 @@ pub struct EngineConfig {
     pub global_hotkeys: BTreeMap<Key, Hotkey>,
     pub category_hotkeys: BTreeMap<InputCategory, BTreeMap<Key, Hotkey>>,
     pub mode_hotkeys: BTreeMap<InputMode, BTreeMap<Key, Hotkey>>,
-    pub xim_preedit_font: (String, f64),
+    pub candidate_font: String,
+    pub xim_preedit_font: (String, f32),
     pub latin: LatinConfig,
     pub hangul: HangulConfig,
 }
@@ -185,6 +186,7 @@ impl Default for EngineConfig {
                 },
             },
             xim_preedit_font: ("D2Coding".to_string(), 15.0),
+            candidate_font: "D2Coding".to_string(),
         }
     }
 }

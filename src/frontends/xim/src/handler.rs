@@ -1,4 +1,4 @@
-use std::{convert::TryInto, num::NonZeroU32, sync::Arc};
+use std::{num::NonZeroU32, sync::Arc};
 
 use crate::pe_window::PeWindow;
 use ahash::AHashMap;
@@ -37,27 +37,19 @@ impl KimeData {
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
-    font: (Arc<rusttype::Font<'static>>, f64),
+    font: (Arc<rusttype::Font<'static>>, f32),
     config: Config,
     screen_num: usize,
 }
 
 impl KimeHandler {
     pub fn new(screen_num: usize, config: Config) -> Self {
-        let (font_family, font_size) = config.xim_font();
-        let font = font_loader::system_fonts::get(
-            &font_loader::system_fonts::FontPropertyBuilder::new()
-                .family(font_family)
-                .build(),
-        )
-        .and_then(|(data, index)| {
-            rusttype::Font::try_from_vec_and_index(data, index.try_into().unwrap_or_default())
-        })
-        .map(Arc::new)
-        .unwrap_or_else(|| {
-            log::error!("Font {} load failed!", font_family);
-            panic!("Font {} load failed!", font_family)
-        });
+        let (font_data, index, font_size) = config.xim_font();
+        let font = Arc::new(
+            rusttype::Font::try_from_vec_and_index(font_data.to_vec(), index)
+                .unwrap()
+                .to_owned(),
+        );
 
         Self {
             preedit_windows: AHashMap::new(),
@@ -163,7 +155,12 @@ impl KimeHandler {
         Ok(())
     }
 
-    fn process_input_result<C: HasConnection>(&mut self, server: &mut X11rbServer<C>, user_ic: &mut xim::UserInputContext<KimeData>, ret: kime_engine_cffi::InputResult) -> Result<bool, xim::ServerError> {
+    fn process_input_result<C: HasConnection>(
+        &mut self,
+        server: &mut X11rbServer<C>,
+        user_ic: &mut xim::UserInputContext<KimeData>,
+        ret: kime_engine_cffi::InputResult,
+    ) -> Result<bool, xim::ServerError> {
         log::trace!("{:?}", ret);
 
         if ret & InputResult_LANGUAGE_CHANGED != 0 {

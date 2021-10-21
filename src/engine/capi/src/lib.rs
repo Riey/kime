@@ -23,9 +23,25 @@ impl RustStr {
 }
 
 #[repr(C)]
-pub struct XimPreeditFont {
-    name: RustStr,
-    size: f64,
+pub struct RustSlice {
+    ptr: *const u8,
+    len: usize,
+}
+
+impl RustSlice {
+    pub fn new(s: &[u8]) -> Self {
+        Self {
+            ptr: s.as_ptr(),
+            len: s.len(),
+        }
+    }
+}
+
+#[repr(C)]
+pub struct FontData {
+    font_data: RustSlice,
+    index: u32,
+    size: f32,
 }
 
 /// Return API version
@@ -158,18 +174,28 @@ pub unsafe extern "C" fn kime_config_delete(config: *mut Config) {
     drop(Box::from_raw(config));
 }
 
-/// Get xim_preedit_font config
-/// name only valid while config is live
-///
-/// ## Return
-///
-/// utf-8 string when len
+/// Get candidate_font config
+/// font_data only valid while config is live
 #[no_mangle]
-pub extern "C" fn kime_config_xim_preedit_font(config: &Config) -> XimPreeditFont {
-    let (ref font, size) = config.xim_preedit_font;
+pub extern "C" fn kime_config_candidate_font(config: &Config) -> FontData {
+    let (ref font, index) = config.candidate_font;
 
-    XimPreeditFont {
-        name: RustStr::new(font),
+    FontData {
+        font_data: RustSlice::new(font),
+        index,
+        size: 0.,
+    }
+}
+
+/// Get xim_preedit_font config
+/// font_data only valid while config is live
+#[no_mangle]
+pub extern "C" fn kime_config_xim_preedit_font(config: &Config) -> FontData {
+    let (ref font, index, size) = config.xim_preedit_font;
+
+    FontData {
+        font_data: RustSlice::new(font),
+        index,
         size,
     }
 }

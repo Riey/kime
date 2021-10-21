@@ -69,26 +69,17 @@ impl eframe::epi::App for CandidateApp {
         _frame: &mut eframe::epi::Frame<'_>,
         _storage: Option<&dyn eframe::epi::Storage>,
     ) {
+        assert!(kime_engine_cffi::check_api_version());
+
+        let config = kime_engine_cffi::Config::load();
+        let (font_bytes, _index) = config.candidate_font();
         let mut font_data = BTreeMap::<_, Cow<'static, [u8]>>::new();
         let mut fonts_for_family = BTreeMap::new();
 
-        font_data.insert(
-            "NanumBarunGothic".to_string(),
-            Cow::Borrowed(include_bytes!("/nix/store/imnk1n6llkh089xgzqyqpr6yw9qz9b3z-d2codingfont-1.3.2/share/fonts/truetype/D2Coding-Ver1.3.2-20180524-all.ttc")),
-        );
-        font_data.insert(
-            "NanumGothicCoding".to_string(),
-            Cow::Borrowed(include_bytes!("/nix/store/imnk1n6llkh089xgzqyqpr6yw9qz9b3z-d2codingfont-1.3.2/share/fonts/truetype/D2Coding-Ver1.3.2-20180524-all.ttc")),
-        );
+        font_data.insert("Font".to_string(), Cow::Owned(font_bytes.to_vec()));
 
-        fonts_for_family.insert(
-            egui::FontFamily::Proportional,
-            vec!["NanumBarunGothic".to_string()],
-        );
-        fonts_for_family.insert(
-            egui::FontFamily::Monospace,
-            vec!["NanumGothicCoding".to_string()],
-        );
+        fonts_for_family.insert(egui::FontFamily::Proportional, vec!["Font".to_string()]);
+        fonts_for_family.insert(egui::FontFamily::Monospace, vec!["Font".to_string()]);
 
         let mut family_and_size = BTreeMap::new();
         family_and_size.insert(

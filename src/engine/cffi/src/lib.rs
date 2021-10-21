@@ -125,15 +125,24 @@ impl Config {
         }
     }
 
-    pub fn xim_font(&self) -> (&str, f64) {
+    pub fn candidate_font(&self) -> (&[u8], u32) {
+        unsafe {
+            let font = ffi::kime_config_candidate_font(self.config);
+
+            (
+                core::slice::from_raw_parts(font.font_data.ptr, font.font_data.len),
+                font.index,
+            )
+        }
+    }
+
+    pub fn xim_font(&self) -> (&[u8], u32, f32) {
         unsafe {
             let font = ffi::kime_config_xim_preedit_font(self.config);
 
             (
-                core::str::from_utf8_unchecked(core::slice::from_raw_parts(
-                    font.name.ptr,
-                    font.name.len,
-                )),
+                core::slice::from_raw_parts(font.font_data.ptr, font.font_data.len),
+                font.index,
                 font.size,
             )
         }

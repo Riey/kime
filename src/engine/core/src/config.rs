@@ -90,17 +90,23 @@ impl Config {
 }
 
 #[cfg(unix)]
-pub fn load_from_config_dir() -> Option<(Config, DaemonConfig, IndicatorConfig, LogConfig)> {
+pub fn load_engine_config_from_config_dir() -> Option<Config> {
     let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
     let config: RawConfig = dir
         .find_config_file("config.yaml")
         .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
         .unwrap_or_default();
 
-    Some((
-        Config::from_engine_config_with_dir(config.engine, &dir),
-        config.daemon,
-        config.indicator,
-        config.log,
-    ))
+    Some(Config::from_engine_config_with_dir(config.engine, &dir))
+}
+
+#[cfg(unix)]
+pub fn load_other_configs_from_config_dir() -> Option<(DaemonConfig, IndicatorConfig, LogConfig)> {
+    let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
+    let config: RawConfig = dir
+        .find_config_file("config.yaml")
+        .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
+        .unwrap_or_default();
+
+    Some((config.daemon, config.indicator, config.log))
 }

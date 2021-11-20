@@ -15,6 +15,7 @@
 * Let incomplete character can commit multiple jamos
 * Support johab encoding for preedit string
 * Fix jongseong input bug `$ㅋㅕ + $ㅋㅕ = ㅋㅋ`
+* Added Qt 5.12.9 library build
 
 ## 2.5.6
 

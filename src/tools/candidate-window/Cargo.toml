@@ -9,5 +9,5 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 kime-engine-cffi = { path = "../../engine/cffi" }
-eframe = "0.14.0"
-egui = "0.14.2"
+eframe = "0.15.0"
+egui = "0.15.0"

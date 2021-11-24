@@ -189,8 +189,7 @@ fn main() -> io::Result<()> {
             initial_window_size: Some(egui::vec2(400.0, 400.0)),
             resizable: false,
             transparent: false,
+            maximized: false,
         },
     );
-
-    Ok(())
 }

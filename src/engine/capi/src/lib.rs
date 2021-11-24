@@ -1,8 +1,9 @@
 #![allow(clippy::missing_safety_doc)]
 
 pub use kime_engine_core::{
-    config_load_from_config_dir, Config, DaemonConfig, DaemonModule, IconColor, IndicatorConfig,
-    InputCategory, InputEngine, InputResult, LogConfig, ModifierState,
+    load_engine_config_from_config_dir, load_other_configs_from_config_dir, Config, DaemonConfig,
+    DaemonModule, IconColor, IndicatorConfig, InputCategory, InputEngine, InputResult, LogConfig,
+    ModifierState,
 };
 
 pub const KIME_API_VERSION: usize = 6;
@@ -156,9 +157,7 @@ pub extern "C" fn kime_engine_press_key(
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_config_load() -> *mut Config {
-    let config = config_load_from_config_dir()
-        .map(|c| c.0)
-        .unwrap_or_default();
+    let config = load_engine_config_from_config_dir().unwrap_or_default();
     Box::into_raw(Box::new(config))
 }
 
@@ -204,8 +203,8 @@ pub extern "C" fn kime_config_xim_preedit_font(config: &Config) -> FontData {
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_daemon_config_load() -> *mut DaemonConfig {
-    let config = config_load_from_config_dir()
-        .map(|c| c.1)
+    let config = load_other_configs_from_config_dir()
+        .map(|c| c.0)
         .unwrap_or_default();
     Box::into_raw(Box::new(config))
 }
@@ -233,8 +232,8 @@ pub unsafe extern "C" fn kime_daemon_config_delete(config: *mut DaemonConfig) {
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_indicator_config_load() -> *mut IndicatorConfig {
-    let config = config_load_from_config_dir()
-        .map(|c| c.2)
+    let config = load_other_configs_from_config_dir()
+        .map(|c| c.1)
         .unwrap_or_default();
     Box::into_raw(Box::new(config))
 }
@@ -262,8 +261,8 @@ pub extern "C" fn kime_indicator_config_icon_color(config: &IndicatorConfig) -> 
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_log_config_load() -> *mut LogConfig {
-    let config = config_load_from_config_dir()
-        .map(|c| c.3)
+    let config = load_other_configs_from_config_dir()
+        .map(|c| c.2)
         .unwrap_or_default();
     Box::into_raw(Box::new(config))
 }

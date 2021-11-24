@@ -24,6 +24,10 @@ struct CandidateApp {
 
 impl eframe::epi::App for CandidateApp {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut eframe::epi::Frame<'_>) {
+        if ctx.input().key_down(egui::Key::Escape) || ctx.input().key_down(egui::Key::Q) {
+            frame.quit();
+            return;
+        }
         if ctx.input().key_down(egui::Key::ArrowLeft) || ctx.input().key_down(egui::Key::H) {
             if !self.key_state.left {
                 self.page_index = self.page_index.saturating_sub(1);

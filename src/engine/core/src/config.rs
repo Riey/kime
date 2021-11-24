@@ -1,4 +1,5 @@
-use font_loader::system_fonts::{self, FontPropertyBuilder};
+use fontconfig_parser::FontConfig;
+use fontdb::{Family, Query};
 pub use kime_engine_config::*;
 
 /// Preprocessed engine config
@@ -22,6 +23,25 @@ impl Default for Config {
 
 impl Config {
     fn new_impl(mut engine: EngineConfig, hangul_data: HangulData) -> Self {
+        let mut db = fontdb::Database::new();
+        db.load_system_fonts();
+
+        let mut fc = FontConfig::default();
+        fc.merge_config("/etc/fonts/fonts.conf").ok();
+
+        for dir in fc.dirs {
+            db.load_fonts_dir(dir.path);
+        }
+
+        let load_font = |name| {
+            db.query(&Query {
+                families: &[Family::Name(name), Family::Serif],
+                ..Default::default()
+            })
+            .and_then(|id| db.with_face_data(id, |data, index| (data.to_vec(), index)))
+            .unwrap_or_default()
+        };
+
         Self {
             default_category: engine.default_category,
             global_category_state: engine.global_category_state,
@@ -49,23 +69,12 @@ impl Config {
                 }
             },
             xim_preedit_font: {
-                let (font, index) = system_fonts::get(
-                    &FontPropertyBuilder::new()
-                        .family(&engine.xim_preedit_font.0)
-                        .build(),
-                )
-                .map(|(d, i)| (d, i as u32))
-                .unwrap_or_default();
+                let (font, index) = load_font(&engine.xim_preedit_font.0);
                 (font, index, engine.xim_preedit_font.1)
             },
             candidate_font: {
-                system_fonts::get(
-                    &FontPropertyBuilder::new()
-                        .family(&engine.candidate_font)
-                        .build(),
-                )
-                .map(|(d, i)| (d, i as u32))
-                .unwrap_or_default()
+                let (font, index) = load_font(&engine.candidate_font);
+                (font, index)
             },
             preferred_direct: engine.latin.preferred_direct,
             latin_data: LatinData::new(&engine.latin),

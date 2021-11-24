@@ -3,9 +3,10 @@
 }:
 let
   deps = import ./nix/deps.nix { pkgs = pkgs; };
+  stdenv = pkgs.llvmPackages_13.stdenv;
+  mkShell = (pkgs.mkShell.override { stdenv = stdenv; });
 in
-with pkgs;
-llvmPackages_13.stdenv.mkDerivation {
+mkShell {
   name = "kime-shell";
   dontUseCmakeConfigure = true;
   dontWrapQtApps = true;

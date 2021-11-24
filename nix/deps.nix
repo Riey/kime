@@ -10,9 +10,6 @@ with pkgs;
     libGL
     wayland
 
-    fontconfig
-    freetype
-
     gtk2
     gtk3
     gtk4

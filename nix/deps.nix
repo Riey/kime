@@ -9,6 +9,7 @@ with pkgs;
     xlibs.libxcb
     libGL
     wayland
+    libxkbcommon
 
     gtk2
     gtk3
@@ -19,7 +20,6 @@ with pkgs;
   ];
 
   kimeNativeBuildInputs = [
-    bash
     python3 # xcb 0.9.0
     pkg-config
     llvmPackages_13.clang

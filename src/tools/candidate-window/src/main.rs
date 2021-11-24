@@ -24,6 +24,30 @@ struct CandidateApp {
 
 impl eframe::epi::App for CandidateApp {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut eframe::epi::Frame<'_>) {
+        if ctx.input().key_down(egui::Key::Escape) || ctx.input().key_down(egui::Key::Q) {
+            frame.quit();
+            return;
+        }
+
+        macro_rules! num_hotkey {
+            ($k:expr, $n:expr) => {
+                if ctx.input().key_down($k) {
+                    self.page_index = $n;
+                }
+            };
+        }
+
+        num_hotkey!(egui::Key::Num1, 0);
+        num_hotkey!(egui::Key::Num2, 1);
+        num_hotkey!(egui::Key::Num3, 2);
+        num_hotkey!(egui::Key::Num4, 3);
+        num_hotkey!(egui::Key::Num5, 4);
+        num_hotkey!(egui::Key::Num6, 5);
+        num_hotkey!(egui::Key::Num7, 6);
+        num_hotkey!(egui::Key::Num8, 7);
+        num_hotkey!(egui::Key::Num9, 8);
+        num_hotkey!(egui::Key::Num0, 9);
+
         if ctx.input().key_down(egui::Key::ArrowLeft) || ctx.input().key_down(egui::Key::H) {
             if !self.key_state.left {
                 self.page_index = self.page_index.saturating_sub(1);

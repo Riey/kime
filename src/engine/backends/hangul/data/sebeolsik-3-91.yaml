@@ -69,7 +69,7 @@ S-0: ~
 Minus: )
 S-Minus: ;
 Equal: '>'
-S-Equal: '>'
+S-Equal: '+'
 Backslash: ':'
 S-Backslash: \
 OpenBracket: (

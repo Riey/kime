@@ -16,6 +16,7 @@
 * Support johab encoding for preedit string
 * Fix jongseong input bug `$ㅋㅕ + $ㅋㅕ = ㅋㅋ`
 * Added Qt 5.12.9 library build
+* Fix sebeolsik-391 "S-Equal" key
 
 ## 2.5.6
 

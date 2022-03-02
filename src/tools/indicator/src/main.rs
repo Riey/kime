@@ -25,9 +25,14 @@ impl ksni::Tray for KimeTray {
         self.icon_name.into()
     }
 
-    fn title(&self) -> String {
+    fn id(&self) -> String {
         "kime".into()
     }
+
+    fn title(&self) -> String {
+        self.id()
+    }
+
     fn attention_icon_name(&self) -> String {
         self.icon_name.into()
     }

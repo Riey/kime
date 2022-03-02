@@ -17,6 +17,7 @@
 * Fix jongseong input bug `$ㅋㅕ + $ㅋㅕ = ㅋㅋ`
 * Added Qt 5.12.9 library build
 * Fix sebeolsik-391 "S-Equal" key
+* Let indicator shown on Gnome tray (requires Gnome shell extension, https://extensions.gnome.org/extension/615/appindicator-support/)
 
 ## 2.5.6
 

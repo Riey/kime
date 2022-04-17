@@ -39,8 +39,12 @@ typedef struct KimeImContext {
   KimeSignals signals;
   KimeInputEngine *engine;
   gboolean preedit_visible;
+
   // for firefox edge case
   gboolean preedit_has_ended;
+  // prevent commit triggering reset event
+  gboolean is_committing;
+
   gboolean engine_ready;
   KimeConfig *config;
 } KimeImContext;
@@ -52,6 +56,8 @@ typedef struct KimeImContext {
 #define debug(...) g_log("kime", G_LOG_LEVEL_DEBUG, __VA_ARGS__)
 
 void update_preedit(KimeImContext *ctx, gboolean visible) {
+  debug("preedit(%d)", visible);
+
   if (ctx->preedit_visible != visible) {
     ctx->preedit_visible = visible;
 
@@ -69,6 +75,7 @@ void update_preedit(KimeImContext *ctx, gboolean visible) {
 
 void commit(KimeImContext *ctx) {
   // https://github.com/Riey/kime/issues/535
+  ctx->is_committing = TRUE;
   update_preedit(ctx, FALSE);
 
   // Don't commit zero size string
@@ -84,6 +91,9 @@ void commit(KimeImContext *ctx) {
 #endif
 
   g_signal_emit(ctx, ctx->signals.commit, 0, ctx->buf.ptr);
+
+  // clear commit buffer
+  ctx->buf.len = 0;
 }
 
 gboolean process_input_result(KimeImContext *ctx, KimeInputResult ret) {
@@ -147,6 +157,11 @@ void kime_reset(KimeImContext *ctx) {
 void reset(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
+  if (ctx->is_committing) {
+    // dummy
+    return;
+  }
+
   debug("reset");
 
   kime_reset(ctx);
@@ -177,6 +192,7 @@ void put_event(KimeImContext *ctx, EventType *key) {
 }
 
 gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
+  // Try english commit directly(for apps which can't handle this e.g. gedit)
   if (!(state & NOT_ENGLISH_MASK)) {
     uint32_t c = gdk_keyval_to_unicode(keyval);
 
@@ -193,10 +209,13 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
 gboolean on_key_input(KimeImContext *ctx, guint16 code,
                       KimeModifierState state) {
   ctx->preedit_has_ended = FALSE;
-  // debug("(%d, %d)", code, state);
 
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
+
+#if DEBUG
+  debug("(%d, %d, %d)", code, state, ret);
+#endif
 
   return process_input_result(ctx, ret);
 }
@@ -211,13 +230,17 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint keyval = gdk_key_event_get_keyval(key);
   GdkModifierType state = gdk_event_get_modifier_state(key);
 #else
-  if (key->type != GDK_KEY_PRESS || key->state & HANDLED_MASK) {
+  if (key->type != GDK_KEY_PRESS) {
     return FALSE;
   }
   guint16 code = key->hardware_keycode;
   guint keyval = key->keyval;
   GdkModifierType state = key->state;
 #endif
+
+  if (state & HANDLED_MASK) {
+    return commit_event(ctx, state, keyval);
+  }
 
   KimeModifierState kime_state = 0;
 
@@ -237,7 +260,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     kime_state |= KimeModifierState_SUPER;
   }
 
-  if (on_key_input(ctx, code, kime_state) || commit_event(ctx, state, keyval)) {
+  if (on_key_input(ctx, code, kime_state)) {
     return TRUE;
   } else if (ctx->preedit_has_ended) {
     // Can't just return FALSE because firefox can't accept FALSE when
@@ -245,7 +268,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     put_event(ctx, key);
     return TRUE;
   } else {
-    return FALSE;
+    return commit_event(ctx, state, keyval);
   }
 }
 
@@ -334,6 +357,7 @@ void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->buf = str_buf_new();
   ctx->widget = NULL;
   ctx->preedit_visible = FALSE;
+  ctx->is_committing = FALSE;
   ctx->preedit_has_ended = FALSE;
   ctx->engine_ready = TRUE;
   ctx->signals = klass->signals;

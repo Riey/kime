@@ -3,24 +3,13 @@
         {
             "type": "shell",
             "command": [
-                "scripts/build.sh -ad"
+                "nix develop -c scripts/build.sh -ad || scripts/build.sh -ad"
             ],
             "problemMatcher": [
                 "$rustc"
             ],
             "group": "build",
             "label": "build all"
-        },
-        {
-            "type": "shell",
-            "command": [
-                "nix develop -c scripts/build.sh -ad"
-            ],
-            "problemMatcher": [
-                "$rustc"
-            ],
-            "group": "build",
-            "label": "build all(Nix)"
         }
     ]
 }

@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     collections::BTreeMap,
     io::{self, BufRead, Stdout, Write},
 };
@@ -23,7 +22,7 @@ struct CandidateApp {
 }
 
 impl eframe::epi::App for CandidateApp {
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &mut eframe::epi::Frame<'_>) {
+    fn update(&mut self, ctx: &egui::Context, frame: &eframe::epi::Frame) {
         if ctx.input().key_down(egui::Key::Escape) || ctx.input().key_down(egui::Key::Q) {
             frame.quit();
             return;
@@ -103,9 +102,11 @@ impl eframe::epi::App for CandidateApp {
             ui.horizontal(|ui| {
                 for i in 0..self.max_page_index + 1 {
                     if i == self.page_index {
-                        egui::Button::new(format!("[{}]", i + 1))
-                            .text_color(egui::Color32::YELLOW)
-                            .ui(ui);
+                        egui::Button::new(
+                            egui::RichText::new(format!("[{}]", i + 1))
+                                .color(egui::Color32::YELLOW),
+                        )
+                        .ui(ui);
                     } else {
                         if ui.button(format!("{}", i + 1)).clicked() {
                             self.page_index = i;
@@ -118,48 +119,28 @@ impl eframe::epi::App for CandidateApp {
 
     fn setup(
         &mut self,
-        ctx: &egui::CtxRef,
-        _frame: &mut eframe::epi::Frame<'_>,
+        ctx: &egui::Context,
+        _frame: &eframe::epi::Frame,
         _storage: Option<&dyn eframe::epi::Storage>,
     ) {
         assert!(kime_engine_cffi::check_api_version());
 
         let config = kime_engine_cffi::Config::load();
         let (font_bytes, _index) = config.candidate_font();
-        let mut font_data = BTreeMap::<_, Cow<'static, [u8]>>::new();
-        let mut fonts_for_family = BTreeMap::new();
+        let mut font_data = BTreeMap::<_, egui::FontData>::new();
+        let mut families = BTreeMap::new();
 
-        font_data.insert("Font".to_string(), Cow::Owned(font_bytes.to_vec()));
+        font_data.insert(
+            "Font".to_string(),
+            egui::FontData::from_owned(font_bytes.to_vec()),
+        );
 
-        fonts_for_family.insert(egui::FontFamily::Proportional, vec!["Font".to_string()]);
-        fonts_for_family.insert(egui::FontFamily::Monospace, vec!["Font".to_string()]);
-
-        let mut family_and_size = BTreeMap::new();
-        family_and_size.insert(
-            egui::TextStyle::Small,
-            (egui::FontFamily::Proportional, 18.0),
-        );
-        family_and_size.insert(
-            egui::TextStyle::Body,
-            (egui::FontFamily::Proportional, 22.0),
-        );
-        family_and_size.insert(
-            egui::TextStyle::Button,
-            (egui::FontFamily::Proportional, 24.0),
-        );
-        family_and_size.insert(
-            egui::TextStyle::Heading,
-            (egui::FontFamily::Proportional, 30.0),
-        );
-        family_and_size.insert(
-            egui::TextStyle::Monospace,
-            (egui::FontFamily::Monospace, 22.0),
-        );
+        families.insert(egui::FontFamily::Proportional, vec!["Font".to_string()]);
+        families.insert(egui::FontFamily::Monospace, vec!["Font".to_string()]);
 
         ctx.set_fonts(egui::FontDefinitions {
             font_data,
-            fonts_for_family,
-            family_and_size,
+            families,
         });
     }
 
@@ -208,12 +189,9 @@ fn main() -> io::Result<()> {
         eframe::NativeOptions {
             always_on_top: true,
             decorated: false,
-            drag_and_drop_support: false,
             icon_data: None,
             initial_window_size: Some(egui::vec2(400.0, 400.0)),
-            resizable: false,
-            transparent: false,
-            maximized: false,
+            ..Default::default()
         },
     );
 }

@@ -15,6 +15,6 @@ kime-engine-backend-latin = { path = "../backends/latin" }
 log = "0.4.14"
 serde = { version = "1.0.124", features = ["derive"], optional = true }
 enumset = "1.0.6"
-enum-map = "1.0.0"
+enum-map = "2"
 maplit = "1.0.2"
 

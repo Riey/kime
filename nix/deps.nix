@@ -3,10 +3,9 @@ with pkgs;
 {
   kimeBuildInputs = [
     dbus
-    dbus_libs
     libdbusmenu
 
-    xlibs.libxcb
+    xorg.libxcb
     libGL
     wayland
     libxkbcommon

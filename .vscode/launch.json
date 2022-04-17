@@ -17,14 +17,6 @@
             "program": "/nix/store/xayryd4aps8pw1v3xwq5g2pzw3lif6kk-gedit-40.1/bin/.gedit-wrapped"
         },
         {
-            "type": "gdb",
-            "request": "launch",
-            "name": "Cargo test",
-            "target": "/home/riey/repos/kime/target/debug/deps/sebeolsik_3sin_p2-b3402d3703139896",
-            "cwd": "${workspaceRoot}"
-            // "arguments": "double_jongseong --exact --nocapture",
-        },
-        {
             "type": "lldb",
             "request": "launch",
             "name": "Launch indicator",

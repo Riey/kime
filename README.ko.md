@@ -15,7 +15,6 @@
 [<img alt="release version" src="https://img.shields.io/github/v/release/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/releases)
 [<img alt="aur version" src="https://img.shields.io/aur/version/kime?style=for-the-badge" height="25">](https://aur.archlinux.org/packages/kime/)
 [<img alt="license" src="https://img.shields.io/github/license/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/blob/master/LICENSE)
-[<img src="https://d1u4yishnma8v5.cloudfront.net/mobile-gift.png" alt="donaricano-btn" height="50">](https://donaricano.com/mypage/1610220543_mjZDXO)
 
 ## [Changelog](docs/CHANGELOG.md)
 
@@ -66,6 +65,15 @@ i18n = {
 ### 데비안, 우분투
 
 [releases](https://github.com/Riey/kime/releases) 탭에 있는 .deb 파일을 설치할 수 있습니다.
+
+### 젠투
+
+```sh
+eselect repository add riey git https://github.com/Riey/overlay
+eselect repository enable riey
+emaint sync -r riey
+emerge -av kime
+```
 
 ### 소스에서 빌드하기
 

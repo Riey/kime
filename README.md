@@ -15,7 +15,6 @@ Korean IME
 [<img alt="release version" src="https://img.shields.io/github/v/release/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/releases)
 [<img alt="aur version" src="https://img.shields.io/aur/version/kime-bin?style=for-the-badge" height="25">](https://aur.archlinux.org/packages/kime-bin/)
 [<img alt="license" src="https://img.shields.io/github/license/Riey/kime?style=for-the-badge" height="25">](https://github.com/Riey/kime/blob/master/LICENSE)
-[<img src="https://d1u4yishnma8v5.cloudfront.net/mobile-gift.png" alt="donaricano-btn" height="50">](https://donaricano.com/mypage/1610220543_mjZDXO)
 
 ## [Changelog](docs/CHANGELOG.md)
 
@@ -68,6 +67,15 @@ Developing version is available on [`kime-git`](https://aur.archlinux.org/packag
 ### Debian, Ubuntu
 
 `.deb` package is available on github [releases](https://github.com/Riey/kime/releases) tab.
+
+### Gentoo
+
+```sh
+eselect repository add riey git https://github.com/Riey/overlay
+eselect repository enable riey
+emaint sync -r riey
+emerge -av kime
+```
 
 ### Build from source
 

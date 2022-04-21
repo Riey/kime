@@ -77,6 +77,7 @@ void commit(KimeImContext *ctx) {
   // https://github.com/Riey/kime/issues/535
   ctx->is_committing = TRUE;
   update_preedit(ctx, FALSE);
+  ctx->is_committing = FALSE;
 
   // Don't commit zero size string
   if (ctx->buf.len == 0) {

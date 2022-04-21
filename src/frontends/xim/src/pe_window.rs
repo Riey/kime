@@ -1,3 +1,6 @@
+mod bgra;
+
+use bgra::Bgra;
 use std::{num::NonZeroU32, sync::Arc};
 
 use image::ImageBuffer;
@@ -18,7 +21,7 @@ pub struct PeWindow {
     text_pos: (u32, u32),
     text_scale: rusttype::Scale,
     font: Arc<Font<'static>>,
-    image_buffer: ImageBuffer<image::Bgra<u8>, Vec<u8>>,
+    image_buffer: ImageBuffer<Bgra, Vec<u8>>,
 }
 
 impl PeWindow {
@@ -117,8 +120,8 @@ impl PeWindow {
     }
 
     fn redraw(&mut self, conn: &impl Connection) -> Result<(), xim::ServerError> {
-        const BACKGROUND: image::Bgra<u8> = image::Bgra([255, 255, 255, 255]);
-        const FOREGROUND: image::Bgra<u8> = image::Bgra([0, 0, 0, 255]);
+        const BACKGROUND: Bgra = Bgra([255, 255, 255, 255]);
+        const FOREGROUND: Bgra = Bgra([0, 0, 0, 255]);
 
         log::trace!("Redraw: {}", self.preedit);
 
@@ -128,8 +131,8 @@ impl PeWindow {
         imageproc::drawing::draw_text_mut(
             &mut self.image_buffer,
             FOREGROUND,
-            self.text_pos.0,
-            self.text_pos.1,
+            self.text_pos.0 as i32,
+            self.text_pos.1 as i32,
             self.text_scale,
             &self.font,
             &self.preedit,

@@ -11,4 +11,4 @@ kime-engine-config = { path = "../config" }
 
 [build-dependencies]
 bindgen = { version = "0.59", default-features = false }
-cbindgen = { version = "0.21", default-features = false }
+cbindgen = { version = "0.22", default-features = false }

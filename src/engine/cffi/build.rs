@@ -22,6 +22,7 @@ fn main() {
     cpp_binding.write_to_file("kime_engine.hpp");
 
     let rust_binding = bindgen::builder()
+        .layout_tests(false)
         .header("./kime_engine.hpp")
         .disable_name_namespacing()
         .rustified_enum("kime::.+")

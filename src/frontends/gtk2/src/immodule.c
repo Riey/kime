@@ -6,6 +6,8 @@
 static GType KIME_TYPE_IM_CONTEXT = 0;
 // for many buggy gtk apps
 static const guint HANDLED_MASK = 1 << 25;
+static const guint PREEDIT_MASK = 1 << 24;
+static const guint IGNORE_MASK = 1 << 23;
 
 #if GTK_CHECK_VERSION(3, 98, 4)
 typedef GtkWidget ClientType;
@@ -18,6 +20,11 @@ typedef GdkEventKey EventType;
 
 static const guint NOT_ENGLISH_MASK =
     GDK_ALT_MASK | GDK_CONTROL_MASK | GDK_SUPER_MASK;
+
+typedef struct _KeyRet {
+  gboolean bypassed;
+  gboolean has_preedit;
+} KeyRet;
 
 typedef struct KimeSignals {
   guint commit;
@@ -39,11 +46,6 @@ typedef struct KimeImContext {
   KimeSignals signals;
   KimeInputEngine *engine;
   gboolean preedit_visible;
-
-  // for firefox edge case
-  gboolean preedit_has_ended;
-  // prevent commit triggering reset event
-  gboolean is_committing;
 
   gboolean engine_ready;
   KimeConfig *config;
@@ -74,11 +76,6 @@ void update_preedit(KimeImContext *ctx, gboolean visible) {
 }
 
 void commit(KimeImContext *ctx) {
-  // https://github.com/Riey/kime/issues/535
-  ctx->is_committing = TRUE;
-  update_preedit(ctx, FALSE);
-  ctx->is_committing = FALSE;
-
   // Don't commit zero size string
   if (ctx->buf.len == 0) {
     return;
@@ -97,8 +94,10 @@ void commit(KimeImContext *ctx) {
   ctx->buf.len = 0;
 }
 
-gboolean process_input_result(KimeImContext *ctx, KimeInputResult ret) {
-  gboolean bypassed = (ret & KimeInputResult_CONSUMED) != 0;
+KeyRet process_input_result(KimeImContext *ctx, KimeInputResult ret) {
+  KeyRet key_ret;
+  key_ret.bypassed = (ret & KimeInputResult_CONSUMED) == 0;
+  key_ret.has_preedit = (ret & KimeInputResult_HAS_PREEDIT) != 0;
 
   if (ret & KimeInputResult_NOT_READY) {
     ctx->engine_ready = FALSE;
@@ -115,22 +114,13 @@ gboolean process_input_result(KimeImContext *ctx, KimeInputResult ret) {
     kime_engine_update_layout_state(ctx->engine);
   }
 
-  if (!(ret & KimeInputResult_HAS_PREEDIT)) {
-    ctx->preedit_has_ended = ctx->preedit_visible;
-    update_preedit(ctx, FALSE);
-  }
-
   if (ret & KimeInputResult_HAS_COMMIT) {
     str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
     commit(ctx);
     kime_engine_clear_commit(ctx->engine);
   }
 
-  if (ret & KimeInputResult_HAS_PREEDIT) {
-    update_preedit(ctx, TRUE);
-  }
-
-  return bypassed;
+  return key_ret;
 }
 
 void focus_in(GtkIMContext *im) {
@@ -158,11 +148,6 @@ void kime_reset(KimeImContext *ctx) {
 void reset(GtkIMContext *im) {
   KIME_IM_CONTEXT(im);
 
-  if (ctx->is_committing) {
-    // dummy
-    return;
-  }
-
   debug("reset");
 
   kime_reset(ctx);
@@ -179,15 +164,15 @@ void focus_out(GtkIMContext *im) {
   }
 }
 
-void put_event(KimeImContext *ctx, EventType *key) {
+void put_event(KimeImContext *ctx, EventType *key, guint mask) {
 #if GTK_CHECK_VERSION(3, 98, 4)
   gtk_im_context_filter_key(
       GTK_IM_CONTEXT(ctx), gdk_event_get_event_type(key) == GDK_KEY_PRESS,
       gdk_event_get_surface(key), gdk_event_get_device(key),
       gdk_event_get_time(key), gdk_key_event_get_keycode(key),
-      gdk_event_get_modifier_state(key) | HANDLED_MASK, 0);
+      gdk_event_get_modifier_state(key) | mask, 0);
 #else
-  key->state |= HANDLED_MASK;
+  key->state |= mask;
   gdk_event_put((GdkEvent *)key);
 #endif
 }
@@ -207,10 +192,7 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
   return FALSE;
 }
 
-gboolean on_key_input(KimeImContext *ctx, guint16 code,
-                      KimeModifierState state) {
-  ctx->preedit_has_ended = FALSE;
-
+KeyRet on_key_input(KimeImContext *ctx, guint16 code, KimeModifierState state) {
   KimeInputResult ret =
       kime_engine_press_key(ctx->engine, ctx->config, code, state);
 
@@ -239,8 +221,16 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   GdkModifierType state = key->state;
 #endif
 
+  // delayed event
   if (state & HANDLED_MASK) {
-    return commit_event(ctx, state, keyval);
+    // preedit change can't mixed with commit
+    update_preedit(ctx, (state & PREEDIT_MASK) != 0);
+
+    if (state & IGNORE_MASK) {
+      return commit_event(ctx, state, keyval);
+    } else {
+      return TRUE;
+    }
   }
 
   KimeModifierState kime_state = 0;
@@ -261,16 +251,25 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     kime_state |= KimeModifierState_SUPER;
   }
 
-  if (on_key_input(ctx, code, kime_state)) {
-    return TRUE;
-  } else if (ctx->preedit_has_ended) {
-    // Can't just return FALSE because firefox can't accept FALSE when
-    // preedit-end is called
-    put_event(ctx, key);
-    return TRUE;
-  } else {
-    return commit_event(ctx, state, keyval);
+  KeyRet key_ret = on_key_input(ctx, code, kime_state);
+
+  guint mask = HANDLED_MASK;
+
+  if (key_ret.bypassed) {
+    mask |= IGNORE_MASK;
   }
+
+  if (key_ret.has_preedit) {
+    mask |= PREEDIT_MASK;
+  }
+
+  if (mask != HANDLED_MASK || ctx->preedit_visible) {
+    // need change on next event
+    put_event(ctx, key, mask);
+  }
+
+  // never return `FALSE` here
+  return TRUE;
 }
 
 GtkWidget *client_get_widget(ClientType *client) {
@@ -358,8 +357,6 @@ void im_context_init(KimeImContext *ctx, KimeImContextClass *klass) {
   ctx->buf = str_buf_new();
   ctx->widget = NULL;
   ctx->preedit_visible = FALSE;
-  ctx->is_committing = FALSE;
-  ctx->preedit_has_ended = FALSE;
   ctx->engine_ready = TRUE;
   ctx->signals = klass->signals;
   ctx->engine = kime_engine_new(klass->config);

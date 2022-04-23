@@ -18,8 +18,9 @@
 * Added Qt 5.12.9 library build
 * Fix sebeolsik-391 "S-Equal" key
 * Let indicator shown on Gnome tray (requires Gnome shell extension, https://extensions.gnome.org/extension/615/appindicator-support/)
-* Fix space error in some firefox sites[#561](https://github.com/Riey/kime/issues/561).
-* Fix duplicated commit string in some firefox sites[#562](https://github.com/Riey/kime/issues/562).
+* Fix space error in some firefox sites [#561](https://github.com/Riey/kime/issues/561).
+* Fix duplicated commit string in some firefox sites [#562](https://github.com/Riey/kime/issues/562).
+* Delaying preedit, bypass processes in gtk module [#570](https://github.com/Riey/kime/issues/570)
 
 ## 2.5.6
 

@@ -21,9 +21,9 @@ with pkgs;
   kimeNativeBuildInputs = [
     python3 # xcb 0.9.0
     pkg-config
-    llvmPackages_13.clang
-    llvmPackages_13.libclang.lib
-    llvmPackages_13.bintools
+    llvmPackages_14.clang
+    llvmPackages_14.libclang.lib
+    llvmPackages_14.bintools
     rustc cargo
     cmake
     extra-cmake-modules

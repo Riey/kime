@@ -6,8 +6,7 @@
 static GType KIME_TYPE_IM_CONTEXT = 0;
 // for many buggy gtk apps
 static const guint HANDLED_MASK = 1 << 25;
-static const guint PREEDIT_MASK = 1 << 24;
-static const guint IGNORE_MASK = 1 << 23;
+static const guint BYPASS_MASK = 1 << 24;
 
 #if GTK_CHECK_VERSION(3, 98, 4)
 typedef GtkWidget ClientType;
@@ -57,7 +56,10 @@ typedef struct KimeImContext {
 
 #define debug(...) g_log("kime", G_LOG_LEVEL_DEBUG, __VA_ARGS__)
 
-void update_preedit(KimeImContext *ctx, gboolean visible) {
+void update_preedit(KimeImContext *ctx) {
+  KimeRustStr str = kime_engine_preedit_str(ctx->engine);
+
+  gboolean visible = str.len != 0;
   debug("preedit(%d)", visible);
 
   if (ctx->preedit_visible != visible) {
@@ -224,9 +226,9 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   // delayed event
   if (state & HANDLED_MASK) {
     // preedit change can't mixed with commit
-    update_preedit(ctx, (state & PREEDIT_MASK) != 0);
+    update_preedit(ctx);
 
-    if (state & IGNORE_MASK) {
+    if (state & BYPASS_MASK) {
       return commit_event(ctx, state, keyval);
     } else {
       return TRUE;
@@ -253,23 +255,27 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
 
   KeyRet key_ret = on_key_input(ctx, code, kime_state);
 
-  guint mask = HANDLED_MASK;
+  if (ctx->preedit_visible || key_ret.has_preedit) {
+    guint mask = HANDLED_MASK;
 
-  if (key_ret.bypassed) {
-    mask |= IGNORE_MASK;
-  }
+    if (key_ret.bypassed) {
+      mask |= BYPASS_MASK;
+    }
 
-  if (key_ret.has_preedit) {
-    mask |= PREEDIT_MASK;
-  }
-
-  if (mask != HANDLED_MASK || ctx->preedit_visible) {
     // need change on next event
     put_event(ctx, key, mask);
-  }
 
-  // never return `FALSE` here
-  return TRUE;
+    // debug("trip: preedit cur(%d) will(%d))", ctx->preedit_visible, key_ret.has_preedit);
+
+    // never return `FALSE` here
+    return TRUE;
+  } else if (key_ret.bypassed) {
+    // debug("commit_event");
+    return commit_event(ctx, state, keyval);
+  } else {
+    // debug("consume");
+    return TRUE;
+  }
 }
 
 GtkWidget *client_get_widget(ClientType *client) {

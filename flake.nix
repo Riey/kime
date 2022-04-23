@@ -2,14 +2,16 @@
   description = "A very basic flake";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/5625298330265ab90429d8942764c6d4fd7ce39b;
+    nixpkgs.url = github:NixOS/nixpkgs/4c1880fae5bdc3048fc7e0f044c1a8e1bf7fb48a;
     flake-utils.url = github:numtide/flake-utils;
   };
 
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem
       (system:
-        let pkgs = nixpkgs.legacyPackages.${system}; in
+        let pkgs = import nixpkgs {
+          system = system;
+        }; in
         {
           devShell = import ./shell.nix { inherit pkgs; };
           defaultPackage = import ./default.nix { inherit pkgs; };

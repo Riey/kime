@@ -255,10 +255,10 @@ jobs:
       matrix:
         include:
           - qt5: 5.9.5
-            pkg: deb            
+            pkg: deb
             name: ubuntu-18.04
           - qt5: 5.12.8
-            pkg: deb            
+            pkg: deb
             name: ubuntu-20.04
           - qt5: 5.14.2
             pkg: deb

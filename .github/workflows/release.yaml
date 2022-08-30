@@ -266,10 +266,10 @@ jobs:
           - qt5: 5.15.3
             pkg: deb
             name: ubuntu-22.04
-          - qt5: 5.15.3
+          - qt5: 5.11.3
             pkg: deb
             name: debian-buster
-          - qt5: 5.11.3
+          - qt5: 5.15.3
             qt6: 6.0.2
             pkg: zst
             name: latest

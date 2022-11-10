@@ -201,7 +201,7 @@
 , {"keyword":"emptyset","symbols":[{"style":[],"symbol":"∅"}]}
 , {"keyword":"ell","symbols":[{"style":[],"symbol":"ℓ"}]}
 , {"keyword":"e","symbols":[{"style":["bf"],"symbol":"𝐞"},{"style":["it"],"symbol":"𝑒"},{"style":["bf","it"],"symbol":"𝒆"},{"style":["scr"],"symbol":"ℯ"},{"style":["cal"],"symbol":"𝓮"},{"style":["frak"],"symbol":"𝔢"},{"style":["bb"],"symbol":"𝕖"},{"style":["bf","frak"],"symbol":"𝖊"},{"style":["sf"],"symbol":"𝖾"},{"style":["sf","bf"],"symbol":"𝗲"},{"style":["sf","it"],"symbol":"𝘦"},{"style":["sf","bf","it"],"symbol":"𝙚"},{"style":["tt"],"symbol":"𝚎"}]}
-, {"keyword":"downaroow","symbols":[{"style":[],"symbol":"↓"}]}
+, {"keyword":"downarrow","symbols":[{"style":[],"symbol":"↓"}]}
 , {"keyword":"doteq","symbols":[{"style":[],"symbol":"≐"}]}
 , {"keyword":"divideontimes","symbols":[{"style":[],"symbol":"⋇"}]}
 , {"keyword":"div","symbols":[{"style":[],"symbol":"÷"}]}

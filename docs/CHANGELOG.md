@@ -21,6 +21,7 @@
 * Fix space error in some firefox sites [#561](https://github.com/Riey/kime/issues/561).
 * Fix duplicated commit string in some firefox sites [#562](https://github.com/Riey/kime/issues/562).
 * Delaying preedit, bypass processes in gtk module [#570](https://github.com/Riey/kime/issues/570)
+* Fix typo in symbol name for U+2193(↓): downaroow -> downarrow
 
 ## 2.5.6
 

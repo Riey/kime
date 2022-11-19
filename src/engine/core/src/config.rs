@@ -1,9 +1,12 @@
+use crate::KeyMap;
 use fontconfig_parser::FontConfig;
 use fontdb::{Family, Query};
 pub use kime_engine_config::*;
+use std::fs;
 
 /// Preprocessed engine config
 pub struct Config {
+    pub translation_layer: Option<KeyMap<Key>>,
     pub default_category: InputCategory,
     pub global_category_state: bool,
     pub category_hotkeys: EnumMap<InputCategory, Vec<(Key, Hotkey)>>,
@@ -42,7 +45,20 @@ impl Config {
             .unwrap_or_default()
         };
 
+        let translation_layer: Option<KeyMap<Key>> = engine
+            .translation_layer
+            .and_then(|f| {
+                xdg::BaseDirectories::with_prefix("kime")
+                    .ok()
+                    .and_then(|d| d.find_config_file(f))
+            })
+            .as_ref()
+            .and_then(|f| fs::read_to_string(std::path::PathBuf::as_path(f)).ok())
+            .as_ref()
+            .and_then(|content| serde_yaml::from_str(content).ok());
+
         Self {
+            translation_layer: translation_layer,
             default_category: engine.default_category,
             global_category_state: engine.global_category_state,
             category_hotkeys: enum_map! {

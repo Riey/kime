@@ -4,6 +4,7 @@ use maplit::btreemap;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::path::Path;
 
 pub use kime_engine_backend::{Key, KeyCode, ModifierState};
 pub use kime_engine_backend_hangul::{HangulConfig, HangulData};
@@ -137,6 +138,7 @@ impl Default for LogConfig {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct EngineConfig {
+    pub translation_layer: Option<Box<Path>>,
     pub default_category: InputCategory,
     pub global_category_state: bool,
     pub global_hotkeys: BTreeMap<Key, Hotkey>,
@@ -151,6 +153,7 @@ pub struct EngineConfig {
 impl Default for EngineConfig {
     fn default() -> Self {
         Self {
+            translation_layer: None,
             latin: LatinConfig::default(),
             hangul: HangulConfig::default(),
             default_category: InputCategory::Latin,

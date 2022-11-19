@@ -117,7 +117,7 @@ impl Check {
                     Some(path) => path,
                     _ => {
                         return CondResult::Ignore(
-                            "User config not exists will use default config".into(),
+                            "User config does not exists will use default config".into(),
                         )
                     }
                 };

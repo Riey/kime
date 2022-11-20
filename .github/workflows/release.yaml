@@ -123,6 +123,7 @@ jobs:
           - 5.12.9
           - 5.14.2
           - 5.15.2
+          - 5.15.3
 
     steps:
       - name: Download engine
@@ -262,6 +263,9 @@ jobs:
           - qt5: 5.14.2
             pkg: deb
             name: ubuntu-20.10
+          - qt5: 5.15.3
+            pkg: deb
+            name: ubuntu-22.04
           - qt5: 5.11.3
             pkg: deb
             name: debian-buster

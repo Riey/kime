@@ -1,9 +1,11 @@
-use fontconfig_parser::FontConfig;
+use crate::KeyMap;
 use fontdb::{Family, Query};
 pub use kime_engine_config::*;
+use std::fs;
 
 /// Preprocessed engine config
 pub struct Config {
+    pub translation_layer: Option<KeyMap<Key>>,
     pub default_category: InputCategory,
     pub global_category_state: bool,
     pub category_hotkeys: EnumMap<InputCategory, Vec<(Key, Hotkey)>>,
@@ -26,13 +28,6 @@ impl Config {
         let mut db = fontdb::Database::new();
         db.load_system_fonts();
 
-        let mut fc = FontConfig::default();
-        fc.merge_config("/etc/fonts/fonts.conf").ok();
-
-        for dir in fc.dirs {
-            db.load_fonts_dir(dir.path);
-        }
-
         let load_font = |name| {
             db.query(&Query {
                 families: &[Family::Name(name), Family::Serif],
@@ -42,7 +37,20 @@ impl Config {
             .unwrap_or_default()
         };
 
+        let translation_layer: Option<KeyMap<Key>> = engine
+            .translation_layer
+            .and_then(|f| {
+                xdg::BaseDirectories::with_prefix("kime")
+                    .ok()
+                    .and_then(|d| d.find_config_file(f))
+            })
+            .as_ref()
+            .and_then(|f| fs::read_to_string(f.as_path()).ok())
+            .as_ref()
+            .and_then(|content| serde_yaml::from_str(content).ok());
+
         Self {
+            translation_layer: translation_layer,
             default_category: engine.default_category,
             global_category_state: engine.global_category_state,
             category_hotkeys: enum_map! {

@@ -52,7 +52,7 @@ fn main() {
             },
             Err(err) => {
                 // Don't stop server just logging
-                log::error!("ServerError occured while process event: {}", err);
+                log::error!("ServerError occurred while process event: {}", err);
             }
         }
     }

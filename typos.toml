@@ -1,0 +1,10 @@
+[files]
+extend-exclude = [
+    "src/engine/dict/data/Unihan_Readings.txt",
+    "src/engine/dict/data/*.xml"
+]
+
+[default.extend-words]
+quitted = "quitted"
+thi = "thi"
+alph = "alph"

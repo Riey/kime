@@ -22,6 +22,7 @@
 * Fix duplicated commit string in some firefox sites [#562](https://github.com/Riey/kime/issues/562).
 * Delaying preedit, bypass processes in gtk module [#570](https://github.com/Riey/kime/issues/570)
 * Fix typo in symbol name for U+2193(↓): downaroow -> downarrow
+* Adding translation layer feature [#586](https://github.com/Riey/kime/issues/586)
 
 ## 2.5.6
 
@@ -202,7 +203,7 @@
 * Using signal connect client's window instead of `gdk_window_add_filter`
 * Insert emoji with `rofimoji`
 * Embed hanja dict
-* Support multiple archtectures
+* Support multiple architectures
 * Hide desktop entries from DE menu and application launchers [#357](https://github.com/Riey/kime/pull/357)
 * Integrate kime-indicator again
 * Add `icon_color` config
@@ -245,7 +246,7 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 ### Improve
 
 * Fix kime-check fail [#307](https://github.com/Riey/kime/issues/307)
-* Fix preedit string disapear when press hotkey [#310](https://github.com/Riey/kime/issues/310)
+* Fix preedit string disappear when press hotkey [#310](https://github.com/Riey/kime/issues/310)
 * Make character typing order strict `ㅏ + ㄱ = ㅏㄱ`
 * Add `TreatJongseongAsChoseong` addon
 * Add `FlexibleComposeOrder` addon [#318](https://github.com/Riey/kime/issues/318)
@@ -340,7 +341,7 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 * Show hangul/english state on tray icon
 * Support global hangul state
 * Set gtk log domain to `kime`
-* Let `kime-wayland` exit when IO Error occured
+* Let `kime-wayland` exit when IO Error occurred
 * Fix wayland input bug
 * `kime-xtask` now read `KIME_CARGO_ARGS`, `KIME_CMAKE_ARGS`, `KIME_NINJA_ARGS`
 
@@ -392,7 +393,7 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 
 ## 0.5.0
 
-* Now `dubeolsik`, `sebeolsik-390`, `sebeolsik-391` layouts are embeded and no need local file
+* Now `dubeolsik`, `sebeolsik-390`, `sebeolsik-391` layouts are embedded and no need local file
 * Fix intellij issue
 * Fix Super key bug
 * Package deb file

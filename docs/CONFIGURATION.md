@@ -143,7 +143,7 @@ Set latin layout
 | default |`Qwerty`|
 |---------|--------|
 
-### embeded layouts
+### embedded layouts
 
 * `Qwerty`
 * `Dvorak`
@@ -174,7 +174,7 @@ Set hangul layout
 | default |`dubeolsik`|
 |---------|-------|
 
-#### Embeded layouts
+#### Embedded layouts
 
 * `direct`
 * `qwerty`
@@ -195,7 +195,7 @@ structure of keyboard layout file.
 
 Adjust layout addons
 
-format is `layout_name: [Addon]`, `all` applys all layouts
+format is `layout_name: [Addon]`, `all` applies all layouts
 
 #### default
 

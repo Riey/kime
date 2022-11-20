@@ -53,7 +53,7 @@ impl Config {
                     .and_then(|d| d.find_config_file(f))
             })
             .as_ref()
-            .and_then(|f| fs::read_to_string(std::path::PathBuf::as_path(f)).ok())
+            .and_then(|f| fs::read_to_string(f.as_path()).ok())
             .as_ref()
             .and_then(|content| serde_yaml::from_str(content).ok());
 

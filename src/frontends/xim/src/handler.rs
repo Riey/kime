@@ -4,7 +4,7 @@ use crate::pe_window::PeWindow;
 use ahash::AHashMap;
 use x11rb::{
     connection::Connection,
-    protocol::xproto::{ConfigureNotifyEvent, KeyPressEvent, KEY_PRESS_EVENT},
+    protocol::xproto::{ConfigureNotifyEvent, KeyButMask, KeyPressEvent, KEY_PRESS_EVENT},
 };
 use xim::{
     x11rb::{HasConnection, X11rbServer},
@@ -327,19 +327,25 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
         let mut state = 0;
 
-        if xev.state & 0x1 != 0 {
+        macro_rules! check_flag {
+            ($mask:ident) => {
+                (u16::from(xev.state) & u16::from(KeyButMask::$mask)) != 0
+            };
+        }
+
+        if check_flag!(SHIFT) {
             state |= ModifierState_SHIFT;
         }
 
-        if xev.state & 0x4 != 0 {
+        if check_flag!(CONTROL) {
             state |= ModifierState_CONTROL;
         }
 
-        if xev.state & 0x8 != 0 {
+        if check_flag!(MOD1) {
             state |= ModifierState_ALT;
         }
 
-        if xev.state & 0x40 != 0 {
+        if check_flag!(MOD4) {
             state |= ModifierState_SUPER;
         }
 
@@ -351,7 +357,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         self.process_input_result(server, user_ic, ret)
     }
 
-    fn handle_destory_ic(
+    fn handle_destroy_ic(
         &mut self,
         server: &mut X11rbServer<C>,
         user_ic: xim::UserInputContext<Self::InputContextData>,

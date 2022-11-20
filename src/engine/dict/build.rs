@@ -123,26 +123,26 @@ fn load_unicode_annotations() -> quick_xml::Result<Vec<UnicodeEntry>> {
     use quick_xml::{events::Event, Reader};
 
     let mut out = Vec::with_capacity(512);
-    let mut buf = Vec::with_capacity(512);
     let mut current_entry = UnicodeEntry::default();
 
     let mut reader = Reader::from_str(include_str!("data/en.xml"));
 
     loop {
-        match reader.read_event(&mut buf)? {
-            Event::Start(start) if start.name() == b"annotation" => {
+        match reader.read_event()? {
+            Event::Start(start) if start.name().0 == b"annotation" => {
                 let cp = start.attributes().next().unwrap()?;
-                debug_assert_eq!(cp.key, b"cp");
-                let cp = cp.unescape_and_decode_value(&reader)?;
+                debug_assert_eq!(cp.key.0, b"cp");
+                let cp = cp.decode_and_unescape_value(&reader)?;
                 if current_entry.cp != cp {
                     if !current_entry.cp.is_empty() {
                         out.push(mem::take(&mut current_entry));
                     }
 
-                    current_entry.cp = cp;
-                    current_entry.description = reader.read_text(b"annotation", &mut buf)?;
+                    current_entry.cp = cp.into_owned();
+                    current_entry.description =
+                        reader.read_text(start.to_end().name())?.into_owned();
                 } else {
-                    current_entry.tts = reader.read_text(b"annotation", &mut buf)?;
+                    current_entry.tts = reader.read_text(start.to_end().name())?.into_owned();
                 }
             }
             Event::Eof => break,

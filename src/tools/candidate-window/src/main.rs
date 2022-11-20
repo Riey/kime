@@ -21,10 +21,10 @@ struct CandidateApp {
     candidate_list: Vec<(String, String)>,
 }
 
-impl eframe::epi::App for CandidateApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &eframe::epi::Frame) {
+impl eframe::App for CandidateApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         if ctx.input().key_down(egui::Key::Escape) || ctx.input().key_down(egui::Key::Q) {
-            frame.quit();
+            frame.close();
             return;
         }
 
@@ -91,7 +91,7 @@ impl eframe::epi::App for CandidateApp {
 
                     if quitted {
                         self.stdout.write_all(key.as_bytes()).unwrap();
-                        frame.quit();
+                        frame.close();
                         return;
                     }
                 }
@@ -116,40 +116,11 @@ impl eframe::epi::App for CandidateApp {
             });
         });
     }
-
-    fn setup(
-        &mut self,
-        ctx: &egui::Context,
-        _frame: &eframe::epi::Frame,
-        _storage: Option<&dyn eframe::epi::Storage>,
-    ) {
-        assert!(kime_engine_cffi::check_api_version());
-
-        let config = kime_engine_cffi::Config::load();
-        let (font_bytes, _index) = config.candidate_font();
-        let mut font_data = BTreeMap::<_, egui::FontData>::new();
-        let mut families = BTreeMap::new();
-
-        font_data.insert(
-            "Font".to_string(),
-            egui::FontData::from_owned(font_bytes.to_vec()),
-        );
-
-        families.insert(egui::FontFamily::Proportional, vec!["Font".to_string()]);
-        families.insert(egui::FontFamily::Monospace, vec!["Font".to_string()]);
-
-        ctx.set_fonts(egui::FontDefinitions {
-            font_data,
-            families,
-        });
-    }
-
-    fn name(&self) -> &str {
-        "kime-candidate"
-    }
 }
 
 fn main() -> io::Result<()> {
+    assert!(kime_engine_cffi::check_api_version());
+
     let mut buf = String::with_capacity(4096);
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -175,17 +146,7 @@ fn main() -> io::Result<()> {
     }
 
     eframe::run_native(
-        Box::new(CandidateApp {
-            stdout,
-            page_index: 0,
-            key_state: KeyState::default(),
-            max_page_index: if candidate_list.len() % PAGE_SIZE == 0 {
-                (candidate_list.len() / PAGE_SIZE) - 1
-            } else {
-                candidate_list.len() / PAGE_SIZE
-            },
-            candidate_list,
-        }),
+        "kime-candidate",
         eframe::NativeOptions {
             always_on_top: true,
             decorated: false,
@@ -193,5 +154,38 @@ fn main() -> io::Result<()> {
             initial_window_size: Some(egui::vec2(400.0, 400.0)),
             ..Default::default()
         },
+        Box::new(|cc| {
+            let config = kime_engine_cffi::Config::load();
+            let (font_bytes, _index) = config.candidate_font();
+            let mut font_data = BTreeMap::<_, egui::FontData>::new();
+            let mut families = BTreeMap::new();
+
+            font_data.insert(
+                "Font".to_string(),
+                egui::FontData::from_owned(font_bytes.to_vec()),
+            );
+
+            families.insert(egui::FontFamily::Proportional, vec!["Font".to_string()]);
+            families.insert(egui::FontFamily::Monospace, vec!["Font".to_string()]);
+
+            cc.egui_ctx.set_fonts(egui::FontDefinitions {
+                font_data,
+                families,
+            });
+
+            Box::new(CandidateApp {
+                stdout,
+                page_index: 0,
+                key_state: KeyState::default(),
+                max_page_index: if candidate_list.len() % PAGE_SIZE == 0 {
+                    (candidate_list.len() / PAGE_SIZE) - 1
+                } else {
+                    candidate_list.len() / PAGE_SIZE
+                },
+                candidate_list,
+            })
+        }),
     );
+
+    Ok(())
 }

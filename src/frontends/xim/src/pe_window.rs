@@ -173,7 +173,7 @@ impl PeWindow {
         conn.send_event(
             false,
             self.preedit_window.get(),
-            0u32,
+            EventMask::NO_EVENT,
             ExposeEvent {
                 response_type: EXPOSE_EVENT,
                 window: self.window().get(),

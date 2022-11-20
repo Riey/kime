@@ -225,7 +225,7 @@ pub extern "C" fn kime_daemon_config_default() -> *mut DaemonConfig {
 /// Delete daemon config
 #[no_mangle]
 pub unsafe extern "C" fn kime_daemon_config_delete(config: *mut DaemonConfig) {
-    Box::from_raw(config);
+    drop(Box::from_raw(config));
 }
 
 /// Load indicator config
@@ -247,7 +247,7 @@ pub extern "C" fn kime_indicator_config_default() -> *mut IndicatorConfig {
 /// Delete indicator config
 #[no_mangle]
 pub unsafe extern "C" fn kime_indicator_config_delete(config: *mut IndicatorConfig) {
-    Box::from_raw(config);
+    drop(Box::from_raw(config));
 }
 
 /// Get indicator `icon_color`
@@ -276,7 +276,7 @@ pub extern "C" fn kime_log_config_default() -> *mut LogConfig {
 /// Delete log config
 #[no_mangle]
 pub unsafe extern "C" fn kime_log_config_delete(config: *mut LogConfig) {
-    Box::from_raw(config);
+    drop(Box::from_raw(config));
 }
 
 /// Get log `icon_color`

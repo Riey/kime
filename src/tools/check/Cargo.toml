@@ -10,6 +10,6 @@ ansi_term = "0.12.1"
 kime-engine-cffi = { path = "../../engine/cffi" }
 kime-engine-core = { path = "../../engine/core" }
 pad = "0.1.6"
-serde_yaml = "0.8.17"
+serde_yaml = "0.9"
 strum = { version = "0.24", features = ["derive"] }
 xdg = "2.2.0"

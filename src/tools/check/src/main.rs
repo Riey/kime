@@ -1,3 +1,5 @@
+use kime_engine_core::{Key, KeyMap};
+
 use ansi_term::Color;
 use kime_engine_cffi::{
     Config, InputCategory, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT,
@@ -117,20 +119,42 @@ impl Check {
                     Some(path) => path,
                     _ => {
                         return CondResult::Ignore(
-                            "User config not exists will use default config".into(),
+                            "User config does not exists will use default config".into(),
                         )
                     }
                 };
 
                 println!("Loading config path: {}", config_path.display());
 
-                let _config: kime_engine_core::RawConfig = match serde_yaml::from_str(
+                let config: kime_engine_core::RawConfig = match serde_yaml::from_str(
                     &std::fs::read_to_string(config_path).expect("Read config file"),
                 ) {
                     Ok(config) => config,
-                    Err(err) => {
-                        return CondResult::Fail(format!("Can't parse config.yaml: {}", err))
+                    Err(err) => return CondResult::Fail(format!("Can't parse config.yaml: {err}")),
+                };
+
+                match config.engine.translation_layer {
+                    Some(ref raw_path) => {
+                        let path = match dirs.find_config_file(raw_path) {
+                            Some(path) => path,
+                            _ => {
+                                return CondResult::Ignore(
+                                    "translation layer configuration does not exist. No translation layer will be used".into())
+                            }
+                        };
+                        println!("Loading translation layer config: {}", path.display());
+
+                        let _translation_layer: KeyMap<Key> = match serde_yaml::from_str(
+                            &std::fs::read_to_string(path.as_path())
+                                .expect("Read translation layer config"),
+                        ) {
+                            Ok(c) => c,
+                            Err(err) => {
+                                return CondResult::Fail(format!("Can't parse {path:#?}: {err}"))
+                            }
+                        };
                     }
+                    None => return CondResult::Ok,
                 };
 
                 // TODO: check layout

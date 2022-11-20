@@ -103,7 +103,7 @@ struct KimeContext {
     keymap_init: bool,
     grab_activate: bool,
     serial: u32,
-    // Have to consern Multi seats?
+    // Have to concern Multi seats?
 
     // Key repeat contexts
     timer: TimerFd,

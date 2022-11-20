@@ -23,8 +23,8 @@ impl HanjaMode {
     }
 
     pub fn set_key(&mut self, key: &str) -> bool {
-        if let Some(entires) = kime_engine_dict::lookup(key) {
-            match Client::new(entires) {
+        if let Some(entries) = kime_engine_dict::lookup(key) {
+            match Client::new(entries) {
                 Ok(client) => {
                     self.client = Some(client);
                     true

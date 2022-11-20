@@ -202,7 +202,7 @@ impl KimeHandler {
         if let Some(pe) = user_ic.user_data.pe.take() {
             // off-the-spot draw in server
             if let Some(w) = self.preedit_windows.remove(&pe) {
-                log::trace!("Destory PeWindow: {}", w.window());
+                log::trace!("Destroy PeWindow: {}", w.window());
                 w.clean(server.conn())?;
             }
         }

@@ -158,7 +158,7 @@ impl InputEngine {
         state: ModifierState,
         config: &Config,
     ) -> InputResult {
-        match KeyCode::from_hardward_code(hardware_code) {
+        match KeyCode::from_hardware_code(hardware_code) {
             Some(code) => self.press_key(Key::new(code, state), config),
             None => {
                 self.clear_preedit();

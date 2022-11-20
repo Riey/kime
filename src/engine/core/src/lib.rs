@@ -362,7 +362,13 @@ impl EngineImpl {
 impl InputEngineBackend for EngineImpl {
     type ConfigData = Config;
 
-    fn press_key(&mut self, config: &Config, key: Key, commit_buf: &mut String) -> bool {
+    fn press_key(&mut self, config: &Config, raw_key: Key, commit_buf: &mut String) -> bool {
+        let key = config
+            .translation_layer
+            .as_ref()
+            .and_then(|tl| tl.get(raw_key))
+            .unwrap_or(raw_key);
+
         match self.mode {
             Some(InputMode::Emoji) => {
                 do_mode!(@retarm self, emoji_mode, press_key(&config.latin_data, key, commit_buf,))

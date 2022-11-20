@@ -22,6 +22,7 @@
 * Fix duplicated commit string in some firefox sites [#562](https://github.com/Riey/kime/issues/562).
 * Delaying preedit, bypass processes in gtk module [#570](https://github.com/Riey/kime/issues/570)
 * Fix typo in symbol name for U+2193(↓): downaroow -> downarrow
+* Adding translation layer feature [#586](https://github.com/Riey/kime/issues/586)
 
 ## 2.5.6
 

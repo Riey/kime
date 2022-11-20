@@ -1,5 +1,4 @@
 use crate::KeyMap;
-use fontconfig_parser::FontConfig;
 use fontdb::{Family, Query};
 pub use kime_engine_config::*;
 use std::fs;
@@ -28,13 +27,6 @@ impl Config {
     fn new_impl(mut engine: EngineConfig, hangul_data: HangulData) -> Self {
         let mut db = fontdb::Database::new();
         db.load_system_fonts();
-
-        let mut fc = FontConfig::default();
-        fc.merge_config("/etc/fonts/fonts.conf").ok();
-
-        for dir in fc.dirs {
-            db.load_fonts_dir(dir.path);
-        }
 
         let load_font = |name| {
             db.query(&Query {

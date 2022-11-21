@@ -65,9 +65,7 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
 
   kime::ModifierState state = 0;
 
-  if (modifiers.testFlag(Qt::KeyboardModifier::KeypadModifier)) {
-    state |= kime::ModifierState_NUMLOCK;
-  }
+  bool numlock = modifiers.testFlag(Qt::KeyboardModifier::KeypadModifier);
 
   if (modifiers.testFlag(Qt::KeyboardModifier::ControlModifier)) {
     state |= kime::ModifierState_CONTROL;
@@ -86,7 +84,7 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
   }
 
   kime::InputResult ret = kime_engine_press_key(
-      this->engine, this->config, (uint16_t)keyevent->nativeScanCode(), state);
+      this->engine, this->config, (uint16_t)keyevent->nativeScanCode(), numlock, state);
 
   return this->process_input_result(ret);
 }

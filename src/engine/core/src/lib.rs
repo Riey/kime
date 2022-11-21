@@ -156,9 +156,10 @@ impl InputEngine {
         &mut self,
         hardware_code: u16,
         state: ModifierState,
+        numlock: bool,
         config: &Config,
     ) -> InputResult {
-        match KeyCode::from_hardware_code(hardware_code) {
+        match KeyCode::from_hardware_code(hardware_code, numlock) {
             Some(code) => self.press_key(Key::new(code, state), config),
             None => {
                 self.clear_preedit();

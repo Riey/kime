@@ -195,7 +195,7 @@ fn check_input(
     engine.set_input_category(InputCategory::Hangul);
 
     for (key, preedit, commit) in tests.iter().copied() {
-        let ret = engine.press_key(config, key, 0);
+        let ret = engine.press_key(config, key, false, 0);
 
         let preedit_ret;
         let commit_ret;

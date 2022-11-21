@@ -95,6 +95,7 @@ struct KimeContext {
     vk: Main<ZwpVirtualKeyboardV1>,
     im: Main<ZwpInputMethodV2>,
     grab: Main<ZwpInputMethodKeyboardGrabV2>,
+    numlock: bool,
     engine_ready: bool,
     keymap_init: bool,
     grab_activate: bool,
@@ -132,6 +133,7 @@ impl KimeContext {
             current_state: InputMethodState::default(),
             pending_state: InputMethodState::default(),
             serial: 0,
+            numlock: false,
             engine_ready: true,
             keymap_init: false,
             grab_activate: false,
@@ -252,9 +254,12 @@ impl KimeContext {
                 // NOTE: Never read `serial` of KeyEvent. You should rely on serial of KimeContext
                 if state == KeyState::Pressed {
                     if self.grab_activate {
-                        let ret =
-                            self.engine
-                                .press_key(&self.config, (key + 8) as u16, self.mod_state);
+                        let ret = self.engine.press_key(
+                            &self.config,
+                            (key + 8) as u16,
+                            self.numlock,
+                            self.mod_state,
+                        );
 
                         let bypassed = self.process_input_result(ret);
 
@@ -316,12 +321,12 @@ impl KimeContext {
                 if mods_depressed & 0x8 != 0 {
                     self.mod_state |= ModifierState_ALT;
                 }
-                if mods_depressed & 0x10 != 0 {
-                    self.mod_state |= ModifierState_NUMLOCK;
-                }
                 if mods_depressed & 0x40 != 0 {
                     self.mod_state |= ModifierState_SUPER;
                 }
+
+                self.numlock = mods_depressed & 0x10 != 0;
+
                 self.vk
                     .modifiers(mods_depressed, mods_latched, mods_locked, group);
             }

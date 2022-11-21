@@ -206,9 +206,9 @@ gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
   return FALSE;
 }
 
-KeyRet on_key_input(KimeImContext *ctx, guint16 code, KimeModifierState state) {
+KeyRet on_key_input(KimeImContext *ctx, guint16 code, bool numlock, KimeModifierState state) {
   KimeInputResult ret =
-      kime_engine_press_key(ctx->engine, ctx->config, code, state);
+      kime_engine_press_key(ctx->engine, ctx->config, code, numlock, state);
 
 #if DEBUG
   debug("(%d, %d, %d)", code, state, ret);
@@ -249,13 +249,9 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     }
   }
 
-  gboolean numlock = gdk_device_get_num_lock_state(device);
+  bool numlock = gdk_device_get_num_lock_state(device) == TRUE;
 
   KimeModifierState kime_state = 0;
-
-  if (numlock) {
-    kime_state |= KimeModifierState_NUMLOCK;
-  }
 
   if (state & GDK_SHIFT_MASK) {
     kime_state |= KimeModifierState_SHIFT;
@@ -273,7 +269,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     kime_state |= KimeModifierState_SUPER;
   }
 
-  KeyRet key_ret = on_key_input(ctx, code, kime_state);
+  KeyRet key_ret = on_key_input(ctx, code, numlock, kime_state);
 
   if (ctx->preedit_visible || key_ret.has_preedit) {
     guint mask = HANDLED_MASK;

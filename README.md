@@ -34,7 +34,6 @@ Please contact us on [Discord](https://discord.gg/YPnEfZqC6y) or create github i
 
 - [x] XIM
 - [x] Wayland
-- [x] GTK2
 - [x] GTK3
 - [x] GTK4
 - [x] Qt5

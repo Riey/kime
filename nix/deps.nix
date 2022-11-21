@@ -10,7 +10,6 @@ with pkgs;
     wayland
     libxkbcommon
 
-    gtk2
     gtk3
     gtk4
 

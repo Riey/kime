@@ -5,7 +5,7 @@ define_layout_test!("dubeolsik", LatinLayout::Qwerty, InputCategory::Latin);
 
 use kime_engine_core::ModifierState;
 
-const MATH: Key = Key::new(Backslash, ModifierState::from_bits_truncate(10));
+const MATH: Key = Key::new(Backslash, ModifierState::CONTROL.union(ModifierState::ALT));
 
 #[test]
 fn twice_backspace() {

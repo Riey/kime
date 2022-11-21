@@ -12,7 +12,7 @@ use std::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct KeyMap<V> {
-    arr: EnumMap<KeyCode, [Option<V>; 2]>,
+    arr: EnumMap<KeyCode, [Option<V>; 4]>,
 }
 
 impl<V: Copy> Default for KeyMap<V> {
@@ -29,7 +29,10 @@ impl<V: Copy> KeyMap<V> {
     }
 
     pub fn get(&self, key: Key) -> Option<V> {
-        if key.state.intersects(!ModifierState::SHIFT) {
+        if key
+            .state
+            .intersects(!(ModifierState::SHIFT | ModifierState::NUMLOCK))
+        {
             None
         } else {
             // SAFETY: key.state <= 0x1

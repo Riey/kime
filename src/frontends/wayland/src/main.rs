@@ -16,11 +16,7 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
     zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1,
 };
 
-use kime_engine_cffi::{
-    Config, InputEngine, InputResult, InputResult_CONSUMED, InputResult_HAS_COMMIT,
-    InputResult_HAS_PREEDIT, InputResult_LANGUAGE_CHANGED, InputResult_NOT_READY, ModifierState,
-    ModifierState_ALT, ModifierState_CONTROL, ModifierState_SHIFT, ModifierState_SUPER,
-};
+use kime_engine_cffi::*;
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
 use mio_timerfd::{ClockId, TimerFd};
@@ -319,6 +315,9 @@ impl KimeContext {
                 }
                 if mods_depressed & 0x8 != 0 {
                     self.mod_state |= ModifierState_ALT;
+                }
+                if mods_depressed & 0x10 != 0 {
+                    self.mod_state |= ModifierState_NUMLOCK;
                 }
                 if mods_depressed & 0x40 != 0 {
                     self.mod_state |= ModifierState_SUPER;

@@ -15,6 +15,18 @@ typedef GdkEvent EventType;
 #define GDK_ALT_MASK GDK_MOD1_MASK
 typedef GdkWindow ClientType;
 typedef GdkEventKey EventType;
+#if GTK_CHECK_VERSION(3, 0, 0)
+gboolean gdk_device_get_num_lock_state (GdkDevice *device)
+{
+  GdkKeymap *keymap = gdk_keymap_get_for_display(gdk_device_get_display(device));
+  return gdk_keymap_get_num_lock_state(keymap);
+}
+#else
+gboolean gdk_device_get_num_lock_state (GdkDevice *device)
+{
+  return FALSE;
+}
+#endif
 #endif
 
 static const guint NOT_ENGLISH_MASK =
@@ -214,6 +226,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint16 code = gdk_key_event_get_keycode(key);
   guint keyval = gdk_key_event_get_keyval(key);
   GdkModifierType state = gdk_event_get_modifier_state(key);
+  GdkDevice* device = gdk_event_get_device(key);
 #else
   if (key->type != GDK_KEY_PRESS) {
     return FALSE;
@@ -221,6 +234,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   guint16 code = key->hardware_keycode;
   guint keyval = key->keyval;
   GdkModifierType state = key->state;
+  GdkDevice* device = gdk_event_get_device((GdkEvent*)key);
 #endif
 
   // delayed event
@@ -235,7 +249,13 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     }
   }
 
+  gboolean numlock = gdk_device_get_num_lock_state(device);
+
   KimeModifierState kime_state = 0;
+
+  if (numlock) {
+    kime_state |= KimeModifierState_NUMLOCK;
+  }
 
   if (state & GDK_SHIFT_MASK) {
     kime_state |= KimeModifierState_SHIFT;

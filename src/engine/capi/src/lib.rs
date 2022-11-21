@@ -6,7 +6,7 @@ pub use kime_engine_core::{
     ModifierState,
 };
 
-pub const KIME_API_VERSION: usize = 6;
+pub const KIME_API_VERSION: usize = 7;
 
 #[repr(C)]
 pub struct RustStr {

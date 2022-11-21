@@ -11,9 +11,10 @@ bitflags::bitflags! {
     #[repr(transparent)]
     pub struct ModifierState: u32 {
         const SHIFT = 0x1;
-        const CONTROL = 0x2;
-        const SUPER = 0x4;
-        const ALT = 0x8;
+        const NUMLOCK = 0x2;
+        const CONTROL = 0x4;
+        const SUPER = 0x8;
+        const ALT = 0x10;
     }
 }
 
@@ -41,6 +42,27 @@ pub enum KeyCode {
     Nine,
     #[strum(to_string = "0")]
     Zero,
+
+    #[strum(to_string = "N1")]
+    NumOne,
+    #[strum(to_string = "N2")]
+    NumTwo,
+    #[strum(to_string = "N3")]
+    NumThree,
+    #[strum(to_string = "N4")]
+    NumFour,
+    #[strum(to_string = "N5")]
+    NumFive,
+    #[strum(to_string = "N6")]
+    NumSix,
+    #[strum(to_string = "N7")]
+    NumSeven,
+    #[strum(to_string = "N8")]
+    NumEight,
+    #[strum(to_string = "N9")]
+    NumNine,
+    #[strum(to_string = "N0")]
+    NumZero,
 
     Minus,
     Equal,
@@ -127,16 +149,26 @@ pub enum KeyCode {
 impl KeyCode {
     pub const fn from_hardware_code(code: u16) -> Option<Self> {
         match code {
-            10 | 87 => Some(Self::One),
-            11 | 88 => Some(Self::Two),
-            12 | 89 => Some(Self::Three),
-            13 | 83 => Some(Self::Four),
-            14 | 84 => Some(Self::Five),
-            15 | 85 => Some(Self::Six),
-            16 | 79 => Some(Self::Seven),
-            17 | 80 => Some(Self::Eight),
-            18 | 81 => Some(Self::Nine),
-            19 | 90 => Some(Self::Zero),
+            10 => Some(Self::One),
+            87 => Some(Self::NumOne),
+            11 => Some(Self::Two),
+            88 => Some(Self::NumTwo),
+            12 => Some(Self::Three),
+            89 => Some(Self::NumThree),
+            13 => Some(Self::Four),
+            83 => Some(Self::NumFour),
+            14 => Some(Self::Five),
+            84 => Some(Self::NumFive),
+            15 => Some(Self::Six),
+            85 => Some(Self::NumSix),
+            16 => Some(Self::Seven),
+            79 => Some(Self::NumSeven),
+            17 => Some(Self::Eight),
+            80 => Some(Self::NumEight),
+            18 => Some(Self::Nine),
+            81 => Some(Self::NumNine),
+            19 => Some(Self::Zero),
+            90 => Some(Self::NumZero),
             20 => Some(Self::Minus),
             21 => Some(Self::Equal),
             34 => Some(Self::OpenBracket),
@@ -254,6 +286,10 @@ impl Key {
     pub const fn super_(code: KeyCode) -> Self {
         Self::new(code, ModifierState::SUPER)
     }
+
+    pub const fn numlock(code: KeyCode) -> Self {
+        Self::new(code, ModifierState::NUMLOCK)
+    }
 }
 
 impl fmt::Display for Key {
@@ -272,6 +308,10 @@ impl fmt::Display for Key {
 
         if self.state.contains(ModifierState::SHIFT) {
             f.write_str("S-")?;
+        }
+
+        if self.state.contains(ModifierState::NUMLOCK) {
+            f.write_str("N-")?;
         }
 
         write!(f, "{}", self.code)
@@ -306,6 +346,12 @@ impl FromStr for Key {
             if let Some(n) = s.strip_prefix("S-") {
                 s = n;
                 state |= ModifierState::SHIFT;
+                continue;
+            }
+
+            if let Some(n) = s.strip_prefix("N-") {
+                s = n;
+                state |= ModifierState::NUMLOCK;
                 continue;
             }
 
@@ -346,4 +392,9 @@ fn key_parse() {
     assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
     assert_eq!("C-Space".parse::<Key>().unwrap(), Key::ctrl(KeyCode::Space));
     assert_eq!("M-X".parse::<Key>().unwrap(), Key::alt(KeyCode::X));
+    assert_eq!("N-1".parse::<Key>().unwrap(), Key::numlock(KeyCode::One));
+    assert_eq!(
+        "N-N1".parse::<Key>().unwrap(),
+        Key::numlock(KeyCode::NumOne)
+    );
 }

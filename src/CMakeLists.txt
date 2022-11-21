@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.13.0)
 project(kime VERSION 2.0.0)
 
 option(USE_SYSTEM_ENGINE "Use system engine file" OFF)
-option(ENABLE_GTK2 "Enable GTK2 immodule" OFF)
 option(ENABLE_GTK3 "Enable GTK3 immodule" OFF)
 option(ENABLE_GTK4 "Enable GTK4 immodule" OFF)
 option(ENABLE_QT5 "Enable Qt5 immodule" OFF)
@@ -27,9 +26,6 @@ set(OpenGL_GL_PREFERENCE GLVND)
 
 include(GNUInstallDirs)
 
-if(${ENABLE_GTK2})
-    add_subdirectory(frontends/gtk2)
-endif()
 if(${ENABLE_GTK3})
     add_subdirectory(frontends/gtk3)
 endif()

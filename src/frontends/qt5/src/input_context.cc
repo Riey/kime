@@ -65,6 +65,10 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
 
   kime::ModifierState state = 0;
 
+  if (modifiers.testFlag(Qt::KeyboardModifier::KeypadModifier)) {
+    state |= kime::ModifierState_NUMLOCK;
+  }
+
   if (modifiers.testFlag(Qt::KeyboardModifier::ControlModifier)) {
     state |= kime::ModifierState_CONTROL;
   }

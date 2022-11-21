@@ -148,9 +148,10 @@ pub extern "C" fn kime_engine_press_key(
     engine: &mut InputEngine,
     config: &Config,
     hardware_code: u16,
+    numlock: bool,
     state: ModifierState,
 ) -> InputResult {
-    engine.press_key_code(hardware_code, state, config)
+    engine.press_key_code(hardware_code, state, numlock, config)
 }
 
 /// Load config from local file

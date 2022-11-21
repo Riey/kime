@@ -341,18 +341,17 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
             state |= ModifierState_ALT;
         }
 
-        if check_flag!(MOD2) {
-            state |= ModifierState_NUMLOCK;
-        }
+        let numlock = check_flag!(MOD2);
 
         if check_flag!(MOD4) {
             state |= ModifierState_SUPER;
         }
 
-        let ret = user_ic
-            .user_data
-            .engine
-            .press_key(&self.config, xev.detail as u16, state);
+        let ret =
+            user_ic
+                .user_data
+                .engine
+                .press_key(&self.config, xev.detail as u16, numlock, state);
 
         self.process_input_result(server, user_ic, ret)
     }

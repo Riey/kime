@@ -57,3 +57,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Check Rustfmt
         run: cargo fmt -- --check
+
+  spell-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: crate-ci/typos@master

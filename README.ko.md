@@ -34,7 +34,6 @@
 
 - [x] XIM
 - [x] Wayland
-- [x] GTK2
 - [x] GTK3
 - [x] GTK4
 - [x] Qt5

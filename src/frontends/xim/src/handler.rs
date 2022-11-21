@@ -11,11 +11,7 @@ use xim::{
     InputStyle, Server, ServerHandler,
 };
 
-use kime_engine_cffi::{
-    Config, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT, InputResult_HAS_PREEDIT,
-    InputResult_LANGUAGE_CHANGED, InputResult_NOT_READY, ModifierState_ALT, ModifierState_CONTROL,
-    ModifierState_SHIFT, ModifierState_SUPER,
-};
+use kime_engine_cffi::*;
 
 pub struct KimeData {
     engine: InputEngine,
@@ -343,6 +339,10 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
         if check_flag!(MOD1) {
             state |= ModifierState_ALT;
+        }
+
+        if check_flag!(MOD2) {
+            state |= ModifierState_NUMLOCK;
         }
 
         if check_flag!(MOD4) {

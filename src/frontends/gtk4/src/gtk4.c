@@ -1,4 +1,4 @@
-#include "../../gtk2/src/immodule.h"
+#include "../../gtk3/src/immodule.h"
 
 G_MODULE_EXPORT void g_io_module_load(GIOModule *module) {
   if (kime_api_version() != KimeKIME_API_VERSION) {

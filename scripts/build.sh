@@ -76,7 +76,7 @@ while getopts hrda opt; do
                 KIME_BUILD_XIM=1
             fi
             KIME_BUILD_KIME=1
-            KIME_CMAKE_ARGS="-DENABLE_GTK2=ON -DENABLE_GTK3=ON -DENABLE_GTK4=ON -DENABLE_QT5=ON -DENABLE_QT6=ON $KIME_CMAKE_ARGS"
+            KIME_CMAKE_ARGS="-DENABLE_GTK3=ON -DENABLE_GTK4=ON -DENABLE_QT5=ON -DENABLE_QT6=ON $KIME_CMAKE_ARGS"
             ;;
     esac
 done

@@ -4,7 +4,7 @@ WORKDIR /opt/kime
 
 RUN pacman -Syu --noconfirm
 RUN pacman -S --noconfirm --needed rust cmake clang llvm libxcb cairo
-RUN pacman -S --noconfirm --needed gtk2 gtk3 gtk4
+RUN pacman -S --noconfirm --needed gtk3 gtk4
 RUN pacman -S --noconfirm --needed qt5-base qt6-base
 RUN pacman -S --noconfirm --needed git
 RUN mkdir -pv /opt/kime-out

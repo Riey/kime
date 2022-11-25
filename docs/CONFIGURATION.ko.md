@@ -53,6 +53,13 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 `kime-engine`의 설정입니다
 
+## translation_layer
+
+키코드 번역 레이어를 추가합니다 특수한 키보드를 사용할때 유용합니다.
+
+| 기본값 |`null`|
+|--------|-------|
+
 ## default_category
 
 입력기가 시작될때의 기본 언어를 설정합니다. `Latin`(로마자), `Hangul`(한글) 중에서 설정해주세요
@@ -88,15 +95,15 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 #### behavior
 
-##### Toggle: [InputCategory, InputCategory]
+##### !Toggle [InputCategory, InputCategory]
 
 왼쪽과 오른쪽의 상태를 바꿉니다
 
-##### Switch: InputCategory
+##### !Switch InputCategory
 
 해당 언어로 바꿉니다
 
-##### Mode: InputMode
+##### !Mode InputMode
 
 해당 모드를 활성화합니다
 

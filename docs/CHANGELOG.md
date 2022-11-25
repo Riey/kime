@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Update default config file
+
 ## 3.0.0
 
 ### Breaking
@@ -15,6 +17,7 @@
 * Builtin sebeolsik `3-90` and `3-91` changed with all jungseong to uncomposable except for `ㅑ`, `ㅕ`,`ㅡ`, `ㅜ(9)`, `ㅗ(/)` [#542](https://github.com/Riey/kime/issues/542)
 * Respect NUMLOCK state [#591](https://github.com/Riey/kime/issues/591)
 * Remove support GTK2
+* ***Config file format has changed*** see [wiki](https://github.com/Riey/kime/wiki/3.0.0-Migration-guide) for more information
 
 ### Improve
 

@@ -1,66 +1,56 @@
----
 daemon:
   modules:
-    - Xim
-    - Wayland
-    - Indicator
+  - Xim
+  - Wayland
+  - Indicator
 indicator:
   icon_color: Black
 log:
   global_level: DEBUG
 engine:
+  translation_layer: null
   default_category: Latin
   global_category_state: false
   global_hotkeys:
     M-C-Backslash:
-      behavior:
-        Mode: Math
+      behavior: !Mode Math
       result: ConsumeIfProcessed
     Super-Space:
-      behavior:
-        Toggle:
-          - Hangul
-          - Latin
+      behavior: !Toggle
+      - Hangul
+      - Latin
       result: Consume
     M-C-E:
-      behavior:
-        Mode: Emoji
+      behavior: !Mode Emoji
       result: ConsumeIfProcessed
     Esc:
-      behavior:
-        Switch: Latin
+      behavior: !Switch Latin
       result: Bypass
     Muhenkan:
-      behavior:
-        Toggle:
-          - Hangul
-          - Latin
+      behavior: !Toggle
+      - Hangul
+      - Latin
       result: Consume
     AltR:
-      behavior:
-        Toggle:
-          - Hangul
-          - Latin
+      behavior: !Toggle
+      - Hangul
+      - Latin
       result: Consume
     Hangul:
-      behavior:
-        Toggle:
-          - Hangul
-          - Latin
+      behavior: !Toggle
+      - Hangul
+      - Latin
       result: Consume
   category_hotkeys:
     Hangul:
       ControlR:
-        behavior:
-          Mode: Hanja
+        behavior: !Mode Hanja
         result: Consume
       HangulHanja:
-        behavior:
-          Mode: Hanja
+        behavior: !Mode Hanja
         result: Consume
       F9:
-        behavior:
-          Mode: Hanja
+        behavior: !Mode Hanja
         result: ConsumeIfProcessed
   mode_hotkeys:
     Math:
@@ -84,9 +74,10 @@ engine:
       Tab:
         behavior: Commit
         result: ConsumeIfProcessed
+  candidate_font: D2Coding
   xim_preedit_font:
-    - D2Coding
-    - 15.0
+  - D2Coding
+  - 15.0
   latin:
     layout: Qwerty
     preferred_direct: true
@@ -96,6 +87,6 @@ engine:
     preedit_johab: Needed
     addons:
       all:
-        - ComposeChoseongSsang
+      - ComposeChoseongSsang
       dubeolsik:
-        - TreatJongseongAsChoseong
+      - TreatJongseongAsChoseong

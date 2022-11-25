@@ -34,6 +34,11 @@
         "random": "cpp",
         "optional": "cpp"
     },
+    "yaml.customTags": [
+        "!Mode scalar",
+        "!Toggle sequence",
+        "!Switch scalar",
+    ],
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src",
     "rust-analyzer.procMacro.enable": true,

@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 3.0.1
+
+### Improve
+
 * Update default config file
 
 ## 3.0.0

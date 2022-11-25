@@ -115,8 +115,6 @@ scripts/build.sh -ar
 패키지로 설치 하실 경우에는 필요 없을수도 있습니다.
 
 ```sh
-# GTK2 설치 시
-sudo gtk-query-immodules-2.0 --update-cache
 # GTK3 설치 시
 sudo gtk-query-immodules-3.0 --update-cache
 # GTK4 설치 시
@@ -164,7 +162,6 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 참고로 필요하신 종속성만 있으면 됩니다
 예를들어 qt6를 사용하지 않으신다면 필요하지 않습니다.
 
-* gtk2
 * gtk3
 * gtk4
 * qt5
@@ -185,7 +182,6 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 
 #### 선택적
 
-* gtk2
 * gtk3
 * gtk4
 * qtbase5-private

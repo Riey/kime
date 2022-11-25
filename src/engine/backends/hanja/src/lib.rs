@@ -29,11 +29,7 @@ impl HanjaMode {
                     self.client = Some(client);
                     true
                 }
-                Err(err) => {
-                    #[cfg(debug_assertions)]
-                    eprintln!("Can't spawn candidate window {:#?}", err);
-                    false
-                }
+                Err(_err) => false,
             }
         } else {
             false

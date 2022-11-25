@@ -115,8 +115,6 @@ Every files needed for manual install is in `build/out` directory.
 Typically, this step is not necessary when kime is installed from binary package because most Linux distros does these steps themselves.
 
 ```sh
-# for gtk2
-sudo gtk-query-immodules-2.0 --update-cache
 # for gtk3
 sudo gtk-query-immodules-3.0 --update-cache
 # for gtk4
@@ -163,7 +161,6 @@ Read [CONFIGURATION.md](docs/CONFIGURATION.md) for detail options.
 
 These dependencies are optional depending on your environments. For example, qt6 is not required when it is not used.
 
-* gtk2
 * gtk3
 * gtk4
 * qt5
@@ -184,7 +181,6 @@ These dependencies are optional depending on your environments. For example, qt6
 
 #### Optional
 
-* gtk2
 * gtk3
 * gtk4
 * qtbase5-private

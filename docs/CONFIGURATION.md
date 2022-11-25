@@ -53,6 +53,13 @@ Set icon color for indicator
 
 `kime-engine` setting
 
+## translation_layer
+
+Set keycode translation layer useful when you're using special keyboard.
+
+| default |`null`|
+|---------|-------|
+
 ## default_category
 
 Set default InputCategory when IME starts, please select between `Latin` and `Hangul`
@@ -87,15 +94,15 @@ Hotkey for specific mode override global, category hotkey
 
 #### behavior
 
-##### Toggle: [InputCategory, InputCategory]
+##### !Toggle [InputCategory, InputCategory]
 
 Toggle Left and Right category
 
-##### Switch: InputCategory
+##### !Switch InputCategory
 
 Switch to specific category
 
-##### Mode: InputMode
+##### !Mode InputMode
 
 Enable specific mode
 

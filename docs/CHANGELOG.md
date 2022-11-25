@@ -6,6 +6,8 @@
 
 ### Improve
 
+* Update configuration.md
+
 ## 3.0.1
 
 ### Improve

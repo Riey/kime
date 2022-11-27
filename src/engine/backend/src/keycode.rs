@@ -247,8 +247,9 @@ impl KeyCode {
             74 => Some(Self::F8),
             75 => Some(Self::F9),
             76 => Some(Self::F10),
-            77 => Some(Self::F11),
-            78 => Some(Self::F12),
+
+            95 => Some(Self::F11),
+            96 => Some(Self::F12),
 
             _ => None,
         }

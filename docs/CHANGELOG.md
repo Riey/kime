@@ -7,6 +7,7 @@
 ### Improve
 
 * Update configuration.md
+* Correct scan code to properly recognize F11 and F12 key
 
 ## 3.0.1
 

@@ -2,13 +2,13 @@ mod characters;
 mod layout;
 mod state;
 
-use layout::Layout;
 use std::{borrow::Cow, collections::BTreeMap};
 
 use enumset::{EnumSet, EnumSetType};
 use kime_engine_backend::{InputEngineBackend, Key, KeyCode};
 use serde::{Deserialize, Serialize};
 
+pub use layout::Layout;
 pub use state::HangulEngine;
 
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]

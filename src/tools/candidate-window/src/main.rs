@@ -135,7 +135,7 @@ fn main() -> io::Result<()> {
         candidate_list.push((key, value, button));
     }
 
-    let cadidate = CandidateApp {
+    let candidate = CandidateApp {
         candidate_list: Rc::new(candidate_list),
     };
 
@@ -148,7 +148,7 @@ fn main() -> io::Result<()> {
         window.set_title("kime");
         window.set_border_width(12);
 
-        for (key, _, button) in cadidate.candidate_list.iter() {
+        for (key, _, button) in candidate.candidate_list.iter() {
             let window_weak = window.downgrade();
             let key_in = key.clone();
             button.connect_clicked(move |_| {
@@ -159,7 +159,7 @@ fn main() -> io::Result<()> {
         }
         activate(&window);
 
-        cadidate.run_candidate(&window);
+        candidate.run_candidate(&window);
     });
 
     application.run();

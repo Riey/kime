@@ -1,7 +1,7 @@
 #include "input_context.hpp"
 
 #include <QMetaEnum>
-#include <QtCore/QCoreApplication>
+#include <QtGui/QGuiApplication>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QTextCharFormat>
 
@@ -90,6 +90,7 @@ bool KimeInputContext::filterEvent(const QEvent *event) {
 }
 
 void KimeInputContext::preedit_str(kime::RustStr s) {
+  this->focus_object = qApp->focusObject();
   if (!this->focus_object) {
     return;
   }
@@ -105,6 +106,7 @@ void KimeInputContext::preedit_str(kime::RustStr s) {
 }
 
 void KimeInputContext::commit_str(kime::RustStr s) {
+  this->focus_object = qApp->focusObject();
   if (!this->focus_object) {
     return;
   }

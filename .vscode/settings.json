@@ -32,14 +32,15 @@
         "qcoreapplication": "cpp",
         "qmetaenum": "cpp",
         "random": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "gtk.h": "c"
     },
     "yaml.customTags": [
         "!Mode scalar",
         "!Toggle sequence",
         "!Switch scalar",
     ],
-    "C_Cpp.errorSquiggles": "Disabled",
+    "C_Cpp.errorSquiggles": "disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src",
     "rust-analyzer.procMacro.enable": true,
     "cmake.configureOnOpen": true,

@@ -13,6 +13,8 @@ with pkgs;
     gtk3
     gtk4
 
+    gtk-layer-shell
+
     qt5.qtbase
     # qt6.qtbase
   ];

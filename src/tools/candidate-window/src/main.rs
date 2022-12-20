@@ -1,129 +1,115 @@
+use gtk::prelude::*;
+
+fn activate(window: &gtk::ApplicationWindow) {
+    if !window.display().backend().is_wayland() {
+        eprintln!("Should be run on wayland backend.")
+    }
+
+    gtk_layer_shell::init_for_window(window);
+    gtk_layer_shell::set_layer(window, gtk_layer_shell::Layer::Overlay);
+    gtk_layer_shell::set_keyboard_mode(window, gtk_layer_shell::KeyboardMode::Exclusive);
+    // gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Right, 40);
+    // gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Bottom, 20);
+
+    let anchors = [
+        (gtk_layer_shell::Edge::Left, false),
+        (gtk_layer_shell::Edge::Right, true),
+        (gtk_layer_shell::Edge::Top, false),
+        (gtk_layer_shell::Edge::Bottom, true),
+    ];
+
+    for (anchor, state) in anchors {
+        gtk_layer_shell::set_anchor(window, anchor, state);
+    }
+}
+
 use std::{
-    collections::BTreeMap,
-    io::{self, BufRead, Stdout, Write},
+    io::{self, BufRead},
+    rc::Rc,
 };
 
-use egui::Widget;
-
-const PAGE_SIZE: usize = 10;
-
-#[derive(Default)]
-struct KeyState {
-    left: bool,
-    right: bool,
-}
-
 struct CandidateApp {
-    stdout: Stdout,
-    key_state: KeyState,
-    page_index: usize,
-    max_page_index: usize,
-    candidate_list: Vec<(String, String)>,
+    candidate_list: Rc<Vec<(String, String, gtk::Button)>>,
 }
 
-impl eframe::App for CandidateApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        if ctx.input().key_down(egui::Key::Escape) || ctx.input().key_down(egui::Key::Q) {
-            frame.close();
-            return;
+impl CandidateApp {
+    pub fn run_candidate(&self, window: &gtk::ApplicationWindow) {
+        let search_entry = gtk::SearchEntry::new();
+
+        let scroll = gtk::ScrolledWindow::new(gtk::Adjustment::NONE, gtk::Adjustment::NONE);
+        scroll.set_size_request(500, 70);
+        let list = gtk::ButtonBox::new(gtk::Orientation::Horizontal);
+        list.set_layout(gtk::ButtonBoxStyle::Expand);
+
+        scroll.add(&list);
+
+        for (_, _, label) in self.candidate_list.iter() {
+            list.add(label);
         }
 
-        macro_rules! num_hotkey {
-            ($k:expr, $n:expr) => {
-                if ctx.input().key_down($k) {
-                    self.page_index = $n;
+        let se_weak = search_entry.downgrade();
+        let list_weak = list.clone();
+        window.connect_key_press_event(move |window, e| {
+            let Some(search_entry) = se_weak.upgrade() else { return gtk::Inhibit(false); };
+            search_entry.handle_event(e);
+
+            match e.keyval() {
+                gdk::keys::constants::Escape => {
+                    window.close();
                 }
-            };
-        }
-
-        num_hotkey!(egui::Key::Num1, 0);
-        num_hotkey!(egui::Key::Num2, 1);
-        num_hotkey!(egui::Key::Num3, 2);
-        num_hotkey!(egui::Key::Num4, 3);
-        num_hotkey!(egui::Key::Num5, 4);
-        num_hotkey!(egui::Key::Num6, 5);
-        num_hotkey!(egui::Key::Num7, 6);
-        num_hotkey!(egui::Key::Num8, 7);
-        num_hotkey!(egui::Key::Num9, 8);
-        num_hotkey!(egui::Key::Num0, 9);
-
-        if ctx.input().key_down(egui::Key::ArrowLeft) || ctx.input().key_down(egui::Key::H) {
-            if !self.key_state.left {
-                self.page_index = self.page_index.saturating_sub(1);
-                self.key_state.left = true;
-            }
-        }
-
-        if ctx.input().key_released(egui::Key::ArrowLeft) || ctx.input().key_released(egui::Key::H)
-        {
-            self.key_state.left = false;
-        }
-
-        if ctx.input().key_down(egui::Key::ArrowRight) || ctx.input().key_down(egui::Key::L) {
-            if !self.key_state.right {
-                self.page_index = self.page_index.saturating_add(1).min(self.max_page_index);
-                self.key_state.right = true;
-            }
-        }
-
-        if ctx.input().key_released(egui::Key::ArrowRight) || ctx.input().key_released(egui::Key::L)
-        {
-            self.key_state.right = false;
-        }
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                let from = self.page_index * PAGE_SIZE;
-                let to = (from + PAGE_SIZE).min(self.candidate_list.len());
-
-                for (key, value) in self.candidate_list[from..to].iter() {
-                    let quitted = ui
-                        .horizontal(|ui| {
-                            ui.colored_label(egui::Color32::LIGHT_BLUE, key);
-                            ui.separator();
-                            if ui.button(value).clicked() {
-                                true
-                            } else {
-                                false
-                            }
-                        })
-                        .inner;
-
-                    if quitted {
-                        self.stdout.write_all(key.as_bytes()).unwrap();
-                        frame.close();
-                        return;
+                gdk::keys::constants::Return => {
+                    if let Some(child) = list_weak.children().first() {
+                        child.emit_by_name::<()>("clicked", &[]);
                     }
                 }
-            });
+                _ => {}
+            }
+
+            gtk::Inhibit(true)
         });
 
-        egui::TopBottomPanel::bottom("candidate-footer").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                for i in 0..self.max_page_index + 1 {
-                    if i == self.page_index {
-                        egui::Button::new(
-                            egui::RichText::new(format!("[{}]", i + 1))
-                                .color(egui::Color32::YELLOW),
-                        )
-                        .ui(ui);
-                    } else {
-                        if ui.button(format!("{}", i + 1)).clicked() {
-                            self.page_index = i;
-                        }
-                    };
+        let candidate_list_weak = Rc::downgrade(&self.candidate_list);
+        let list_weak = list.downgrade();
+        search_entry.connect_search_changed(move |search_entry| {
+            let Some(list) = list_weak.upgrade() else { return; };
+            let Some(candidate_list) = candidate_list_weak.upgrade() else { return; };
+
+            for child in list.children() {
+                list.remove(&child);
+            }
+
+            let text = search_entry.text();
+
+            if text.is_empty() {
+                for (_, _, label) in candidate_list.iter() {
+                    list.add(label);
                 }
-            });
+            } else {
+                for (_, value, label) in candidate_list.iter() {
+                    if value.contains(text.as_str()) {
+                        list.add(label);
+                    }
+                }
+            }
+
+            list.show_all();
         });
+
+        let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
+        vbox.add(&search_entry);
+        vbox.add(&scroll);
+
+        window.add(&vbox);
+        window.show_all();
     }
 }
 
 fn main() -> io::Result<()> {
-    assert!(kime_engine_cffi::check_api_version());
+    std::env::set_var("GDK_BACKEND", "wayland");
+    gtk::init().ok();
 
     let mut buf = String::with_capacity(4096);
     let stdin = io::stdin();
-    let stdout = io::stdout();
 
     let mut candidate_list = Vec::new();
     let mut stdin_lock = stdin.lock();
@@ -142,50 +128,41 @@ fn main() -> io::Result<()> {
     loop {
         read!(key);
         read!(value);
-        candidate_list.push((key, value));
+        let button = gtk::Button::new();
+        let label = gtk::Label::new(Some(&format!("{key}\n{value}")));
+        label.set_justify(gtk::Justification::Center);
+        button.add(&label);
+        candidate_list.push((key, value, button));
     }
 
-    eframe::run_native(
-        "kime-candidate",
-        eframe::NativeOptions {
-            always_on_top: true,
-            decorated: false,
-            icon_data: None,
-            initial_window_size: Some(egui::vec2(400.0, 400.0)),
-            ..Default::default()
-        },
-        Box::new(|cc| {
-            let config = kime_engine_cffi::Config::load();
-            let (font_bytes, _index) = config.candidate_font();
-            let mut font_data = BTreeMap::<_, egui::FontData>::new();
-            let mut families = BTreeMap::new();
+    let candidate = CandidateApp {
+        candidate_list: Rc::new(candidate_list),
+    };
 
-            font_data.insert(
-                "Font".to_string(),
-                egui::FontData::from_owned(font_bytes.to_vec()),
-            );
+    let application = gtk::Application::new(None, Default::default());
 
-            families.insert(egui::FontFamily::Proportional, vec!["Font".to_string()]);
-            families.insert(egui::FontFamily::Monospace, vec!["Font".to_string()]);
+    application.connect_activate(move |app| {
+        let window = gtk::ApplicationWindow::new(app);
+        window.set_decorated(false);
+        window.set_default_size(500, 600);
+        window.set_title("kime");
+        window.set_border_width(12);
 
-            cc.egui_ctx.set_fonts(egui::FontDefinitions {
-                font_data,
-                families,
+        for (key, _, button) in candidate.candidate_list.iter() {
+            let window_weak = window.downgrade();
+            let key_in = key.clone();
+            button.connect_clicked(move |_| {
+                let window = window_weak.upgrade().unwrap();
+                print!("{key_in}");
+                window.close();
             });
+        }
+        activate(&window);
 
-            Box::new(CandidateApp {
-                stdout,
-                page_index: 0,
-                key_state: KeyState::default(),
-                max_page_index: if candidate_list.len() % PAGE_SIZE == 0 {
-                    (candidate_list.len() / PAGE_SIZE) - 1
-                } else {
-                    candidate_list.len() / PAGE_SIZE
-                },
-                candidate_list,
-            })
-        }),
-    );
+        candidate.run_candidate(&window);
+    });
+
+    application.run();
 
     Ok(())
 }

@@ -8,6 +8,7 @@ license = "GPL-3.0-or-later"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-kime-engine-cffi = { path = "../../engine/cffi" }
-eframe = "0.19"
-egui = "0.19"
+gtk = "0.16.2"
+gdk = "0.16.2"
+gtk-layer-shell = { version = "0.5.0", features = ["v0_6", "v0_4", "v0_5"] }
+glib = "0.16.6"

@@ -1,7 +1,7 @@
 use crate::KeyMap;
 use fontdb::{Family, Query};
 pub use kime_engine_config::*;
-use std::{fs, borrow::Cow};
+use std::{borrow::Cow, fs};
 
 /// Preprocessed engine config
 pub struct Config {
@@ -34,7 +34,12 @@ impl Config {
                 ..Default::default()
             })
             .and_then(|id| db.with_face_data(id, |data, index| (Cow::Owned(data.to_vec()), index)))
-            .unwrap_or((Cow::Borrowed(include_bytes!("../../../../res/D2Coding-Ver1.3.2-20180524.ttf").as_slice()), 0))
+            .unwrap_or((
+                Cow::Borrowed(
+                    include_bytes!("../../../../res/D2Coding-Ver1.3.2-20180524.ttf").as_slice(),
+                ),
+                0,
+            ))
         };
 
         let translation_layer: Option<KeyMap<Key>> = engine

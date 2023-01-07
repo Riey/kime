@@ -1,7 +1,7 @@
 use crate::KeyMap;
 use fontdb::{Family, Query};
 pub use kime_engine_config::*;
-use std::fs;
+use std::{fs, borrow::Cow};
 
 /// Preprocessed engine config
 pub struct Config {
@@ -10,8 +10,8 @@ pub struct Config {
     pub global_category_state: bool,
     pub category_hotkeys: EnumMap<InputCategory, Vec<(Key, Hotkey)>>,
     pub mode_hotkeys: EnumMap<InputMode, Vec<(Key, Hotkey)>>,
-    pub candidate_font: (Vec<u8>, u32),
-    pub xim_preedit_font: (Vec<u8>, u32, f32),
+    pub candidate_font: (Cow<'static, [u8]>, u32),
+    pub xim_preedit_font: (Cow<'static, [u8]>, u32, f32),
     pub hangul_data: HangulData,
     pub preferred_direct: bool,
     pub latin_data: LatinData,
@@ -33,8 +33,8 @@ impl Config {
                 families: &[Family::Name(name), Family::Serif],
                 ..Default::default()
             })
-            .and_then(|id| db.with_face_data(id, |data, index| (data.to_vec(), index)))
-            .unwrap_or_default()
+            .and_then(|id| db.with_face_data(id, |data, index| (Cow::Owned(data.to_vec()), index)))
+            .unwrap_or((Cow::Borrowed(include_bytes!("../../../../res/D2Coding-Ver1.3.2-20180524.ttf").as_slice()), 0))
         };
 
         let translation_layer: Option<KeyMap<Key>> = engine
@@ -50,7 +50,7 @@ impl Config {
             .and_then(|content| serde_yaml::from_str(content).ok());
 
         Self {
-            translation_layer: translation_layer,
+            translation_layer,
             default_category: engine.default_category,
             global_category_state: engine.global_category_state,
             category_hotkeys: enum_map! {

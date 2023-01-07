@@ -8,7 +8,8 @@
 
 * Update configuration.md
 * Correct scan code to properly recognize F11 and F12 key
-* Fix KDE plasmashell crash #609
+* Fix KDE plasmashell crash [#609](https://github.com/Riey/kime/issues/609)
+* Embed d2coding font file
 
 ## 3.0.1
 

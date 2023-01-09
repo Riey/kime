@@ -35,9 +35,7 @@ impl Config {
             })
             .and_then(|id| db.with_face_data(id, |data, index| (Cow::Owned(data.to_vec()), index)))
             .unwrap_or((
-                Cow::Borrowed(
-                    include_bytes!("../../../../res/D2Coding-Ver1.3.2-20180524.ttf").as_slice(),
-                ),
+                Cow::Borrowed(include_bytes!("../fonts/D2Coding-Ver1.3.2-20180524.ttf").as_slice()),
                 0,
             ))
         };

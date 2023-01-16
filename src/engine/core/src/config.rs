@@ -30,7 +30,7 @@ impl Config {
 
         let load_font = |name| {
             db.query(&Query {
-                families: &[Family::Name(name), Family::Serif],
+                families: &[Family::Name(name), Family::Name("D2Coding")],
                 ..Default::default()
             })
             .and_then(|id| db.with_face_data(id, |data, index| (data.to_vec(), index)))

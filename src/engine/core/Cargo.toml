@@ -15,7 +15,7 @@ kime-engine-backend-math = { path = "../backends/math" }
 kime-engine-backend-emoji = { path = "../backends/emoji" }
 serde_yaml = "0.9"
 parking_lot = "0.12"
-fontdb = { version = "0.10", features = ["fontconfig"] }
+fontdb = { version = "0.11.2", features = ["fontconfig"] }
 
 [target.'cfg(unix)'.dependencies]
 xdg = "2.2.0"

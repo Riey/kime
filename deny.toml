@@ -48,6 +48,8 @@ notice = "warn"
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
+    # only for build deps
+    "RUSTSEC-2022-0048",
     #"RUSTSEC-0000-0000",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
@@ -81,6 +83,8 @@ allow = [
     "BSL-1.0",
     "GPL-3.0",
     "Unicode-DFS-2016",
+    "OFL-1.1",
+    "LicenseRef-UFL-1.0",
     "Unlicense",
 ]
 # List of explicitly disallowed licenses

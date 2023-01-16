@@ -18,12 +18,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: cachix/install-nix-action@v13
+    - uses: cachix/install-nix-action@v18
       with:
-        install_url: https://nixos-nix-install-tests.cachix.org/serve/pqndq1i9g5agiyr5iwwyl061s1c71kl6/install
-        install_options: '--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve'
-        extra_nix_config: |
-          experimental-features = nix-command flakes
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Caching cargo
       uses: actions/cache@v2
       with:

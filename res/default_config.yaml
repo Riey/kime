@@ -74,9 +74,9 @@ engine:
       Tab:
         behavior: Commit
         result: ConsumeIfProcessed
-  candidate_font: D2Coding
+  candidate_font: Noto Sans CJK KR
   xim_preedit_font:
-  - D2Coding
+  - Noto Sans CJK KR
   - 15.0
   latin:
     layout: Qwerty

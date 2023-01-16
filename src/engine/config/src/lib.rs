@@ -188,8 +188,8 @@ impl Default for EngineConfig {
                     Key::normal(KeyCode::Tab) => Hotkey::new(HotkeyBehavior::Commit, HotkeyResult::ConsumeIfProcessed),
                 },
             },
-            xim_preedit_font: ("D2Coding".to_string(), 15.0),
-            candidate_font: "D2Coding".to_string(),
+            xim_preedit_font: ("Noto Sans CJK KR".to_string(), 15.0),
+            candidate_font: "Noto Sans CJK KR".to_string(),
         }
     }
 }

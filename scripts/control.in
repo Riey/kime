@@ -6,3 +6,4 @@ Homepage: https://github.com/Riey/kime
 Section: utils
 Priority: optional
 Architecture: %ARCH%
+Recommends: fonts-noto-cjk

@@ -6,10 +6,15 @@
 
 ### Improve
 
-* Update configuration.md
-* Correct scan code to properly recognize F11 and F12 key
-* Fix KDE plasmashell crash #609
-* Set default font to `Noto Sans CJK KR`
+## 3.0.2
+
+### Improve
+
+* Update configuration.md **[@Riey]** [#601](https://github.com/Riey/kime/issues/601)
+* Correct scan code to properly recognize F11 and F12 key **[@xnuk]** [#602](https://github.com/Riey/kime/issues/602)
+* Fix KDE plasmashell crash **[@kpqi5858]** [#609](https://github.com/Riey/kime/issues/609)
+* Set default font to `Noto Sans CJK KR` **[@Riey]** [#618](https://github.com/Riey/kime/issues/618)
+* Fix [#611](https://github.com/Riey/kime/issues/611) **[@Riey]** [#618](https://github.com/Riey/kime/issues/618)
 
 ## 3.0.1
 
@@ -365,8 +370,6 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 * Fix wayland input bug
 * `kime-xtask` now read `KIME_CARGO_ARGS`, `KIME_CMAKE_ARGS`, `KIME_NINJA_ARGS`
 
-[@simnalamburt]: https://github.com/simnalamburt
-
 ## 0.9.1
 
 * Add donation link
@@ -454,3 +457,10 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 * Implement config file
 * Reset when unhandled keysym is entered
 * Add sebeolsik 390, 391 layouts
+
+<!-- Contributors -->
+
+[@simnalamburt]: https://github.com/simnalamburt
+[@xnuk]: https://github.com/xnuk
+[@Riey]: https://github.com/Riey
+[@kpqi5858]: https://github.com/kpqi5858

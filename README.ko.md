@@ -26,9 +26,9 @@
 * 대부분의 코드가 세그멘테이션 오류가 없는 Rust로 작성됨
 * 사용자 설정 자판 지원
 
-## 궁금한게 있으신가요?
+## 궁금한 게 있으신가요?
 
-[디스코드](https://discord.gg/YPnEfZqC6y) 채널에 와서 연락하시거나 이슈를 올려주세요
+[디스코드](https://discord.gg/YPnEfZqC6y) 채널에 와서 연락하시거나 이슈를 올려주세요.
 
 ## 지원되는 프론트엔드
 
@@ -59,7 +59,7 @@ i18n = {
 
 ### 아치 리눅스
 
-최신 릴리스는 [kime](https://aur.archlinux.org/packages/kime) 만약 소스에서 빌드하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치할 수 있습니다.
+최신 릴리스는 AUR의 [kime](https://aur.archlinux.org/packages/kime)에 있으며, 만약 소스에서 빌드하시려면 [kime-git](https://aur.archlinux.org/packages/kime-git)에서 설치할 수 있습니다.
 
 ### 데비안, 우분투
 
@@ -102,9 +102,9 @@ cd kime
 scripts/build.sh -ar
 ```
 
-이제 모든 파일들은 build/out 경로에 있습니다 만약 수동설치를 원하시면 쓰시면 됩니다
+이제 모든 파일은 build/out 경로에 있습니다. 만약 수동 설치를 원하시면 쓰시면 됩니다.
 
-`scripts/install.sh <install-prefix>` 스크립트를 쓸 수도 있습니다 패키징할때 유용합니다
+`scripts/install.sh <install-prefix>` 스크립트를 쓸 수도 있습니다. 패키징할 때 유용합니다.
 
 `scripts/release-deb.sh <deb-out-path>` 스크립트를 사용하시면 `deb` 파일을 생성합니다.
 
@@ -112,7 +112,7 @@ scripts/build.sh -ar
 
 대부분 배포판들은 이걸 자동으로 해주므로
 
-패키지로 설치 하실 경우에는 필요 없을수도 있습니다.
+패키지로 설치하실 경우에는 필요 없을 수도 있습니다.
 
 ```sh
 # GTK3 설치 시
@@ -125,15 +125,15 @@ sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 
 ### C/C++
 
-`./scripts/generate_properties.sh`을 실행해서 vscode에서 C/C++ 코드의 인텔리센스 기능을 사용할수 있습니다
+`./scripts/generate_properties.sh`을 실행해서 vscode에서 C/C++ 코드의 인텔리센스 기능을 사용할 수 있습니다.
 
 ## 설정
 
-### 데비안계열
+### 데비안 계열
 
-언어 설정에서 입력기 `kime`를 선택해주세요
+언어 설정에서 입력기 `kime`를 선택해주세요.
 
-### 그외
+### 그 외
 
 init 스크립트에 다음을 추가하세요.
 
@@ -160,7 +160,7 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 ### 런타임 종속성
 
 참고로 필요하신 종속성만 있으면 됩니다
-예를들어 qt6를 사용하지 않으신다면 필요하지 않습니다.
+예를 들어 qt6를 사용하지 않으신다면 필요하지 않습니다.
 
 * gtk3
 * gtk4
@@ -171,7 +171,7 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 * fontconfig (xim)
 * freetype (xim)
 
-### 빌드타임 종속성 (바이너리 실행시엔 필요 없습니다)
+### 빌드타임 종속성 (바이너리 실행 시엔 필요 없습니다)
 
 #### 필수
 

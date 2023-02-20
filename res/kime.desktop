@@ -8,7 +8,6 @@ Terminal=false
 NoDisplay=true
 StartupNotify=false
 X-DBUS-StartupType=Unique
-X-GNOME-Autostart-Phase=Applications
 X-GNOME-AutoRestart=false
 X-GNOME-Autostart-Notify=false
 X-KDE-StartupNotify=false

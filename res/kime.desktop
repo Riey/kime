@@ -1,5 +1,5 @@
 [Desktop Entry]
-Exec=/usr/bin/kime
+Exec=/usr/bin/kime-xdg-autostart
 Name=kime daemon
 Name[ko]=kime 데몬
 Comment=Start kime daemon

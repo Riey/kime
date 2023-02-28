@@ -5,6 +5,7 @@
 ### Breaking
 
 ### Improve
+* Add ubuntu-22.10 Dockerfile **[@OctopusET]**
 
 ## 3.0.2
 

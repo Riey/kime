@@ -7,6 +7,8 @@
 ### Improve
 * Add ubuntu-22.10 Dockerfile **[@OctopusET]**
 
+* Fix KDE autostart [#576](https://github.com/Riey/kime/issues/576)
+
 ## 3.0.2
 
 ### Improve

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+/usr/bin/kime "#@"
+if systemctl --user is-active --quiet app-kime@autostart.service; then
+	sleep 7s
+fi

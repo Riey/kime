@@ -1,5 +1,11 @@
 use gtk::prelude::*;
 
+use std::{
+    cell::Cell,
+    io::{self, BufRead},
+    rc::Rc,
+};
+
 fn activate(window: &gtk::ApplicationWindow) {
     if !window.display().backend().is_wayland() {
         eprintln!("Should be run on wayland backend.")
@@ -22,12 +28,6 @@ fn activate(window: &gtk::ApplicationWindow) {
         gtk_layer_shell::set_anchor(window, anchor, state);
     }
 }
-
-use std::{
-    cell::Cell,
-    io::{self, BufRead},
-    rc::Rc,
-};
 
 const PAGE_SIZE: usize = 9;
 
@@ -52,44 +52,50 @@ impl CandidateApp {
         };
         let page_index = Cell::new(0usize);
 
-        let list_weak = list.clone();
+        window.add(&list);
+        window.show_all();
+
         window.connect_key_press_event(move |window, e| {
             match e.keyval() {
                 gdk::keys::constants::Escape => {
                     window.close();
+                    return gtk::Inhibit(true);
                 }
                 gdk::keys::constants::Return => {
-                    if let Some(child) = list_weak.children().first() {
+                    if let Some(child) = list.children().first() {
                         child.emit_by_name::<()>("clicked", &[]);
+                        return gtk::Inhibit(true);
                     }
                 }
                 gdk::keys::constants::uparrow | gdk::keys::constants::Up => {
                     if let Some(new_page_index) = page_index.get().checked_sub(1) {
-                        for child in list_weak.children() {
-                            list_weak.remove(&child);
+                        for child in list.children() {
+                            list.remove(&child);
                         }
                         page_index.set(new_page_index);
                         for (_, _, btn) in &candidate_list
                             [page_index.get() * PAGE_SIZE..(page_index.get() + 1) * PAGE_SIZE]
                         {
-                            list_weak.add(btn);
+                            list.add(btn);
                         }
-                        list_weak.show_all();
+                        list.show_all();
+                        return gtk::Inhibit(true);
                     }
                 }
                 gdk::keys::constants::downarrow | gdk::keys::constants::Down => {
                     if page_index.get() != max_page_index {
                         let new_page_index = page_index.get() + 1;
-                        for child in list_weak.children() {
-                            list_weak.remove(&child);
+                        for child in list.children() {
+                            list.remove(&child);
                         }
                         page_index.set(new_page_index);
                         for (_, _, btn) in &candidate_list[page_index.get() * PAGE_SIZE
                             ..((page_index.get() + 1) * PAGE_SIZE).min(candidate_list.len())]
                         {
-                            list_weak.add(btn);
+                            list.add(btn);
                         }
-                        list_weak.show_all();
+                        list.show_all();
+                        return gtk::Inhibit(true);
                     }
                 }
                 gdk::keys::constants::_1
@@ -102,18 +108,15 @@ impl CandidateApp {
                 | gdk::keys::constants::_8
                 | gdk::keys::constants::_9 => {
                     let index = *e.keyval() - *gdk::keys::constants::_1;
-                    if let Some(child) = list_weak.children().get(index as usize) {
+                    if let Some(child) = list.children().get(index as usize) {
                         child.emit_by_name::<()>("clicked", &[]);
                     }
+                    return gtk::Inhibit(true);
                 }
                 _ => {}
             }
-
-            gtk::Inhibit(true)
+            gtk::Inhibit(false)
         });
-
-        window.add(&list);
-        window.show_all();
     }
 }
 

@@ -13,7 +13,11 @@ pub struct Client {
 
 impl Client {
     pub fn new(candidate_list: &[(&str, &str)]) -> io::Result<Self> {
-        let mut child = std::process::Command::new(CANDIDATE_PROCESS_NAME)
+        Self::with_exe_path(CANDIDATE_PROCESS_NAME, candidate_list)
+    }
+
+    pub fn with_exe_path(path: &str, candidate_list: &[(&str, &str)]) -> io::Result<Self> {
+        let mut child = std::process::Command::new(path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())

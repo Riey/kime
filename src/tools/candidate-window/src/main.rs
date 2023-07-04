@@ -8,14 +8,14 @@ fn activate(window: &gtk::ApplicationWindow) {
     gtk_layer_shell::init_for_window(window);
     gtk_layer_shell::set_layer(window, gtk_layer_shell::Layer::Overlay);
     gtk_layer_shell::set_keyboard_mode(window, gtk_layer_shell::KeyboardMode::Exclusive);
-    // gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Right, 40);
-    // gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Bottom, 20);
+    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Left, 400);
+    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Top, 200);
 
     let anchors = [
-        (gtk_layer_shell::Edge::Left, false),
-        (gtk_layer_shell::Edge::Right, true),
-        (gtk_layer_shell::Edge::Top, false),
-        (gtk_layer_shell::Edge::Bottom, true),
+        (gtk_layer_shell::Edge::Left, true),
+        (gtk_layer_shell::Edge::Right, false),
+        (gtk_layer_shell::Edge::Top, true),
+        (gtk_layer_shell::Edge::Bottom, false),
     ];
 
     for (anchor, state) in anchors {
@@ -24,9 +24,12 @@ fn activate(window: &gtk::ApplicationWindow) {
 }
 
 use std::{
+    cell::Cell,
     io::{self, BufRead},
     rc::Rc,
 };
+
+const PAGE_SIZE: usize = 9;
 
 struct CandidateApp {
     candidate_list: Rc<Vec<(String, String, gtk::Button)>>,
@@ -34,25 +37,23 @@ struct CandidateApp {
 
 impl CandidateApp {
     pub fn run_candidate(&self, window: &gtk::ApplicationWindow) {
-        let search_entry = gtk::SearchEntry::new();
-
-        let scroll = gtk::ScrolledWindow::new(gtk::Adjustment::NONE, gtk::Adjustment::NONE);
-        scroll.set_size_request(500, 70);
-        let list = gtk::ButtonBox::new(gtk::Orientation::Horizontal);
+        let candidate_list = Rc::clone(&self.candidate_list);
+        let list = gtk::ButtonBox::new(gtk::Orientation::Vertical);
+        list.set_margin(0);
         list.set_layout(gtk::ButtonBoxStyle::Expand);
 
-        scroll.add(&list);
-
-        for (_, _, label) in self.candidate_list.iter() {
+        for (_, _, label) in &self.candidate_list[..PAGE_SIZE] {
             list.add(label);
         }
+        let max_page_index = if candidate_list.len() % PAGE_SIZE == 0 {
+            (candidate_list.len() / PAGE_SIZE) - 1
+        } else {
+            candidate_list.len() / PAGE_SIZE
+        };
+        let page_index = Cell::new(0usize);
 
-        let se_weak = search_entry.downgrade();
         let list_weak = list.clone();
         window.connect_key_press_event(move |window, e| {
-            let Some(search_entry) = se_weak.upgrade() else { return gtk::Inhibit(false); };
-            search_entry.handle_event(e);
-
             match e.keyval() {
                 gdk::keys::constants::Escape => {
                     window.close();
@@ -62,50 +63,64 @@ impl CandidateApp {
                         child.emit_by_name::<()>("clicked", &[]);
                     }
                 }
+                gdk::keys::constants::uparrow | gdk::keys::constants::Up => {
+                    if let Some(new_page_index) = page_index.get().checked_sub(1) {
+                        for child in list_weak.children() {
+                            list_weak.remove(&child);
+                        }
+                        page_index.set(new_page_index);
+                        for (_, _, btn) in &candidate_list
+                            [page_index.get() * PAGE_SIZE..(page_index.get() + 1) * PAGE_SIZE]
+                        {
+                            list_weak.add(btn);
+                        }
+                        list_weak.show_all();
+                    }
+                }
+                gdk::keys::constants::downarrow | gdk::keys::constants::Down => {
+                    if page_index.get() != max_page_index {
+                        let new_page_index = page_index.get() + 1;
+                        for child in list_weak.children() {
+                            list_weak.remove(&child);
+                        }
+                        page_index.set(new_page_index);
+                        for (_, _, btn) in &candidate_list[page_index.get() * PAGE_SIZE
+                            ..((page_index.get() + 1) * PAGE_SIZE).min(candidate_list.len())]
+                        {
+                            list_weak.add(btn);
+                        }
+                        list_weak.show_all();
+                    }
+                }
+                gdk::keys::constants::_1
+                | gdk::keys::constants::_2
+                | gdk::keys::constants::_3
+                | gdk::keys::constants::_4
+                | gdk::keys::constants::_5
+                | gdk::keys::constants::_6
+                | gdk::keys::constants::_7
+                | gdk::keys::constants::_8
+                | gdk::keys::constants::_9 => {
+                    let index = *e.keyval() - *gdk::keys::constants::_1;
+                    if let Some(child) = list_weak.children().get(index as usize) {
+                        child.emit_by_name::<()>("clicked", &[]);
+                    }
+                }
                 _ => {}
             }
 
             gtk::Inhibit(true)
         });
 
-        let candidate_list_weak = Rc::downgrade(&self.candidate_list);
-        let list_weak = list.downgrade();
-        search_entry.connect_search_changed(move |search_entry| {
-            let Some(list) = list_weak.upgrade() else { return; };
-            let Some(candidate_list) = candidate_list_weak.upgrade() else { return; };
-
-            for child in list.children() {
-                list.remove(&child);
-            }
-
-            let text = search_entry.text();
-
-            if text.is_empty() {
-                for (_, _, label) in candidate_list.iter() {
-                    list.add(label);
-                }
-            } else {
-                for (_, value, label) in candidate_list.iter() {
-                    if value.contains(text.as_str()) {
-                        list.add(label);
-                    }
-                }
-            }
-
-            list.show_all();
-        });
-
-        let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
-        vbox.add(&search_entry);
-        vbox.add(&scroll);
-
-        window.add(&vbox);
+        window.add(&list);
         window.show_all();
     }
 }
 
 fn main() -> io::Result<()> {
-    std::env::set_var("GDK_BACKEND", "wayland");
+    if std::env::var("XDG_SESSION_TYPE").as_deref() == Ok("wayland") {
+        std::env::set_var("GDK_BACKEND", "wayland");
+    }
     gtk::init().ok();
 
     let mut buf = String::with_capacity(4096);
@@ -145,8 +160,6 @@ fn main() -> io::Result<()> {
         let window = gtk::ApplicationWindow::new(app);
         window.set_decorated(false);
         window.set_default_size(500, 600);
-        window.set_title("kime");
-        window.set_border_width(12);
 
         for (key, _, button) in candidate.candidate_list.iter() {
             let window_weak = window.downgrade();

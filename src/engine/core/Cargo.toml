@@ -9,10 +9,10 @@ license = "GPL-3.0-or-later"
 kime-engine-config = { path = "../config", features = ["config-serde"] }
 kime-engine-backend = { path = "../backend" }
 kime-engine-backend-hangul = { path = "../backends/hangul" }
-kime-engine-backend-hanja = { path = "../backends/hanja" }
+kime-engine-backend-hanja = { path = "../backends/hanja", optional = true }
 kime-engine-backend-latin = { path = "../backends/latin" }
-kime-engine-backend-math = { path = "../backends/math" }
-kime-engine-backend-emoji = { path = "../backends/emoji" }
+kime-engine-backend-math = { path = "../backends/math", optional = true }
+kime-engine-backend-emoji = { path = "../backends/emoji", optional = true }
 serde_yaml = "0.9"
 parking_lot = "0.12"
 fontdb = { version = "0.11.2", features = ["fontconfig"] }
@@ -30,3 +30,7 @@ name = "call_key"
 harness = false
 
 [features]
+default = ["hanja", "math", "emoji"]
+hanja = ["dep:kime-engine-backend-hanja"]
+math = ["dep:kime-engine-backend-math"]
+emoji = ["dep:kime-engine-backend-emoji"]

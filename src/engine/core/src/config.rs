@@ -37,6 +37,7 @@ impl Config {
             .unwrap_or_default()
         };
 
+        #[cfg(unix)]
         let translation_layer: Option<KeyMap<Key>> = engine
             .translation_layer
             .and_then(|f| {
@@ -48,6 +49,9 @@ impl Config {
             .and_then(|f| fs::read_to_string(f.as_path()).ok())
             .as_ref()
             .and_then(|content| serde_yaml::from_str(content).ok());
+
+        #[cfg(not(unix))]
+        let translation_layer = None;
 
         Self {
             translation_layer: translation_layer,

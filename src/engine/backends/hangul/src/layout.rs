@@ -9,7 +9,7 @@ pub struct Layout {
 }
 
 impl Layout {
-    fn from_items(items: HashMap<Key, String>) -> Self {
+    pub fn from_items(items: HashMap<Key, String>) -> Self {
         let mut keymap = KeyMap::default();
 
         for (key, value) in items {

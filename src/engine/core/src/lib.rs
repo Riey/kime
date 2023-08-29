@@ -13,10 +13,13 @@ use config::{HotkeyBehavior, HotkeyResult};
 use os::{DefaultOsContext, OsContext};
 
 use kime_engine_backend::{InputEngineBackend, InputEngineMode, InputEngineModeResult};
+#[cfg(feature = "emoji")]
 use kime_engine_backend_emoji::EmojiMode;
 use kime_engine_backend_hangul::HangulEngine;
+#[cfg(feature = "hanja")]
 use kime_engine_backend_hanja::HanjaMode;
 use kime_engine_backend_latin::LatinEngine;
+#[cfg(feature = "math")]
 use kime_engine_backend_math::MathMode;
 
 pub struct InputEngine {
@@ -231,8 +234,11 @@ struct EngineImpl {
     mode: Option<InputMode>,
     latin_engine: LatinEngine,
     hangul_engine: HangulEngine,
+    #[cfg(feature = "hanja")]
     hanja_mode: HanjaMode,
+    #[cfg(feature = "math")]
     math_mode: MathMode,
+    #[cfg(feature = "emoji")]
     emoji_mode: EmojiMode,
 }
 
@@ -246,8 +252,11 @@ impl EngineImpl {
                 config.hangul_data.word_commit(),
                 config.hangul_data.preedit_johab(),
             ),
+            #[cfg(feature = "hanja")]
             hanja_mode: HanjaMode::new(),
+            #[cfg(feature = "math")]
             math_mode: MathMode::new(),
+            #[cfg(feature = "emoji")]
             emoji_mode: EmojiMode::new(),
         }
     }
@@ -265,6 +274,7 @@ impl EngineImpl {
                 true
             }
             InputMode::Hanja => match self.category {
+                #[cfg(feature = "hanja")]
                 InputCategory::Hangul => {
                     preedit_buf.clear();
                     self.hangul_engine.preedit_str(preedit_buf);
@@ -301,30 +311,36 @@ macro_rules! do_mode {
     };
     (@ret $self:expr, $func:ident($($arg:expr,)*)) => {
         match $self.mode {
+            #[cfg(feature = "math")]
             Some(InputMode::Math) => {
                 do_mode!(@retarm $self, math_mode, $func($($arg,)*));
             }
+            #[cfg(feature = "hanja")]
             Some(InputMode::Hanja) => {
                 do_mode!(@retarm $self, hanja_mode, $func($($arg,)*));
             }
+            #[cfg(feature = "emoji")]
             Some(InputMode::Emoji) => {
                 do_mode!(@retarm $self, emoji_mode, $func($($arg,)*));
             }
-            None => {}
+            _ => {}
         }
     };
     (@direct $self:expr, $func:ident($($arg:expr,)*)) => {
         match $self.mode {
+            #[cfg(feature = "hanja")]
             Some(InputMode::Hanja) => {
                 return $self.hanja_mode.$func($($arg,)*);
             }
+            #[cfg(feature = "math")]
             Some(InputMode::Math) => {
                 return $self.math_mode.$func($($arg,)*);
             }
+            #[cfg(feature = "emoji")]
             Some(InputMode::Emoji) => {
                 return $self.emoji_mode.$func($($arg,)*);
             }
-            None => {}
+            _ => {}
         }
     };
 }
@@ -348,10 +364,13 @@ macro_rules! connect {
 impl EngineImpl {
     pub fn check_ready(&self) -> bool {
         match self.mode {
+            #[cfg(feature = "hanja")]
             Some(InputMode::Hanja) => self.hanja_mode.check_ready(),
+            #[cfg(feature = "emoji")]
             Some(InputMode::Emoji) => self.emoji_mode.check_ready(),
+            #[cfg(feature = "math")]
             Some(InputMode::Math) => self.math_mode.check_ready(),
-            None => true,
+            _ => true,
         }
     }
 
@@ -371,12 +390,15 @@ impl InputEngineBackend for EngineImpl {
             .unwrap_or(raw_key);
 
         match self.mode {
+            #[cfg(feature = "emoji")]
             Some(InputMode::Emoji) => {
                 do_mode!(@retarm self, emoji_mode, press_key(&config.latin_data, key, commit_buf,))
             }
+            #[cfg(feature = "hanja")]
             Some(InputMode::Hanja) => {
                 do_mode!(@retarm self, hanja_mode, press_key(&(), key, commit_buf,))
             }
+            #[cfg(feature = "math")]
             Some(InputMode::Math) => {
                 do_mode!(@retarm self, math_mode, press_key(&config.latin_data, key, commit_buf,))
             }

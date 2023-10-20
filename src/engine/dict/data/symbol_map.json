@@ -431,4 +431,8 @@
 , {"keyword":"(b","symbols":[{"style":[],"symbol":"⟅"}]}
 , {"keyword":"((","symbols":[{"style":[],"symbol":"⦅"}]}
 , {"keyword":"&","symbols":[{"style":[],"symbol":"⅋"}]}
+, {"keyword":"prime","symbols":[{"style":[],"symbol":"′"}]}
+, {"keyword":"pprime","symbols":[{"style":[],"symbol":"″"}]}
+, {"keyword":"ppprime","symbols":[{"style":[],"symbol":"‴"}]}
+, {"keyword":"pppprime","symbols":[{"style":[],"symbol":"⁗"}]}
 ]

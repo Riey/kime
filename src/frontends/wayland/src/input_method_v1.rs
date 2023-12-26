@@ -2,7 +2,11 @@ use std::error::Error;
 use std::os::fd::{FromRawFd, OwnedFd};
 use std::time::{Duration, Instant};
 
-use wayland_client::{event_enum, protocol::wl_keyboard::{Event as KeyEvent, KeyState, WlKeyboard, REQ_RELEASE_SINCE}, DispatchData, Display, Filter, GlobalManager, Main, EventQueue};
+use wayland_client::{
+    event_enum,
+    protocol::wl_keyboard::{Event as KeyEvent, KeyState, WlKeyboard, REQ_RELEASE_SINCE},
+    DispatchData, Display, EventQueue, Filter, GlobalManager, Main,
+};
 
 use wayland_protocols::unstable::input_method::v1::client::{
     zwp_input_method_context_v1::{Event as ImCtxEvent, ZwpInputMethodContextV1},
@@ -18,7 +22,7 @@ use xkbcommon::xkb::{
     Context, Keycode, Keymap, CONTEXT_NO_FLAGS, KEYMAP_COMPILE_NO_FLAGS, KEYMAP_FORMAT_TEXT_V1,
 };
 
-use crate::{RepeatInfo, PressState};
+use crate::{PressState, RepeatInfo};
 
 event_enum! {
     Events |
@@ -162,7 +166,7 @@ impl KimeContext {
                             KEYMAP_FORMAT_TEXT_V1,
                             KEYMAP_COMPILE_NO_FLAGS,
                         )
-                            .unwrap_or(None);
+                        .unwrap_or(None);
                     }
                 } else {
                     unsafe {
@@ -191,17 +195,17 @@ impl KimeContext {
                             // IME. Start waiting for the key hold timer event.
                             match self.repeat_state {
                                 Some((info, ref mut press_state))
-                                if !press_state.is_pressing(key) =>
-                                    {
-                                        let duration = Duration::from_millis(info.delay as u64);
-                                        self.timer.set_timeout(&duration).unwrap();
-                                        *press_state = PressState::Pressing {
-                                            pressed_at: Instant::now(),
-                                            is_repeating: false,
-                                            key,
-                                            wayland_time: time,
-                                        }
+                                    if !press_state.is_pressing(key) =>
+                                {
+                                    let duration = Duration::from_millis(info.delay as u64);
+                                    self.timer.set_timeout(&duration).unwrap();
+                                    *press_state = PressState::Pressing {
+                                        pressed_at: Instant::now(),
+                                        is_repeating: false,
+                                        key,
+                                        wayland_time: time,
                                     }
+                                }
                                 _ => {}
                             }
                         }
@@ -273,14 +277,14 @@ impl KimeContext {
         }
 
         if let Some((
-                        info,
-                        PressState::Pressing {
-                            pressed_at,
-                            ref mut is_repeating,
-                            key,
-                            wayland_time,
-                        },
-                    )) = self.repeat_state
+            info,
+            PressState::Pressing {
+                pressed_at,
+                ref mut is_repeating,
+                key,
+                wayland_time,
+            },
+        )) = self.repeat_state
         {
             if !*is_repeating {
                 if self
@@ -368,7 +372,11 @@ impl KimeContext {
     }
 }
 
-pub fn run(display: &Display, event_queue: &mut EventQueue, globals: &GlobalManager) -> Result<(), Box<dyn Error>> {
+pub fn run(
+    display: &Display,
+    event_queue: &mut EventQueue,
+    globals: &GlobalManager,
+) -> Result<(), Box<dyn Error>> {
     let im_filter = Filter::new(|ev, _filter, mut data| {
         let ctx = KimeContext::new_data(&mut data);
         match ev {
@@ -386,8 +394,7 @@ pub fn run(display: &Display, event_queue: &mut EventQueue, globals: &GlobalMana
         }
     });
 
-    let im = globals
-        .instantiate_exact::<ZwpInputMethodV1>(1)?;
+    let im = globals.instantiate_exact::<ZwpInputMethodV1>(1)?;
     im.assign(im_filter);
 
     let mut timer = TimerFd::new(ClockId::Monotonic).expect("Initialize timer");

@@ -1,7 +1,11 @@
 use std::error::Error;
 use std::time::{Duration, Instant};
 
-use wayland_client::{event_enum, protocol::{wl_keyboard::KeyState, wl_seat::WlSeat}, DispatchData, Display, Filter, GlobalManager, Main, EventQueue};
+use wayland_client::{
+    event_enum,
+    protocol::{wl_keyboard::KeyState, wl_seat::WlSeat},
+    DispatchData, Display, EventQueue, Filter, GlobalManager, Main,
+};
 
 use wayland_protocols::misc::zwp_input_method_v2::client::{
     zwp_input_method_keyboard_grab_v2::{Event as KeyEvent, ZwpInputMethodKeyboardGrabV2},
@@ -18,7 +22,7 @@ use kime_engine_cffi::*;
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
 use mio_timerfd::{ClockId, TimerFd};
 
-use crate::{RepeatInfo, PressState};
+use crate::{PressState, RepeatInfo};
 
 event_enum! {
     Events |
@@ -228,17 +232,17 @@ impl KimeContext {
                             // IME. Start waiting for the key hold timer event.
                             match self.repeat_state {
                                 Some((info, ref mut press_state))
-                                if !press_state.is_pressing(key) =>
-                                    {
-                                        let duration = Duration::from_millis(info.delay as u64);
-                                        self.timer.set_timeout(&duration).unwrap();
-                                        *press_state = PressState::Pressing {
-                                            pressed_at: Instant::now(),
-                                            is_repeating: false,
-                                            key,
-                                            wayland_time: time,
-                                        };
-                                    }
+                                    if !press_state.is_pressing(key) =>
+                                {
+                                    let duration = Duration::from_millis(info.delay as u64);
+                                    self.timer.set_timeout(&duration).unwrap();
+                                    *press_state = PressState::Pressing {
+                                        pressed_at: Instant::now(),
+                                        is_repeating: false,
+                                        key,
+                                        wayland_time: time,
+                                    };
+                                }
                                 _ => {}
                             }
                         }
@@ -309,14 +313,14 @@ impl KimeContext {
         }
 
         if let Some((
-                        info,
-                        PressState::Pressing {
-                            pressed_at,
-                            ref mut is_repeating,
-                            key,
-                            wayland_time,
-                        },
-                    )) = self.repeat_state
+            info,
+            PressState::Pressing {
+                pressed_at,
+                ref mut is_repeating,
+                key,
+                wayland_time,
+            },
+        )) = self.repeat_state
         {
             if !*is_repeating {
                 // Start repeat
@@ -343,11 +347,13 @@ impl KimeContext {
     }
 }
 
-pub fn run(display: &Display, event_queue: &mut EventQueue, globals: &GlobalManager) -> Result<(), Box<dyn Error>> {
-    let im_manager = globals
-        .instantiate_exact::<ZwpInputMethodManagerV2>(1)?;
-    let vk_manager = globals
-        .instantiate_exact::<ZwpVirtualKeyboardManagerV1>(1)?;
+pub fn run(
+    display: &Display,
+    event_queue: &mut EventQueue,
+    globals: &GlobalManager,
+) -> Result<(), Box<dyn Error>> {
+    let im_manager = globals.instantiate_exact::<ZwpInputMethodManagerV2>(1)?;
+    let vk_manager = globals.instantiate_exact::<ZwpVirtualKeyboardManagerV1>(1)?;
     let seat = globals.instantiate_exact::<WlSeat>(1).expect("Load Seat");
 
     let filter = Filter::new(|ev, _filter, mut data| {

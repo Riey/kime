@@ -151,6 +151,11 @@ if you use X, append above lines to file `~/.xprofile`
 
 kime.desktop file is installed in /etc/xdg/autostart when installing kime.
 
+### KDE Plasma Wayland
+
+It is required to select `kime daemon` under System Settings > Hardware > Input Devices > Virtual Keyboard.  
+A logout is recommended afterwards.
+
 ### Configuration
 
 Read [CONFIGURATION.md](docs/CONFIGURATION.md) for detail options.

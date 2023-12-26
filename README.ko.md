@@ -151,6 +151,11 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 
 혹시 `i3`나 `sway`처럼 `시작 프로그램`을 지원하지 않는다면 해당 WM의 설정파일에서 `kime` 혹은 원하시는 서버 커맨드를 실행해주세요
 
+### KDE Plasma Wayland
+
+시스템 설정 > 하드웨어 > 입력 장치 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.  
+이후에 로그아웃을 하는 것을 권장합니다.
+
 ### Configuration
 
 자세한 옵션은 [CONFIGURATION.md](docs/CONFIGURATION.ko.md)를 참고하세요.

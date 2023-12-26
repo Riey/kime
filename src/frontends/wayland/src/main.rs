@@ -15,9 +15,9 @@ fn main() {
 
     event_queue.sync_roundtrip(&mut (), |_, _, _| ()).unwrap();
 
-    let result = kime_wayland::v2::run(&display, &mut event_queue, &globals);
+    let result = kime_wayland::input_method_v2::run(&display, &mut event_queue, &globals);
 
     if let Err(_) = result {
-        kime_wayland::v1::run(&display, &mut event_queue, &globals).unwrap();
+        kime_wayland::input_method_v1::run(&display, &mut event_queue, &globals).unwrap();
     }
 }

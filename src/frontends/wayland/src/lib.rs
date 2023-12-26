@@ -1,7 +1,7 @@
 use std::time::Instant;
 
-pub mod v1;
-pub mod v2;
+pub mod input_method_v1;
+pub mod input_method_v2;
 
 #[derive(Clone, Copy)]
 pub struct RepeatInfo {

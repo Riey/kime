@@ -231,9 +231,12 @@ impl Check {
                         ))
                     }
                 } else {
-                    CondResult::Ignore(format!("Current desktop and session type is {} and {}, not KDE and wayland", current_desktop, session_type))
+                    CondResult::Ignore(format!(
+                        "Current desktop and session type is {} and {}, not KDE and wayland",
+                        current_desktop, session_type
+                    ))
                 }
-            } ,
+            }
         }
     }
 }

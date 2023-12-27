@@ -186,8 +186,10 @@ impl Check {
                 },
                 "set LANG encoding UTF-8",
             ),
-            Check::PlasmaVirtualKeyboard => match env::var("DESKTOP_SESSION").unwrap().as_str() {
-                "plasmawayland" => {
+            Check::PlasmaVirtualKeyboard => {
+                let current_desktop = env::var("XDG_CURRENT_DESKTOP").unwrap();
+                let session_type = env::var("XDG_SESSION_TYPE").unwrap();
+                if current_desktop.contains("KDE") && session_type == "wayland" {
                     let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
                     let config_path = match dirs.find_config_file("kwinrc") {
                         Some(path) => path,
@@ -228,11 +230,10 @@ impl Check {
                             given_input_method
                         ))
                     }
+                } else {
+                    CondResult::Ignore(format!("Current desktop and session type is {} and {}, not KDE and wayland", current_desktop, session_type))
                 }
-                other => {
-                    CondResult::Ignore(format!("Desktop session is {} not plasmawayland", other))
-                }
-            },
+            } ,
         }
     }
 }

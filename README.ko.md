@@ -175,6 +175,7 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 * xcb (candidate)
 * fontconfig (xim)
 * freetype (xim)
+* libxkbcommon (wayland)
 
 ### 빌드타임 종속성 (바이너리 실행 시엔 필요 없습니다)
 
@@ -195,3 +196,4 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 * xcb
 * fontconfig
 * freetype
+* libxkbcommon

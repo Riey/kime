@@ -174,6 +174,7 @@ These dependencies are optional depending on your environments. For example, qt6
 * xcb (candidate)
 * fontconfig (xim)
 * freetype (xim)
+* libxkbcommon (wayland)
 
 ### Build time (you don't need this on running compiled binary)
 
@@ -194,3 +195,4 @@ These dependencies are optional depending on your environments. For example, qt6
 * xcb
 * fontconfig
 * freetype
+* libxkbcommon

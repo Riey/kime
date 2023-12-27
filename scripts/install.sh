@@ -38,7 +38,7 @@ if [ -z "$KIME_AUTOSTART_DIR" ]; then
 fi
 
 if [ -z "$KIME_DESKTOP_ENTRY_DIR" ]; then
-    KIME_AUTOSTART_DIR=usr/share/applications
+    KIME_DESKTOP_ENTRY_DIR=usr/share/applications
 fi
 
 if [ -z "$KIME_LIB_DIR" ]; then

@@ -156,6 +156,14 @@ kime.desktop file is installed in /etc/xdg/autostart when installing kime.
 It is required to select `kime daemon` under System Settings > Hardware > Input Devices > Virtual Keyboard.  
 A logout is recommended afterwards.
 
+### Weston
+
+It is required to have the following lines in `~/.config/weston.ini`
+```
+[input-method]
+path=/usr/bin/kime
+```
+
 ### Configuration
 
 Read [CONFIGURATION.md](docs/CONFIGURATION.md) for detail options.

@@ -187,8 +187,8 @@ impl Check {
                 "set LANG encoding UTF-8",
             ),
             Check::PlasmaVirtualKeyboard => {
-                let current_desktop = env::var("XDG_CURRENT_DESKTOP").unwrap();
-                let session_type = env::var("XDG_SESSION_TYPE").unwrap();
+                let current_desktop = env::var("XDG_CURRENT_DESKTOP").map_or(String::new(), |x| x);
+                let session_type = env::var("XDG_SESSION_TYPE").map_or(String::new(), |x| x);
                 if current_desktop.contains("KDE") && session_type == "wayland" {
                     let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
                     let config_path = match dirs.find_config_file("kwinrc") {

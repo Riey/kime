@@ -9,6 +9,7 @@
 * Add ubuntu-22.10 Dockerfile **[@OctopusET]**
 * Fix KDE autostart [#576](https://github.com/Riey/kime/issues/576)
 * Add unicode prime symbols to math mode. (prime, double prime, triple prime, quadruple prime)
+* Add wayland zwp_input_method_v1 support **[@Jhyub]**
 
 ## 3.0.2
 

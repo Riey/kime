@@ -112,7 +112,7 @@ Every files needed for manual install is in `build/out` directory.
 
 #### GTK
 
-Typically, this step is not necessary when kime is installed from binary package because most Linux distros does these steps themselves.
+Typically, this step is not necessary when kime is installed from the binary package because most Linux distros do these steps themselves.
 
 ```sh
 # for gtk3

@@ -177,7 +177,6 @@ impl KimeContext {
 
     fn commit(&mut self) {
         self.im.commit(self.serial);
-        self.serial += 1;
     }
 
     fn commit_string(&mut self, s: String) {
@@ -208,6 +207,7 @@ impl KimeContext {
                 panic!("Unavailable")
             }
             ImEvent::Done => {
+                self.serial += 1;
                 if !self.current_state.activate && self.pending_state.activate {
                     self.engine.update_layout_state();
                     if !self.engine_ready {
@@ -379,7 +379,6 @@ impl KimeContext {
                 key,
                 state: KeyState::Pressed,
             };
-            self.serial += 1;
             self.handle_key_ev(ev);
         } else {
             log::warn!("Received timer event when it has never received RepeatInfo.");

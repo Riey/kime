@@ -2,7 +2,7 @@
 name = "kime"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0-or-later"
 
 [dependencies]
@@ -11,7 +11,6 @@ kime-version = { path = "../version" }
 kime-run-dir = { path = "../run_dir" }
 
 ctrlc = { version = "3.1.8", features = ["termination"] }
-daemonize = "0.4.1"
+daemonize = "0.5.0"
 log = "0.4.14"
 pico-args = "0.5.0"
-

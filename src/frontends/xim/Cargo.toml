@@ -3,7 +3,7 @@ name = "kime-xim"
 description = "Kime XIM server"
 version = "0.3.0"
 authors = ["Riey <creeper844@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0-or-later"
 
 [dependencies]

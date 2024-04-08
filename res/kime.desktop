@@ -11,4 +11,5 @@ X-DBUS-StartupType=Unique
 X-GNOME-AutoRestart=false
 X-GNOME-Autostart-Notify=false
 X-KDE-StartupNotify=false
+X-KDE-Wayland-VirtualKeyboard=true
 Icon=kime-hangul-black

@@ -7,6 +7,7 @@ use kime_engine_cffi::{
 };
 use pad::PadStr;
 use std::env;
+use std::io::BufRead;
 use strum::{EnumIter, EnumMessage, IntoEnumIterator, IntoStaticStr};
 
 #[derive(Clone, PartialEq, Eq, IntoStaticStr)]
@@ -34,7 +35,7 @@ impl CondResult {
         print!(
             "{} {}",
             c.paint(<&str>::from(self).pad_to_width(8)),
-            Color::White.bold().paint(message.pad_to_width(30))
+            Color::White.bold().paint(message.pad_to_width(40))
         );
 
         match self {
@@ -62,6 +63,8 @@ enum Check {
     QtImModule,
     #[strum(message = "LANG has UTF-8")]
     Lang,
+    #[strum(message = "Plasma virtual keyboard has kime")]
+    PlasmaVirtualKeyboard,
 }
 
 impl Check {
@@ -183,6 +186,57 @@ impl Check {
                 },
                 "set LANG encoding UTF-8",
             ),
+            Check::PlasmaVirtualKeyboard => {
+                let current_desktop = env::var("XDG_CURRENT_DESKTOP").map_or(String::new(), |x| x);
+                let session_type = env::var("XDG_SESSION_TYPE").map_or(String::new(), |x| x);
+                if current_desktop.contains("KDE") && session_type == "wayland" {
+                    let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
+                    let config_path = match dirs.find_config_file("kwinrc") {
+                        Some(path) => path,
+                        _ => {
+                            return CondResult::Fail(
+                                "kwinrc configuration file doesn't exist".into(),
+                            )
+                        }
+                    };
+
+                    println!("Loading kwinrc: {}", config_path.display());
+
+                    let file = std::fs::File::open(config_path).expect("Open kwinrc");
+                    let lines = std::io::BufReader::new(file).lines();
+
+                    let mut given_input_method = String::new();
+
+                    for line in lines {
+                        if let Ok(s) = line {
+                            if s.contains("=") {
+                                let splits: Vec<&str> = s.split('=').collect();
+                                if splits[0].contains("InputMethod") {
+                                    if splits[1].contains("kime.desktop") {
+                                        return CondResult::Ok;
+                                    } else {
+                                        given_input_method = String::from(splits[1]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if given_input_method.is_empty() {
+                        CondResult::Fail("Virtual keyboard is not set".to_string())
+                    } else {
+                        CondResult::Fail(format!(
+                            "Virtual keyboard is set to {} not kime",
+                            given_input_method
+                        ))
+                    }
+                } else {
+                    CondResult::Ignore(format!(
+                        "Current desktop and session type is {} and {}, not KDE and wayland",
+                        current_desktop, session_type
+                    ))
+                }
+            }
         }
     }
 }

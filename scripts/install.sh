@@ -37,6 +37,10 @@ if [ -z "$KIME_AUTOSTART_DIR" ]; then
     KIME_AUTOSTART_DIR=etc/xdg/autostart
 fi
 
+if [ -z "$KIME_DESKTOP_ENTRY_DIR" ]; then
+    KIME_DESKTOP_ENTRY_DIR=usr/share/applications
+fi
+
 if [ -z "$KIME_LIB_DIR" ]; then
     KIME_LIB_DIR=usr/lib
 fi
@@ -95,6 +99,7 @@ if [ "${KIME_INSTALL_DOC}" -eq "1" ]; then
 fi
 
 install -Dm644 $KIME_OUT/*.desktop -t "$PREFIX/$KIME_AUTOSTART_DIR"
+install -Dm644 $KIME_OUT/*.desktop -t "$PREFIX/$KIME_DESKTOP_ENTRY_DIR"
 install -Dm755 $KIME_OUT/kime-xdg-autostart -t "$PREFIX/$KIME_BIN_DIR"
 install -Dm644 $KIME_OUT/icons/64x64/*.png -t "$PREFIX/$KIME_ICON_DIR/hicolor/64x64/apps"
 install -Dm755 $KIME_OUT/libkime_engine.so -t "$PREFIX/$KIME_LIB_DIR"

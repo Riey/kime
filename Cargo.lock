@@ -1158,7 +1158,7 @@ checksum = "652aa0009b1406e40114685c96ea2c01069e1c035ad6c340999fa08213fad4c5"
 dependencies = [
  "fontconfig-parser",
  "log",
- "memmap2",
+ "memmap2 0.5.8",
  "ttf-parser 0.18.1",
 ]
 
@@ -1766,6 +1766,7 @@ dependencies = [
  "pico-args",
  "wayland-client",
  "wayland-protocols",
+ "xkbcommon",
  "zwp-virtual-keyboard",
 ]
 
@@ -1826,9 +1827,9 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "libc"
-version = "0.2.139"
+version = "0.2.151"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
+checksum = "302d7ab3130588088d277783b1e2d2e10c9e9e4a16dd9050e6ec93fb3e7048f4"
 
 [[package]]
 name = "libdbus-sys"
@@ -1904,6 +1905,15 @@ name = "memmap2"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b182332558b18d807c4ce1ca8ca983b34c3ee32765e47b3f0f69b90355cc1dc"
+dependencies = [
+ "libc",
+]
+
+[[package]]
+name = "memmap2"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43a5a03cefb0d953ec0be133036f14e109412fa594edc2f77227249db66cc3ed"
 dependencies = [
  "libc",
 ]
@@ -2918,7 +2928,7 @@ dependencies = [
  "dlib",
  "lazy_static",
  "log",
- "memmap2",
+ "memmap2 0.5.8",
  "nix 0.24.3",
  "pkg-config",
  "wayland-client",
@@ -3817,6 +3827,23 @@ checksum = "b100b895758fefbf602129502acc0dd474bc08dd1e2036f17a7c118d6fd6fe53"
 dependencies = [
  "bitflags",
 ]
+
+[[package]]
+name = "xkbcommon"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13867d259930edc7091a6c41b4ce6eee464328c6ff9659b7e4c668ca20d4c91e"
+dependencies = [
+ "libc",
+ "memmap2 0.8.0",
+ "xkeysym",
+]
+
+[[package]]
+name = "xkeysym"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "054a8e68b76250b253f671d1268cb7f1ae089ec35e195b2efb2a4e9a836d0621"
 
 [[package]]
 name = "xml-rs"

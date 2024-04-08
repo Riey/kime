@@ -12,6 +12,7 @@ kime-version = { path = "../../tools/version" }
 wayland-client = "0.29"
 wayland-protocols = { version = "0.29", features = ["client", "unstable_protocols"] }
 zwp-virtual-keyboard = "0.2.7"
+xkbcommon = { version = "0.7.0", features = ["wayland"] }
 
 libc = "0.2.82"
 log = "0.4.13"

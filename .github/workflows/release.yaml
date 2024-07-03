@@ -41,17 +41,17 @@ jobs:
           strip -s ./target/release/libkime_engine.so
           strip -s ./target/release/kime-check
       - name: Upload cpp header
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: cpp-header
           path: ./src/engine/cffi/kime_engine.hpp
       - name: Upload engine
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: engine
           path: ./target/release/libkime_engine.so
       - name: Upload check
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: check
           path: ./target/release/kime-check
@@ -72,13 +72,13 @@ jobs:
           sudo apt-get install -y libgtk-3-dev
 
       - name: Download engine
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: engine
           path: .
 
       - name: Download check
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: check
           path: .
@@ -92,7 +92,7 @@ jobs:
           scripts/release-zst.sh .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: other
           path: ./build/out/*
@@ -127,13 +127,13 @@ jobs:
 
     steps:
       - name: Download engine
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: engine
           path: .
 
       - name: Download header
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: cpp-header
           path: .
@@ -160,7 +160,7 @@ jobs:
           strip -s ./lib/libkime-qt5.so
 
       - name: Upload Qt-${{ matrix.qt5 }} artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: qt-${{matrix.qt5}}
           path: build/lib/libkime-qt5.so
@@ -189,13 +189,13 @@ jobs:
 
     steps:
       - name: Download engine
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: engine
           path: .
 
       - name: Download header
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: cpp-header
           path: .
@@ -222,7 +222,7 @@ jobs:
           strip -s ./lib/libkime-qt6.so
 
       - name: Upload Qt-${{ matrix.qt6 }} artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: qt-${{matrix.qt6}}
           path: build/lib/libkime-qt6.so
@@ -278,20 +278,20 @@ jobs:
 
       - name: Download qt5 artifact
         if: ${{ matrix.qt5 }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: qt-${{ matrix.qt5 }}
           path: ./build/out
 
       - name: Download qt6 artifact
         if: ${{ matrix.qt6 }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: qt-${{ matrix.qt6 }}
           path: ./build/out
 
       - name: Download other artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: other
           path: ./build/out

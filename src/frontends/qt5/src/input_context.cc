@@ -99,7 +99,9 @@ void KimeInputContext::preedit_str(kime::RustStr s) {
   fmt.setFontUnderline(true);
   QString qs = QString::fromUtf8((const char *)(s.ptr), s.len);
   this->attributes.push_back(QInputMethodEvent::Attribute{
-      QInputMethodEvent::AttributeType::TextFormat, 0, qs.length(), fmt});
+      QInputMethodEvent::AttributeType::TextFormat,
+      0, static_cast<int>(qs.length()), fmt
+  });
   QInputMethodEvent e(qs, this->attributes);
   this->attributes.clear();
   QCoreApplication::sendEvent(this->focus_object, &e);

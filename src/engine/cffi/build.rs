@@ -29,7 +29,7 @@ fn main() {
         .allowlist_var("kime::.+")
         .allowlist_type("kime::.+")
         .allowlist_function("kime::.+")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .unwrap();
 

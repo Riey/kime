@@ -11,6 +11,7 @@ use std::{
     mem,
     path::PathBuf,
 };
+use unic::emoji::char::is_emoji;
 
 #[derive(Default, Debug, Clone, Copy)]
 struct HanjaEntry {
@@ -203,6 +204,10 @@ fn main() {
     )
     .unwrap();
     for entry in load_unicode_annotations().unwrap() {
+        if !entry.cp.chars().any(|c| is_emoji(c)) {
+            continue;
+        }
+
         writeln!(
             out,
             "UnicodeAnnotation {{ codepoint: \"{}\", tts: \"{}\" }},",

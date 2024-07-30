@@ -3,7 +3,7 @@
 }:
 let
   deps = import ./nix/deps.nix { pkgs = pkgs; };
-  stdenv = pkgs.llvmPackages_14.stdenv;
+  stdenv = pkgs.llvmPackages_18.stdenv;
   mkShell = (pkgs.mkShell.override { stdenv = stdenv; });
 in
 mkShell {
@@ -13,11 +13,11 @@ mkShell {
   buildInputs = deps.kimeBuildInputs;
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ (with pkgs; [
     rustfmt
-    gnome.gedit
-    llvmPackages_14.lldb
+    pkgs.gedit
+    llvmPackages_18.lldb
   ]);
   CMAKE_EXPORT_COMPILE_COMMANDS = 1;
-  LIBCLANG_PATH = "${pkgs.llvmPackages_14.libclang.lib}/lib";
+  LIBCLANG_PATH = "${pkgs.llvmPackages_18.libclang.lib}/lib";
   LD_LIBRARY_PATH = "./target/debug:${pkgs.wayland}/lib:${pkgs.libGL}/lib:${pkgs.libxkbcommon}/lib";
   G_MESSAGES_DEBUG = "kime";
   GTK_IM_MODULE = "kime";

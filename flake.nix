@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "Korean IME";
 
   inputs = {
     nixpkgs.url = github:NixOS/nixpkgs;

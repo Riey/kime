@@ -10,5 +10,5 @@ kime-engine-capi = { path = "../capi" }
 kime-engine-config = { path = "../config" }
 
 [build-dependencies]
-bindgen = { version = "0.63", default-features = false }
-cbindgen = { version = "0.24", default-features = false }
+bindgen = { version = "0.69.4", default-features = false }
+cbindgen = { version = "0.26.0", default-features = false }

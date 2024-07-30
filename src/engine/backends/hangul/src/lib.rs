@@ -12,7 +12,7 @@ pub use layout::Layout;
 pub use state::HangulEngine;
 
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]
-#[enumset(serialize_as_list)]
+#[enumset(serialize_repr = "list")]
 pub enum Addon {
     ComposeChoseongSsang,
     ComposeJungseongSsang,

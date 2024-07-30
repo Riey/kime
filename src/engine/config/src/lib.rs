@@ -16,7 +16,7 @@ pub use log::LevelFilter;
 
 #[derive(Debug, EnumSetType, Enum, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", enumset(serialize_as_list))]
+#[cfg_attr(feature = "serde", enumset(serialize_repr = "list"))]
 #[repr(u32)]
 pub enum InputCategory {
     Latin,
@@ -25,7 +25,7 @@ pub enum InputCategory {
 
 #[derive(Debug, EnumSetType, Enum, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", enumset(serialize_as_list))]
+#[cfg_attr(feature = "serde", enumset(serialize_repr = "list"))]
 #[repr(u32)]
 pub enum InputMode {
     Math,
@@ -93,7 +93,7 @@ impl Default for IconColor {
 
 #[derive(EnumSetType)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", enumset(serialize_as_list))]
+#[cfg_attr(feature = "serde", enumset(serialize_repr = "list"))]
 pub enum DaemonModule {
     Xim,
     Wayland,

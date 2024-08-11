@@ -148,8 +148,6 @@ jobs:
         with:
           dir: /opt
           version: ${{ matrix.qt5 }}
-          aqtversion: ==1.1.1
-          py7zrversion: ==0.13.0
 
       - uses: actions/checkout@v4
 
@@ -212,8 +210,6 @@ jobs:
         with:
           dir: /opt
           version: ${{ matrix.qt6 }}
-          aqtversion: ==1.1.1
-          py7zrversion: ==0.13.0
 
       - uses: actions/checkout@v4
 

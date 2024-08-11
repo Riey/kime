@@ -6,6 +6,10 @@
 
 ### Improve
 
+## 3.1.1
+
+### Improve
+
 * Update Unicode CLDR version to 45 [#674](https://github.com/Riey/kime/issues/674)
 
 ## 3.1.0

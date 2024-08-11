@@ -28,7 +28,7 @@ jobs:
           prerelease: false
 
   build-engine:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
@@ -61,7 +61,7 @@ jobs:
       - build-engine
       - create-release
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
@@ -112,7 +112,7 @@ jobs:
       - build-engine
       - create-release
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:

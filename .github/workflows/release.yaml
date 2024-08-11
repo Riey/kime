@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build engine
         run: |
           sudo apt-get update
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install deps
         run: |
           sudo apt-get update
@@ -144,14 +144,14 @@ jobs:
           sudo mv ./kime_engine.hpp /usr/include
 
       - name: Install Qt-${{ matrix.qt5 }}
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v4
         with:
           dir: /opt
           version: ${{ matrix.qt5 }}
           aqtversion: ==1.1.1
           py7zrversion: ==0.13.0
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Build Qt-${{ matrix.qt5 }}
         run: |
@@ -208,14 +208,14 @@ jobs:
           sudo mv ./kime_engine.hpp /usr/include
 
       - name: Install Qt-${{ matrix.qt6 }}
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v4
         with:
           dir: /opt
           version: ${{ matrix.qt6 }}
           aqtversion: ==1.1.1
           py7zrversion: ==0.13.0
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Build Qt-${{ matrix.qt6 }}
         run: |
@@ -275,7 +275,7 @@ jobs:
             name: latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Create out folder
         run: mkdir -pv ./build/out

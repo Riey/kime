@@ -66,6 +66,15 @@ i18n = {
 
 [releases](https://github.com/Riey/kime/releases) 탭에 있는 .deb 파일을 설치할 수 있습니다.
 
+### 페도라
+
+비공식 패키지가 [Fedora Copr](https://copr.fedorainfracloud.org/coprs/toroidalfox/kime/) 에서 운영되고 있습니다.
+
+```sh
+dnf copr enable toroidalfox/kime
+dnf install kime # 개발 버전은 `kime-git`
+```
+
 ### 젠투
 
 ```sh

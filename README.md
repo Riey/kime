@@ -68,6 +68,15 @@ Developing version is available on [`kime-git`](https://aur.archlinux.org/packag
 
 `.deb` package is available on github [releases](https://github.com/Riey/kime/releases) tab.
 
+### Fedora
+
+The unofficial package is being maintained on [Fedora Copr](https://copr.fedorainfracloud.org/coprs/toroidalfox/kime/).
+
+```sh
+dnf copr enable toroidalfox/kime
+dnf install kime # `kime-git` for bleeding edge
+```
+
 ### Gentoo
 
 ```sh

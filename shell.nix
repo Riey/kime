@@ -2,11 +2,11 @@
   pkgs ? import <nixpkgs> { },
 }:
 let
-  deps = import ./nix/deps.nix { pkgs = pkgs; };
+  deps = import ./nix/deps.nix { inherit pkgs; };
   stdenv = pkgs.llvmPackages_18.stdenv;
-  mkShell = (pkgs.mkShell.override { stdenv = stdenv; });
+  mkShell = (pkgs.mkShell.override { inherit stdenv; });
 in
-mkShell {
+pkgs.mkShell {
   name = "kime-shell";
   dontUseCmakeConfigure = true;
   dontWrapQtApps = true;

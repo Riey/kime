@@ -10,11 +10,11 @@
     flake-utils.lib.eachDefaultSystem
       (system:
         let pkgs = import nixpkgs {
-          system = system;
+          inherit system;
         }; in
         {
-          devShell = import ./shell.nix { inherit pkgs; };
-          defaultPackage = import ./default.nix { inherit pkgs; };
+          devShells.default = import ./shell.nix { inherit pkgs; };
+          packages.default = import ./default.nix { inherit pkgs; };
         }
       );
 }

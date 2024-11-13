@@ -5,6 +5,7 @@
 ### Breaking
 
 ### Improve
+- Fix mismatched cargoDeps in nix and update attribute syntax **[@nakoo]**
 
 ## 3.1.1
 

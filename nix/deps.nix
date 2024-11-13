@@ -1,7 +1,6 @@
 { pkgs }:
-with pkgs;
 {
-  kimeBuildInputs = [
+  kimeBuildInputs = with pkgs; [
     dbus
     libdbusmenu
 
@@ -17,7 +16,7 @@ with pkgs;
     # qt6.qtbase
   ];
 
-  kimeNativeBuildInputs = [
+  kimeNativeBuildInputs = with pkgs; [
     python3 # xcb 0.9.0
     pkg-config
     llvmPackages_18.clang

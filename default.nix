@@ -3,23 +3,24 @@
   debug ? false,
 }:
 let
-  deps = import ./nix/deps.nix { pkgs = pkgs; };
+  src = ./.;
+  deps = import ./nix/deps.nix { inherit pkgs; };
   kimeVersion = builtins.readFile ./VERSION;
   testArgs = if debug then "" else "--release";
+  inherit (pkgs) llvmPackages_18 rustPlatform qt5;
 in
-with pkgs;
-llvmPackages_18.stdenv.mkDerivation rec {
+llvmPackages_18.stdenv.mkDerivation {
   name = "kime";
-  src = ./.;
+  inherit src;
   buildInputs = deps.kimeBuildInputs;
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustPlatform.cargoSetupHook ];
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
     inherit src;
-    #sha256 = "0000000000000000000000000000000000000000000000000000";
-    sha256 = "sha256-hlTxyaE/300CBGIJtFzIh6CT5PcmmqWt8CN428sr2U8=";
+    #hash = "0000000000000000000000000000000000000000000000000000";
+    hash = "sha256-2MG6xigiKdvQX8PR457d6AXswTRPRJBPERvZqemjv24=";
   };
-  LIBCLANG_PATH = "${pkgs.llvmPackages_18.libclang.lib}/lib";
+  LIBCLANG_PATH = "${llvmPackages_18.libclang.lib}/lib";
   dontUseCmakeConfigure = true;
   dontWrapQtApps = true;
   buildPhase = if debug then "bash scripts/build.sh -ad" else "bash scripts/build.sh -ar";
@@ -30,7 +31,7 @@ llvmPackages_18.stdenv.mkDerivation rec {
     KIME_ICON_DIR=share/icons \
     KIME_LIB_DIR=lib \
     KIME_DOC_DIR=share/doc/kime \
-    KIME_QT5_DIR=lib/qt-${pkgs.qt5.qtbase.version} \
+    KIME_QT5_DIR=lib/qt-${qt5.qtbase.version} \
     bash scripts/install.sh "$out"
   '';
   doCheck = true;

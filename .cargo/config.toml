@@ -1,0 +1,2 @@
+[build]
+rustflags = [ "-Clink-args=-L./target/release"]

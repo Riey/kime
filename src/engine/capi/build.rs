@@ -20,20 +20,4 @@ fn main() {
     .unwrap();
 
     cpp_binding.write_to_file("kime_engine.hpp");
-
-    let rust_binding = bindgen::builder()
-        .layout_tests(false)
-        .header("./kime_engine.hpp")
-        .disable_name_namespacing()
-        .rustified_enum("kime::.+")
-        .allowlist_var("kime::.+")
-        .allowlist_type("kime::.+")
-        .allowlist_function("kime::.+")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        .generate()
-        .unwrap();
-
-    rust_binding
-        .write_to_file(std::path::PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs"))
-        .unwrap();
 }

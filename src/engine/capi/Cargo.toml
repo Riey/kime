@@ -12,3 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 kime-engine-core = { path = "../core" }
+
+[build-dependencies]
+bindgen = { version = "0.69.4", default-features = false }
+cbindgen = { version = "0.26.0", default-features = false }

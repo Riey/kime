@@ -5,7 +5,6 @@ members = [
     "src/engine/candidate",
     "src/engine/core",
     "src/engine/config",
-    "src/engine/cffi",
     "src/engine/dict",
 
     "src/engine/backend",

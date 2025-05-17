@@ -10,12 +10,7 @@ mod pe_window;
 fn main() {
     kime_version::cli_boilerplate!((),);
 
-    assert!(
-        kime_engine_cffi::check_api_version(),
-        "Engine version mismatched"
-    );
-
-    let config = kime_engine_cffi::Config::load();
+    let config = kime_engine_core::load_engine_config_from_config_dir().unwrap_or_default();
 
     let (conn, screen_num) =
         x11rb::rust_connection::RustConnection::connect(None).expect("Connect X");

@@ -68,7 +68,7 @@ fn main() {
     }
 
     include_path.insert("${workspaceFolder}".into());
-    include_path.insert("${workspaceFolder}/src/engine/cffi".into());
+    include_path.insert("${workspaceFolder}/src/engine/capi".into());
 
     let config = Configuration {
         name: "include paths".into(),

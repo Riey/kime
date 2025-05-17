@@ -1,10 +1,7 @@
-use kime_engine_core::{Key, KeyMap};
+use kime_engine_core::{load_engine_config_from_config_dir, Key, KeyCode, KeyMap};
 
 use ansi_term::Color;
-use kime_engine_cffi::{
-    Config, InputCategory, InputEngine, InputResult_CONSUMED, InputResult_HAS_COMMIT,
-    InputResult_HAS_PREEDIT,
-};
+use kime_engine_core::{Config, InputCategory, InputEngine, InputResult};
 use pad::PadStr;
 use std::env;
 use std::io::BufRead;
@@ -47,8 +44,6 @@ impl CondResult {
 
 #[derive(Clone, Copy, EnumIter, EnumMessage)]
 enum Check {
-    #[strum(message = "Engine api version")]
-    ApiVersion,
     #[strum(message = "Check icons exists")]
     Icons,
     #[strum(message = "Config file")]
@@ -70,14 +65,6 @@ enum Check {
 impl Check {
     pub fn cond(self) -> CondResult {
         match self {
-            Check::ApiVersion => {
-                println!("KIME_API_VERSION: {}", kime_engine_cffi::KIME_API_VERSION);
-                if kime_engine_cffi::check_api_version() {
-                    CondResult::Ok
-                } else {
-                    CondResult::Fail("Install correct kime engine".into())
-                }
-            }
             Check::Icons => {
                 let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
 
@@ -98,8 +85,8 @@ impl Check {
                 CondResult::Ok
             }
             Check::EngineWorks => {
-                let config = kime_engine_cffi::Config::default();
-                let mut engine = kime_engine_cffi::InputEngine::new(&config);
+                let config = load_engine_config_from_config_dir().unwrap_or_default();
+                let mut engine = InputEngine::new(&config);
 
                 check_input(
                     &mut engine,
@@ -249,20 +236,23 @@ fn check_input(
     engine.set_input_category(InputCategory::Hangul);
 
     for (key, preedit, commit) in tests.iter().copied() {
-        let ret = engine.press_key(config, key, false, 0);
+        let ret = engine.press_key(
+            Key::normal(KeyCode::from_hardware_code(key, false).unwrap()),
+            config,
+        );
 
         let preedit_ret;
         let commit_ret;
 
-        if ret & InputResult_HAS_PREEDIT != 0 {
+        if ret.contains(InputResult::HAS_PREEDIT) {
             preedit_ret = preedit == engine.preedit_str();
         } else {
             preedit_ret = preedit.is_empty();
         }
 
-        if ret & InputResult_CONSUMED == 0 {
+        if !ret.contains(InputResult::CONSUMED) {
             commit_ret = commit == format!("{}PASS", engine.commit_str());
-        } else if ret & InputResult_HAS_COMMIT != 0 {
+        } else if ret.contains(InputResult::HAS_COMMIT) {
             commit_ret = commit == engine.commit_str();
             engine.clear_commit();
         } else {

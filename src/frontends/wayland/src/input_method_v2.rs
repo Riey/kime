@@ -17,8 +17,6 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
     zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1,
 };
 
-use kime_engine_cffi::*;
-
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
 use mio_timerfd::{ClockId, TimerFd};
 

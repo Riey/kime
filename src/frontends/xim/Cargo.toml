@@ -7,7 +7,7 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-kime-engine-cffi = { path = "../../engine/cffi" }
+kime-engine-core = { path = "../../engine/core" }
 kime-version = { path = "../../tools/version" }
 
 xim = { version = "0.2", default-features = false, features = ["x11rb-server"] }
@@ -15,7 +15,10 @@ xim = { version = "0.2", default-features = false, features = ["x11rb-server"] }
 
 ahash = "0.8"
 log = "0.4.11"
-x11rb = { version = "0.11.0", features = ["render", "image"], default-features = false }
+x11rb = { version = "0.11.0", features = [
+    "render",
+    "image",
+], default-features = false }
 pico-args = "0.5.0"
 image = "0.24"
 imageproc = "0.23"

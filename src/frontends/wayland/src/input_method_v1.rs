@@ -13,8 +13,6 @@ use wayland_protocols::unstable::input_method::v1::client::{
     zwp_input_method_v1::{Event as ImEvent, ZwpInputMethodV1},
 };
 
-use kime_engine_cffi::*;
-
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
 use mio_timerfd::{ClockId, TimerFd};
 use wayland_client::protocol::wl_keyboard::KeymapFormat;

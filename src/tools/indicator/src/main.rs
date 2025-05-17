@@ -1,5 +1,5 @@
 use anyhow::Result;
-use kime_engine_cffi::{IconColor, IndicatorConfig as Config};
+use kime_engine_core::{IconColor, IndicatorConfig as Config};
 use ksni::menu::*;
 use std::net::Shutdown;
 use std::os::unix::net::{UnixListener, UnixStream};

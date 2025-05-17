@@ -128,8 +128,8 @@ cp $TARGET_DIR/kime-xim $KIME_OUT || true
 cp $TARGET_DIR/kime-wayland $KIME_OUT || true
 cp $TARGET_DIR/kime $KIME_OUT || true
 
-cp src/engine/cffi/kime_engine.h $KIME_OUT
-cp src/engine/cffi/kime_engine.hpp $KIME_OUT
+cp src/engine/capi/kime_engine.h $KIME_OUT
+cp src/engine/capi/kime_engine.hpp $KIME_OUT
 cp docs/CHANGELOG.md $KIME_OUT
 cp LICENSE $KIME_OUT
 cp NOTICE.md $KIME_OUT

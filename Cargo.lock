@@ -1790,6 +1790,7 @@ dependencies = [
 name = "kime-wayland"
 version = "0.1.0"
 dependencies = [
+ "kime-engine-core",
  "kime-version",
  "libc",
  "log",

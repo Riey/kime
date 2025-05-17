@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::time::{Duration, Instant};
 
+use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode, ModifierState};
 use wayland_client::{
     event_enum,
     protocol::{wl_keyboard::KeyState, wl_seat::WlSeat},
@@ -106,29 +107,29 @@ impl KimeContext {
     }
 
     fn process_input_result(&mut self, ret: InputResult) -> bool {
-        if ret & InputResult_NOT_READY != 0 {
+        if ret.contains(InputResult::NOT_READY) {
             self.engine_ready = false;
         }
 
-        if ret & InputResult_LANGUAGE_CHANGED != 0 {
+        if ret.contains(InputResult::LANGUAGE_CHANGED) {
             self.engine.update_layout_state();
         }
 
-        if ret & InputResult_HAS_PREEDIT != 0 {
+        if ret.contains(InputResult::HAS_PREEDIT) {
             let preedit = self.engine.preedit_str().into();
             self.preedit(preedit);
         } else {
             self.clear_preedit();
         }
 
-        if ret & InputResult_HAS_COMMIT != 0 {
+        if ret.contains(InputResult::HAS_COMMIT) {
             self.commit_string(self.engine.commit_str().into());
             self.engine.clear_commit();
         }
 
         self.commit();
 
-        ret & InputResult_CONSUMED == 0
+        !ret.contains(InputResult::CONSUMED)
     }
 
     fn commit(&mut self) {
@@ -211,10 +212,11 @@ impl KimeContext {
                 if state == KeyState::Pressed {
                     if self.grab_activate {
                         let ret = self.engine.press_key(
+                            Key::new(
+                                KeyCode::from_hardware_code((key + 8) as u16, numlock),
+                                self.mod_state,
+                            ),
                             &self.config,
-                            (key + 8) as u16,
-                            self.numlock,
-                            self.mod_state,
                         );
 
                         let bypassed = self.process_input_result(ret);

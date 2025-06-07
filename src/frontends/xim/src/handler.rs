@@ -159,7 +159,7 @@ impl KimeHandler {
         log::trace!("{:?}", ret);
 
         if ret.contains(InputResult::LANGUAGE_CHANGED) {
-            user_ic.user_data.engine.update_layout_state();
+            user_ic.user_data.engine.update_layout_state().ok();
         }
 
         if !ret.contains(InputResult::HAS_PREEDIT) {
@@ -379,7 +379,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        user_ic.user_data.engine.update_layout_state();
+        user_ic.user_data.engine.update_layout_state().ok();
 
         if !user_ic.user_data.engine_ready {
             if user_ic.user_data.engine.check_ready() {

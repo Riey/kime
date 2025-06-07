@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::time::{Duration, Instant};
 
-use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode, ModifierState};
+use kime_engine_core::{load_engine_config_from_config_dir, Config, InputEngine, InputResult, Key, KeyCode, ModifierState};
 use wayland_client::{
     event_enum,
     protocol::{wl_keyboard::KeyState, wl_seat::WlSeat},
@@ -82,11 +82,11 @@ impl KimeContext {
         grab: Main<ZwpInputMethodKeyboardGrabV2>,
         timer: TimerFd,
     ) -> Self {
-        let config = Config::load();
+        let config =  load_engine_config_from_config_dir().unwrap_or_default();
         Self {
             engine: InputEngine::new(&config),
             config,
-            mod_state: 0,
+            mod_state: ModifierState::empty(),
             current_state: InputMethodState::default(),
             pending_state: InputMethodState::default(),
             serial: 0,
@@ -112,7 +112,7 @@ impl KimeContext {
         }
 
         if ret.contains(InputResult::LANGUAGE_CHANGED) {
-            self.engine.update_layout_state();
+            self.engine.update_layout_state().ok();
         }
 
         if ret.contains(InputResult::HAS_PREEDIT) {
@@ -166,7 +166,7 @@ impl KimeContext {
             ImEvent::Done => {
                 self.serial += 1;
                 if !self.current_state.activate && self.pending_state.activate {
-                    self.engine.update_layout_state();
+                    self.engine.update_layout_state().ok();
                     if !self.engine_ready {
                         if self.engine.check_ready() {
                             let ret = self.engine.end_ready();
@@ -213,7 +213,7 @@ impl KimeContext {
                     if self.grab_activate {
                         let ret = self.engine.press_key(
                             Key::new(
-                                KeyCode::from_hardware_code((key + 8) as u16, numlock),
+                                KeyCode::from_hardware_code((key + 8) as u16, self.numlock).unwrap(),
                                 self.mod_state,
                             ),
                             &self.config,
@@ -269,18 +269,18 @@ impl KimeContext {
                 group,
                 ..
             } => {
-                self.mod_state = 0;
+                self.mod_state = ModifierState::empty();
                 if mods_depressed & 0x1 != 0 {
-                    self.mod_state |= ModifierState_SHIFT;
+                    self.mod_state |= ModifierState::SHIFT;
                 }
                 if mods_depressed & 0x4 != 0 {
-                    self.mod_state |= ModifierState_CONTROL;
+                    self.mod_state |= ModifierState::CONTROL;
                 }
                 if mods_depressed & 0x8 != 0 {
-                    self.mod_state |= ModifierState_ALT;
+                    self.mod_state |= ModifierState::ALT;
                 }
                 if mods_depressed & 0x40 != 0 {
-                    self.mod_state |= ModifierState_SUPER;
+                    self.mod_state |= ModifierState::SUPER;
                 }
 
                 self.numlock = mods_depressed & 0x10 != 0;

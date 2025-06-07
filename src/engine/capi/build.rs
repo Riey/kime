@@ -1,5 +1,3 @@
-use std::env;
-
 fn main() {
     println!("cargo:rerun-if-changed=./kime_engine.h");
     println!("cargo:rerun-if-changed=./kime_engine.hpp");

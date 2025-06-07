@@ -1,5 +1,5 @@
 use daemonize::Daemonize;
-use kime_engine_core::{load_other_configs_from_config_dir, DaemonModule as Module};
+use kime_engine_core::{load_raw_config_from_config_dir, DaemonModule as Module};
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::{
     env, io,
@@ -71,7 +71,7 @@ fn main() -> Result<(), ()> {
         }
     }
 
-    let config = load_other_configs_from_config_dir().unwrap_or_default().0;
+    let config = load_raw_config_from_config_dir().daemon;
 
     static RUN: AtomicBool = AtomicBool::new(true);
 

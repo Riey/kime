@@ -52,6 +52,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Install Rustfmt
+        run: rustup component add rustfmt
       - name: Check Rustfmt
         run: cargo fmt -- --check
 

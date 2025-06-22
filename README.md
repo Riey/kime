@@ -98,7 +98,7 @@ cd kime
 
 docker build --file build-docker/<distro path>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
-docker cp kime:/opt/kime-out/kime.tar.xz .
+docker cp kime:/opt/kime-out/kime.tar.zst .
 # if you want to build deb package try this command instead
 # docker cp kime:/opt/kime-out/kime_amd64.deb .
 ```

@@ -10,7 +10,7 @@ env:
 
 jobs:
   create-release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     outputs:
       url: ${{ steps.create_release.outputs.upload_url }}
@@ -28,7 +28,7 @@ jobs:
           prerelease: false
 
   build-engine:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +61,7 @@ jobs:
       - build-engine
       - create-release
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +112,7 @@ jobs:
       - build-engine
       - create-release
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -180,7 +180,7 @@ jobs:
       - build-engine
       - create-release
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -244,7 +244,7 @@ jobs:
       - build-qt6
       - create-release
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false

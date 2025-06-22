@@ -14,7 +14,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
     - run: nix develop -c cargo test
 
   cargo-deny:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         checks:
@@ -48,15 +48,17 @@ jobs:
         command: check ${{ matrix.checks }}
 
   format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
+      - name: Install Rustfmt
+        run: rustup component add rustfmt
       - name: Check Rustfmt
         run: cargo fmt -- --check
 
   spell-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - uses: crate-ci/typos@master

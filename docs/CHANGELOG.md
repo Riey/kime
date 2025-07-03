@@ -370,7 +370,7 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 * Workaround patch with xwayland input focus bug ([#137](https://github.com/Riey/kime/issues/137))
 * Handle disabled key repeat properly by **[@simnalamburt]** ([#188](https://github.com/Riey/kime/issues/188))
 * Fix unwanted key repeat bug on wayland by **[@simnalamburt]** ([#206](https://github.com/Riey/kime/issues/206))
-* Fix preedit string sended to wrong client by **[@simnalamburt]** ([#205](https://github.com/Riey/kime/issues/205))
+* Fix preedit string sent to wrong client by **[@simnalamburt]** ([#205](https://github.com/Riey/kime/issues/205))
 * Fix the key repeat regression by **[@simnalamburt]** ([#215](https://github.com/Riey/kime/issues/215))
 * Fix wrong behavior in neovide ([#179](https://github.com/Riey/kime/issues/179))
 * Fix xim crash when typing fast ([#170](https://github.com/Riey/kime/issues/170))

@@ -8,6 +8,6 @@ license = "GPL-3.0-or-later"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-kime-engine-cffi = { path = "../../engine/cffi" }
+kime-engine-core = { path = "../../engine/core" }
 eframe = "0.20.1"
 egui = "0.20.1"

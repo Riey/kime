@@ -37,14 +37,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libclang-10-dev
           cargo build --release -p kime-engine-capi
-          LD_LIBRARY_PATH=$PWD/target/release cargo build --release -p kime-check
+          cargo build --release -p kime-check
           strip -s ./target/release/libkime_engine.so
           strip -s ./target/release/kime-check
       - name: Upload cpp header
         uses: actions/upload-artifact@v4
         with:
           name: cpp-header
-          path: ./src/engine/cffi/kime_engine.hpp
+          path: ./src/engine/capi/kime_engine.hpp
       - name: Upload engine
         uses: actions/upload-artifact@v4
         with:

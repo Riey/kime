@@ -6,11 +6,14 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-kime-engine-cffi = { path = "../../engine/cffi" }
+kime-engine-core = { path = "../../engine/core" }
 kime-version = { path = "../../tools/version" }
 
 wayland-client = "0.29"
-wayland-protocols = { version = "0.29", features = ["client", "unstable_protocols"] }
+wayland-protocols = { version = "0.29", features = [
+    "client",
+    "unstable_protocols",
+] }
 zwp-virtual-keyboard = "0.2.7"
 xkbcommon = { version = "0.7.0", features = ["wayland"] }
 

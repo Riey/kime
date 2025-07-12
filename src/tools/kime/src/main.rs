@@ -1,5 +1,5 @@
 use daemonize::Daemonize;
-use kime_engine_cffi::{DaemonConfig as Config, DaemonModule as Module};
+use kime_engine_core::{load_raw_config_from_config_dir, DaemonModule as Module};
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::{
     env, io,
@@ -71,7 +71,7 @@ fn main() -> Result<(), ()> {
         }
     }
 
-    let config = Config::load();
+    let config = load_raw_config_from_config_dir().daemon;
 
     static RUN: AtomicBool = AtomicBool::new(true);
 
@@ -84,7 +84,7 @@ fn main() -> Result<(), ()> {
     log::info!("Initialized");
 
     let mut processes = config
-        .modules()
+        .modules
         .iter()
         .filter_map(|module| {
             let name = process_name(module);

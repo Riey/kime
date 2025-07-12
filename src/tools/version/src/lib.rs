@@ -2,9 +2,6 @@
 pub use kime_log;
 
 #[doc(hidden)]
-pub use kime_engine_cffi;
-
-#[doc(hidden)]
 pub mod build {
     pub const VERSION: &str = include_str!("../../../../VERSION");
 }
@@ -33,7 +30,7 @@ macro_rules! cli_boilerplate {
             .ok()
             .flatten()
             .unwrap_or_else(|| {
-                $crate::kime_engine_cffi::LogConfig::load().global_level().parse().unwrap()
+                kime_engine_core::load_raw_config_from_config_dir().log.global_level
             });
         $crate::kime_log::enable_logger(log_level);
 

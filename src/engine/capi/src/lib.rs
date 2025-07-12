@@ -1,9 +1,10 @@
 #![allow(clippy::missing_safety_doc)]
 
+use kime_engine_core::{load_engine_config_from_config_dir, load_raw_config_from_config_dir};
+
 pub use kime_engine_core::{
-    load_engine_config_from_config_dir, load_other_configs_from_config_dir, Config, DaemonConfig,
-    DaemonModule, IconColor, IndicatorConfig, InputCategory, InputEngine, InputResult, LogConfig,
-    ModifierState,
+    Config, DaemonConfig, DaemonModule, IconColor, IndicatorConfig, InputCategory, InputEngine,
+    InputResult, LogConfig, ModifierState,
 };
 
 pub const KIME_API_VERSION: usize = 7;
@@ -204,10 +205,7 @@ pub extern "C" fn kime_config_xim_preedit_font(config: &Config) -> FontData {
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_daemon_config_load() -> *mut DaemonConfig {
-    let config = load_other_configs_from_config_dir()
-        .map(|c| c.0)
-        .unwrap_or_default();
-    Box::into_raw(Box::new(config))
+    Box::into_raw(Box::new(load_raw_config_from_config_dir().daemon))
 }
 
 /// Get daemon `modules`
@@ -233,10 +231,7 @@ pub unsafe extern "C" fn kime_daemon_config_delete(config: *mut DaemonConfig) {
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_indicator_config_load() -> *mut IndicatorConfig {
-    let config = load_other_configs_from_config_dir()
-        .map(|c| c.1)
-        .unwrap_or_default();
-    Box::into_raw(Box::new(config))
+    Box::into_raw(Box::new(load_raw_config_from_config_dir().indicator))
 }
 
 /// Get default indicator config
@@ -262,10 +257,7 @@ pub extern "C" fn kime_indicator_config_icon_color(config: &IndicatorConfig) -> 
 #[cfg(unix)]
 #[no_mangle]
 pub extern "C" fn kime_log_config_load() -> *mut LogConfig {
-    let config = load_other_configs_from_config_dir()
-        .map(|c| c.2)
-        .unwrap_or_default();
-    Box::into_raw(Box::new(config))
+    Box::into_raw(Box::new(load_raw_config_from_config_dir().log))
 }
 
 /// Get default log config

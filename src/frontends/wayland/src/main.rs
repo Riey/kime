@@ -3,11 +3,6 @@ use wayland_client::{Display, GlobalManager};
 fn main() {
     kime_version::cli_boilerplate!((),);
 
-    assert!(
-        kime_engine_cffi::check_api_version(),
-        "Engine version mismatched"
-    );
-
     let display = Display::connect_to_env().expect("Failed to connect wayland display");
     let mut event_queue = display.create_event_queue();
     let attached_display = display.attach(event_queue.token());

@@ -5,7 +5,9 @@
 ### Breaking
 
 ### Improve
-- Fix mismatched cargoDeps in nix and update attribute syntax **[@nakoo]**
+
+* Fix mismatched cargoDeps in nix and update attribute syntax **[@nakoo]**
+* Remove `kime-engine-cffi`
 
 ## 3.1.1
 

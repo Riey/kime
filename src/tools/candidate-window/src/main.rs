@@ -119,8 +119,6 @@ impl eframe::App for CandidateApp {
 }
 
 fn main() -> io::Result<()> {
-    assert!(kime_engine_cffi::check_api_version());
-
     let mut buf = String::with_capacity(4096);
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -155,8 +153,8 @@ fn main() -> io::Result<()> {
             ..Default::default()
         },
         Box::new(|cc| {
-            let config = kime_engine_cffi::Config::load();
-            let (font_bytes, _index) = config.candidate_font();
+            let config = kime_engine_core::load_engine_config_from_config_dir().unwrap_or_default();
+            let (font_bytes, _index) = config.candidate_font;
             let mut font_data = BTreeMap::<_, egui::FontData>::new();
             let mut families = BTreeMap::new();
 

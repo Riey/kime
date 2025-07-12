@@ -2,6 +2,7 @@ use std::{num::NonZeroU32, sync::Arc};
 
 use crate::pe_window::PeWindow;
 use ahash::AHashMap;
+use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode, ModifierState};
 use x11rb::{
     connection::Connection,
     protocol::xproto::{ConfigureNotifyEvent, KeyButMask, KeyPressEvent, KEY_PRESS_EVENT},
@@ -10,8 +11,6 @@ use xim::{
     x11rb::{HasConnection, X11rbServer},
     InputStyle, Server, ServerHandler,
 };
-
-use kime_engine_cffi::*;
 
 pub struct KimeData {
     engine: InputEngine,
@@ -40,18 +39,18 @@ pub struct KimeHandler {
 
 impl KimeHandler {
     pub fn new(screen_num: usize, config: Config) -> Self {
-        let (font_data, index, font_size) = config.xim_font();
+        let (font_data, index, font_size) = &config.xim_preedit_font;
         let font = Arc::new(
-            rusttype::Font::try_from_vec_and_index(font_data.to_vec(), index)
+            rusttype::Font::try_from_vec_and_index(font_data.clone(), *index)
                 .unwrap()
                 .to_owned(),
         );
 
         Self {
             preedit_windows: AHashMap::new(),
-            config,
             screen_num,
-            font: (font, font_size),
+            font: (font, *font_size),
+            config,
         }
     }
 }
@@ -155,30 +154,30 @@ impl KimeHandler {
         &mut self,
         server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<KimeData>,
-        ret: kime_engine_cffi::InputResult,
+        ret: InputResult,
     ) -> Result<bool, xim::ServerError> {
         log::trace!("{:?}", ret);
 
-        if ret & InputResult_LANGUAGE_CHANGED != 0 {
-            user_ic.user_data.engine.update_layout_state();
+        if ret.contains(InputResult::LANGUAGE_CHANGED) {
+            user_ic.user_data.engine.update_layout_state().ok();
         }
 
-        if ret & InputResult_HAS_PREEDIT == 0 {
+        if !ret.contains(InputResult::HAS_PREEDIT) {
             self.clear_preedit(server, user_ic)?;
         }
 
-        if ret & InputResult_HAS_COMMIT != 0 {
+        if ret.contains(InputResult::HAS_COMMIT) {
             self.commit(server, user_ic)?;
             user_ic.user_data.engine.clear_commit();
         }
 
-        if ret & InputResult_HAS_PREEDIT != 0 {
+        if ret.contains(InputResult::HAS_PREEDIT) {
             self.preedit(server, user_ic)?;
         }
 
-        user_ic.user_data.engine_ready = ret & InputResult_NOT_READY == 0;
+        user_ic.user_data.engine_ready = !ret.contains(InputResult::NOT_READY);
 
-        Ok(ret & InputResult_CONSUMED != 0)
+        Ok(ret.contains(InputResult::CONSUMED))
     }
 
     fn clear_preedit<C: HasConnection>(
@@ -321,7 +320,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
 
         log::trace!("{:?}", xev);
 
-        let mut state = 0;
+        let mut state = ModifierState::empty();
 
         macro_rules! check_flag {
             ($mask:ident) => {
@@ -330,28 +329,30 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         }
 
         if check_flag!(SHIFT) {
-            state |= ModifierState_SHIFT;
+            state.insert(ModifierState::SHIFT);
         }
 
         if check_flag!(CONTROL) {
-            state |= ModifierState_CONTROL;
+            state.insert(ModifierState::CONTROL);
         }
 
         if check_flag!(MOD1) {
-            state |= ModifierState_ALT;
+            state.insert(ModifierState::ALT);
         }
 
         let numlock = check_flag!(MOD2);
 
         if check_flag!(MOD4) {
-            state |= ModifierState_SUPER;
+            state.insert(ModifierState::SUPER);
         }
 
-        let ret =
-            user_ic
-                .user_data
-                .engine
-                .press_key(&self.config, xev.detail as u16, numlock, state);
+        let ret = user_ic.user_data.engine.press_key(
+            Key::new(
+                KeyCode::from_hardware_code(xev.detail as u16, numlock).unwrap(),
+                state,
+            ),
+            &self.config,
+        );
 
         self.process_input_result(server, user_ic, ret)
     }
@@ -378,7 +379,7 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         server: &mut X11rbServer<C>,
         user_ic: &mut xim::UserInputContext<Self::InputContextData>,
     ) -> Result<(), xim::ServerError> {
-        user_ic.user_data.engine.update_layout_state();
+        user_ic.user_data.engine.update_layout_state().ok();
 
         if !user_ic.user_data.engine_ready {
             if user_ic.user_data.engine.check_ready() {

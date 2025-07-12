@@ -3,7 +3,7 @@ FROM archlinux:base-devel
 WORKDIR /opt/kime
 
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm --needed rust cmake clang llvm libxcb cairo
+RUN pacman -S --noconfirm --needed rustup cmake clang llvm libxcb cairo
 RUN pacman -S --noconfirm --needed gtk3 gtk4
 RUN pacman -S --noconfirm --needed qt5-base qt6-base
 RUN pacman -S --noconfirm --needed git
@@ -14,6 +14,9 @@ COPY .git ./.git
 
 COPY Cargo.toml .
 COPY Cargo.lock .
+COPY rust-toolchain.toml .
+
+RUN rustup install
 
 RUN cargo fetch
 
@@ -27,4 +30,4 @@ COPY README.ko.md .
 COPY README.md .
 COPY VERSION .
 
-ENTRYPOINT [ "ci/build_xz.sh" ]
+ENTRYPOINT [ "ci/build_zst.sh" ]

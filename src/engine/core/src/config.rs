@@ -114,9 +114,7 @@ impl Config {
 pub fn load_raw_config_from_config_dir() -> RawConfig {
     let dir = xdg::BaseDirectories::with_prefix("kime").ok();
 
-    dir
-        .and_then(|dir| dir
-        .find_config_file("config.yaml"))
+    dir.and_then(|dir| dir.find_config_file("config.yaml"))
         .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
         .unwrap_or_default()
 }

@@ -2,7 +2,10 @@ use std::error::Error;
 use std::os::fd::{FromRawFd, OwnedFd};
 use std::time::{Duration, Instant};
 
-use kime_engine_core::{load_engine_config_from_config_dir, Config, InputEngine, InputResult, Key, KeyCode, ModifierState};
+use kime_engine_core::{
+    load_engine_config_from_config_dir, Config, InputEngine, InputResult, Key, KeyCode,
+    ModifierState,
+};
 use wayland_client::{
     event_enum,
     protocol::wl_keyboard::{Event as KeyEvent, KeyState, WlKeyboard, REQ_RELEASE_SINCE},
@@ -180,7 +183,8 @@ impl KimeContext {
                     if self.grab_activate {
                         let ret = self.engine.press_key(
                             Key::new(
-                                KeyCode::from_hardware_code((key + 8) as u16, self.numlock).unwrap(),
+                                KeyCode::from_hardware_code((key + 8) as u16, self.numlock)
+                                    .unwrap(),
                                 self.mod_state,
                             ),
                             &self.config,

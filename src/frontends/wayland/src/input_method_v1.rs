@@ -181,37 +181,40 @@ impl KimeContext {
             } => {
                 if state == KeyState::Pressed {
                     if self.grab_activate {
-                        let ret = self.engine.press_key(
-                            Key::new(
-                                KeyCode::from_hardware_code((key + 8) as u16, self.numlock)
-                                    .unwrap(),
-                                self.mod_state,
-                            ),
-                            &self.config,
-                        );
+                        let hwcode = (key + 8) as u16;
+                        if let Some(code) = KeyCode::from_hardware_code(hwcode, self.numlock) {
+                            let ret = self
+                                .engine
+                                .press_key(Key::new(code, self.mod_state), &self.config);
 
-                        let bypassed = self.process_input_result(ret);
+                            let bypassed = self.process_input_result(ret);
 
-                        if bypassed {
-                            self.key(time, key, state);
-                        } else {
-                            // If the key was not bypassed by IME, key repeat should be handled by the
-                            // IME. Start waiting for the key hold timer event.
-                            match self.repeat_state {
-                                Some((info, ref mut press_state))
-                                    if !press_state.is_pressing(key) =>
-                                {
-                                    let duration = Duration::from_millis(info.delay as u64);
-                                    self.timer.set_timeout(&duration).unwrap();
-                                    *press_state = PressState::Pressing {
-                                        pressed_at: Instant::now(),
-                                        is_repeating: false,
-                                        key,
-                                        wayland_time: time,
+                            if bypassed {
+                                self.key(time, key, state);
+                            } else {
+                                // If the key was not bypassed by IME, key repeat should be handled by the
+                                // IME. Start waiting for the key hold timer event.
+                                match self.repeat_state {
+                                    Some((info, ref mut press_state))
+                                        if !press_state.is_pressing(key) =>
+                                    {
+                                        let duration = Duration::from_millis(info.delay as u64);
+                                        if let Err(e) = self.timer.set_timeout(&duration) {
+                                            log::warn!("failed to set repeat timer: {}", e);
+                                        }
+                                        *press_state = PressState::Pressing {
+                                            pressed_at: Instant::now(),
+                                            is_repeating: false,
+                                            key,
+                                            wayland_time: time,
+                                        }
                                     }
+                                    _ => {}
                                 }
-                                _ => {}
                             }
+                        } else {
+                            self.key(time, key, state);
+                            return;
                         }
                     } else {
                         self.key(time, key, state);
@@ -219,7 +222,9 @@ impl KimeContext {
                 } else {
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
-                            self.timer.disarm().unwrap();
+                            if let Err(e) = self.timer.disarm() {
+                                log::warn!("failed to disarm timer: {}", e);
+                            }
                             *press_state = PressState::NotPressing;
                         }
                     }

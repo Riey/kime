@@ -196,7 +196,6 @@ impl KimeContext {
             _ => {}
         }
     }
-
     pub fn handle_key_ev(&mut self, ev: KeyEvent) {
         match ev {
             KeyEvent::Keymap { fd, format, size } => {
@@ -214,41 +213,45 @@ impl KimeContext {
                 // NOTE: Never read `serial` of KeyEvent. You should rely on serial of KimeContext
                 if state == KeyState::Pressed {
                     if self.grab_activate {
-                        let ret = self.engine.press_key(
-                            Key::new(
-                                KeyCode::from_hardware_code((key + 8) as u16, self.numlock)
-                                    .unwrap(),
-                                self.mod_state,
-                            ),
-                            &self.config,
-                        );
+                        let hwcode = (key + 8) as u16;
+                        if let Some(code) = KeyCode::from_hardware_code(hwcode, self.numlock) {
+                            let ret = self
+                                .engine
+                                .press_key(Key::new(code, self.mod_state), &self.config);
 
-                        let bypassed = self.process_input_result(ret);
+                            let bypassed = self.process_input_result(ret);
 
-                        if bypassed {
-                            // Bypassed key's repeat will be handled by the clients.
-                            //
-                            // Reference:
-                            //   https://github.com/swaywm/sway/pull/4932#issuecomment-774113129
-                            self.vk.key(time, key, state as _);
-                        } else {
-                            // If the key was not bypassed by IME, key repeat should be handled by the
-                            // IME. Start waiting for the key hold timer event.
-                            match self.repeat_state {
-                                Some((info, ref mut press_state))
-                                    if !press_state.is_pressing(key) =>
-                                {
-                                    let duration = Duration::from_millis(info.delay as u64);
-                                    self.timer.set_timeout(&duration).unwrap();
-                                    *press_state = PressState::Pressing {
-                                        pressed_at: Instant::now(),
-                                        is_repeating: false,
-                                        key,
-                                        wayland_time: time,
-                                    };
+                            if bypassed {
+                                // Bypassed key's repeat will be handled by the clients.
+                                //
+                                // Reference:
+                                //   https://github.com/swaywm/sway/pull/4932#issuecomment-774113129
+                                self.vk.key(time, key, state as _);
+                            } else {
+                                // If the key was not bypassed by IME, key repeat should be handled by the
+                                // IME. Start waiting for the key hold timer event.
+                                match self.repeat_state {
+                                    Some((info, ref mut press_state))
+                                        if !press_state.is_pressing(key) =>
+                                    {
+                                        let duration = Duration::from_millis(info.delay as u64);
+                                        if let Err(e) = self.timer.set_timeout(&duration) {
+                                            log::warn!("failed to set repeat timer: {}", e);
+                                        }
+                                        *press_state = PressState::Pressing {
+                                            pressed_at: Instant::now(),
+                                            is_repeating: false,
+                                            key,
+                                            wayland_time: time,
+                                        };
+                                    }
+                                    _ => {}
                                 }
-                                _ => {}
                             }
+                        } else {
+                            log::warn!("unknown hardware keycode: {}", key);
+                            self.vk.key(time, key, state as _);
+                            return;
                         }
                     } else {
                         // not activated so just skip
@@ -258,7 +261,9 @@ impl KimeContext {
                     // If user released the last pressed key, clear the timer and state
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
-                            self.timer.disarm().unwrap();
+                            if let Err(e) = self.timer.disarm() {
+                                log::warn!("failed to disarm timer: {}", e);
+                            }
                             *press_state = PressState::NotPressing;
                         }
                     }
@@ -303,7 +308,7 @@ impl KimeContext {
                     let info = RepeatInfo { rate, delay };
                     let press_state = self.repeat_state.map(|pair| pair.1);
                     Some((info, press_state.unwrap_or(PressState::NotPressing)))
-                }
+                };
             }
             _ => {}
         }

@@ -7,12 +7,6 @@
         {
             "type": "lldb",
             "request": "attach",
-            "name": "Attach",
-            "program": "java"
-        },
-        {
-            "type": "lldb",
-            "request": "attach",
             "name": "Attach Gedit(Nix)",
             "program": "/nix/store/xayryd4aps8pw1v3xwq5g2pzw3lif6kk-gedit-40.1/bin/.gedit-wrapped"
         },
@@ -59,7 +53,9 @@
                 "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug"
             },
             "program": "${cargo:program}",
-            "args": ["--verbose"]
+            "args": [
+                "--verbose"
+            ]
         },
         {
             "type": "lldb",
@@ -75,7 +71,9 @@
                 "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug"
             },
             "program": "${cargo:program}",
-            "args": ["--verbose"]
+            "args": [
+                "--verbose"
+            ]
         },
         {
             "type": "lldb",
@@ -89,7 +87,14 @@
                 "G_MESSAGES_DEBUG": "kime",
             },
             "program": "/usr/lib64/firefox/firefox",
-            "args": ["-g", "-new-instance", "-P", "kime-debug", "-new-window", "https://codepen.io/hpop/pen/drLiH"]
+            "args": [
+                "-g",
+                "-new-instance",
+                "-P",
+                "kime-debug",
+                "-new-window",
+                "https://codepen.io/hpop/pen/drLiH"
+            ]
         },
         {
             "type": "lldb",
@@ -103,7 +108,9 @@
                 "G_MESSAGES_DEBUG": "kime"
             },
             "program": "/usr/lib/libreoffice/program/soffice.bin",
-            "args": ["--calc"]
+            "args": [
+                "--calc"
+            ]
         },
         {
             "type": "lldb",

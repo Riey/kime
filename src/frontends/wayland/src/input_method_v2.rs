@@ -68,6 +68,7 @@ struct KimeContext {
     /// is zero). `Some(..)` if `RepeatInfo` is known and kime-wayland started tracking the press
     /// state of keys.
     repeat_state: Option<(RepeatInfo, PressState)>,
+    last_preedit_len: usize,
 }
 
 impl Drop for KimeContext {
@@ -102,6 +103,7 @@ impl KimeContext {
             grab,
             timer,
             repeat_state: None,
+            last_preedit_len: 0,
         }
     }
 
@@ -146,10 +148,14 @@ impl KimeContext {
     }
 
     fn clear_preedit(&mut self) {
-        self.im.set_preedit_string(String::new(), -1, -1);
+        if self.last_preedit_len > 0 {
+            self.im.set_preedit_string(String::new(), -1, -1);
+            self.last_preedit_len = 0;
+        }
     }
 
     fn preedit(&mut self, s: String) {
+        self.last_preedit_len = s.len();
         let len = s.len();
         self.im.set_preedit_string(s, 0, len as _);
     }

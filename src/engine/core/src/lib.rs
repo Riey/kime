@@ -145,9 +145,17 @@ impl InputEngine {
             ret |= InputResult::CONSUMED;
         } else if key.code == KeyCode::Shift {
             // ignore shift key
+        } else if matches!(
+            key.code,
+            KeyCode::ControlL | KeyCode::ControlR | KeyCode::AltL | KeyCode::AltR | KeyCode::Shift
+        ) {
+            ret |= self.current_result();
+            return ret;
         } else {
             // clear preedit when get unhandled key
-            self.clear_preedit();
+            if self.engine_impl.has_preedit() {
+                self.clear_preedit();
+            }
         }
 
         ret |= self.current_result();

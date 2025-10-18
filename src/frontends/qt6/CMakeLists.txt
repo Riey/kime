@@ -5,6 +5,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 6.0.0 QUIET COMPONENTS Gui QUIET)
+find_package(Qt5 5.1.0 QUIET COMPONENTS Gui QUIET)
 
 if(NOT Qt6_FOUND)
     return()
@@ -12,6 +13,6 @@ endif()
 
 add_library(kime-qt6 SHARED ../qt5/src/plugin.cc ../qt5/src/input_context.cc)
 
-target_include_directories(kime-qt6 PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${KIME_INCLUDE})
+target_include_directories(kime-qt6 PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${KIME_INCLUDE})
 target_link_directories(kime-qt6 PRIVATE ${KIME_LIB_DIRS})
 target_link_libraries(kime-qt6 PRIVATE ${KIME_ENGINE} Qt6::Gui)

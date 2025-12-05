@@ -93,6 +93,10 @@ emerge -av kime
 git clone https://github.com/riey/kime
 cd kime
 
+export DOCKER_BUILDKIT=0
+export COMPOSE_DOCKER_CLI_BUILD=0
+# 도커 빌드시 Buildkit을 쓰지 않고 레거시 방식으로 빌드하기 위함
+
 docker build --file build-docker/<배포판 경로>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
 docker cp kime:/opt/kime-out/kime.tar.xz .

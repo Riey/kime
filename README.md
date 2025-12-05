@@ -95,6 +95,10 @@ Building with docker does not requires any other dependencies.
 git clone https://github.com/riey/kime
 cd kime
 
+export DOCKER_BUILDKIT=0
+export COMPOSE_DOCKER_CLI_BUILD=0
+# This is Docker build image using legacy
+
 docker build --file build-docker/<distro path>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
 docker cp kime:/opt/kime-out/kime.tar.zst .

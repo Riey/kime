@@ -83,6 +83,14 @@ emaint sync -r riey
 emerge -av kime
 ```
 
+### 오픈수세
+
+```
+zypper ar https://download.opensuse.org/repositories/home:/Kernalix7/openSUSE_Tumbleweed/home:Kernalix7.repo
+zypper refresh
+zypper in kime
+```
+
 ### 소스에서 빌드하기
 
 ### 도커

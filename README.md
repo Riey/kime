@@ -85,6 +85,14 @@ emaint sync -r riey
 emerge -av kime
 ```
 
+### openSUSE
+
+```
+zypper ar https://download.opensuse.org/repositories/home:/Kernalix7/openSUSE_Tumbleweed/home:Kernalix7.repo
+zypper refresh
+zypper in kime
+```
+
 ### Build from source
 
 #### Docker

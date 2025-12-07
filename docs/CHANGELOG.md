@@ -11,6 +11,7 @@
 * Remove `kime-engine-cffi`
 * fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/715)
 * feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/719)
+* add Opensuse Build Service repository and modify README
 
 ## 3.1.1
 

@@ -166,8 +166,8 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 
 ### KDE Plasma Wayland
 
-시스템 설정 > 하드웨어 > 입력 장치 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.  
-이후에 로그아웃을 하는 것을 권장합니다.
+시스템 설정 > 입력과 출력 > 키보드 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.  
+이후에 로그아웃 후 재로그인을 하는 것을 권장합니다.
 
 ### Weston
 `~/.config/weston.ini`에 해당 내용이 있어야 합니다.

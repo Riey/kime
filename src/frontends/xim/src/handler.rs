@@ -346,15 +346,16 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
             state.insert(ModifierState::SUPER);
         }
 
-        let ret = user_ic.user_data.engine.press_key(
-            Key::new(
-                KeyCode::from_hardware_code(xev.detail as u16, numlock).unwrap(),
-                state,
-            ),
-            &self.config,
-        );
-
-        self.process_input_result(server, user_ic, ret)
+        if let Some(keycode) = KeyCode::from_hardware_code(xev.detail as u16, numlock) {
+            let ret = user_ic
+                .user_data
+                .engine
+                .press_key(Key::new(keycode, state), &self.config);
+            self.process_input_result(server, user_ic, ret)
+        } else {
+            log::warn!("Unknown hardware keycode: {}", xev.detail);
+            return Ok(false);
+        }
     }
 
     fn handle_destroy_ic(

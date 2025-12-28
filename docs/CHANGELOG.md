@@ -11,6 +11,7 @@
 * Remove `kime-engine-cffi`
 * fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/715)
 * feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/719)
+* fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
 
 ## 3.1.1
 
@@ -487,3 +488,4 @@ sebeolsik-sin1995 -> sebeolsik-3sin-1995
 [@Riey]: https://github.com/Riey
 [@kpqi5858]: https://github.com/kpqi5858
 [@racakenon]: https://github.com/racakenon
+[@strictpvp]: https://github.com/strictpvp/

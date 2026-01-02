@@ -86,7 +86,8 @@ emerge -av kime
 ### 오픈수세
 
 ```
-zypper ar https://download.opensuse.org/repositories/home:/Kernalix7/openSUSE_Tumbleweed/home:Kernalix7.repo
+zypper ar https://download.opensuse.org/repositories/M17N/openSUSE_Tumbleweed/M17N.repo # 오픈수세 Tumbleweed 레포지토리
+zypper ar https://download.opensuse.org/repositories/M17N/16.0/M17N.repo # 오픈수세 Leap 16 레포지토리
 zypper refresh
 zypper in kime
 ```

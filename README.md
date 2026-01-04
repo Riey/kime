@@ -85,10 +85,11 @@ emaint sync -r riey
 emerge -av kime
 ```
 
-### openSUSE (after 2026 Jan 04 release)
+### openSUSE
+
+After 2026 Jan 04, official package is provided by [openSUSE Software](https://software.opensuse.org/package/kime)
 
 ```
-zypper refresh
 zypper in kime
 ```
 

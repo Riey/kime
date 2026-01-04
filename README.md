@@ -85,11 +85,9 @@ emaint sync -r riey
 emerge -av kime
 ```
 
-### openSUSE
+### openSUSE (after 2026 Jan 04 release)
 
 ```
-zypper ar https://download.opensuse.org/repositories/M17N/openSUSE_Tumbleweed/M17N.repo # for Tumbleweed
-zypper ar https://download.opensuse.org/repositories/M17N/16.0/M17N.repo # for Leap 16
 zypper refresh
 zypper in kime
 ```

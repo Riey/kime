@@ -83,10 +83,12 @@ emaint sync -r riey
 emerge -av kime
 ```
 
-### 오픈수세 (2026년 01월 04일 업데이트 이후)
+### 오픈수세
+
+2026년 01월 04일 이후 공식 패키지가 제공되고 있습니다.
+[openSUSE Software](https://software.opensuse.org/package/kime)
 
 ```
-zypper refresh
 zypper in kime
 ```
 

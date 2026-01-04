@@ -83,11 +83,9 @@ emaint sync -r riey
 emerge -av kime
 ```
 
-### 오픈수세
+### 오픈수세 (2026년 01월 04일 업데이트 이후)
 
 ```
-zypper ar https://download.opensuse.org/repositories/M17N/openSUSE_Tumbleweed/M17N.repo # 오픈수세 Tumbleweed 레포지토리
-zypper ar https://download.opensuse.org/repositories/M17N/16.0/M17N.repo # 오픈수세 Leap 16 레포지토리
 zypper refresh
 zypper in kime
 ```

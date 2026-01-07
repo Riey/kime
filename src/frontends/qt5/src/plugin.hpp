@@ -6,10 +6,13 @@
 #include <QtPlugin>
 #include <qpa/qplatforminputcontextplugin_p.h>
 
+#ifndef KIME_QT_IID
+#define KIME_QT_IID "org.qt-project.Qt.QPlatformInputContextFactoryInterface"
+#endif
+
 class KimePlatformInputContextPlugin : public QPlatformInputContextPlugin {
   Q_OBJECT
-  Q_PLUGIN_METADATA(IID QPlatformInputContextFactoryInterface_iid FILE
-                    "kime.json")
+  Q_PLUGIN_METADATA(IID KIME_QT_IID FILE "kime.json")
 
 private:
   kime::InputEngine *engine = nullptr;

@@ -83,11 +83,9 @@ emaint sync -r riey
 emerge -av kime
 ```
 
-### 오픈수세
+### 오픈수세 (텀블위드)
 
 ```
-zypper ar https://download.opensuse.org/repositories/home:/Kernalix7/openSUSE_Tumbleweed/home:Kernalix7.repo
-zypper refresh
 zypper in kime
 ```
 

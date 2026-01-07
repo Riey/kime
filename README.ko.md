@@ -85,7 +85,7 @@ emerge -av kime
 
 ### 오픈수세 (텀블위드)
 
-```드
+```
 zypper in kime
 ```
 

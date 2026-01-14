@@ -14,7 +14,7 @@ xim = { version = "0.2", default-features = false, features = ["x11rb-server"] }
 # xim = { path = "../../../../xim-rs", default-features = false, features = ["x11rb-server", "x11rb-xcb"] }
 
 ahash = "0.8"
-log = "0.4.11"
+log = "0.4"
 x11rb = { version = "0.11.0", features = [
     "render",
     "image",

@@ -10,7 +10,7 @@ kime-engine-core = { path = "../../engine/core" }
 kime-version = { path = "../version" }
 kime-run-dir = { path = "../run_dir" }
 
-anyhow = "1.0.38"
-pico-args = "0.5.0"
-log = "0.4.14"
-ksni = "0.2.0"
+anyhow = "1.0"
+pico-args = "0.5"
+log = "0.4"
+ksni = "0.2"

@@ -12,8 +12,8 @@ config-serde = ["serde", "enumset/serde", "log/serde"]
 kime-engine-backend = { path = "../backend" }
 kime-engine-backend-hangul = { path = "../backends/hangul" }
 kime-engine-backend-latin = { path = "../backends/latin" }
-log = "0.4.14"
-serde = { version = "1.0.124", features = ["derive"], optional = true }
-enumset = "1.0.6"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"], optional = true }
+enumset = "1.1"
 enum-map = "2"
-maplit = "1.0.2"
+maplit = "1.0"

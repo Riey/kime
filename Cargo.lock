@@ -786,15 +786,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef8ae57c4978a2acd8b869ce6b9ca1dfe817bff704c220209fdef2c0b75a01b9"
 
 [[package]]
-name = "daemonize"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab8bfdaacb3c887a54d41bdf48d3af8873b3f5566469f8ba21b92057509f116e"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "darling"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1644,11 +1635,11 @@ name = "kime"
 version = "0.1.0"
 dependencies = [
  "ctrlc",
- "daemonize",
  "kime-engine-core",
  "kime-run-dir",
  "kime-version",
  "log",
+ "nix 0.30.1",
  "pico-args",
 ]
 
@@ -1665,8 +1656,8 @@ dependencies = [
 name = "kime-check"
 version = "0.1.0"
 dependencies = [
- "ansi_term",
  "kime-engine-core",
+ "owo-colors",
  "pad",
  "serde_yaml",
  "strum 0.26.3",
@@ -2528,6 +2519,12 @@ checksum = "490d3a563d3122bf7c911a59b0add9389e5ec0f5f0c3ac6b91ff235a0e6a7f90"
 dependencies = [
  "ttf-parser 0.24.0",
 ]
+
+[[package]]
+name = "owo-colors"
+version = "4.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c6901729fa79e91a0913333229e9ca5dc725089d1c363b2f4b4760709dc4a52"
 
 [[package]]
 name = "pad"

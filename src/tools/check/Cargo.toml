@@ -6,7 +6,7 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-ansi_term = "0.12.1"
+owo-colors = "4"
 kime-engine-core = { path = "../../engine/core" }
 pad = "0.1.6"
 serde_yaml = "0.9"

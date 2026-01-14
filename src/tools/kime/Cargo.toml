@@ -11,6 +11,6 @@ kime-version = { path = "../version" }
 kime-run-dir = { path = "../run_dir" }
 
 ctrlc = { version = "3.4", features = ["termination"] }
-daemonize = "0.5"
+nix = { version = "0.30", features = ["process", "fs", "signal"] }
 log = "0.4"
 pico-args = "0.5"

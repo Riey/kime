@@ -1,11 +1,13 @@
-use daemonize::Daemonize;
 use kime_engine_core::{load_raw_config_from_config_dir, DaemonModule as Module};
+use nix::unistd::{daemon, Pid};
+use nix::sys::signal::{kill, Signal};
+use std::os::unix::io::AsRawFd;
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::{
-    env, io,
+    io,
     process::{Command, Stdio},
 };
-use std::{fs::File, path::Path};
+use std::{fs::File, io::Write, path::Path};
 
 const fn process_name(module: Module) -> &'static str {
     match module {
@@ -15,20 +17,18 @@ const fn process_name(module: Module) -> &'static str {
     }
 }
 
-fn kill_daemon(pid: &Path) -> io::Result<()> {
-    let pid = std::fs::read_to_string(pid)?;
+fn kill_daemon(pid_path: &Path) -> io::Result<()> {
+    let pid_str = std::fs::read_to_string(pid_path)?;
+    let pid: i32 = pid_str.trim().parse().map_err(|e| {
+        io::Error::new(io::ErrorKind::InvalidData, format!("Invalid PID: {}", e))
+    })?;
 
-    let ret = Command::new("kill")
-        .arg(pid)
-        .spawn()?
-        .wait_with_output()?
-        .status;
-
-    if ret.success() {
-        Ok(())
-    } else {
-        log::error!("kill return: {}", ret);
-        Err(io::Error::new(io::ErrorKind::Other, "kill command failed"))
+    match kill(Pid::from_raw(pid), Signal::SIGTERM) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            log::error!("kill return: {}", err);
+            Err(io::Error::new(io::ErrorKind::Other, "kill command failed"))
+        }
     }
 }
 
@@ -49,25 +49,35 @@ fn main() -> Result<(), ()> {
     }
 
     if !args.contains(["-D", "--no-daemon"]) {
-        let stderr = run_dir.join("kime.err");
-        let stderr_file = match File::create(stderr) {
+        let stderr_path = run_dir.join("kime.err");
+        let stderr_file = match File::create(&stderr_path) {
             Ok(file) => file,
             Err(err) => {
                 log::error!("Can't create stderr file: {}", err);
                 return Err(());
             }
         };
-        match Daemonize::new()
-            .working_directory("/tmp")
-            .stderr(stderr_file)
-            .pid_file(&pid)
-            .start()
-        {
+
+        // Daemonize: fork and detach from terminal (noclose=true to keep fds open)
+        match daemon(true, true) {
             Ok(_) => {}
             Err(err) => {
                 log::error!("Can't daemonize kime: {}", err);
                 return Err(());
             }
+        }
+
+        // Change working directory to /tmp
+        let _ = std::env::set_current_dir("/tmp");
+
+        // Redirect stderr to file
+        unsafe {
+            nix::libc::dup2(stderr_file.as_raw_fd(), nix::libc::STDERR_FILENO);
+        }
+
+        // Write PID file
+        if let Ok(mut file) = File::create(&pid) {
+            let _ = writeln!(file, "{}", std::process::id());
         }
     }
 

@@ -1,13 +1,13 @@
 use kime_engine_core::{load_raw_config_from_config_dir, DaemonModule as Module};
-use nix::unistd::{daemon, Pid};
 use nix::sys::signal::{kill, Signal};
+use nix::unistd::{daemon, Pid};
 use std::os::unix::io::AsRawFd;
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
+use std::{fs::File, io::Write, path::Path};
 use std::{
     io,
     process::{Command, Stdio},
 };
-use std::{fs::File, io::Write, path::Path};
 
 const fn process_name(module: Module) -> &'static str {
     match module {
@@ -19,9 +19,10 @@ const fn process_name(module: Module) -> &'static str {
 
 fn kill_daemon(pid_path: &Path) -> io::Result<()> {
     let pid_str = std::fs::read_to_string(pid_path)?;
-    let pid: i32 = pid_str.trim().parse().map_err(|e| {
-        io::Error::new(io::ErrorKind::InvalidData, format!("Invalid PID: {}", e))
-    })?;
+    let pid: i32 = pid_str
+        .trim()
+        .parse()
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Invalid PID: {}", e)))?;
 
     match kill(Pid::from_raw(pid), Signal::SIGTERM) {
         Ok(_) => Ok(()),

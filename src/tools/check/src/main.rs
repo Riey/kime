@@ -1,7 +1,7 @@
 use kime_engine_core::{load_engine_config_from_config_dir, Key, KeyCode, KeyMap};
 
-use owo_colors::{OwoColorize, Style};
 use kime_engine_core::{Config, InputCategory, InputEngine, InputResult};
+use owo_colors::{OwoColorize, Style};
 use pad::PadStr;
 use std::env;
 use std::io::BufRead;

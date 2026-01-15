@@ -86,6 +86,7 @@ allow = [
     "OFL-1.1",
     "LicenseRef-UFL-1.0",
     "Unlicense",
+    "NCSA",
 ]
 # List of explicitly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
@@ -187,8 +188,15 @@ skip = [
 # dependencies starting at the specified crate, up to a certain depth, which is
 # by default infinite
 skip-tree = [
-    { name = "criterion", version = "=0.3.5" }
 ]
+
+[[licenses.clarify]]
+# Clarify license expression for epaint_default_fonts which uses a
+# non-SPDX token in its Cargo.toml (Ubuntu-font-1.0). Treat it as
+# (MIT OR Apache-2.0) AND OFL-1.1 for our checks.
+name = "epaint_default_fonts"
+version = "=0.33.3"
+expression = "(MIT OR Apache-2.0) AND OFL-1.1"
 
 # This section is considered when running `cargo deny check sources`.
 # More documentation about the 'sources' section can be found here:

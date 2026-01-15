@@ -1,4 +1,5 @@
 use kime_engine_core::{load_raw_config_from_config_dir, DaemonModule as Module};
+use nix::fcntl::{Flock, FlockArg};
 use nix::sys::signal::{kill, Signal};
 use nix::unistd::{daemon, Pid};
 use std::os::unix::io::AsRawFd;
@@ -19,10 +20,13 @@ const fn process_name(module: Module) -> &'static str {
 
 fn kill_daemon(pid_path: &Path) -> io::Result<()> {
     let pid_str = std::fs::read_to_string(pid_path)?;
-    let pid: i32 = pid_str
-        .trim()
-        .parse()
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Invalid PID: {}", e)))?;
+    let pid: i32 = match pid_str.trim().parse() {
+        Ok(pid) => pid,
+        Err(err) => {
+            log::error!("kill return: {}", err);
+            return Err(io::Error::new(io::ErrorKind::Other, "kill command failed"));
+        }
+    };
 
     match kill(Pid::from_raw(pid), Signal::SIGTERM) {
         Ok(_) => Ok(()),
@@ -75,12 +79,28 @@ fn main() -> Result<(), ()> {
         unsafe {
             nix::libc::dup2(stderr_file.as_raw_fd(), nix::libc::STDERR_FILENO);
         }
-
-        // Write PID file
-        if let Ok(mut file) = File::create(&pid) {
-            let _ = writeln!(file, "{}", std::process::id());
-        }
     }
+
+    // Create PID file and lock it exclusively to prevent duplicate instances
+    // Lock must be held until program exits (like daemonize library behavior)
+    // Possible errors:
+    //   - File::create fails: permission denied, disk full, etc.
+    //   - Flock::lock returns EWOULDBLOCK: another kime instance is running
+    //   - Flock::lock returns other error: unexpected lock failure
+    let _pid_lock = match File::create(&pid).and_then(|file| {
+        Flock::lock(file, FlockArg::LockExclusiveNonblock).map_err(|(_, e)| io::Error::from(e))
+    }) {
+        Ok(mut lock) => {
+            writeln!(lock, "{}", std::process::id()).map_err(|err| {
+                log::error!("Can't daemonize kime: {}", err);
+            })?;
+            Some(lock)
+        }
+        Err(err) => {
+            log::error!("Can't daemonize kime: {}", err);
+            return Err(());
+        }
+    };
 
     let config = load_raw_config_from_config_dir().daemon;
 

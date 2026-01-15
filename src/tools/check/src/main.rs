@@ -1,7 +1,7 @@
 use kime_engine_core::{load_engine_config_from_config_dir, Key, KeyCode, KeyMap};
 
-use ansi_term::Color;
 use kime_engine_core::{Config, InputCategory, InputEngine, InputResult};
+use owo_colors::{OwoColorize, Style};
 use pad::PadStr;
 use std::env;
 use std::io::BufRead;
@@ -19,25 +19,25 @@ impl CondResult {
         matches!(self, Self::Ok | Self::Ignore(..))
     }
 
-    pub fn color(&self) -> Color {
+    pub fn style(&self) -> Style {
         match self {
-            CondResult::Ok => Color::Green,
-            CondResult::Fail(..) => Color::Red,
-            CondResult::Ignore(..) => Color::Purple,
+            CondResult::Ok => Style::new().green(),
+            CondResult::Fail(..) => Style::new().red(),
+            CondResult::Ignore(..) => Style::new().purple(),
         }
     }
 
     pub fn print(&self, message: &str) {
-        let c = self.color();
+        let s = self.style();
         print!(
             "{} {}",
-            c.paint(<&str>::from(self).pad_to_width(8)),
-            Color::White.bold().paint(message.pad_to_width(40))
+            <&str>::from(self).pad_to_width(8).style(s),
+            message.pad_to_width(40).bold().white()
         );
 
         match self {
             CondResult::Ok => println!(),
-            CondResult::Fail(msg) | CondResult::Ignore(msg) => println!("({})", c.paint(msg)),
+            CondResult::Fail(msg) | CondResult::Ignore(msg) => println!("({})", msg.style(s)),
         }
     }
 }

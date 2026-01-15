@@ -8,6 +8,7 @@ use serde::{
 use strum::{Display, EnumString};
 
 bitflags::bitflags! {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
     #[repr(transparent)]
     pub struct ModifierState: u32 {
         const SHIFT = 0x1;

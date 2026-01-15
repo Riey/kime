@@ -1,11 +1,14 @@
-use daemonize::Daemonize;
 use kime_engine_core::{load_raw_config_from_config_dir, DaemonModule as Module};
+use nix::fcntl::{Flock, FlockArg};
+use nix::sys::signal::{kill, Signal};
+use nix::unistd::{daemon, Pid};
+use std::os::unix::io::AsRawFd;
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
+use std::{fs::File, io::Write, path::Path};
 use std::{
-    env, io,
+    io,
     process::{Command, Stdio},
 };
-use std::{fs::File, path::Path};
 
 const fn process_name(module: Module) -> &'static str {
     match module {
@@ -15,20 +18,22 @@ const fn process_name(module: Module) -> &'static str {
     }
 }
 
-fn kill_daemon(pid: &Path) -> io::Result<()> {
-    let pid = std::fs::read_to_string(pid)?;
+fn kill_daemon(pid_path: &Path) -> io::Result<()> {
+    let pid_str = std::fs::read_to_string(pid_path)?;
+    let pid: i32 = match pid_str.trim().parse() {
+        Ok(pid) => pid,
+        Err(err) => {
+            log::error!("kill return: {}", err);
+            return Err(io::Error::new(io::ErrorKind::Other, "kill command failed"));
+        }
+    };
 
-    let ret = Command::new("kill")
-        .arg(pid)
-        .spawn()?
-        .wait_with_output()?
-        .status;
-
-    if ret.success() {
-        Ok(())
-    } else {
-        log::error!("kill return: {}", ret);
-        Err(io::Error::new(io::ErrorKind::Other, "kill command failed"))
+    match kill(Pid::from_raw(pid), Signal::SIGTERM) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            log::error!("kill return: {}", err);
+            Err(io::Error::new(io::ErrorKind::Other, "kill command failed"))
+        }
     }
 }
 
@@ -49,27 +54,57 @@ fn main() -> Result<(), ()> {
     }
 
     if !args.contains(["-D", "--no-daemon"]) {
-        let stderr = run_dir.join("kime.err");
-        let stderr_file = match File::create(stderr) {
+        let stderr_path = run_dir.join("kime.err");
+        let stderr_file = match File::create(&stderr_path) {
             Ok(file) => file,
             Err(err) => {
                 log::error!("Can't create stderr file: {}", err);
                 return Err(());
             }
         };
-        match Daemonize::new()
-            .working_directory("/tmp")
-            .stderr(stderr_file)
-            .pid_file(&pid)
-            .start()
-        {
+
+        // Daemonize: fork and detach from terminal (noclose=true to keep fds open)
+        match daemon(true, true) {
             Ok(_) => {}
             Err(err) => {
                 log::error!("Can't daemonize kime: {}", err);
                 return Err(());
             }
         }
+
+        // Change working directory to /tmp
+        let _ = std::env::set_current_dir("/tmp");
+
+        // Redirect stderr to file
+        unsafe {
+            nix::libc::dup2(stderr_file.as_raw_fd(), nix::libc::STDERR_FILENO);
+        }
     }
+
+    // Create PID file and lock it exclusively to prevent duplicate instances
+    // Lock must be held until program exits (like daemonize library behavior)
+    // Possible errors:
+    //   - File::create fails: permission denied, disk full, etc.
+    //   - Flock::lock returns EWOULDBLOCK: another kime instance is running
+    //   - Flock::lock returns other error: unexpected lock failure
+    let _pid_lock = match File::create(&pid).and_then(|file| {
+        Flock::lock(file, FlockArg::LockExclusiveNonblock).map_err(|(_, e)| io::Error::from(e))
+    }) {
+        Ok(mut lock) => {
+            writeln!(lock, "{}", std::process::id()).map_err(|err| {
+                log::error!("Can't daemonize kime: {}", err);
+            })?;
+            Some(lock)
+        }
+        Err(err) if err.kind() == io::ErrorKind::WouldBlock => {
+            log::error!("Another instance of kime daemon is already running.");
+            return Err(());
+        }
+        Err(err) => {
+            log::error!("Can't daemonize kime: {}", err);
+            return Err(());
+        }
+    };
 
     let config = load_raw_config_from_config_dir().daemon;
 

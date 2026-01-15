@@ -1,14 +1,13 @@
-use nix::poll;
+use nix::poll::{self, PollFd, PollFlags, PollTimeout};
 use std::fmt;
 use std::io::{self, BufWriter, Write};
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsFd, BorrowedFd};
 use std::process::{Child, Stdio};
 
 pub const CANDIDATE_PROCESS_NAME: &str = "kime-candidate-window";
 
 pub struct Client {
     child: Child,
-    stdout_fd: RawFd,
 }
 
 impl Client {
@@ -32,14 +31,13 @@ impl Client {
 
         drop(stdin);
 
-        let stdout_fd = child.stdout.as_ref().unwrap().as_raw_fd();
-
-        Ok(Self { stdout_fd, child })
+        Ok(Self { child })
     }
 
     pub fn is_ready(&self) -> bool {
-        let fds = &mut [poll::PollFd::new(self.stdout_fd, poll::PollFlags::POLLIN)];
-        poll::poll(fds, 200) == Ok(1)
+        let stdout: BorrowedFd = self.child.stdout.as_ref().unwrap().as_fd();
+        let fds = &mut [PollFd::new(stdout, PollFlags::POLLIN)];
+        poll::poll(fds, PollTimeout::from(200u16)) == Ok(1)
     }
 
     pub fn close(mut self) -> io::Result<Option<String>> {

@@ -15,15 +15,15 @@ kime-engine-backend-math = { path = "../backends/math", optional = true }
 kime-engine-backend-emoji = { path = "../backends/emoji", optional = true }
 serde_yaml = "0.9"
 parking_lot = "0.12"
-fontdb = { version = "0.11.2", features = ["fontconfig"] }
+fontdb = { version = "0.23", features = ["fontconfig"] }
 
 [target.'cfg(unix)'.dependencies]
-xdg = "2.2.0"
+xdg = "2.5"
 kime-run-dir = { path = "../../tools/run_dir" }
 
 [dev-dependencies]
-criterion = "0.4"
-pretty_assertions = "1.0.0"
+criterion = "0.8"
+pretty_assertions = "1.4"
 
 [[bench]]
 name = "call_key"

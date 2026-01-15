@@ -1,10 +1,10 @@
 mod bgra;
 
 use bgra::Bgra;
-use std::{num::NonZeroU32, sync::Arc};
+use std::num::NonZeroU32;
 
+use ab_glyph::{FontArc, PxScale};
 use image::ImageBuffer;
-use rusttype::Font;
 use x11rb::{
     connection::Connection,
     protocol::xproto::{
@@ -19,15 +19,15 @@ pub struct PeWindow {
     preedit: String,
     gc: u32,
     text_pos: (u32, u32),
-    text_scale: rusttype::Scale,
-    font: Arc<Font<'static>>,
+    text_scale: PxScale,
+    font: FontArc,
     image_buffer: ImageBuffer<Bgra, Vec<u8>>,
 }
 
 impl PeWindow {
     pub fn new(
         conn: &impl Connection,
-        (font, font_size): (Arc<Font<'static>>, f32),
+        (font, font_size): (FontArc, f32),
         app_win: Option<NonZeroU32>,
         spot_location: xim::Point,
         screen_num: usize,
@@ -102,7 +102,7 @@ impl PeWindow {
             gc,
             font,
             text_pos: ((font_size * 0.36) as _, (font_size * 0.36) as _),
-            text_scale: rusttype::Scale::uniform(font_size as f32),
+            text_scale: PxScale::from(font_size),
             image_buffer: ImageBuffer::new(size.0 as _, size.1 as _),
         })
     }

@@ -18,7 +18,7 @@ use wayland_protocols::unstable::input_method::v1::client::{
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
-use mio_timerfd::{ClockId, TimerFd};
+use timerfd_mio::TimerFd;
 use wayland_client::protocol::wl_keyboard::KeymapFormat;
 use xkbcommon::xkb::{
     Context, Keycode, Keymap, CONTEXT_NO_FLAGS, KEYMAP_COMPILE_NO_FLAGS, KEYMAP_FORMAT_TEXT_V1,
@@ -205,7 +205,7 @@ impl KimeContext {
                                         if !press_state.is_pressing(key) =>
                                     {
                                         let duration = Duration::from_millis(info.delay as u64);
-                                        if let Err(e) = self.timer.set_timeout(&duration) {
+                                        if let Err(e) = self.timer.set_timeout_oneshot(duration) {
                                             log::warn!("failed to set repeat timer: {}", e);
                                         }
                                         *press_state = PressState::Pressing {
@@ -228,7 +228,7 @@ impl KimeContext {
                 } else {
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
-                            if let Err(e) = self.timer.disarm() {
+                            if let Err(e) = self.timer.set_timeout_oneshot(Duration::ZERO) {
                                 log::warn!("failed to disarm timer: {}", e);
                             }
                             *press_state = PressState::NotPressing;
@@ -309,8 +309,8 @@ impl KimeContext {
                 {
                     // Start repeat
                     log::trace!("Start repeating {}", key);
-                    let interval = &Duration::from_secs_f64(1.0 / info.rate as f64);
-                    self.timer.set_timeout_interval(interval)?;
+                    let interval = Duration::from_secs_f64(1.0 / info.rate as f64);
+                    self.timer.set_timeout_interval(interval, interval)?;
                     *is_repeating = true;
                 }
             }
@@ -368,7 +368,7 @@ impl KimeContext {
         self.grab_activate = false;
 
         // Input deactivated, stop repeating
-        self.timer.disarm().unwrap();
+        self.timer.set_timeout_oneshot(Duration::ZERO).unwrap();
         if let Some((_, ref mut press_state)) = self.repeat_state {
             *press_state = PressState::NotPressing
         }
@@ -412,7 +412,7 @@ pub fn run(
     let im = globals.instantiate_exact::<ZwpInputMethodV1>(1)?;
     im.assign(im_filter);
 
-    let mut timer = TimerFd::new(ClockId::Monotonic).expect("Initialize timer");
+    let mut timer = TimerFd::new().expect("Initialize timer");
 
     let mut poll = Poll::new().expect("Initialize epoll()");
     let registry = poll.registry();

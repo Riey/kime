@@ -20,5 +20,5 @@ xkbcommon = { version = "0.7.0", features = ["wayland"] }
 libc = "0.2"
 log = "0.4"
 pico-args = "0.5"
-mio = { version = "0.7", features = ["os-ext"] }
-mio-timerfd = "0.2"
+mio = { version = "1.0", features = ["os-ext"] }
+timerfd-mio = "0.1"

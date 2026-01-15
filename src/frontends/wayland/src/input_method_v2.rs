@@ -22,7 +22,7 @@ use zwp_virtual_keyboard::virtual_keyboard_unstable_v1::{
 };
 
 use mio::{unix::SourceFd, Events as MioEvents, Interest, Poll, Token};
-use mio_timerfd::{ClockId, TimerFd};
+use timerfd_mio::TimerFd;
 
 use crate::{PressState, RepeatInfo};
 
@@ -192,7 +192,7 @@ impl KimeContext {
                     self.grab_activate = false;
 
                     // Input deactivated, stop repeating
-                    self.timer.disarm().unwrap();
+                    self.timer.set_timeout_oneshot(Duration::ZERO).unwrap();
                     if let Some((_, ref mut press_state)) = self.repeat_state {
                         *press_state = PressState::NotPressing
                     }
@@ -241,7 +241,7 @@ impl KimeContext {
                                         if !press_state.is_pressing(key) =>
                                     {
                                         let duration = Duration::from_millis(info.delay as u64);
-                                        if let Err(e) = self.timer.set_timeout(&duration) {
+                                        if let Err(e) = self.timer.set_timeout_oneshot(duration) {
                                             log::warn!("failed to set repeat timer: {}", e);
                                         }
                                         *press_state = PressState::Pressing {
@@ -267,7 +267,7 @@ impl KimeContext {
                     // If user released the last pressed key, clear the timer and state
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
-                            if let Err(e) = self.timer.disarm() {
+                            if let Err(e) = self.timer.set_timeout_oneshot(Duration::ZERO) {
                                 log::warn!("failed to disarm timer: {}", e);
                             }
                             *press_state = PressState::NotPressing;
@@ -340,8 +340,8 @@ impl KimeContext {
             if !*is_repeating {
                 // Start repeat
                 log::trace!("Start repeating {}", key);
-                let interval = &Duration::from_secs_f64(1.0 / info.rate as f64);
-                self.timer.set_timeout_interval(interval)?;
+                let interval = Duration::from_secs_f64(1.0 / info.rate as f64);
+                self.timer.set_timeout_interval(interval, interval)?;
                 *is_repeating = true;
             }
 
@@ -390,7 +390,7 @@ pub fn run(
     im.assign(filter);
 
     // Initialize timer
-    let mut timer = TimerFd::new(ClockId::Monotonic).expect("Initialize timer");
+    let mut timer = TimerFd::new().expect("Initialize timer");
 
     // Initialize epoll() object
     let mut poll = Poll::new().expect("Initialize epoll()");

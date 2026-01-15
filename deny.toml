@@ -86,6 +86,7 @@ allow = [
     "Unicode-3.0",
     "OFL-1.1",
     "Unlicense",
+    "NCSA",
 ]
 # List of explicitly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses

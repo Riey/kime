@@ -100,10 +100,10 @@ allow = [
     "Zlib",
     "ISC",
     "BSL-1.0",
-    "GPL-3.0-or-later",  # kime project license
-    "MPL-2.0",           # cbindgen
-    "Unicode-3.0",       # ICU crates
-    "OFL-1.1",           # fonts
+    "GPL-3.0-or-later",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "OFL-1.1",
     "Unlicense",
     "NCSA",
 ]
@@ -186,10 +186,6 @@ allow = [
     #"ansi_term@0.11.0",
     #{ crate = "ansi_term@0.11.0", reason = "you can specify a reason it is allowed" },
 ]
-# If true, workspace members are automatically allowed even when using deny-by-default
-# This is useful for organizations that want to deny all external dependencies by default
-# but allow their own workspace crates without having to explicitly list them
-allow-workspace = false
 # List of crates to deny
 deny = [
     #"ansi_term@0.11.0",

@@ -96,6 +96,10 @@ fn main() -> Result<(), ()> {
             })?;
             Some(lock)
         }
+        Err(err) if err.kind() == io::ErrorKind::WouldBlock => {
+            log::error!("Another instance of kime daemon is already running.");
+            return Err(());
+        }
         Err(err) => {
             log::error!("Can't daemonize kime: {}", err);
             return Err(());

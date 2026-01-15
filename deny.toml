@@ -83,6 +83,7 @@ allow = [
     "BSL-1.0",
     "GPL-3.0",
     "Unicode-DFS-2016",
+    "Unicode-3.0",
     "OFL-1.1",
     "LicenseRef-UFL-1.0",
     "Unlicense",

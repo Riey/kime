@@ -48,26 +48,32 @@ impl eframe::App for CandidateApp {
         num_hotkey!(egui::Key::Num9, 8);
         num_hotkey!(egui::Key::Num0, 9);
 
-        if ctx.input(|i| i.key_down(egui::Key::ArrowLeft)) || ctx.input(|i| i.key_down(egui::Key::H)) {
+        if ctx.input(|i| i.key_down(egui::Key::ArrowLeft))
+            || ctx.input(|i| i.key_down(egui::Key::H))
+        {
             if !self.key_state.left {
                 self.page_index = self.page_index.saturating_sub(1);
                 self.key_state.left = true;
             }
         }
 
-        if ctx.input(|i| i.key_released(egui::Key::ArrowLeft)) || ctx.input(|i| i.key_released(egui::Key::H))
+        if ctx.input(|i| i.key_released(egui::Key::ArrowLeft))
+            || ctx.input(|i| i.key_released(egui::Key::H))
         {
             self.key_state.left = false;
         }
 
-        if ctx.input(|i| i.key_down(egui::Key::ArrowRight)) || ctx.input(|i| i.key_down(egui::Key::L)) {
+        if ctx.input(|i| i.key_down(egui::Key::ArrowRight))
+            || ctx.input(|i| i.key_down(egui::Key::L))
+        {
             if !self.key_state.right {
                 self.page_index = self.page_index.saturating_add(1).min(self.max_page_index);
                 self.key_state.right = true;
             }
         }
 
-        if ctx.input(|i| i.key_released(egui::Key::ArrowRight)) || ctx.input(|i| i.key_released(egui::Key::L))
+        if ctx.input(|i| i.key_released(egui::Key::ArrowRight))
+            || ctx.input(|i| i.key_released(egui::Key::L))
         {
             self.key_state.right = false;
         }

@@ -119,6 +119,8 @@ exceptions = [
     # Each entry is the crate and version constraint, and its specific allow
     # list
     #{ allow = ["Zlib"], name = "adler32", version = "*" },
+    # epaint_default_fonts uses Ubuntu-font-1.0 which isn't a standard SPDX ID
+    { allow = ["MIT", "Apache-2.0", "OFL-1.1"], name = "epaint_default_fonts", version = "*" },
 ]
 
 # Some crates don't have (easily) machine readable licensing information,
@@ -189,14 +191,6 @@ skip = [
 # by default infinite
 skip-tree = [
 ]
-
-[[licenses.clarify]]
-# Clarify license expression for epaint_default_fonts which uses a
-# non-SPDX token in its Cargo.toml (Ubuntu-font-1.0). Treat it as
-# (MIT OR Apache-2.0) AND OFL-1.1 for our checks.
-name = "epaint_default_fonts"
-version = "=0.33.3"
-expression = "(MIT OR Apache-2.0) AND OFL-1.1"
 
 # This section is considered when running `cargo deny check sources`.
 # More documentation about the 'sources' section can be found here:

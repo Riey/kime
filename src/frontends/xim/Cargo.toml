@@ -21,5 +21,5 @@ x11rb = { version = "0.13", features = [
 ], default-features = false }
 pico-args = "0.5.0"
 image = { version = "0.25", default-features = false, features = ["png"] }
-imageproc = "0.25"
+imageproc = { version = "0.25", default-features = false }
 ab_glyph = "0.2"

@@ -192,7 +192,7 @@ impl KimeContext {
                     self.grab_activate = false;
 
                     // Input deactivated, stop repeating
-                    self.timer.set_timeout_oneshot(Duration::ZERO).unwrap();
+                    self.timer.disarm();
                     if let Some((_, ref mut press_state)) = self.repeat_state {
                         *press_state = PressState::NotPressing
                     }
@@ -267,9 +267,7 @@ impl KimeContext {
                     // If user released the last pressed key, clear the timer and state
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
-                            if let Err(e) = self.timer.set_timeout_oneshot(Duration::ZERO) {
-                                log::warn!("failed to disarm timer: {}", e);
-                            }
+                            self.timer.disarm();
                             *press_state = PressState::NotPressing;
                         }
                     }
@@ -323,6 +321,10 @@ impl KimeContext {
     pub fn handle_timer_ev(&mut self) -> std::io::Result<()> {
         // Read timer, this MUST be called or timer will be broken
         let overrun_count = self.timer.read()?;
+        if overrun_count == 0 {
+            // Non-blocking read returned no expirations, skip processing
+            return Ok(());
+        }
         if overrun_count != 1 {
             log::warn!("Some timer events were not properly handled!");
         }

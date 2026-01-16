@@ -12,7 +12,8 @@ fn main() {
 
     let result = kime_wayland::input_method_v2::run(&display, &mut event_queue, &globals);
 
-    if let Err(_) = result {
+    if let Err(e) = result {
+        log::warn!("input_method_v2 failed: {}, trying v1", e);
         kime_wayland::input_method_v1::run(&display, &mut event_queue, &globals).unwrap();
     }
 }

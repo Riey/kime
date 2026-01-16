@@ -228,7 +228,7 @@ impl KimeContext {
                 } else {
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
-                            self.timer.disarm();
+                            let _ = self.timer.set_timeout_oneshot(Duration::ZERO);
                             *press_state = PressState::NotPressing;
                         }
                     }
@@ -370,7 +370,7 @@ impl KimeContext {
         self.grab_activate = false;
 
         // Input deactivated, stop repeating
-        self.timer.disarm();
+        let _ = self.timer.set_timeout_oneshot(Duration::ZERO);
         if let Some((_, ref mut press_state)) = self.repeat_state {
             *press_state = PressState::NotPressing
         }

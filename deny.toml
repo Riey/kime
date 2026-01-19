@@ -81,11 +81,12 @@ allow = [
     "Zlib",
     "ISC",
     "BSL-1.0",
-    "GPL-3.0",
+    "MPL-2.0",
     "Unicode-DFS-2016",
+    "Unicode-3.0",
     "OFL-1.1",
-    "LicenseRef-UFL-1.0",
     "Unlicense",
+    "NCSA",
 ]
 # List of explicitly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
@@ -123,6 +124,15 @@ exceptions = [
 # Some crates don't have (easily) machine readable licensing information,
 # adding a clarification entry for it allows you to manually specify the
 # licensing information
+
+# epaint_default_fonts uses "Ubuntu-font-1.0" which isn't a standard SPDX identifier
+# The actual licenses are MIT OR Apache-2.0 for code, OFL-1.1 for fonts
+[[licenses.clarify]]
+name = "epaint_default_fonts"
+version = "*"
+expression = "(MIT OR Apache-2.0) AND OFL-1.1"
+license-files = []
+
 #[[licenses.clarify]]
 # The name of the crate the clarification applies to
 #name = "ring"
@@ -187,7 +197,6 @@ skip = [
 # dependencies starting at the specified crate, up to a certain depth, which is
 # by default infinite
 skip-tree = [
-    { name = "criterion", version = "=0.3.5" }
 ]
 
 # This section is considered when running `cargo deny check sources`.

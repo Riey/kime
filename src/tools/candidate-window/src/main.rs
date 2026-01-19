@@ -1,6 +1,7 @@
 use std::{
     collections::BTreeMap,
     io::{self, BufRead, Stdout, Write},
+    sync::Arc,
 };
 
 use egui::Widget;
@@ -22,15 +23,15 @@ struct CandidateApp {
 }
 
 impl eframe::App for CandidateApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        if ctx.input().key_down(egui::Key::Escape) || ctx.input().key_down(egui::Key::Q) {
-            frame.close();
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if ctx.input(|i| i.key_down(egui::Key::Escape)) || ctx.input(|i| i.key_down(egui::Key::Q)) {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
             return;
         }
 
         macro_rules! num_hotkey {
             ($k:expr, $n:expr) => {
-                if ctx.input().key_down($k) {
+                if ctx.input(|i| i.key_down($k)) {
                     self.page_index = $n;
                 }
             };
@@ -47,26 +48,32 @@ impl eframe::App for CandidateApp {
         num_hotkey!(egui::Key::Num9, 8);
         num_hotkey!(egui::Key::Num0, 9);
 
-        if ctx.input().key_down(egui::Key::ArrowLeft) || ctx.input().key_down(egui::Key::H) {
+        if ctx.input(|i| i.key_down(egui::Key::ArrowLeft))
+            || ctx.input(|i| i.key_down(egui::Key::H))
+        {
             if !self.key_state.left {
                 self.page_index = self.page_index.saturating_sub(1);
                 self.key_state.left = true;
             }
         }
 
-        if ctx.input().key_released(egui::Key::ArrowLeft) || ctx.input().key_released(egui::Key::H)
+        if ctx.input(|i| i.key_released(egui::Key::ArrowLeft))
+            || ctx.input(|i| i.key_released(egui::Key::H))
         {
             self.key_state.left = false;
         }
 
-        if ctx.input().key_down(egui::Key::ArrowRight) || ctx.input().key_down(egui::Key::L) {
+        if ctx.input(|i| i.key_down(egui::Key::ArrowRight))
+            || ctx.input(|i| i.key_down(egui::Key::L))
+        {
             if !self.key_state.right {
                 self.page_index = self.page_index.saturating_add(1).min(self.max_page_index);
                 self.key_state.right = true;
             }
         }
 
-        if ctx.input().key_released(egui::Key::ArrowRight) || ctx.input().key_released(egui::Key::L)
+        if ctx.input(|i| i.key_released(egui::Key::ArrowRight))
+            || ctx.input(|i| i.key_released(egui::Key::L))
         {
             self.key_state.right = false;
         }
@@ -91,7 +98,7 @@ impl eframe::App for CandidateApp {
 
                     if quitted {
                         self.stdout.write_all(key.as_bytes()).unwrap();
-                        frame.close();
+                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                         return;
                     }
                 }
@@ -146,21 +153,21 @@ fn main() -> io::Result<()> {
     eframe::run_native(
         "kime-candidate",
         eframe::NativeOptions {
-            always_on_top: true,
-            decorated: false,
-            icon_data: None,
-            initial_window_size: Some(egui::vec2(400.0, 400.0)),
+            viewport: egui::ViewportBuilder::default()
+                .with_inner_size([400.0, 400.0])
+                .with_decorations(false)
+                .with_window_level(egui::WindowLevel::AlwaysOnTop),
             ..Default::default()
         },
         Box::new(|cc| {
             let config = kime_engine_core::load_engine_config_from_config_dir().unwrap_or_default();
             let (font_bytes, _index) = config.candidate_font;
-            let mut font_data = BTreeMap::<_, egui::FontData>::new();
+            let mut font_data = BTreeMap::<_, Arc<egui::FontData>>::new();
             let mut families = BTreeMap::new();
 
             font_data.insert(
                 "Font".to_string(),
-                egui::FontData::from_owned(font_bytes.to_vec()),
+                Arc::new(egui::FontData::from_owned(font_bytes.to_vec())),
             );
 
             families.insert(egui::FontFamily::Proportional, vec!["Font".to_string()]);
@@ -171,7 +178,7 @@ fn main() -> io::Result<()> {
                 families,
             });
 
-            Box::new(CandidateApp {
+            Ok(Box::new(CandidateApp {
                 stdout,
                 page_index: 0,
                 key_state: KeyState::default(),
@@ -181,9 +188,10 @@ fn main() -> io::Result<()> {
                     candidate_list.len() / PAGE_SIZE
                 },
                 candidate_list,
-            })
+            }))
         }),
-    );
+    )
+    .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
 
     Ok(())
 }

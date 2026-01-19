@@ -1,6 +1,7 @@
-use std::{num::NonZeroU32, sync::Arc};
+use std::num::NonZeroU32;
 
 use crate::pe_window::PeWindow;
+use ab_glyph::{FontArc, FontVec};
 use ahash::AHashMap;
 use kime_engine_core::{Config, InputEngine, InputResult, Key, KeyCode, ModifierState};
 use x11rb::{
@@ -32,7 +33,7 @@ impl KimeData {
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
-    font: (Arc<rusttype::Font<'static>>, f32),
+    font: (FontArc, f32),
     config: Config,
     screen_num: usize,
 }
@@ -40,11 +41,8 @@ pub struct KimeHandler {
 impl KimeHandler {
     pub fn new(screen_num: usize, config: Config) -> Self {
         let (font_data, index, font_size) = &config.xim_preedit_font;
-        let font = Arc::new(
-            rusttype::Font::try_from_vec_and_index(font_data.clone(), *index)
-                .unwrap()
-                .to_owned(),
-        );
+        let font_vec = FontVec::try_from_vec_and_index(font_data.clone(), *index).unwrap();
+        let font = FontArc::from(font_vec);
 
         Self {
             preedit_windows: AHashMap::new(),

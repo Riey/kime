@@ -13,6 +13,15 @@
 * feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/719)
 * Add Opensuse Build Service repository and modify README
 * fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
+* Update dependencies:
+  - bitflags 2.10, nix 0.30, strum 0.27
+  - x11rb 0.13, xim 0.5, image 0.25, imageproc 0.25
+  - mio 1.0 with timerfd-mio
+  - egui/eframe 0.33
+  - Replace rusttype with ab_glyph
+  - Replace ansi_term with owo-colors
+  - Replace daemonize with nix daemon
+  - Replace unic with unicode-properties
 
 ## 3.1.1
 

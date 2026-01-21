@@ -13,4 +13,5 @@ kime-run-dir = { path = "../run_dir" }
 anyhow = "1.0"
 pico-args = "0.5"
 log = "0.4"
-ksni = "0.2"
+ksni = "0.3.3"
+tokio = { version = "1.49.0", features = ["full"] }

@@ -3,11 +3,11 @@ name: CI
 on:
   push:
     branches:
-      - 'develop'
-      - 'releases/*'
+      - "develop"
+      - "releases/*"
   pull_request:
     branches:
-      - 'develop'
+      - "develop"
 
 env:
   CARGO_TERM_COLOR: always
@@ -17,22 +17,22 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: cachix/install-nix-action@v18
-      with:
-        github_access_token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Caching cargo
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-nix-rustc-v1-1.55.0-${{ hashFiles('Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-nix-rustc-v1-1.55.0-
-    - run: nix develop -c bash scripts/build.sh -ad
-    - run: nix develop -c cargo test
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v18
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Caching cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-nix-rustc-v1-1.55.0-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nix-rustc-v1-1.55.0-
+      - run: nix develop -c bash scripts/build.sh -ad
+      - run: nix develop -c cargo test
 
   cargo-deny:
     runs-on: ubuntu-24.04
@@ -42,10 +42,8 @@ jobs:
           - bans licenses sources
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: EmbarkStudios/cargo-deny-action@v1
-      with:
-        command: check ${{ matrix.checks }}
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
 
   format:
     runs-on: ubuntu-24.04
@@ -60,5 +58,5 @@ jobs:
   spell-check:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
-    - uses: crate-ci/typos@master
+      - uses: actions/checkout@v4
+      - uses: crate-ci/typos@master

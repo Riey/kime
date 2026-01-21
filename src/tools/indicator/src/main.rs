@@ -1,6 +1,7 @@
 use anyhow::Result;
 use kime_engine_core::{load_raw_config_from_config_dir, IconColor};
 use ksni::menu::*;
+use ksni::TrayMethods;
 use std::net::Shutdown;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
@@ -90,10 +91,8 @@ fn try_terminate_previous_server(file_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
-    let service = ksni::TrayService::new(KimeTray::new(color));
-    let handle = service.handle();
-    service.spawn();
+async fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
+    let handle = KimeTray::new(color).spawn().await?;
 
     if file_path.exists() {
         try_terminate_previous_server(file_path).ok();
@@ -120,20 +119,25 @@ fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
 
                 current_bytes = read_buf;
 
-                handle.update(|tray| {
-                    tray.update_with_bytes(&current_bytes);
-                });
+                handle
+                    .update(|tray| {
+                        tray.update_with_bytes(&current_bytes);
+                    })
+                    .await;
             }
             _ => {}
         }
     }
 }
 
-fn main() {
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
     kime_version::cli_boilerplate!((),);
 
     let config = load_raw_config_from_config_dir().indicator;
     let run_dir = kime_run_dir::get_run_dir();
     let file_path = run_dir.join("kime-indicator.sock");
-    indicator_server(&file_path, config.icon_color).unwrap();
+    indicator_server(&file_path, config.icon_color)
+        .await
+        .unwrap();
 }

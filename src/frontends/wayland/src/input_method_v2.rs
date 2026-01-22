@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::panic;
 use std::time::{Duration, Instant};
 
 use kime_engine_core::{
@@ -107,8 +108,9 @@ impl KimeContext {
         }
     }
 
-    pub fn new_data<'a>(data: &'a mut DispatchData) -> &'a mut Self {
-        data.get::<Self>().unwrap()
+    #[allow(dead_code)]
+    pub fn try_get_data<'a>(data: &'a mut DispatchData) -> Option<&'a mut Self> {
+        data.get::<Self>()
     }
 
     fn process_input_result(&mut self, ret: InputResult) -> bool {
@@ -357,9 +359,11 @@ impl KimeContext {
             }
 
             // Emit key repeat event
+            // Use wrapping_add to prevent overflow panic
+            let elapsed_ms = pressed_at.elapsed().as_millis() as u32;
             let ev = KeyEvent::Key {
                 serial: self.serial,
-                time: wayland_time + pressed_at.elapsed().as_millis() as u32,
+                time: wayland_time.wrapping_add(elapsed_ms),
                 key,
                 state: KeyState::Pressed,
             };
@@ -382,15 +386,24 @@ pub fn run(
     let seat = globals.instantiate_exact::<WlSeat>(1).expect("Load Seat");
 
     let filter = Filter::new(|ev, _filter, mut data| {
-        let ctx = KimeContext::new_data(&mut data);
+        // Catch any panic to prevent abort at FFI boundary
+        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+            if let Some(ctx) = data.get::<KimeContext>() {
+                match ev {
+                    Events::Key { event, .. } => {
+                        ctx.handle_key_ev(event);
+                    }
+                    Events::Im { event, .. } => {
+                        ctx.handle_im_ev(event);
+                    }
+                }
+            } else {
+                log::error!("Failed to get KimeContext from DispatchData");
+            }
+        }));
 
-        match ev {
-            Events::Key { event, .. } => {
-                ctx.handle_key_ev(event);
-            }
-            Events::Im { event, .. } => {
-                ctx.handle_im_ev(event);
-            }
+        if let Err(e) = result {
+            log::error!("Panic in wayland callback: {:?}", e);
         }
     });
 

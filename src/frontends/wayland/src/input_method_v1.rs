@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::os::fd::{FromRawFd, OwnedFd};
+use std::panic;
 use std::time::{Duration, Instant};
 
 use kime_engine_core::{
@@ -91,8 +92,9 @@ impl KimeContext {
         }
     }
 
-    pub fn new_data<'a>(data: &'a mut DispatchData) -> &'a mut Self {
-        data.get::<Self>().unwrap()
+    #[allow(dead_code)]
+    pub fn try_get_data<'a>(data: &'a mut DispatchData) -> Option<&'a mut Self> {
+        data.get::<Self>()
     }
 
     fn process_input_result(&mut self, ret: InputResult) -> bool {
@@ -325,9 +327,11 @@ impl KimeContext {
                 }
             }
 
+            // Use wrapping_add to prevent overflow panic
+            let elapsed_ms = pressed_at.elapsed().as_millis() as u32;
             let ev = KeyEvent::Key {
                 serial: self.serial, // Is this fine?
-                time: wayland_time + pressed_at.elapsed().as_millis() as u32,
+                time: wayland_time.wrapping_add(elapsed_ms),
                 key,
                 state: KeyState::Pressed,
             };
@@ -350,16 +354,24 @@ impl KimeContext {
         self.grab_activate = true;
 
         let filter = Filter::new(|ev, _filter, mut data| {
-            let ctx = KimeContext::new_data(&mut data);
+            let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+                if let Some(ctx) = data.get::<KimeContext>() {
+                    match ev {
+                        Events::ImCtx { event, .. } => {
+                            ctx.handle_im_ctx_ev(event);
+                        }
+                        Events::Key { event, .. } => {
+                            ctx.handle_key_ev(event);
+                        }
+                        _ => {}
+                    }
+                } else {
+                    log::error!("Failed to get KimeContext from DispatchData in activate");
+                }
+            }));
 
-            match ev {
-                Events::ImCtx { event, .. } => {
-                    ctx.handle_im_ctx_ev(event);
-                }
-                Events::Key { event, .. } => {
-                    ctx.handle_key_ev(event);
-                }
-                _ => {}
+            if let Err(e) = result {
+                log::error!("Panic in wayland activate callback: {:?}", e);
             }
         });
 
@@ -403,19 +415,28 @@ pub fn run(
     globals: &GlobalManager,
 ) -> Result<(), Box<dyn Error>> {
     let im_filter = Filter::new(|ev, _filter, mut data| {
-        let ctx = KimeContext::new_data(&mut data);
-        match ev {
-            Events::Im { event, .. } => match event {
-                ImEvent::Activate { id: im_ctx } => {
-                    let keyboard = im_ctx.grab_keyboard();
-                    ctx.activate(im_ctx, keyboard);
+        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+            if let Some(ctx) = data.get::<KimeContext>() {
+                match ev {
+                    Events::Im { event, .. } => match event {
+                        ImEvent::Activate { id: im_ctx } => {
+                            let keyboard = im_ctx.grab_keyboard();
+                            ctx.activate(im_ctx, keyboard);
+                        }
+                        ImEvent::Deactivate { .. } => {
+                            ctx.deactivate();
+                        }
+                        _ => {}
+                    },
+                    _ => {}
                 }
-                ImEvent::Deactivate { .. } => {
-                    ctx.deactivate();
-                }
-                _ => {}
-            },
-            _ => {}
+            } else {
+                log::error!("Failed to get KimeContext from DispatchData");
+            }
+        }));
+
+        if let Err(e) = result {
+            log::error!("Panic in wayland callback: {:?}", e);
         }
     });
 

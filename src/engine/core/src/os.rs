@@ -60,6 +60,7 @@ mod unix {
     }
 }
 
+#[cfg(not(unix))]
 mod fallback {
     use crate::InputCategory;
     use std::io;

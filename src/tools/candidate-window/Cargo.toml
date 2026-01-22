@@ -9,5 +9,5 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 kime-engine-core = { path = "../../engine/core" }
-eframe = { version = "0.31", default-features = false, features = ["glow", "default_fonts", "wayland", "x11"] }
-egui = "0.31"
+eframe = { version = "0.33", default-features = false, features = ["glow", "default_fonts", "wayland", "x11"] }
+egui = "0.33"

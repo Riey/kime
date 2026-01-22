@@ -133,7 +133,7 @@ fn load_unicode_annotations() -> quick_xml::Result<Vec<UnicodeEntry>> {
             Event::Start(start) if start.name().0 == b"annotation" => {
                 let cp = start.attributes().next().unwrap()?;
                 debug_assert_eq!(cp.key.0, b"cp");
-                let cp = cp.decode_and_unescape_value(&reader)?;
+                let cp = cp.decode_and_unescape_value(reader.decoder())?;
                 if current_entry.cp != cp {
                     if !current_entry.cp.is_empty() {
                         out.push(mem::take(&mut current_entry));

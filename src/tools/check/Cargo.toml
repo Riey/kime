@@ -11,4 +11,4 @@ kime-engine-core = { path = "../../engine/core" }
 pad = "0.1.6"
 serde_yaml = "0.9"
 strum = { version = "0.27", features = ["derive"] }
-xdg = "2.5"
+xdg = "3.0"

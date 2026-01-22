@@ -1,14 +1,13 @@
 use std::time::Instant;
 
-pub mod input_method_v1;
-pub mod input_method_v2;
+pub mod state;
 
 #[derive(Clone, Copy)]
 pub struct RepeatInfo {
     /// The rate of repeating keys in characters per second
-    rate: i32,
+    pub rate: i32,
     /// Delay in milliseconds since key down until repeating starts
-    delay: i32,
+    pub delay: i32,
 }
 
 #[derive(Clone, Copy)]

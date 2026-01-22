@@ -22,7 +22,6 @@
     llvmPackages_18.clang
     llvmPackages_18.libclang.lib
     llvmPackages_18.bintools
-    rustc cargo
     cmake
     extra-cmake-modules
   ];

@@ -1,5 +1,6 @@
 {
   pkgs ? import <nixpkgs> {  },
+  rustToolchain ? pkgs.rustc,
   debug ? false,
 }:
 let
@@ -13,7 +14,7 @@ llvmPackages_18.stdenv.mkDerivation {
   name = "kime";
   inherit src;
   buildInputs = deps.kimeBuildInputs;
-  nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustPlatform.cargoSetupHook ];
+  nativeBuildInputs = deps.kimeNativeBuildInputs ++ [ rustToolchain rustPlatform.cargoSetupHook ];
   version = kimeVersion;
   cargoDeps = rustPlatform.fetchCargoTarball {
     inherit src;

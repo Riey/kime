@@ -185,7 +185,10 @@ impl KimeContext {
             KeyEvent::Key {
                 time, key, state, ..
             } => {
-                if state == KeyState::Pressed {
+                // Handle both Pressed and Repeated states as "key down"
+                // Since wl_keyboard version 10, compositor may send Repeated state
+                let is_pressed = state == KeyState::Pressed || state as u32 == 2; // 2 = Repeated
+                if is_pressed {
                     if self.grab_activate {
                         let hwcode = (key + 8) as u16;
                         if let Some(code) = KeyCode::from_hardware_code(hwcode, self.numlock) {
@@ -225,7 +228,8 @@ impl KimeContext {
                     } else {
                         self.key(time, key, state);
                     }
-                } else {
+                } else if state == KeyState::Released {
+                    // Only handle actual key release
                     if let Some((.., ref mut press_state)) = self.repeat_state {
                         if press_state.is_pressing(key) {
                             let _ = self.timer.set_timeout_oneshot(Duration::ZERO);
@@ -233,6 +237,10 @@ impl KimeContext {
                         }
                     }
 
+                    self.key(time, key, state);
+                } else {
+                    // Unknown state, log and pass through
+                    log::trace!("Unknown key state: {:?}", state);
                     self.key(time, key, state);
                 }
             }

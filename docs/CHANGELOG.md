@@ -15,7 +15,7 @@
 * fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
 * Update dependencies:
   - bitflags 2.10, nix 0.30, strum 0.27
-  - x11rb 0.13, xim 0.5, image 0.25, imageproc 0.25
+  - x11rb 0.13, xim 0.5, image 0.25, imageproc 0.26
   - mio 1.0 with timerfd-mio
   - egui/eframe 0.33
   - Replace rusttype with ab_glyph
@@ -24,6 +24,8 @@
   - Replace unic with unicode-properties
   - xkbcommon 0.9.0
   - wayland-client 0.29.5, wayland-protocols 0.29.5
+  - itertools 0.14
+  - bindgen 0.72.1, cbindgen 0.29.2
 * Fix kime-wayland crash on KDE Plasma 6.5.5 by handling KeyState::Repeated
 * Fix indicator tray icon not showing/updating on KDE after ksni 0.3.3 upgrade
 

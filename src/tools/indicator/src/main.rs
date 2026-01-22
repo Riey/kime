@@ -2,13 +2,10 @@ use anyhow::Result;
 use kime_engine_core::{load_raw_config_from_config_dir, IconColor};
 use ksni::menu::*;
 use ksni::TrayMethods;
-use std::net::Shutdown;
-use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
-use std::{
-    io::{Read, Write},
-    time::Duration,
-};
+use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{UnixListener, UnixStream};
 
 #[derive(Clone, Copy, Debug)]
 enum InputCategory {
@@ -83,19 +80,25 @@ impl KimeTray {
 
 const EXIT_MESSAGE: &[u8; 1] = b"Z";
 
-fn try_terminate_previous_server(file_path: &Path) -> Result<()> {
-    let mut client = UnixStream::connect(file_path)?;
+async fn try_terminate_previous_server(file_path: &Path) -> Result<()> {
+    let mut client = UnixStream::connect(file_path).await?;
 
-    client.write_all(EXIT_MESSAGE)?;
+    client.write_all(EXIT_MESSAGE).await?;
 
     Ok(())
 }
 
 async fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
-    let handle = KimeTray::new(color).spawn().await?;
+    // Use assume_sni_available to handle the case when desktop environment
+    // is not fully initialized yet. This allows the tray to appear later
+    // when StatusNotifierWatcher becomes available.
+    let handle = KimeTray::new(color)
+        .assume_sni_available(true)
+        .spawn()
+        .await?;
 
     if file_path.exists() {
-        try_terminate_previous_server(file_path).ok();
+        try_terminate_previous_server(file_path).await.ok();
         std::fs::remove_file(file_path).ok();
     }
 
@@ -105,13 +108,19 @@ async fn indicator_server(file_path: &Path, color: IconColor) -> Result<()> {
     let mut read_buf = [0; 1];
 
     loop {
-        let mut client = listener.accept()?.0;
-        client.set_read_timeout(Some(Duration::from_secs(2))).ok();
-        client.set_write_timeout(Some(Duration::from_secs(2))).ok();
-        client.write_all(&current_bytes).ok();
-        client.shutdown(Shutdown::Write).ok();
-        match client.read_exact(&mut read_buf) {
-            Ok(_) => {
+        let (mut client, _) = listener.accept().await?;
+
+        let timeout = Duration::from_secs(2);
+
+        // Write current state with timeout
+        let _ = tokio::time::timeout(timeout, client.write_all(&current_bytes)).await;
+
+        // Shutdown write side
+        let _ = client.shutdown().await;
+
+        // Read with timeout
+        match tokio::time::timeout(timeout, client.read_exact(&mut read_buf)).await {
+            Ok(Ok(_)) => {
                 if &read_buf == EXIT_MESSAGE {
                     log::info!("Receive exit message");
                     return Ok(());

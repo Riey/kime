@@ -14,21 +14,21 @@
 * Add Opensuse Build Service repository and modify README
 * fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
 * Update dependencies:
+  - wayland-client 0.29 → 0.31, wayland-protocols 0.29 → 0.32
+  - wayland-protocols-misc 0.3 (신규), xdg 2.5 → 3.0, quick-xml 0.27 → 0.39
+  - xkbcommon 0.7 → 0.9, ksni 0.2 → 0.3.3 + tokio
   - bitflags 2.10, nix 0.30, strum 0.27
   - x11rb 0.13, xim 0.5, image 0.25, imageproc 0.26
-  - mio 1.0 with timerfd-mio
-  - egui/eframe 0.33
+  - mio 1.0 with timerfd-mio, egui/eframe 0.33, itertools 0.14
+  - bindgen 0.72.1, cbindgen 0.29.2
   - Replace rusttype with ab_glyph
   - Replace ansi_term with owo-colors
   - Replace daemonize with nix daemon
   - Replace unic with unicode-properties
-  - xkbcommon 0.9.0
-  - wayland-client 0.31, wayland-protocols 0.32, wayland-protocols-misc 0.3
-  - itertools 0.14
-  - bindgen 0.72.1, cbindgen 0.29.2
-  - xdg 3.0, quick-xml 0.39
+* Remove unused dependencies:
+  - Remove zwp-virtual-keyboard (merged into wayland-protocols-misc)
 * Fix kime-wayland crash on KDE Plasma 6.5.5 by handling KeyState::Repeated
-* Fix indicator tray icon not showing/updating on KDE after ksni 0.3.3 upgrade
+* Fix indicator tray icon not showing/updating on KDE with tokio async I/O (ksni 0.3.3)
 * **BREAKING**: Rewrite kime-wayland for wayland-rs 0.31 API (Dispatch trait pattern)
 
 

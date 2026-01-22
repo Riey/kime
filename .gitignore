@@ -12,6 +12,7 @@ kime_engine.h
 kime_engine.hpp
 massif.out*
 flamegraph.svg
+kime-crash.log
 
 result
 .DS_Store

@@ -1,7 +1,8 @@
 [files]
 extend-exclude = [
     "src/engine/dict/data/Unihan_Readings.txt",
-    "src/engine/dict/data/*.xml"
+    "src/engine/dict/data/*.xml",
+    "*.log"
 ]
 
 [default.extend-words]

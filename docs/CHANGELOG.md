@@ -22,6 +22,11 @@
   - Replace ansi_term with owo-colors
   - Replace daemonize with nix daemon
   - Replace unic with unicode-properties
+  - xkbcommon 0.9.0
+  - wayland-client 0.29.5, wayland-protocols 0.29.5
+* Fix kime-wayland crash on KDE Plasma 6.5.5 by handling KeyState::Repeated
+* Fix indicator tray icon not showing/updating on KDE after ksni 0.3.3 upgrade
+
 
 ## 3.1.1
 

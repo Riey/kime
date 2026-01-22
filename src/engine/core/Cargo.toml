@@ -18,7 +18,7 @@ parking_lot = "0.12"
 fontdb = { version = "0.23", features = ["fontconfig"] }
 
 [target.'cfg(unix)'.dependencies]
-xdg = "2.5"
+xdg = "3.0"
 kime-run-dir = { path = "../../tools/run_dir" }
 
 [dev-dependencies]

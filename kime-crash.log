@@ -1,0 +1,85 @@
+[0m[34m[ INFO] [0mInitialized
+[0m[34m[ INFO] [0mwrite_command; command=Auth(Some(External), Some([49, 48, 48, 48]))
+[0m[34m[ INFO] [0mwrite_commands; commands=[Auth(Some(External), Some([49, 48, 48, 48]))] extra_bytes=None
+[0m[34m[ INFO] [0mread_command;
+[0m[34m[ INFO] [0mread_commands; n_commands=1
+[0m[34m[ INFO] [0mwrite_commands; commands=[NegotiateUnixFD, Begin] extra_bytes=Some([108, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 109, 0, 0, 0, 1, 1, 111, 0, 21, 0, 0, 0, 47, 111, 114, 103, 47, 102, 114, 101, 101, 100, 101, 115, 107, 116, 111, 112, 47, 68, 66, 117, 115, 0, 0, 0, 2, 1, 115, 0, 20, 0, 0, 0, 111, 114, 103, 46, 102, 114, 101, 101, 100, 101, 115, 107, 116, 111, 112, 46, 68, 66, 117, 115, 0, 0, 0, 0, 3, 1, 115, 0, 5, 0, 0, 0, 72, 101, 108, 108, 111, 0, 0, 0, 6, 1, 115, 0, 20, 0, 0, 0, 111, 114, 103, 46, 102, 114, 101, 101, 100, 101, 115, 107, 116, 111, 112, 46, 68, 66, 117, 115, 0, 0, 0, 0])
+[0m[34m[ INFO] [0mread_commands; n_commands=1
+[0m[34m[ INFO] [0mstart_object_server; started_event=Some(Event { listeners_notified: 0, listeners_total: 1 })
+[0m[34m[ INFO] [0mobj_server_task;
+[0m[34m[ INFO] [0mmonitor_name_lost; name=org.kde.StatusNotifierItem-232294-1
+[0m[34m[ INFO] [0mdispatch_call; msg=Msg { type: MethodCall, serial: 19339, sender: UniqueName(":1.32"), path: ObjectPath("/StatusNotifierItem"), iface: InterfaceName("org.freedesktop.DBus.Properties"), member: MemberName("GetAll"), body: Str, fds: [] } hdr=Header { primary: PrimaryHeader { endian_sig: Little, msg_type: MethodCall, flags: BitFlags<Flags>(0b0), protocol_version: 1, body_len: 31, serial_num: 19339 }, fields: Fields { path: Some(ObjectPath("/StatusNotifierItem")), interface: Some(InterfaceName("org.freedesktop.DBus.Properties")), member: Some(MemberName("GetAll")), error_name: None, reply_serial: None, destination: Some(BusName::WellKnown("org.kde.StatusNotifierItem-232294-1")), sender: Some(UniqueName(":1.32")), signature: Str, unix_fds: None } }
+[0m[34m[ INFO] [0mdispatch_call; msg=Msg { type: MethodCall, serial: 19343, sender: UniqueName(":1.32"), path: ObjectPath("/MenuBar"), iface: InterfaceName("com.canonical.dbusmenu"), member: MemberName("GetLayout"), body: Structure(Dynamic { fields: [I32, I32, Array(Dynamic { child: Str })] }), fds: [] } hdr=Header { primary: PrimaryHeader { endian_sig: Little, msg_type: MethodCall, flags: BitFlags<Flags>(0b0), protocol_version: 1, body_len: 12, serial_num: 19343 }, fields: Fields { path: Some(ObjectPath("/MenuBar")), interface: Some(InterfaceName("com.canonical.dbusmenu")), member: Some(MemberName("GetLayout")), error_name: None, reply_serial: None, destination: Some(BusName::WellKnown("org.kde.StatusNotifierItem-232294-1")), sender: Some(UniqueName(":1.32")), signature: Structure(Dynamic { fields: [I32, I32, Array(Dynamic { child: Str })] }), unix_fds: None } }
+[0m[34m[ INFO] [0mFound previous XIM_SERVER it will overrided
+[0m[34m[ INFO] [0mStart server win: 6291456
+
+thread 'main' (232293) panicked at src/frontends/wayland/src/main.rs:34:9:
+No input method protocol available
+stack backtrace:
+   0:     0x5581ebe042c2 - std::backtrace_rs::backtrace::libunwind::trace::hd57362190422746d
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x5581ebe042c2 - std::backtrace_rs::backtrace::trace_unsynchronized::he61be86f5e8dfc7b
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x5581ebe042c2 - std::sys::backtrace::_print_fmt::hd233ea33e70c29e2
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/sys/backtrace.rs:66:9
+   3:     0x5581ebe042c2 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h718e2d17a1928e63
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/sys/backtrace.rs:39:26
+   4:     0x5581ebe1600f - core::fmt::rt::Argument::fmt::hdeda3281325c4830
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/core/src/fmt/rt.rs:173:76
+   5:     0x5581ebe1600f - core::fmt::write::h1d2246b072ea91eb
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/core/src/fmt/mod.rs:1469:25
+   6:     0x5581ebdd6633 - std::io::default_write_fmt::h4ebfe695aebd90ac
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/io/mod.rs:639:11
+   7:     0x5581ebdd6633 - std::io::Write::write_fmt::haf55272405c09d9b
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/io/mod.rs:1954:13
+   8:     0x5581ebde1612 - std::sys::backtrace::BacktraceLock::print::h61c3bd81a9458a03
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/sys/backtrace.rs:42:9
+   9:     0x5581ebde43fc - std::panicking::default_hook::{{closure}}::haf1ffb5d1e33a97f
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:301:27
+  10:     0x5581ebde4256 - std::panicking::default_hook::hc32245deb6eaa988
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:328:9
+  11:     0x5581ebde49d5 - std::panicking::panic_with_hook::h43adc00fd0e494cb
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:834:13
+  12:     0x5581ebde4836 - std::panicking::panic_handler::{{closure}}::h44391079756da3e7
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:700:13
+  13:     0x5581ebde1759 - std::sys::backtrace::__rust_end_short_backtrace::h934e1568393e5b8f
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/sys/backtrace.rs:174:18
+  14:     0x5581ebdc9e2d - __rustc[d9b87f19e823c0ef]::rust_begin_unwind
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:698:5
+  15:     0x5581ebe1f5d0 - core::panicking::panic_fmt::h62031895f6e012da
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/core/src/panicking.rs:80:14
+  16:     0x5581ebba8d7d - kime_wayland::main::h6cdecfce7650ba0a
+                               at /home/kernalix7/Desktop/00_Personal_Project/00G_Clone-kime/kime/src/frontends/wayland/src/main.rs:34:9
+  17:     0x5581ebbac40b - core::ops::function::FnOnce::call_once::h8b8fe2540ada8143
+                               at /home/kernalix7/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/ops/function.rs:250:5
+  18:     0x5581ebbad0be - std::sys::backtrace::__rust_begin_short_backtrace::hc834a36618e2715c
+                               at /home/kernalix7/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/backtrace.rs:158:18
+  19:     0x5581ebbaa121 - std::rt::lang_start::{{closure}}::had839e96592570b9
+                               at /home/kernalix7/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/rt.rs:206:18
+  20:     0x5581ebdd81e0 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::hef272b0bbce060cb
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/core/src/ops/function.rs:287:21
+  21:     0x5581ebdd81e0 - std::panicking::catch_unwind::do_call::hb8c4cc43eed9a08c
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:590:40
+  22:     0x5581ebdd81e0 - std::panicking::catch_unwind::h2729a121c7344441
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:553:19
+  23:     0x5581ebdd81e0 - std::panic::catch_unwind::h8930b2483deb2063
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panic.rs:359:14
+  24:     0x5581ebdd81e0 - std::rt::lang_start_internal::{{closure}}::hada379c5dd834c6b
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/rt.rs:175:24
+  25:     0x5581ebdd81e0 - std::panicking::catch_unwind::do_call::hc3ea95eb90ebfdc8
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:590:40
+  26:     0x5581ebdd81e0 - std::panicking::catch_unwind::h0b97aa6eb277c112
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panicking.rs:553:19
+  27:     0x5581ebdd81e0 - std::panic::catch_unwind::h2db34aa2a1d62ae5
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/panic.rs:359:14
+  28:     0x5581ebdd81e0 - std::rt::lang_start_internal::h00c7908c7c2f92b8
+                               at /rustc/ded5c06cf21d2b93bffd5d884aa6e96934ee4234/library/std/src/rt.rs:171:5
+  29:     0x5581ebbaa107 - std::rt::lang_start::hcfabc1c82847f1e1
+                               at /home/kernalix7/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/rt.rs:205:5
+  30:     0x5581ebba98fe - main
+  31:     0x7f04ecc2b2fb - __libc_start_call_main
+  32:     0x7f04ecc2b3cb - __libc_start_main_impl
+  33:     0x5581ebba80b5 - _start
+                               at /home/abuild/rpmbuild/BUILD/glibc-2.42-build/glibc-2.42/csu/../sysdeps/x86_64/start.S:115:0
+  34:                0x0 - <unknown>
+[0m[34m[ INFO] [0mProcess kime-wayland has exit with exit status: 101

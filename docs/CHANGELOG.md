@@ -23,11 +23,13 @@
   - Replace daemonize with nix daemon
   - Replace unic with unicode-properties
   - xkbcommon 0.9.0
-  - wayland-client 0.29.5, wayland-protocols 0.29.5
+  - wayland-client 0.31, wayland-protocols 0.32, wayland-protocols-misc 0.3
   - itertools 0.14
   - bindgen 0.72.1, cbindgen 0.29.2
+  - xdg 3.0, quick-xml 0.39
 * Fix kime-wayland crash on KDE Plasma 6.5.5 by handling KeyState::Repeated
 * Fix indicator tray icon not showing/updating on KDE after ksni 0.3.3 upgrade
+* **BREAKING**: Rewrite kime-wayland for wayland-rs 0.31 API (Dispatch trait pattern)
 
 
 ## 3.1.1

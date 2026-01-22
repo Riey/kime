@@ -42,8 +42,7 @@ impl Config {
             .translation_layer
             .and_then(|f| {
                 xdg::BaseDirectories::with_prefix("kime")
-                    .ok()
-                    .and_then(|d| d.find_config_file(f))
+                    .find_config_file(f)
             })
             .as_ref()
             .and_then(|f| fs::read_to_string(f.as_path()).ok())
@@ -112,16 +111,16 @@ impl Config {
 
 #[cfg(unix)]
 pub fn load_raw_config_from_config_dir() -> RawConfig {
-    let dir = xdg::BaseDirectories::with_prefix("kime").ok();
+    let dir = xdg::BaseDirectories::with_prefix("kime");
 
-    dir.and_then(|dir| dir.find_config_file("config.yaml"))
+    dir.find_config_file("config.yaml")
         .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
         .unwrap_or_default()
 }
 
 #[cfg(unix)]
 pub fn load_engine_config_from_config_dir() -> Option<Config> {
-    let dir = xdg::BaseDirectories::with_prefix("kime").ok()?;
+    let dir = xdg::BaseDirectories::with_prefix("kime");
     let config: RawConfig = dir
         .find_config_file("config.yaml")
         .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())

@@ -66,7 +66,7 @@ impl Check {
     pub fn cond(self) -> CondResult {
         match self {
             Check::Icons => {
-                let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
+                let dirs = xdg::BaseDirectories::new();
 
                 let icons = &[
                     "kime-hangul-black.png",
@@ -78,7 +78,7 @@ impl Check {
                 for icon in icons {
                     match dirs.find_data_file(format!("icons/hicolor/64x64/apps/{}", icon)) {
                         Some(path) => println!("Found icon: {}", path.display()),
-                        _ => return CondResult::Fail(format!("Can't find icon {}", icon)),
+                        None => return CondResult::Fail(format!("Can't find icon {}", icon)),
                     }
                 }
 
@@ -104,8 +104,8 @@ impl Check {
                 )
             }
             Check::Config => {
-                let dirs = xdg::BaseDirectories::with_prefix("kime").expect("Load xdg dirs");
-                let config_path = match dirs.find_config_file("config.yaml") {
+                let dirs = xdg::BaseDirectories::with_prefix("kime");
+                let config_path: std::path::PathBuf = match dirs.find_config_file("config.yaml") {
                     Some(path) => path,
                     _ => {
                         return CondResult::Ignore(
@@ -125,7 +125,7 @@ impl Check {
 
                 match config.engine.translation_layer {
                     Some(ref raw_path) => {
-                        let path = match dirs.find_config_file(raw_path) {
+                        let path: std::path::PathBuf = match dirs.find_config_file(raw_path) {
                             Some(path) => path,
                             _ => {
                                 return CondResult::Ignore(
@@ -177,8 +177,8 @@ impl Check {
                 let current_desktop = env::var("XDG_CURRENT_DESKTOP").map_or(String::new(), |x| x);
                 let session_type = env::var("XDG_SESSION_TYPE").map_or(String::new(), |x| x);
                 if current_desktop.contains("KDE") && session_type == "wayland" {
-                    let dirs = xdg::BaseDirectories::new().expect("Load xdg dirs");
-                    let config_path = match dirs.find_config_file("kwinrc") {
+                    let dirs = xdg::BaseDirectories::new();
+                    let config_path: std::path::PathBuf = match dirs.find_config_file("kwinrc") {
                         Some(path) => path,
                         _ => {
                             return CondResult::Fail(

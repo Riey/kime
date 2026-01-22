@@ -146,10 +146,7 @@ impl AppState {
         self.globals.seat.is_some()
     }
 
-    pub fn setup_input_method_v2(
-        &mut self,
-        qh: &QueueHandle<Self>,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn setup_input_method_v2(&mut self, qh: &QueueHandle<Self>) -> Result<(), Box<dyn Error>> {
         let seat = self.globals.seat.as_ref().ok_or("No seat")?;
         let im_manager = self
             .globals
@@ -181,10 +178,7 @@ impl AppState {
         Ok(())
     }
 
-    pub fn setup_input_method_v1(
-        &mut self,
-        _qh: &QueueHandle<Self>,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn setup_input_method_v1(&mut self, _qh: &QueueHandle<Self>) -> Result<(), Box<dyn Error>> {
         // v1 is already bound through registry in Dispatch<WlRegistry>
         // The actual context activation happens via the Activate event
         if self.globals.im_v1.is_none() {
@@ -372,7 +366,9 @@ impl AppState {
             if ret.contains(InputResult::HAS_PREEDIT) {
                 let preedit = self.engine.preedit_str();
                 let len = preedit.len();
-                im_state.im.set_preedit_string(preedit.into(), 0, len as i32);
+                im_state
+                    .im
+                    .set_preedit_string(preedit.into(), 0, len as i32);
                 self.last_preedit_len = len;
             } else if self.last_preedit_len > 0 {
                 im_state.im.set_preedit_string(String::new(), -1, -1);
@@ -416,7 +412,11 @@ impl AppState {
                     let preedit = self.engine.preedit_str();
                     let len = preedit.len();
                     im_ctx.preedit_cursor(len as i32);
-                    im_ctx.preedit_styling(0, len as u32, ZWP_TEXT_INPUT_V1_PREEDIT_STYLE_UNDERLINE);
+                    im_ctx.preedit_styling(
+                        0,
+                        len as u32,
+                        ZWP_TEXT_INPUT_V1_PREEDIT_STYLE_UNDERLINE,
+                    );
                     im_ctx.preedit_string(self.serial, preedit.to_string(), preedit.into());
                     self.last_preedit_len = len;
                 } else if self.last_preedit_len > 0 {
@@ -438,10 +438,22 @@ impl AppState {
         }
     }
 
-    fn modifiers_v1(&mut self, mods_depressed: u32, mods_latched: u32, mods_locked: u32, group: u32) {
+    fn modifiers_v1(
+        &mut self,
+        mods_depressed: u32,
+        mods_latched: u32,
+        mods_locked: u32,
+        group: u32,
+    ) {
         if let Some(ref im_state) = self.im_v1 {
             if let Some(ref im_ctx) = im_state.im_ctx {
-                im_ctx.modifiers(self.serial, mods_depressed, mods_latched, mods_locked, group);
+                im_ctx.modifiers(
+                    self.serial,
+                    mods_depressed,
+                    mods_latched,
+                    mods_locked,
+                    group,
+                );
             }
         }
     }
@@ -472,14 +484,22 @@ impl Dispatch<WlRegistry, ()> for AppState {
                 }
                 "zwp_input_method_manager_v2" => {
                     log::debug!("Binding zwp_input_method_manager_v2");
-                    let mgr = registry
-                        .bind::<ZwpInputMethodManagerV2, _, _>(name, version.min(1), qh, ());
+                    let mgr = registry.bind::<ZwpInputMethodManagerV2, _, _>(
+                        name,
+                        version.min(1),
+                        qh,
+                        (),
+                    );
                     state.globals.im_manager_v2 = Some(mgr);
                 }
                 "zwp_virtual_keyboard_manager_v1" => {
                     log::debug!("Binding zwp_virtual_keyboard_manager_v1");
-                    let mgr = registry
-                        .bind::<ZwpVirtualKeyboardManagerV1, _, _>(name, version.min(1), qh, ());
+                    let mgr = registry.bind::<ZwpVirtualKeyboardManagerV1, _, _>(
+                        name,
+                        version.min(1),
+                        qh,
+                        (),
+                    );
                     state.globals.vk_manager = Some(mgr);
                 }
                 "zwp_input_method_v1" => {
@@ -543,7 +563,8 @@ impl Dispatch<ZwpInputMethodV2, ()> for AppState {
                 let (should_activate, should_deactivate) = {
                     if let Some(ref im_state) = state.im_v2 {
                         let activate = !im_state.current_activate && im_state.pending_activate;
-                        let deactivate = !im_state.current_deactivate && im_state.pending_deactivate;
+                        let deactivate =
+                            !im_state.current_deactivate && im_state.pending_deactivate;
                         (activate, deactivate)
                     } else {
                         (false, false)

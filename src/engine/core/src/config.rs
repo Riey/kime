@@ -40,10 +40,7 @@ impl Config {
         #[cfg(unix)]
         let translation_layer: Option<KeyMap<Key>> = engine
             .translation_layer
-            .and_then(|f| {
-                xdg::BaseDirectories::with_prefix("kime")
-                    .find_config_file(f)
-            })
+            .and_then(|f| xdg::BaseDirectories::with_prefix("kime").find_config_file(f))
             .as_ref()
             .and_then(|f| fs::read_to_string(f.as_path()).ok())
             .as_ref()

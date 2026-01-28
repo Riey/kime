@@ -1,6 +1,6 @@
 use wayland_client::Connection;
 
-use crate::state::AppState;
+use kime_wayland::state::AppState;
 
 fn main() {
     kime_version::cli_boilerplate!((),);

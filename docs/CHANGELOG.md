@@ -29,7 +29,7 @@
   - Remove zwp-virtual-keyboard (merged into wayland-protocols-misc)
 * Fix kime-wayland crash on KDE Plasma 6.5.5 by handling KeyState::Repeated
 * Fix indicator tray icon not showing/updating on KDE with tokio async I/O (ksni 0.3.3)
-* **BREAKING**: Rewrite kime-wayland for wayland-rs 0.31 API (Dispatch trait pattern)
+* Rewrite kime-wayland for wayland-rs 0.31 API (Dispatch trait pattern)
 
 
 ## 3.1.1

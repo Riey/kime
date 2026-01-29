@@ -674,17 +674,16 @@ impl Dispatch<ZwpInputMethodKeyboardGrabV2, ()> for AppState {
                     } else if let Some(ref im_state) = state.im_v2 {
                         im_state.vk.key(time, key, key_state.into());
                     }
-                } else if matches!(key_state, WEnum::Value(KeyState::Released)) {
-                    if let Some((.., ref mut press_state)) = state.repeat_state {
-                        if press_state.is_pressing(key) {
-                            let _ = state.timer.set_timeout_oneshot(Duration::ZERO);
-                            *press_state = PressState::NotPressing;
+                } else {
+                    // Not activated or Released - bypass all keys
+                    if matches!(key_state, WEnum::Value(KeyState::Released)) {
+                        if let Some((.., ref mut press_state)) = state.repeat_state {
+                            if press_state.is_pressing(key) {
+                                let _ = state.timer.set_timeout_oneshot(Duration::ZERO);
+                                *press_state = PressState::NotPressing;
+                            }
                         }
                     }
-                    if let Some(ref im_state) = state.im_v2 {
-                        im_state.vk.key(time, key, key_state.into());
-                    }
-                } else if !is_pressed {
                     if let Some(ref im_state) = state.im_v2 {
                         im_state.vk.key(time, key, key_state.into());
                     }
@@ -894,16 +893,19 @@ impl Dispatch<WlKeyboard, ()> for AppState {
                     } else if let WEnum::Value(ks) = key_state {
                         state.key_v1(time, key, ks);
                     }
-                } else if matches!(key_state, WEnum::Value(KeyState::Released)) {
-                    if let Some((.., ref mut press_state)) = state.repeat_state {
-                        if press_state.is_pressing(key) {
-                            let _ = state.timer.set_timeout_oneshot(Duration::ZERO);
-                            *press_state = PressState::NotPressing;
+                } else {
+                    // Not activated or Released - bypass all keys
+                    if matches!(key_state, WEnum::Value(KeyState::Released)) {
+                        if let Some((.., ref mut press_state)) = state.repeat_state {
+                            if press_state.is_pressing(key) {
+                                let _ = state.timer.set_timeout_oneshot(Duration::ZERO);
+                                *press_state = PressState::NotPressing;
+                            }
                         }
                     }
-                    state.key_v1(time, key, KeyState::Released);
-                } else if let WEnum::Value(ks) = key_state {
-                    state.key_v1(time, key, ks);
+                    if let WEnum::Value(ks) = key_state {
+                        state.key_v1(time, key, ks);
+                    }
                 }
             }
             wl_keyboard::Event::Modifiers {

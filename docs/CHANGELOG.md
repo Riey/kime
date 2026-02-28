@@ -6,6 +6,16 @@
 
 ### Improve
 
+* Replace cmake build system with meson
+  - cargo builds via `custom_target()`, GTK/Qt frontends as `shared_library()`
+  - Per-component build options (gtk3, gtk4, qt5, qt6, check, indicator, etc.), enabled by default
+  - `kime` and other binaries build by default when running `ninja`
+  - `system_engine` mode for building frontends against system-installed engine
+  - Qt plugin dir override options for nix compatibility
+* Remove EOL distro Dockerfiles (ubuntu 18.04~22.10, debian buster)
+* Add debian-trixie Dockerfile
+* Update release workflow: Qt5/Qt6 multi-version matrix builds, softprops/action-gh-release@v2
+* nix: switch to fetchCargoVendor, parameterize frontend toggles
 * Fix mismatched cargoDeps in nix and update attribute syntax **[@nakoo]**
 * Updated NixOS configuration example to match updated attribute syntax.
 * Remove `kime-engine-cffi`

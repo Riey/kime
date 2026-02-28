@@ -5,323 +5,221 @@ on:
     tags:
       - "v*"
 
-env:
-  DOCKER_BUILDKIT: 1
+permissions:
+  contents: write
 
 jobs:
-  create-release:
-    runs-on: ubuntu-22.04
-
-    outputs:
-      url: ${{ steps.create_release.outputs.upload_url }}
-
-    steps:
-      - name: Create draft release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: true
-          prerelease: false
-
-  build-engine:
-    runs-on: ubuntu-22.04
-
+  build-archive:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Build engine
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libclang-10-dev
-          cargo build --release -p kime-engine-capi
-          cargo build --release -p kime-check
-          strip -s ./target/release/libkime_engine.so
-          strip -s ./target/release/kime-check
-      - name: Upload cpp header
-        uses: actions/upload-artifact@v4
+      - uses: cachix/install-nix-action@v18
         with:
-          name: cpp-header
-          path: ./src/engine/capi/kime_engine.hpp
-      - name: Upload engine
-        uses: actions/upload-artifact@v4
-        with:
-          name: engine
-          path: ./target/release/libkime_engine.so
-      - name: Upload check
-        uses: actions/upload-artifact@v4
-        with:
-          name: check
-          path: ./target/release/kime-check
-
-  build-other:
-    needs:
-      - build-engine
-      - create-release
-
-    runs-on: ubuntu-22.04
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libclang-10-dev
-          sudo apt-get install -y libgtk-3-dev
-
-      - name: Download engine
-        uses: actions/download-artifact@v4
-        with:
-          name: engine
-          path: .
-
-      - name: Download check
-        uses: actions/download-artifact@v4
-        with:
-          name: check
-          path: .
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: |
-          sudo mv ./libkime_engine.so /usr/lib
-          KIME_SKIP_ENGINE=1 scripts/build.sh -ar
-          cp /usr/lib/libkime_engine.so ./build/out
-          mv ./kime-check ./build/out
-          scripts/release-zst.sh .
+          nix develop -c meson setup build
+          nix develop -c ninja -C build
 
-      - name: Upload artifact
+      - name: Strip
+        run: |
+          for f in kime kime-check kime-indicator kime-candidate-window kime-xim kime-wayland; do
+            [ -f "target/release/$f" ] && strip -s "target/release/$f"
+          done
+          [ -f "target/release/libkime_engine.so" ] && strip -s target/release/libkime_engine.so
+          for f in build/src/frontends/*/lib*.so; do
+            [ -e "$f" ] && strip -s "$f"
+          done
+
+      - name: Upload engine artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: other
-          path: ./build/out/*
+          name: engine
+          path: |
+            target/release/libkime_engine.so
+            src/engine/capi/kime_engine.h
+            src/engine/capi/kime_engine.hpp
 
-      - name: Upload zst
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create archive
+        run: |
+          DESTDIR=$(pwd)/kime-install ninja -C build install
+          tar -C kime-install -caf kime-${{ github.ref_name }}.tar.zst .
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: ./kime.tar.zst
-          asset_name: kime-${{ github.ref }}.tar.zst
-          asset_content_type: application/zstd
+          draft: true
+          files: kime-${{ github.ref_name }}.tar.zst
 
   build-qt5:
-    needs:
-      - build-engine
-      - create-release
-
-    runs-on: ubuntu-22.04
-
+    needs: build-archive
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        # 5.15.3 doesn't have binary release
-        qt5:
-          - 5.9.5
-          - 5.11.3
-          - 5.12.8
-          - 5.12.9
-          - 5.14.2
-          - 5.15.2
-
+        qt5: ['5.12.8', '5.15.2']
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download engine
         uses: actions/download-artifact@v4
         with:
           name: engine
-          path: .
-
-      - name: Download header
-        uses: actions/download-artifact@v4
-        with:
-          name: cpp-header
-          path: .
+          path: ./engine-artifacts
 
       - name: Install engine
         run: |
-          sudo mv ./libkime_engine.so /usr/lib
-          sudo mv ./kime_engine.hpp /usr/include
+          sudo install -Dm755 engine-artifacts/target/release/libkime_engine.so -t /usr/lib
+          sudo install -Dm644 engine-artifacts/src/engine/capi/kime_engine.h -t /usr/include
+          sudo install -Dm644 engine-artifacts/src/engine/capi/kime_engine.hpp -t /usr/include
+          sudo ldconfig
 
-      - name: Install Qt-${{ matrix.qt5 }}
+      - name: Install Qt ${{ matrix.qt5 }}
         uses: jurplel/install-qt-action@v4
         with:
           dir: /opt
           version: ${{ matrix.qt5 }}
 
-      - uses: actions/checkout@v4
+      - name: Install meson
+        run: sudo apt-get update && sudo apt-get install -y meson
 
-      - name: Build Qt-${{ matrix.qt5 }}
+      - name: Build Qt5 plugin
         run: |
-          mkdir build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_QT5=ON ../src
-          make -j$(nproc --all)
-          strip -s ./lib/libkime-qt5.so
+          meson setup build -Dsystem_engine=true -Dqt5=enabled -Dqt6=disabled -Dgtk3=disabled -Dgtk4=disabled
+          ninja -C build
+          strip -s build/src/frontends/qt5/libkimeplatforminputcontextplugin.so
+          cp build/src/frontends/qt5/libkimeplatforminputcontextplugin.so libkime-qt-${{ matrix.qt5 }}.so
 
-      - name: Upload Qt-${{ matrix.qt5 }} artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
         with:
-          name: qt-${{matrix.qt5}}
-          path: build/lib/libkime-qt5.so
-
-      - name: Upload Qt-${{ matrix.qt5 }} file
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: build/lib/libkime-qt5.so
-          asset_name: libkime-qt-${{ matrix.qt5 }}.so
-          asset_content_type: application/x-sharedlib
+          draft: true
+          files: libkime-qt-${{ matrix.qt5 }}.so
 
   build-qt6:
-    needs:
-      - build-engine
-      - create-release
-
-    runs-on: ubuntu-22.04
-
+    needs: build-archive
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        qt6:
-          - 6.0.2
-
+        qt6: ['6.2.4', '6.5.3', '6.7.3', '6.8.2']
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download engine
         uses: actions/download-artifact@v4
         with:
           name: engine
-          path: .
-
-      - name: Download header
-        uses: actions/download-artifact@v4
-        with:
-          name: cpp-header
-          path: .
+          path: ./engine-artifacts
 
       - name: Install engine
         run: |
-          sudo mv ./libkime_engine.so /usr/lib
-          sudo mv ./kime_engine.hpp /usr/include
+          sudo install -Dm755 engine-artifacts/target/release/libkime_engine.so -t /usr/lib
+          sudo install -Dm644 engine-artifacts/src/engine/capi/kime_engine.h -t /usr/include
+          sudo install -Dm644 engine-artifacts/src/engine/capi/kime_engine.hpp -t /usr/include
+          sudo ldconfig
 
-      - name: Install Qt-${{ matrix.qt6 }}
+      - name: Install Qt ${{ matrix.qt6 }}
         uses: jurplel/install-qt-action@v4
         with:
           dir: /opt
           version: ${{ matrix.qt6 }}
 
-      - uses: actions/checkout@v4
+      - name: Install meson
+        run: sudo apt-get update && sudo apt-get install -y meson
 
-      - name: Build Qt-${{ matrix.qt6 }}
+      - name: Build Qt6 plugin
         run: |
-          mkdir build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_QT6=ON ../src
-          make -j$(nproc --all)
-          strip -s ./lib/libkime-qt6.so
+          meson setup build -Dsystem_engine=true -Dqt6=enabled -Dqt5=disabled -Dgtk3=disabled -Dgtk4=disabled
+          ninja -C build
+          strip -s build/src/frontends/qt6/libkimeplatforminputcontextplugin.so
+          cp build/src/frontends/qt6/libkimeplatforminputcontextplugin.so libkime-qt-${{ matrix.qt6 }}.so
 
-      - name: Upload Qt-${{ matrix.qt6 }} artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
         with:
-          name: qt-${{matrix.qt6}}
-          path: build/lib/libkime-qt6.so
+          draft: true
+          files: libkime-qt-${{ matrix.qt6 }}.so
 
-      - name: Upload Qt-${{ matrix.qt6 }} file
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: build/lib/libkime-qt6.so
-          asset_name: libkime-qt-${{ matrix.qt6 }}.so
-          asset_content_type: application/x-sharedlib
-
-  package-archive:
-    needs:
-      - build-other
-      - build-qt5
-      - build-qt6
-      - create-release
-
-    runs-on: ubuntu-22.04
-
+  build-deb:
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.container }}
     strategy:
-      fail-fast: false
       matrix:
         include:
-          - qt5: 5.9.5
-            pkg: deb
-            name: ubuntu-18.04
-          - qt5: 5.12.8
-            pkg: deb
-            name: ubuntu-20.04
-          - qt5: 5.14.2
-            pkg: deb
-            name: ubuntu-20.10
-          - qt5: 5.15.2
-            pkg: deb
-            name: ubuntu-22.04
-          - qt5: 5.11.3
-            pkg: deb
-            name: debian-buster
-          - qt5: 5.15.2
-            qt6: 6.0.2
-            pkg: zst
-            name: latest
+          - container: ubuntu:22.04
+            gtk3: enabled
+            gtk4: disabled
+            qt5: enabled
+            qt6: disabled
+            suffix: ubuntu-22.04
+          - container: ubuntu:24.04
+            gtk3: enabled
+            gtk4: enabled
+            qt5: enabled
+            qt6: enabled
+            suffix: ubuntu-24.04
+          - container: debian:bookworm
+            gtk3: enabled
+            gtk4: enabled
+            qt5: enabled
+            qt6: enabled
+            suffix: debian-bookworm
+          - container: debian:trixie
+            gtk3: enabled
+            gtk4: enabled
+            qt5: enabled
+            qt6: enabled
+            suffix: debian-trixie
 
     steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          PKGS="build-essential curl git pkg-config libclang-dev meson ninja-build"
+          if [ "${{ matrix.gtk3 }}" = "enabled" ]; then PKGS="$PKGS libgtk-3-dev"; fi
+          if [ "${{ matrix.gtk4 }}" = "enabled" ]; then PKGS="$PKGS libgtk-4-dev"; fi
+          if [ "${{ matrix.qt5 }}" = "enabled" ]; then PKGS="$PKGS qtbase5-dev qtbase5-private-dev"; fi
+          if [ "${{ matrix.qt6 }}" = "enabled" ]; then PKGS="$PKGS qt6-base-dev qt6-base-private-dev"; fi
+          apt-get install -y $PKGS
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup default stable
+
       - uses: actions/checkout@v4
 
-      - name: Create out folder
-        run: mkdir -pv ./build/out
+      - name: Build
+        run: |
+          MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
+          meson setup build --prefix=/usr --libdir="lib/$MULTIARCH" \
+            -Dgtk3=${{ matrix.gtk3 }} -Dgtk4=${{ matrix.gtk4 }} \
+            -Dqt5=${{ matrix.qt5 }} -Dqt6=${{ matrix.qt6 }}
+          ninja -C build
 
-      - name: Download qt5 artifact
-        if: ${{ matrix.qt5 }}
-        uses: actions/download-artifact@v4
+      - name: Strip
+        run: |
+          for f in kime kime-check kime-indicator kime-candidate-window kime-xim kime-wayland; do
+            [ -f "target/release/$f" ] && strip -s "target/release/$f"
+          done
+          [ -f "target/release/libkime_engine.so" ] && strip -s target/release/libkime_engine.so
+          for f in build/src/frontends/*/lib*.so; do
+            [ -e "$f" ] && strip -s "$f"
+          done
+
+      - name: Build .deb
+        run: |
+          mkdir -p output
+          bash packaging/build-deb.sh build output
+          ARCH=$(dpkg --print-architecture)
+          mv output/kime_*_${ARCH}.deb "output/kime-${{ github.ref_name }}_${ARCH}_${{ matrix.suffix }}.deb"
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
         with:
-          name: qt-${{ matrix.qt5 }}
-          path: ./build/out
-
-      - name: Download qt6 artifact
-        if: ${{ matrix.qt6 }}
-        uses: actions/download-artifact@v4
-        with:
-          name: qt-${{ matrix.qt6 }}
-          path: ./build/out
-
-      - name: Download other artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: other
-          path: ./build/out
-
-      - name: Create deb
-        if: ${{ matrix.pkg == 'deb' }}
-        run: scripts/release-deb.sh .
-
-      - name: Upload deb
-        if: ${{ matrix.pkg == 'deb' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: ./kime_amd64.deb
-          asset_name: kime_${{ matrix.name }}_${{ github.ref }}_amd64.deb
-          asset_content_type: application/x-xz
-
-      - name: Create zst
-        if: ${{ matrix.pkg == 'zst' }}
-        run: scripts/release-zst.sh .
-
-      - name: Upload zst
-        if: ${{ matrix.pkg == 'zst' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.url }}
-          asset_path: ./kime.tar.zst
-          asset_name: kime_${{ matrix.name }}_${{ github.ref }}.tar.zst
-          asset_content_type: application/zstd
+          draft: true
+          files: output/kime-*.deb

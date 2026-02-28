@@ -101,10 +101,6 @@ Building with docker does not requires any other dependencies.
 git clone https://github.com/riey/kime
 cd kime
 
-export DOCKER_BUILDKIT=0
-export COMPOSE_DOCKER_CLI_BUILD=0
-# This is Docker build image using legacy
-
 docker build --file build-docker/<distro path>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
 docker cp kime:/opt/kime-out/kime.tar.zst .
@@ -114,20 +110,18 @@ docker cp kime:/opt/kime-out/kime.tar.zst .
 
 #### Manual build
 
-Make sure that **cargo** and other dependencies listed below are installed before build.
+Make sure that **cargo**, **meson**, **ninja**, and other dependencies listed below are installed before build.
 
 ```sh
 git clone https://github.com/Riey/kime
 cd kime
 
-scripts/build.sh -ar
+meson setup build
+ninja -C build
+sudo ninja -C build install
 ```
 
-Every files needed for manual install is in `build/out` directory.
-
-`scripts/install.sh <install-prefix>` can be used for packaging.
-
-`scripts/release-deb.sh <deb-out-path>` can be used for packaging `deb` package.
+Enable/disable the frontends by toggling `-Dgtk3=true`, `-Dqt5=false`, etc.
 
 #### GTK
 
@@ -139,12 +133,6 @@ sudo gtk-query-immodules-3.0 --update-cache
 # for gtk4
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
-
-## Development
-
-### C/C++
-
-Run `./scripts/generate_properties.sh` for using intellisense C/C++ in vscode
 
 ## Configuration
 
@@ -172,7 +160,7 @@ kime.desktop file is installed in /etc/xdg/autostart when installing kime.
 
 ### KDE Plasma Wayland
 
-It is required to select `kime daemon` under System Settings > Input & Output > Keyboard > Virtual Keyboard.  
+It is required to select `kime daemon` under System Settings > Input & Output > Keyboard > Virtual Keyboard.
 A logout and re-login is recommended afterwards.
 
 ### Weston
@@ -207,7 +195,8 @@ These dependencies are optional depending on your environments. For example, qt6
 
 #### Required
 
-* cmake
+* meson
+* ninja
 * cargo
 * libclang
 * pkg-config

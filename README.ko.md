@@ -99,33 +99,27 @@ zypper in kime
 git clone https://github.com/riey/kime
 cd kime
 
-export DOCKER_BUILDKIT=0
-export COMPOSE_DOCKER_CLI_BUILD=0
-# 도커 빌드시 Buildkit을 쓰지 않고 레거시 방식으로 빌드하기 위함
-
 docker build --file build-docker/<배포판 경로>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
-docker cp kime:/opt/kime-out/kime.tar.xz .
+docker cp kime:/opt/kime-out/kime.tar.zst .
 # deb 파일을 얻으시려면 대신 이 명령어를 실행하세요
 # docker cp kime:/opt/kime-out/kime_amd64.deb .
 ```
 
 ### 직접 빌드
 
-빌드하기 전에 **cargo** 및 아래 나열되어 있는 기타 종속성이 설치되어 있는지 확인하세요.
+빌드하기 전에 **cargo**, **meson**, **ninja** 및 아래 나열되어 있는 기타 종속성이 설치되어 있는지 확인하세요.
 
 ```sh
-git clone https://github.com/riey/kime
+git clone https://github.com/Riey/kime
 cd kime
 
-scripts/build.sh -ar
+meson setup build
+ninja -C build
+sudo ninja -C build install
 ```
 
-이제 모든 파일은 build/out 경로에 있습니다. 만약 수동 설치를 원하시면 쓰시면 됩니다.
-
-`scripts/install.sh <install-prefix>` 스크립트를 쓸 수도 있습니다. 패키징할 때 유용합니다.
-
-`scripts/release-deb.sh <deb-out-path>` 스크립트를 사용하시면 `deb` 파일을 생성합니다.
+필요한 프론트엔드만 `-Dgtk3=true`, `-Dqt5=true` 등으로 선택 또는 해제 하세요.
 
 #### GTK
 
@@ -139,12 +133,6 @@ sudo gtk-query-immodules-3.0 --update-cache
 # GTK4 설치 시
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
-
-## 개발
-
-### C/C++
-
-`./scripts/generate_properties.sh`을 실행해서 vscode에서 C/C++ 코드의 인텔리센스 기능을 사용할 수 있습니다.
 
 ## 설정
 
@@ -172,7 +160,7 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 
 ### KDE Plasma Wayland
 
-시스템 설정 > 입력과 출력 > 키보드 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.  
+시스템 설정 > 입력과 출력 > 키보드 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.
 이후에 로그아웃 후 재로그인을 하는 것을 권장합니다.
 
 ### Weston
@@ -207,7 +195,8 @@ path=/usr/bin/kime
 
 #### 필수
 
-* cmake
+* meson
+* ninja
 * cargo
 * libclang
 * pkg-config

@@ -1,6 +1,5 @@
 if [ "$IM_CONFIG_PHASE" = 2 ]; then
     # start kime daemon
-    # it failed when other daemon is already running
     kime || true
 fi
 

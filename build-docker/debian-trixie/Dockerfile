@@ -1,16 +1,10 @@
-FROM rust:slim-bookworm
+FROM rust:slim-trixie
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MESON_ARGS="-Dgtk3=enabled -Dgtk4=enabled -Dqt5=enabled -Dqt6=enabled"
 
 WORKDIR /opt/kime
 
-RUN echo " \n\
-deb http://ftp.kr.debian.org/debian/ sid main contrib non-free\n\
-#deb http://ftp.kr.debian.org/debian/ sid-updates main contrib non-free\n\
-#deb http://security.debian.org/ sid/updates main\n\
-#deb http://ftp.debian.org/debian bookworm-backports main\n\
-" > /etc/apt/sources.list
 RUN apt-get update
 RUN apt-get install -y build-essential git gcc clang libclang-dev ninja-build pkg-config zstd meson
 RUN apt-get install -y libpango1.0-dev libcairo2-dev libgtk-4-dev libgtk-3-dev libglib2.0-0t64 libxcb1

@@ -1,0 +1,19 @@
+option('gtk3', type: 'feature', value: 'auto', description: 'Build GTK3 IM module')
+option('gtk4', type: 'feature', value: 'auto', description: 'Build GTK4 IM module')
+option('qt5', type: 'feature', value: 'auto', description: 'Build Qt5 IM module')
+option('qt6', type: 'feature', value: 'auto', description: 'Build Qt6 IM module')
+option('cargo_profile', type: 'combo', choices: ['release', 'debug'], value: 'release', description: 'Cargo build profile')
+
+option('check', type: 'feature', value: 'auto', description: 'Build kime-check')
+option('indicator', type: 'feature', value: 'auto', description: 'Build kime-indicator')
+option('candidate_window', type: 'feature', value: 'auto', description: 'Build kime-candidate-window')
+option('xim', type: 'feature', value: 'auto', description: 'Build kime-xim')
+option('wayland', type: 'feature', value: 'auto', description: 'Build kime-wayland')
+
+option('install_headers', type: 'boolean', value: true, description: 'Install C/C++ headers')
+option('install_docs', type: 'boolean', value: true, description: 'Install documentation')
+
+option('system_engine', type: 'boolean', value: false, description: 'Use system-installed kime engine instead of building from source')
+
+option('qt5_plugindir', type: 'string', value: '', description: 'Override Qt5 plugin install directory')
+option('qt6_plugindir', type: 'string', value: '', description: 'Override Qt6 plugin install directory')

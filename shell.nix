@@ -1,15 +1,18 @@
 {
-  pkgs ? import <nixpkgs> { },
+  pkgs ? import <nixpkgs> {},
   rustToolchain ? pkgs.rustc,
+  gtk3 ? true,
+  gtk4 ? true,
+  qt5 ? false,
+  qt6 ? true,
 }:
 let
-  deps = import ./nix/deps.nix { inherit pkgs; };
+  deps = import ./nix/deps.nix { inherit pkgs gtk3 gtk4 qt5 qt6; };
   stdenv = pkgs.llvmPackages_18.stdenv;
   mkShell = (pkgs.mkShell.override { inherit stdenv; });
 in
-pkgs.mkShell {
+mkShell {
   name = "kime-shell";
-  dontUseCmakeConfigure = true;
   dontWrapQtApps = true;
   buildInputs = deps.kimeBuildInputs;
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ [
@@ -17,7 +20,6 @@ pkgs.mkShell {
     pkgs.gedit
     pkgs.llvmPackages_18.lldb
   ];
-  CMAKE_EXPORT_COMPILE_COMMANDS = 1;
   LIBCLANG_PATH = "${pkgs.llvmPackages_18.libclang.lib}/lib";
   LD_LIBRARY_PATH = "./target/debug:${pkgs.wayland}/lib:${pkgs.libGL}/lib:${pkgs.libxkbcommon}/lib";
   G_MESSAGES_DEBUG = "kime";

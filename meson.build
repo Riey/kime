@@ -3,6 +3,8 @@ project('kime', 'c', 'cpp',
   meson_version: '>= 1.1',
   default_options: [
     'cpp_std=c++20',
+    'buildtype=release',
+    'b_ndebug=if-release',
     'c_args=-Wall -fvisibility=hidden',
     'cpp_args=-Wall -fvisibility=hidden',
   ],

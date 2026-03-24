@@ -31,7 +31,7 @@ jobs:
           key: ${{ runner.os }}-nix-rustc-v1-1.55.0-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-nix-rustc-v1-1.55.0-
-      - run: nix develop -c meson setup build -Dcargo_profile=debug
+      - run: nix develop -c meson setup build --buildtype=debug -Dcargo_profile=debug
       - run: nix develop -c ninja -C build
       - run: nix develop -c cargo test
 

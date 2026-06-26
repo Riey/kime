@@ -19,7 +19,8 @@ jobs:
 
       - name: Build
         run: |
-          nix develop -c meson setup build
+          nix develop -c meson setup build \
+            -Dgtk3=enabled -Dgtk4=enabled -Dqt5=disabled -Dqt6=enabled
           nix develop -c ninja -C build
 
       - name: Strip

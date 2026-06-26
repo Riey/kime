@@ -149,9 +149,9 @@ jobs:
         include:
           - container: ubuntu:22.04
             gtk3: enabled
-            gtk4: disabled
+            gtk4: enabled
             qt5: enabled
-            qt6: disabled
+            qt6: enabled
             suffix: ubuntu-22.04
           - container: ubuntu:24.04
             gtk3: enabled

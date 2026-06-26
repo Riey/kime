@@ -20,7 +20,7 @@ jobs:
       - name: Build
         run: |
           nix develop -c meson setup build \
-            -Dgtk3=enabled -Dgtk4=enabled -Dqt5=disabled -Dqt6=enabled
+            -Dgtk3=enabled -Dgtk4=enabled -Dqt5=disabled -Dqt6=disabled
           nix develop -c ninja -C build
 
       - name: Strip
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        qt6: ['6.2.4', '6.5.3', '6.7.3', '6.8.2']
+        qt6: ['6.2.4', '6.5.3', '6.7.3', '6.8.2', '6.9.3', '6.10.3']
     steps:
       - uses: actions/checkout@v4
 

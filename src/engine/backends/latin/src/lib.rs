@@ -143,7 +143,11 @@ mod tests {
     fn embedded_layouts_parse_completely() {
         // A malformed entry makes serde fall back to an empty map via
         // `unwrap_or_default()`, so a full keymap proves the file parsed.
-        for layout in [LatinLayout::Qwerty, LatinLayout::Dvorak, LatinLayout::Colemak] {
+        for layout in [
+            LatinLayout::Qwerty,
+            LatinLayout::Dvorak,
+            LatinLayout::Colemak,
+        ] {
             let data = LatinData::new(&LatinConfig {
                 layout,
                 preferred_direct: false,

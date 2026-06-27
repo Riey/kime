@@ -163,10 +163,7 @@ fn exclamation_mark() {
 #[test]
 fn special_char_bypass() {
     // with a pending composition, '@' commits it and passes through (not consumed)
-    test_input(&[
-        (Key::normal(R), "ㄱ", ""),
-        (Key::shift(Two), "", "ㄱPASS"),
-    ]);
+    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::shift(Two), "", "ㄱPASS")]);
     // with no pending composition, '@' simply passes through
     test_input(&[(Key::shift(Two), "", "PASS")]);
 }

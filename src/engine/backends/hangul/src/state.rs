@@ -72,13 +72,18 @@ impl HangulEngine {
 
     pub fn key(&mut self, kv: KeyValue, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         let ret = match kv {
-            KeyValue::Pass(_) => {
-                // Commit any pending composition, then leave the key unhandled
-                // (return false) so the original key event reaches the
-                // application. This lets shortcuts bound to special characters
-                // such as '@' or '#' fire even while in Hangul mode (issue #719).
+            KeyValue::Pass(pass) => {
+                // A pass key is a literal character defined by the layout (e.g.
+                // the sebeolsik number/symbol layer). Commit any pending
+                // composition, then emit the literal (issue #754).
+                //
+                // Keys carrying a shortcut modifier (Ctrl/Alt/Super) never reach
+                // here: the layout only has plain/Shift entries, so the lookup
+                // misses and the caller passes the key through to the
+                // application — which is where shortcut handling belongs.
                 self.clear_preedit(commit_buf);
-                return false;
+                commit_buf.push(pass);
+                return true;
             }
             KeyValue::Choseong { cho } => self.state.cho(cho, addons),
             KeyValue::Jungseong { jung, compose } => self.state.jung(jung, compose, addons),
@@ -537,10 +542,9 @@ mod tests {
         );
     }
 
-    // issue #719: pass keys (numbers, symbols, ...) must not be consumed so that
-    // application shortcuts bound to keys like '@' or '#' fire in Hangul mode.
+    // issue #754: a pass key (layout literal) commits its character in Hangul mode.
     #[test]
-    fn pass_key_not_consumed() {
+    fn pass_key() {
         let mut engine = HangulEngine::new(false, PreeditJohabLevel::Needed);
         let mut commit = String::new();
 
@@ -554,15 +558,10 @@ mod tests {
         ));
         assert!(engine.has_preedit());
 
-        // a pass key commits the pending preedit but is NOT consumed
-        assert!(!engine.key(KeyValue::Pass('@'), EnumSet::empty(), &mut commit));
-        assert_eq!(commit, "ㄱ");
+        // a pass key commits the pending preedit and then its own literal
+        assert!(engine.key(KeyValue::Pass('@'), EnumSet::empty(), &mut commit));
+        assert_eq!(commit, "ㄱ@");
         assert!(!engine.has_preedit());
-
-        // with no pending preedit, a pass key is still not consumed and commits nothing
-        commit.clear();
-        assert!(!engine.key(KeyValue::Pass('@'), EnumSet::empty(), &mut commit));
-        assert_eq!(commit, "");
     }
 
     #[test]

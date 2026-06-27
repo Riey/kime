@@ -146,26 +146,34 @@ fn number() {
         (Key::normal(S), "안", ""),
         (Key::normal(G), "않", ""),
         (Key::normal(E), "ㄷ", "않"),
-        // issue #719: a pass key commits the pending preedit but is not consumed,
-        // so the key event passes through to the application.
-        (Key::normal(One), "", "ㄷPASS"),
+        // a pass key commits the pending preedit, then commits its own literal
+        (Key::normal(One), "", "ㄷ1"),
     ]);
 }
 
 #[test]
 fn exclamation_mark() {
-    // issue #719: '!' commits the pending preedit and passes through (not consumed).
-    test_input(&[(Key::shift(R), "ㄲ", ""), (Key::shift(One), "", "ㄲPASS")]);
+    // '!' commits the pending preedit, then commits itself
+    test_input(&[(Key::shift(R), "ㄲ", ""), (Key::shift(One), "", "ㄲ!")]);
 }
 
-// issue #719: special-character shortcuts (@, #, ...) must fire in Hangul mode,
-// which requires the engine to leave the key unhandled (pass it through).
+// issue #754: plain special-character (pass) keys must be typed in Hangul mode,
+// not bypassed to the application.
 #[test]
-fn special_char_bypass() {
-    // with a pending composition, '@' commits it and passes through (not consumed)
-    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::shift(Two), "", "ㄱPASS")]);
-    // with no pending composition, '@' simply passes through
-    test_input(&[(Key::shift(Two), "", "PASS")]);
+fn special_char_commit() {
+    // with a pending composition, '@' commits it and then commits '@'
+    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::shift(Two), "", "ㄱ@")]);
+    // with no pending composition, '@' is committed
+    test_input(&[(Key::shift(Two), "", "@")]);
+}
+
+// issue #754/#719: a shortcut-modified key (Ctrl+...) has no layout entry, so it
+// is bypassed to the application by the caller — shortcut handling lives there,
+// not in the pass-key path.
+#[test]
+fn ctrl_shortcut_bypass() {
+    use kime_engine_core::ModifierState;
+    test_input(&[(Key::new(Two, ModifierState::CONTROL), "", "PASS")]);
 }
 
 #[test]

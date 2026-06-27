@@ -46,10 +46,10 @@ fn issue_521() {
     ]);
 }
 
-// issue #719: symbol pass keys are not consumed so the key event reaches the app.
+// issue #754: a pass key (here ':') is committed in Hangul mode, not bypassed.
 #[test]
 fn colon() {
-    test_input(&[(Key::normal(Backslash), "", "PASS")]);
+    test_input(&[(Key::normal(Backslash), "", ":")]);
 }
 
 // https://github.com/Riey/kime/issues/520

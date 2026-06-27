@@ -98,23 +98,37 @@ fn flexible_compose_order_jong_jung() {
     );
 }
 
-// issue #719: symbol pass keys are not consumed so the key event reaches the app.
 #[test]
 fn s_number() {
     test_input(&[
-        (Key::shift(Two), "", "PASS"),
-        (Key::shift(Three), "", "PASS"),
-        (Key::shift(Four), "", "PASS"),
-        (Key::shift(Five), "", "PASS"),
-        (Key::shift(Six), "", "PASS"),
-        (Key::shift(Seven), "", "PASS"),
-        (Key::shift(Eight), "", "PASS"),
-        (Key::shift(Nine), "", "PASS"),
-        (Key::shift(Zero), "", "PASS"),
+        (Key::shift(Two), "", "@"),
+        (Key::shift(Three), "", "#"),
+        (Key::shift(Four), "", "$"),
+        (Key::shift(Five), "", "%"),
+        (Key::shift(Six), "", "^"),
+        (Key::shift(Seven), "", "&"),
+        (Key::shift(Eight), "", "*"),
+        (Key::shift(Nine), "", "("),
+        (Key::shift(Zero), "", ")"),
     ])
 }
 
 #[test]
 fn colon() {
-    test_input(&[(Key::shift(SemiColon), "", "PASS")]);
+    test_input(&[(Key::shift(SemiColon), "", ":")]);
+}
+
+// issue #754: sebeolsik-390 puts a number/symbol layer on the shifted right-half
+// keys via pass characters. These must be committed, not bypassed to the app
+// (which would type the raw QWERTY letter instead).
+#[test]
+fn s754_number_layer() {
+    test_input(&[(Key::shift(U), "", "7")]);
+    test_input(&[(Key::shift(I), "", "8")]);
+    test_input(&[(Key::shift(O), "", "9")]);
+    test_input(&[(Key::shift(J), "", "4")]);
+    test_input(&[(Key::shift(K), "", "5")]);
+    test_input(&[(Key::shift(L), "", "6")]);
+    test_input(&[(Key::shift(Y), "", "<")]);
+    test_input(&[(Key::shift(P), "", ">")]);
 }

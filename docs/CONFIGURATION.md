@@ -141,11 +141,25 @@ Set latin setting
 
 ### preferred_direct
 
-Handling key event by external as possible
+Pass latin key events through to the application directly instead of letting
+kime remap them, so the OS/firmware keyboard layout is used as-is.
+
+| default |`true`|
+|---------|------|
+
+**Note:** when `preferred_direct` is `true` the embedded [`layout`](#layout)
+below is **ignored**, because keys are handed to the OS layout untouched. To use
+an embedded latin layout such as `Dvorak` or `Colemak`, set
+`preferred_direct: false`. (kime maps physical keycodes, so the hangul layout is
+unaffected by this setting.) See [#626].
+
+[#626]: https://github.com/Riey/kime/issues/626
 
 ### layout
 
-Set latin layout
+Set latin layout.
+
+Only takes effect when [`preferred_direct`](#preferred_direct) is `false`.
 
 | default |`Qwerty`|
 |---------|--------|

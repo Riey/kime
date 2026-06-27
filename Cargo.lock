@@ -1821,6 +1821,7 @@ name = "kime-engine-backend-latin"
 version = "0.1.0"
 dependencies = [
  "kime-engine-backend",
+ "log",
  "serde",
  "serde_yaml",
 ]

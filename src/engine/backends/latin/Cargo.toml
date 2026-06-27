@@ -9,3 +9,4 @@ license = "GPL-3.0-or-later"
 kime-engine-backend = { path = "../../backend" }
 serde = { version = "1.0.124", features = ["derive"] }
 serde_yaml = "0.9"
+log = "0.4"

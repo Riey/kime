@@ -6,6 +6,9 @@
 
 ### Improve
 
+* Add `kime-ibus` IBus engine frontend (preedit + commit + key/focus/reset). This
+  is the supported path on GNOME Wayland where Mutter lacks `zwp_input_method_v2`
+  [#422](https://github.com/Riey/kime/issues/422) [#748](https://github.com/Riey/kime/issues/748)
 * Replace cmake build system with meson
   - cargo builds via `custom_target()`, GTK/Qt frontends as `shared_library()`
   - Per-component build options (gtk3, gtk4, qt5, qt6, check, indicator, etc.), enabled by default

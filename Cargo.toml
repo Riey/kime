@@ -14,6 +14,7 @@ members = [
     "src/engine/backends/latin",
     "src/engine/backends/math",
 
+    "src/frontends/ibus",
     "src/frontends/wayland",
     "src/frontends/xim",
 

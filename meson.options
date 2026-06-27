@@ -9,6 +9,7 @@ option('indicator', type: 'feature', value: 'auto', description: 'Build kime-ind
 option('candidate_window', type: 'feature', value: 'auto', description: 'Build kime-candidate-window')
 option('xim', type: 'feature', value: 'auto', description: 'Build kime-xim')
 option('wayland', type: 'feature', value: 'auto', description: 'Build kime-wayland')
+option('ibus', type: 'feature', value: 'auto', description: 'Build kime-ibus IBus engine')
 
 option('install_headers', type: 'boolean', value: true, description: 'Install C/C++ headers')
 option('install_docs', type: 'boolean', value: true, description: 'Install documentation')

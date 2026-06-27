@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Installed to ${datadir}/ibus/component/kime.xml -->
+<component>
+  <name>org.freedesktop.IBus.Kime</name>
+  <description>Kime Korean input method</description>
+  <exec>/usr/bin/kime-ibus --ibus</exec>
+  <version>3.1.1</version>
+  <author>Riey &lt;creeper844@gmail.com&gt;</author>
+  <license>GPL-3.0</license>
+  <homepage>https://github.com/Riey/kime</homepage>
+  <textdomain>kime</textdomain>
+
+  <engines>
+    <engine>
+      <name>kime</name>
+      <longname>Kime</longname>
+      <description>Kime Korean input method</description>
+      <language>ko</language>
+      <license>GPL-3.0</license>
+      <author>Riey &lt;creeper844@gmail.com&gt;</author>
+      <layout>us</layout>
+      <rank>99</rank>
+      <symbol>한</symbol>
+    </engine>
+  </engines>
+</component>

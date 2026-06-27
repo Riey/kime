@@ -49,6 +49,9 @@ else
   if get_option('wayland').allowed()
     cargo_packages += ['-p', 'kime-wayland']
   endif
+  if get_option('ibus').allowed()
+    cargo_packages += ['-p', 'kime-ibus']
+  endif
   # kime main binary is always built when not using system engine
   cargo_packages += ['-p', 'kime']
 
@@ -103,6 +106,12 @@ else
       '_', target_dir / 'kime-wayland',
     )
   endif
+  if get_option('ibus').allowed()
+    meson.add_install_script('sh', '-c',
+      'install -Dm755 "$1" -t "${DESTDIR}${MESON_INSTALL_PREFIX}/bin"',
+      '_', target_dir / 'kime-ibus',
+    )
+  endif
 
   # Install engine shared library
   meson.add_install_script('sh', '-c',
@@ -136,6 +145,13 @@ meson.add_install_script('sh', '-c',
   'install -Dm755 "$1" -t "${DESTDIR}${MESON_INSTALL_PREFIX}/bin"',
   '_', meson.project_source_root() / 'res' / 'kime-xdg-autostart',
 )
+
+# Install IBus component definition (makes "kime" selectable in IBus/GNOME)
+if get_option('ibus').allowed()
+  install_data('res/ibus/component/kime.xml',
+    install_dir: get_option('datadir') / 'ibus' / 'component',
+  )
+endif
 
 # Install icons
 install_data(

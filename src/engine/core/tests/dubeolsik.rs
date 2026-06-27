@@ -146,13 +146,29 @@ fn number() {
         (Key::normal(S), "안", ""),
         (Key::normal(G), "않", ""),
         (Key::normal(E), "ㄷ", "않"),
-        (Key::normal(One), "", "ㄷ1"),
+        // issue #719: a pass key commits the pending preedit but is not consumed,
+        // so the key event passes through to the application.
+        (Key::normal(One), "", "ㄷPASS"),
     ]);
 }
 
 #[test]
 fn exclamation_mark() {
-    test_input(&[(Key::shift(R), "ㄲ", ""), (Key::shift(One), "", "ㄲ!")]);
+    // issue #719: '!' commits the pending preedit and passes through (not consumed).
+    test_input(&[(Key::shift(R), "ㄲ", ""), (Key::shift(One), "", "ㄲPASS")]);
+}
+
+// issue #719: special-character shortcuts (@, #, ...) must fire in Hangul mode,
+// which requires the engine to leave the key unhandled (pass it through).
+#[test]
+fn special_char_bypass() {
+    // with a pending composition, '@' commits it and passes through (not consumed)
+    test_input(&[
+        (Key::normal(R), "ㄱ", ""),
+        (Key::shift(Two), "", "ㄱPASS"),
+    ]);
+    // with no pending composition, '@' simply passes through
+    test_input(&[(Key::shift(Two), "", "PASS")]);
 }
 
 #[test]

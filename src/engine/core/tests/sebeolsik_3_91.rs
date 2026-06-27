@@ -46,9 +46,10 @@ fn issue_521() {
     ]);
 }
 
+// issue #719: symbol pass keys are not consumed so the key event reaches the app.
 #[test]
 fn colon() {
-    test_input(&[(Key::normal(Backslash), "", ":")]);
+    test_input(&[(Key::normal(Backslash), "", "PASS")]);
 }
 
 // https://github.com/Riey/kime/issues/520

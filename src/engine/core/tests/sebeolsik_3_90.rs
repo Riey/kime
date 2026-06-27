@@ -98,22 +98,23 @@ fn flexible_compose_order_jong_jung() {
     );
 }
 
+// issue #719: symbol pass keys are not consumed so the key event reaches the app.
 #[test]
 fn s_number() {
     test_input(&[
-        (Key::shift(Two), "", "@"),
-        (Key::shift(Three), "", "#"),
-        (Key::shift(Four), "", "$"),
-        (Key::shift(Five), "", "%"),
-        (Key::shift(Six), "", "^"),
-        (Key::shift(Seven), "", "&"),
-        (Key::shift(Eight), "", "*"),
-        (Key::shift(Nine), "", "("),
-        (Key::shift(Zero), "", ")"),
+        (Key::shift(Two), "", "PASS"),
+        (Key::shift(Three), "", "PASS"),
+        (Key::shift(Four), "", "PASS"),
+        (Key::shift(Five), "", "PASS"),
+        (Key::shift(Six), "", "PASS"),
+        (Key::shift(Seven), "", "PASS"),
+        (Key::shift(Eight), "", "PASS"),
+        (Key::shift(Nine), "", "PASS"),
+        (Key::shift(Zero), "", "PASS"),
     ])
 }
 
 #[test]
 fn colon() {
-    test_input(&[(Key::shift(SemiColon), "", ":")]);
+    test_input(&[(Key::shift(SemiColon), "", "PASS")]);
 }

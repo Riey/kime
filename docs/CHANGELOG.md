@@ -21,6 +21,7 @@
 * Remove `kime-engine-cffi`
 * fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/715)
 * feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/719)
+* fix(hangul): Don't consume pass keys (numbers, symbols) so app shortcuts like `@`/`#` fire in Hangul mode [#719](https://github.com/Riey/kime/719)
 * Add Opensuse Build Service repository and modify README
 * fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
 * Update dependencies:

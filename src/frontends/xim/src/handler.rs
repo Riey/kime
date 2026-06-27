@@ -33,7 +33,7 @@ impl KimeData {
 
 pub struct KimeHandler {
     preedit_windows: AHashMap<NonZeroU32, PeWindow>,
-    font: (FontArc, f32),
+    font: Option<(FontArc, f32)>,
     config: Config,
     screen_num: usize,
 }
@@ -41,13 +41,25 @@ pub struct KimeHandler {
 impl KimeHandler {
     pub fn new(screen_num: usize, config: Config) -> Self {
         let (font_data, index, font_size) = &config.xim_preedit_font;
-        let font_vec = FontVec::try_from_vec_and_index(font_data.clone(), *index).unwrap();
-        let font = FontArc::from(font_vec);
+        // The preedit font can be missing (e.g. neither the configured
+        // `xim_preedit_font` nor the fallback is installed), in which case
+        // `load_font` yields empty data and parsing fails. Degrade gracefully
+        // by disabling the preedit popup window instead of panicking. See #706.
+        let font = match FontVec::try_from_vec_and_index(font_data.clone(), *index) {
+            Ok(font_vec) => Some((FontArc::from(font_vec), *font_size)),
+            Err(err) => {
+                log::warn!(
+                    "Failed to load xim preedit font; preedit window is disabled: {}",
+                    err
+                );
+                None
+            }
+        };
 
         Self {
             preedit_windows: AHashMap::new(),
             screen_num,
-            font: (font, *font_size),
+            font,
             config,
         }
     }
@@ -109,6 +121,12 @@ impl KimeHandler {
             return Ok(());
         }
 
+        // No usable preedit font was loaded; skip the popup window. See #706.
+        let font = match self.font.clone() {
+            Some(font) => font,
+            None => return Ok(()),
+        };
+
         if let Some(pe) = user_ic.user_data.pe.as_mut() {
             // Draw in server (already have pe_window)
             let pe = self.preedit_windows.get_mut(pe).unwrap();
@@ -118,7 +136,7 @@ impl KimeHandler {
             // Draw in server
             let mut pe = PeWindow::new(
                 server.conn(),
-                self.font.clone(),
+                font,
                 user_ic.ic.app_win(),
                 user_ic.ic.preedit_spot(),
                 self.screen_num,
@@ -401,5 +419,29 @@ impl<C: HasConnection> ServerHandler<X11rbServer<C>> for KimeHandler {
         } else {
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::KimeHandler;
+    use kime_engine_core::Config;
+
+    /// Regression test for #706: when the preedit font cannot be loaded
+    /// (`load_font` returns empty data because no matching font is installed),
+    /// constructing the handler must not panic. Instead the preedit window is
+    /// disabled (`font == None`).
+    #[test]
+    fn missing_preedit_font_does_not_panic() {
+        let mut config = Config::default();
+        // Simulate a missing font: empty data, as produced by
+        // `load_font(...).unwrap_or_default()` when no face matches.
+        config.xim_preedit_font = (Vec::new(), 0, 15.0);
+
+        let handler = KimeHandler::new(0, config);
+        assert!(
+            handler.font.is_none(),
+            "preedit window should be disabled when the font is missing"
+        );
     }
 }

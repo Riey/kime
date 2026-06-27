@@ -211,6 +211,8 @@ all:
   - ComposeChoseongSsang
 dubeolsik:
   - TreatJongseongAsChoseongg
+sebeolsik-3sin-p2:
+  - ComposeJongseongSsang
 ```
 
 #### Addons

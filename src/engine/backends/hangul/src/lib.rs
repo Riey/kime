@@ -65,6 +65,10 @@ impl Default for HangulConfig {
             addons: vec![
                 ("all".into(), Addon::ComposeChoseongSsang.into()),
                 ("dubeolsik".into(), Addon::TreatJongseongAsChoseong.into()),
+                (
+                    "sebeolsik-3sin-p2".into(),
+                    Addon::ComposeJongseongSsang.into(),
+                ),
             ]
             .into_iter()
             .collect(),

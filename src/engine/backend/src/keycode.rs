@@ -124,6 +124,8 @@ pub enum KeyCode {
     Henkan,
     AltL,
     AltR,
+    SuperL,
+    SuperR,
     Hangul,
     HangulHanja,
 
@@ -230,6 +232,8 @@ impl KeyCode {
             102 => Some(Self::Muhenkan),
             64 => Some(Self::AltL),
             108 => Some(Self::AltR),
+            133 => Some(Self::SuperL),
+            134 => Some(Self::SuperR),
             122 | 130 => Some(Self::Hangul),
             121 | 123 | 131 => Some(Self::HangulHanja),
 
@@ -379,4 +383,27 @@ fn key_parse() {
     assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
     assert_eq!("C-Space".parse::<Key>().unwrap(), Key::ctrl(KeyCode::Space));
     assert_eq!("M-X".parse::<Key>().unwrap(), Key::alt(KeyCode::X));
+}
+
+#[test]
+fn super_keys() {
+    // X11 hardware keycodes for Super_L (133) / Super_R (134),
+    // e.g. Apple right-command, so they can be bound as a category toggle.
+    assert_eq!(
+        KeyCode::from_hardware_code(133, false),
+        Some(KeyCode::SuperL)
+    );
+    assert_eq!(
+        KeyCode::from_hardware_code(134, false),
+        Some(KeyCode::SuperR)
+    );
+
+    // The variants must round-trip through their string form so they can be
+    // written in the config like the existing AltR toggle.
+    assert_eq!("SuperL".parse::<KeyCode>().unwrap(), KeyCode::SuperL);
+    assert_eq!("SuperR".parse::<KeyCode>().unwrap(), KeyCode::SuperR);
+    assert_eq!(
+        "SuperR".parse::<Key>().unwrap(),
+        Key::normal(KeyCode::SuperR)
+    );
 }

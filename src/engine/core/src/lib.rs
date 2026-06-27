@@ -147,7 +147,13 @@ impl InputEngine {
             // ignore shift key
         } else if matches!(
             key.code,
-            KeyCode::ControlL | KeyCode::ControlR | KeyCode::AltL | KeyCode::AltR | KeyCode::Shift
+            KeyCode::ControlL
+                | KeyCode::ControlR
+                | KeyCode::AltL
+                | KeyCode::AltR
+                | KeyCode::SuperL
+                | KeyCode::SuperR
+                | KeyCode::Shift
         ) {
             ret |= self.current_result();
             return ret;

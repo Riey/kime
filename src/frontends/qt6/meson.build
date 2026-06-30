@@ -17,6 +17,7 @@ if qt6_dep.found()
   qt6_moc = qt6_mod.preprocess(
     moc_headers: ['../qt5/src/plugin.hpp', '../qt5/src/input_context.hpp'],
     dependencies: [qt6_dep, kime_engine_dep],
+    moc_extra_arguments: ['-DKIME_QT_IID="org.qt-project.Qt.QPlatformInputContextFactoryInterface.5.1"'],
   )
 
   shared_library('kimeplatforminputcontextplugin',

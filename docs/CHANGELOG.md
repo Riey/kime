@@ -6,6 +6,8 @@
 
 ### Improve
 
+* fix(gtk): GTK4 no longer swallows bypassed keys (Enter, Tab, arrows) while a preedit is visible — the GTK3-style deferred event re-injection can't reach the widget on GTK4, so the GTK4 build now updates the preedit synchronously and lets the widget handle bypassed control keys on the first press (Enter no longer needs to be pressed twice in Hangul mode) [#606](https://github.com/Riey/kime/issues/606) [#775](https://github.com/Riey/kime/pull/775)
+* fix(gtk): harden IM context lifetime — hold a reference across signal emission so an app destroying the context from a `commit` handler (Inkscape tool teardown) can't leave dangling pointers, disconnect the button-press handler in finalize so a widget outliving the context can't call into freed memory, and chain up to the parent class finalize [#579](https://github.com/Riey/kime/issues/579) [#775](https://github.com/Riey/kime/pull/775)
 * fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)
 
 ## 3.2.0

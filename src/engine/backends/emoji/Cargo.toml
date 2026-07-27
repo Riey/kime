@@ -1,5 +1,6 @@
 [package]
 name = "kime-engine-backend-emoji"
+description = "Emoji input mode backed by CLDR annotations"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

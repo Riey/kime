@@ -1,5 +1,6 @@
 [package]
 name = "kime"
+description = "Kime daemon: runs the XIM, Wayland, and indicator modules"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

@@ -8,7 +8,7 @@ use enumset::{EnumSet, EnumSetType};
 use kime_engine_backend::{InputEngineBackend, Key, KeyCode};
 use serde::{Deserialize, Serialize};
 
-pub use layout::Layout;
+pub use layout::{Layout, LayoutError, LAYOUT_FORMAT_VERSION};
 pub use state::HangulEngine;
 
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]
@@ -116,11 +116,23 @@ impl HangulData {
             .list_config_files("layouts")
             .into_iter()
             .filter_map(|path| {
-                let name = path.file_stem()?.to_str()?;
+                let name = path.file_stem()?.to_str()?.to_string();
 
-                Layout::load_from(std::fs::read_to_string(&path).ok()?.as_str())
-                    .ok()
-                    .map(move |l| (name.to_string().into(), l))
+                let content = match std::fs::read_to_string(&path) {
+                    Ok(content) => content,
+                    Err(err) => {
+                        log::error!("Can't read layout file {}: {}", path.display(), err);
+                        return None;
+                    }
+                };
+
+                match Layout::load_from(&content) {
+                    Ok(layout) => Some((name.into(), layout)),
+                    Err(err) => {
+                        log::error!("Can't load layout file {}: {}", path.display(), err);
+                        None
+                    }
+                }
             });
 
         Self::new(config, custom_layouts.chain(builtin_layouts()))

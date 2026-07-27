@@ -121,6 +121,13 @@ void KimeInputContext::commit_str(kime::RustStr s) {
 }
 
 bool KimeInputContext::process_input_result(kime::InputResult ret) {
+  if (ret & kime::InputResult_NOT_READY) {
+    // The engine is waiting for the candidate window process (e.g. hanja
+    // conversion). Mark it not ready so losing focus to that window does
+    // not reset the engine and kill the popup (issue #757).
+    this->engine_ready = false;
+  }
+
   if (ret & kime::InputResult_LANGUAGE_CHANGED) {
     kime::kime_engine_update_layout_state(this->engine);
   }

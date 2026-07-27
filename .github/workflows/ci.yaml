@@ -18,10 +18,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      # init: none — the runner is an ephemeral container without systemd
+      # init: none — the runner is an ephemeral container without systemd.
+      # The first substituter is a local caching proxy for cache.nixos.org;
+      # nix falls back to the real cache if it is unreachable.
       - uses: DeterminateSystems/nix-installer-action@v22
         with:
           init: none
+          extra-conf: |
+            substituters = http://172.30.0.251:8080 https://cache.nixos.org
       - name: Caching cargo
         uses: actions/cache@v4
         with:

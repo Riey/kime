@@ -17,7 +17,7 @@ jobs:
     runs-on: [self-hosted, docker-ci]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # init: none — the runner is an ephemeral container without systemd.
       # The first substituter is a local caching proxy for cache.nixos.org;
       # nix falls back to the real cache if it is unreachable.
@@ -27,7 +27,7 @@ jobs:
           extra-conf: |
             substituters = http://172.30.0.251:8080 https://cache.nixos.org
       - name: Caching cargo and nix inputs
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           # ~/.cache/nix holds fetched flake inputs (the nixpkgs tarball
           # alone costs ~10s per run on the ephemeral runners)
@@ -36,9 +36,9 @@ jobs:
             ~/.cargo/git
             ~/.cache/nix
             target
-          key: ${{ runner.os }}-nix-rustc-v1-1.55.0-${{ hashFiles('Cargo.lock', 'flake.lock') }}
+          key: ${{ runner.os }}-nix-rustc-v1-1.97.1-${{ hashFiles('Cargo.lock', 'flake.lock') }}
           restore-keys: |
-            ${{ runner.os }}-nix-rustc-v1-1.55.0-
+            ${{ runner.os }}-nix-rustc-v1-1.97.1-
       - run: nix develop -c meson setup build --buildtype=debug -Dcargo_profile=debug
       - run: nix develop -c ninja -C build
       - run: nix develop -c cargo test
@@ -54,7 +54,7 @@ jobs:
     # (a container without a docker socket) can't run — install the binary
     # instead. cargo-deny shells out to `cargo metadata`, hence the toolchain.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: taiki-e/install-action@v2
         with:
@@ -65,7 +65,7 @@ jobs:
     runs-on: [self-hosted, docker-ci]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # the runner image has no rustup; this installs it with rustfmt included
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -76,5 +76,5 @@ jobs:
   spell-check:
     runs-on: [self-hosted, docker-ci]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: crate-ci/typos@master

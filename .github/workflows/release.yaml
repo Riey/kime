@@ -12,7 +12,7 @@ jobs:
   build-archive:
     runs-on: [self-hosted, docker-ci]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # init: none — the runner is an ephemeral container without systemd.
       # The first substituter is a local caching proxy for cache.nixos.org;
       # nix falls back to the real cache if it is unreachable.
@@ -39,7 +39,7 @@ jobs:
           done
 
       - name: Upload engine artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: engine
           path: |
@@ -55,7 +55,7 @@ jobs:
           tar -C kime-install -caf kime-${{ github.ref_name }}.tar.zst .
 
       - name: Upload release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: kime-${{ github.ref_name }}.tar.zst
@@ -67,16 +67,16 @@ jobs:
       matrix:
         qt5: ['5.12.8', '5.15.2']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # install-qt-action needs pip; the runner container's system python
       # is externally managed (PEP 668), so bring an isolated one
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Download engine
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: engine
           path: ./engine-artifacts
@@ -105,7 +105,7 @@ jobs:
           cp build/src/frontends/qt5/libkimeplatforminputcontextplugin.so libkime-qt-${{ matrix.qt5 }}.so
 
       - name: Upload release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: libkime-qt-${{ matrix.qt5 }}.so
@@ -117,16 +117,16 @@ jobs:
       matrix:
         qt6: ['6.2.4', '6.5.3', '6.7.3', '6.8.2', '6.9.3', '6.10.3']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # install-qt-action needs pip; the runner container's system python
       # is externally managed (PEP 668), so bring an isolated one
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Download engine
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: engine
           path: ./engine-artifacts
@@ -155,7 +155,7 @@ jobs:
           cp build/src/frontends/qt6/libkimeplatforminputcontextplugin.so libkime-qt-${{ matrix.qt6 }}.so
 
       - name: Upload release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: libkime-qt-${{ matrix.qt6 }}.so
@@ -220,7 +220,7 @@ jobs:
           export PATH="$HOME/.cargo/bin:$PATH"
           rustup default stable
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build
         run: |
@@ -248,7 +248,7 @@ jobs:
           mv output/kime_*_${ARCH}.deb "output/kime-${{ github.ref_name }}_${ARCH}_${{ matrix.suffix }}.deb"
 
       - name: Upload release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: output/kime-*.deb

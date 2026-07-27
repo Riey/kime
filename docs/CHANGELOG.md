@@ -7,6 +7,9 @@
 ### Improve
 
 * fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)
+* fix(engine): volume keys (Mute/VolumeDown/VolumeUp) no longer act as Hangul/Hanja keys — hardware keycodes 121/122/123 were raw evdev values added by mistake; only the real X11 keycodes 130 (`<HNGL>`) and 131 (`<HJCV>`) map now [#603](https://github.com/Riey/kime/issues/603) [#769](https://github.com/Riey/kime/pull/769)
+* fix(engine): reap the candidate window process after killing it so dismissed hanja popups no longer accumulate as zombie (`<defunct>`) processes [#617](https://github.com/Riey/kime/issues/617) [#769](https://github.com/Riey/kime/pull/769)
+* fix(engine): log config file open/parse errors instead of silently falling back to the default config, so a syntax error in `config.yaml` is diagnosable [#656](https://github.com/Riey/kime/issues/656) [#769](https://github.com/Riey/kime/pull/769)
 
 ## 3.2.0
 

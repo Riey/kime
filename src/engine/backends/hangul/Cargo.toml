@@ -8,6 +8,7 @@ license = "GPL-3.0-or-later"
 [dependencies]
 kime-engine-backend = { path = "../../backend" }
 enumset = "1.1"
+log = "0.4"
 num-derive = "0.4"
 num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }

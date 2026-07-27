@@ -79,6 +79,44 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 엔진의 단축키를 설정합니다 형식은 `키: 내용` 입니다
 
+### 키 형식
+
+키는 0개 이상의 수식키 접두사 뒤에 키 이름을 이어서 적습니다.
+
+| 접두사   | 수식키                        |
+|----------|-------------------------------|
+| `Super-` | Super (윈도우/로고 키)        |
+| `M-`     | Alt (Emacs의 Meta에서 온 `M`) |
+| `C-`     | Ctrl                          |
+| `S-`     | Shift                         |
+
+접두사는 순서에 상관없이 조합할 수 있으며, kime가 출력할 때는 `Super-`,
+`M-`, `C-`, `S-` 순서로 적습니다.
+
+예시:
+
+* `S-Space` — Shift+Space
+* `M-C-Backslash` — Alt+Ctrl+`\`
+* `Super-Space` — Super+Space
+
+사용할 수 있는 키 이름:
+
+* 숫자: `1`-`9`, `0`
+* 숫자패드 숫자(NumLock 켜짐): `N1`-`N9`, `N0`
+* 로마자: `A`-`Z`
+* `Minus`, `Equal`, `Backslash`, `Grave`, `OpenBracket`, `CloseBracket`,
+  `Space`, `Comma`, `Period`, `SemiColon`, `Quote`, `Slash`
+* `Esc`, `Shift`, `Backspace`, `Enter`, `Tab`, `ControlL`, `ControlR`,
+  `Delete`, `Insert`, `Home`, `End`, `PageUp`, `PageDown`, `Muhenkan`,
+  `Henkan`, `AltL`, `AltR`, `SuperL`, `SuperR`, `Hangul`, `HangulHanja`
+* 방향키: `Left`, `Right`, `Up`, `Down`
+* 기능키: `F1`-`F12`
+
+`Shift`는 좌우 구분이 없는 단일 키 이름이고 Ctrl, Alt, Super는
+`ControlL`/`ControlR`, `AltL`/`AltR`, `SuperL`/`SuperR`로 좌우가
+구분됩니다. 수식키 자체도 단축키로 지정할 수 있습니다(기본 설정의
+`AltR`, `ControlR`처럼).
+
 ### global_hotkeys
 
 전역 단축키입니다
@@ -105,7 +143,8 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 ##### !Mode InputMode
 
-해당 모드를 활성화합니다
+해당 모드를 활성화합니다 각 모드의 동작은 [입력 모드](#입력-모드)를
+참고하세요
 
 ##### Commit
 
@@ -133,7 +172,15 @@ indicator에서 사용할 아이콘의 색을 정합니다
 
 XIM에서 쓸 편집창 글꼴과 크기입니다.
 
-| 기본값 |`[D2Coding, 15.0]`|
+| 기본값 |`[Noto Sans CJK KR, 15.0]`|
+|--------|--------------------------|
+
+## candidate_font
+
+[Hanja 모드](#hanja)에서 쓰는 `kime-candidate-window` 팝업의 글꼴
+이름입니다.
+
+| 기본값 |`Noto Sans CJK KR`|
 |--------|------------------|
 
 ## latin
@@ -279,3 +326,73 @@ sebeolsik-3sin-p2:
 ```
 
 ##### DecomposeJongseongSsang
+
+# 입력 모드
+
+kime에는 `Latin`/`Hangul` 입력 언어 외에 세 가지 입력 *모드*가
+있습니다: `Math`, `Hanja`, `Emoji`. 모드는 `!Mode`
+단축키([hotkeys](#hotkeys) 참고)로 켜지며 현재 언어 위에서 동작합니다.
+
+기본 단축키:
+
+| 모드    | 기본 단축키                     | 사용 범위          |
+|---------|---------------------------------|--------------------|
+| `Math`  | `M-C-Backslash` (Alt+Ctrl+`\`)  | 전역               |
+| `Emoji` | `M-C-E` (Alt+Ctrl+E)            | 전역               |
+| `Hanja` | `F9`, `HangulHanja`, `ControlR` | `Hangul` 언어에서만 |
+
+모든 모드에서 `Enter`와 `Tab`이 기본으로 `Commit`에 연결되어 있어 현재
+입력을 커밋합니다. 전역 단축키는 `mode_hotkeys`에서 덮어쓰지 않는 한
+모드 안에서도 계속 동작하므로, 예를 들어 기본 `Esc` 단축키(`!Switch
+Latin`)로 모드에서 빠져나올 수 있습니다.
+
+## Math
+
+수학 기호를 (대부분) LaTeX 이름으로 입력하는 모드입니다. 이 모드는
+지속되는 모드로, 기호를 커밋한 뒤에도 언어를 바꾸기 전까지(예:
+`Esc`나 한영 전환키) 유지됩니다.
+
+* `\`로 기호 이름 입력을 시작합니다. 이름을 입력한 뒤
+  `Enter`/`Tab`으로 커밋합니다: `\pi` → π, `\Pi` → Π (이름은
+  대소문자를 구분합니다).
+* 기호 이름을 입력 중이 아닐 때 누른 키는 일반 로마자로 커밋됩니다.
+* `\\`는 백슬래시 `\` 문자를 커밋합니다.
+* `Backspace`는 이름의 마지막 글자를 지우며, 이름이 비어 있으면 기호
+  입력을 종료합니다.
+* 이름 앞에 `\<스타일>.<이름>` 형식으로 스타일을 붙일 수 있습니다.
+  스타일은 `sf`(산세리프), `bf`(굵게), `it`(기울임), `tt`(고정폭),
+  `bb`(겹선), `scr`(스크립트), `cal`(필기체), `frak`(프락투어)이며
+  순서에 상관없이 이어 붙일 수 있습니다: `\bfit.alpha` → 𝜶.
+* 없는 이름은 아무것도 커밋하지 않습니다. 해석할 수 없는 스타일은
+  조용히 무시되고 스타일 없는 기호가 커밋됩니다.
+* LaTeX에 없는 이름도 일부 있습니다. 예: `\squotl` → 「. 전체 목록은
+  [symbol_map.json]을 보세요.
+
+[symbol_map.json]: ../src/engine/dict/data/symbol_map.json
+
+## Emoji
+
+이모지를 이름으로 검색해 입력하는 모드입니다.
+
+* 이모지의 영어 이름 일부를 입력하세요 — 영어 [유니코드 CLDR][cldr]
+  이름에 대한 부분 문자열 검색이므로 한글 이름으로는 검색되지
+  않습니다.
+* 편집창에 검색어와 함께 일치하는 후보가 최대 5개 표시됩니다.
+* `Space`도 검색어의 일부입니다(예: `red apple`).
+* `Enter`/`Tab`은 첫 번째 후보를 커밋하고 모드를 종료합니다.
+* `Backspace`는 검색어의 마지막 글자를 지우며, 검색어가 비어 있으면
+  모드를 종료합니다.
+
+[cldr]: https://cldr.unicode.org
+
+## Hanja
+
+조합 중인 한글을 한자로 변환하는 모드로, `Hangul` 언어에서 편집 중인
+글자가 있을 때만 동작합니다(예: 한을 입력한 뒤 `F9`).
+
+* 후보와 뜻을 보여주는 `kime-candidate-window` 팝업이 열립니다.
+  `kime-candidate-window` 바이너리가 `PATH`에 설치되어 있어야 합니다.
+* 마우스로 후보를 클릭하면 커밋되고, `Esc`를 누르면 변환 없이
+  닫힙니다.
+
+팝업의 키보드 조작은 아직 미비하며 개편 중입니다.

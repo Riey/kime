@@ -363,6 +363,8 @@ impl AppState {
         }
 
         if let Some(ref im_state) = self.im_v2 {
+            let mut state_changed = false;
+
             if ret.contains(InputResult::HAS_PREEDIT) {
                 let preedit = self.engine.preedit_str();
                 let len = preedit.len();
@@ -370,20 +372,31 @@ impl AppState {
                     .im
                     .set_preedit_string(preedit.into(), 0, len as i32);
                 self.last_preedit_len = len;
+                state_changed = true;
             } else if self.last_preedit_len > 0 {
                 im_state.im.set_preedit_string(String::new(), -1, -1);
                 self.last_preedit_len = 0;
+                state_changed = true;
             }
 
             if ret.contains(InputResult::HAS_COMMIT) {
                 let commit_str = self.engine.commit_str();
                 if !commit_str.is_empty() {
                     im_state.im.commit_string(commit_str.into());
+                    state_changed = true;
                 }
                 self.engine.clear_commit();
             }
 
-            im_state.im.commit(self.serial);
+            // Only send `commit` when we actually changed the pending state.
+            // Under the double-buffered input-method-v2 -> text-input-v3
+            // semantics a bare `commit` applies an "empty preedit, no commit
+            // string" state and yields a spurious `done` at the client, which
+            // Firefox/Chromium interpret as an empty composition that replaces
+            // the current selection (issue #714).
+            if state_changed {
+                im_state.im.commit(self.serial);
+            }
         }
 
         !ret.contains(InputResult::CONSUMED)

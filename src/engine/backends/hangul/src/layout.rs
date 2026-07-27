@@ -61,6 +61,17 @@ struct VersionProbe {
     version: Option<u32>,
 }
 
+impl VersionProbe {
+    /// The format version this file is written in.
+    ///
+    /// A file without a `version` field is format version 1: the original
+    /// flat-map format predates the field, so its absence is semantically
+    /// identical to `version: 1` (not merely "legacy accepted").
+    fn format_version(&self) -> u32 {
+        self.version.unwrap_or(1)
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct VersionedLayout {
@@ -96,18 +107,20 @@ impl Layout {
         // also checks the version before the rest of the file is parsed: a
         // future format may change the schema, and the unsupported version
         // error is more useful than a schema mismatch.
-        let items: HashMap<Key, String> =
-            match serde_yaml::from_str::<VersionProbe>(content)?.version {
-                Some(version) => {
-                    if version > LAYOUT_FORMAT_VERSION {
-                        return Err(LayoutError::UnsupportedVersion { version });
-                    }
+        let probe: VersionProbe = serde_yaml::from_str(content)?;
+        let version = probe.format_version();
 
-                    serde_yaml::from_str::<VersionedLayout>(content)?.keys
-                }
-                // Legacy format: a flat `Key: value` map without a version field.
-                None => serde_yaml::from_str(content)?,
-            };
+        if version > LAYOUT_FORMAT_VERSION {
+            return Err(LayoutError::UnsupportedVersion { version });
+        }
+
+        let items: HashMap<Key, String> = if probe.version.is_some() {
+            serde_yaml::from_str::<VersionedLayout>(content)?.keys
+        } else {
+            // Legacy shape: a flat `Key: value` map without a version field,
+            // read as format version 1.
+            serde_yaml::from_str(content)?
+        };
 
         Ok(Self::from_items(items))
     }
@@ -159,6 +172,32 @@ keys:
 
     #[test]
     fn versioned_layout_parses_like_flat() {
+        let flat = Layout::load_from(FLAT).expect("flat layout parses");
+        let versioned = Layout::load_from(VERSIONED).expect("versioned layout parses");
+
+        for key in KEYS {
+            assert_eq!(
+                flat.lookup_kv(key),
+                versioned.lookup_kv(key),
+                "mismatch for key {key}"
+            );
+        }
+    }
+
+    #[test]
+    fn missing_version_is_treated_as_version_1() {
+        // The defaulting decision itself: a file without a `version` field
+        // resolves to format version 1, not merely "legacy accepted".
+        let probe: VersionProbe = serde_yaml::from_str(FLAT).expect("flat layout probes");
+        assert_eq!(probe.version, None);
+        assert_eq!(probe.format_version(), 1);
+
+        let probe: VersionProbe = serde_yaml::from_str(VERSIONED).expect("versioned layout probes");
+        assert_eq!(probe.version, Some(1));
+        assert_eq!(probe.format_version(), 1);
+
+        // And end to end: the same key set with and without `version: 1`
+        // produces identical layouts.
         let flat = Layout::load_from(FLAT).expect("flat layout parses");
         let versioned = Layout::load_from(VERSIONED).expect("versioned layout parses");
 

@@ -17,9 +17,14 @@ mkShell {
   buildInputs = deps.kimeBuildInputs;
   nativeBuildInputs = deps.kimeNativeBuildInputs ++ [
     rustToolchain
+    pkgs.mold
     pkgs.gedit
     pkgs.llvmPackages_18.lldb
   ];
+  # link with mold (rust via the clang driver, meson C/C++ via CC_LD/CXX_LD)
+  RUSTFLAGS = "-C link-arg=-fuse-ld=mold";
+  CC_LD = "mold";
+  CXX_LD = "mold";
   LIBCLANG_PATH = "${pkgs.llvmPackages_18.libclang.lib}/lib";
   LD_LIBRARY_PATH = "./target/debug:${pkgs.wayland}/lib:${pkgs.libGL}/lib:${pkgs.libxkbcommon}/lib";
   G_MESSAGES_DEBUG = "kime";

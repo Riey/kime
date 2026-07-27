@@ -36,9 +36,9 @@ jobs:
             ~/.cargo/git
             ~/.cache/nix
             target
-          key: ${{ runner.os }}-nix-rustc-v1-1.97.1-${{ hashFiles('Cargo.lock', 'flake.lock') }}
+          key: ${{ runner.os }}-nix-rustc-v1-1.97.1-mold-${{ hashFiles('Cargo.lock', 'flake.lock') }}
           restore-keys: |
-            ${{ runner.os }}-nix-rustc-v1-1.97.1-
+            ${{ runner.os }}-nix-rustc-v1-1.97.1-mold-
       - run: nix develop -c meson setup build --buildtype=debug -Dcargo_profile=debug
       - run: nix develop -c ninja -C build
       - run: nix develop -c cargo test

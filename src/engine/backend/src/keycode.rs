@@ -234,8 +234,8 @@ impl KeyCode {
             108 => Some(Self::AltR),
             133 => Some(Self::SuperL),
             134 => Some(Self::SuperR),
-            122 | 130 => Some(Self::Hangul),
-            121 | 123 | 131 => Some(Self::HangulHanja),
+            130 => Some(Self::Hangul),
+            131 => Some(Self::HangulHanja),
 
             113 => Some(Self::Left),
             114 => Some(Self::Right),
@@ -417,4 +417,24 @@ fn super_keys() {
         "SuperR".parse::<Key>().unwrap(),
         Key::normal(KeyCode::SuperR)
     );
+}
+
+#[test]
+fn hangul_hanja_keys() {
+    // X11 hardware keycodes for Hangul (130, <HNGL>) / Hangul_Hanja (131, <HJCV>).
+    assert_eq!(
+        KeyCode::from_hardware_code(130, false),
+        Some(KeyCode::Hangul)
+    );
+    assert_eq!(
+        KeyCode::from_hardware_code(131, false),
+        Some(KeyCode::HangulHanja)
+    );
+
+    // 121/122/123 are XF86AudioMute/LowerVolume/RaiseVolume in X11 keycode
+    // space (evdev + 8). They were added as raw evdev values by mistake and
+    // must not map to Hangul/HangulHanja, or volume keys trigger the IME.
+    assert_eq!(KeyCode::from_hardware_code(121, false), None);
+    assert_eq!(KeyCode::from_hardware_code(122, false), None);
+    assert_eq!(KeyCode::from_hardware_code(123, false), None);
 }

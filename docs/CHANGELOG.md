@@ -7,6 +7,7 @@
 ### Improve
 
 * fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)
+* feat(engine): layout files support an optional `version:`/`keys:` format — files declaring a format version newer than kime supports are rejected with a clear error instead of breaking silently on a future format change, legacy flat-map layouts keep working unchanged, and user layout files that fail to load are logged with the reason instead of silently skipped [#540](https://github.com/Riey/kime/issues/540) [#774](https://github.com/Riey/kime/pull/774)
 
 ## 3.2.0
 

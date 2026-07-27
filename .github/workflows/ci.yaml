@@ -38,9 +38,21 @@ jobs:
           key: ${{ runner.os }}-ci-v2-${{ hashFiles('flake.lock') }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-ci-v2-${{ hashFiles('flake.lock') }}-
-      - run: nix develop -c meson setup build --buildtype=debug -Dcargo_profile=debug
-      - run: nix develop -c ninja -C build
-      - run: nix develop -c cargo test
+      # Evaluating the repo flake copies the whole tree to the nix store
+      # (~8s/run). When the files that define the devshell match the copies
+      # baked into the image, enter the pre-built profile instead (~1s);
+      # otherwise fall back to the repo flake so a lock bump is never
+      # silently ignored.
+      - name: Pick devshell
+        run: |
+          shell=/opt/kime-devshell
+          for f in flake.nix flake.lock shell.nix nix/deps.nix; do
+            cmp -s "$f" "/opt/kime-flake/$f" || { shell=.; echo "$f differs from the baked image — evaluating the repo flake"; }
+          done
+          echo "DEVSHELL=$shell" >> "$GITHUB_ENV"
+      - run: nix develop "$DEVSHELL" -c meson setup build --buildtype=debug -Dcargo_profile=debug
+      - run: nix develop "$DEVSHELL" -c ninja -C build
+      - run: nix develop "$DEVSHELL" -c cargo test
 
   # cargo-deny-action is a Docker action, which the self-hosted runner (a
   # container without a docker socket) can't run — the cargo-deny binary and

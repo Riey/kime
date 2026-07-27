@@ -4,9 +4,11 @@
 #include <stdio.h>
 
 static GType KIME_TYPE_IM_CONTEXT = 0;
+#if !GTK_CHECK_VERSION(3, 98, 4)
 // for many buggy gtk apps
 static const guint HANDLED_MASK = 1 << 25;
 static const guint BYPASS_MASK = 1 << 24;
+#endif
 
 #if GTK_CHECK_VERSION(3, 98, 4)
 typedef GtkWidget ClientType;
@@ -178,18 +180,19 @@ void focus_out(GtkIMContext *im) {
   }
 }
 
+#if !GTK_CHECK_VERSION(3, 98, 4)
+// GTK3 only: re-queue the event with marker bits so the app sees it again and
+// the second pass through filter_keypress finishes the work (workaround for
+// buggy GTK3 apps that can't handle preedit updates mixed with commits).
+// GTK4 has no gdk_event_put(); re-injecting through
+// gtk_im_context_filter_key() would only re-enter this IM context without ever
+// reaching the widget, so the GTK4 build handles everything synchronously in
+// filter_keypress instead.
 void put_event(KimeImContext *ctx, EventType *key, guint mask) {
-#if GTK_CHECK_VERSION(3, 98, 4)
-  gtk_im_context_filter_key(
-      GTK_IM_CONTEXT(ctx), gdk_event_get_event_type(key) == GDK_KEY_PRESS,
-      gdk_event_get_surface(key), gdk_event_get_device(key),
-      gdk_event_get_time(key), gdk_key_event_get_keycode(key),
-      gdk_event_get_modifier_state(key) | mask, 0);
-#else
   key->state |= mask;
   gdk_event_put((GdkEvent *)key);
-#endif
 }
+#endif
 
 gboolean commit_event(KimeImContext *ctx, GdkModifierType state, guint keyval) {
   // Try english commit directly(for apps which can't handle this e.g. gedit)
@@ -237,6 +240,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   GdkDevice* device = gdk_event_get_device((GdkEvent*)key);
 #endif
 
+#if !GTK_CHECK_VERSION(3, 98, 4)
   // delayed event
   if (state & HANDLED_MASK) {
     // preedit change can't mixed with commit
@@ -248,6 +252,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
       return TRUE;
     }
   }
+#endif
 
   bool numlock = gdk_device_get_num_lock_state(device) == TRUE;
 
@@ -272,6 +277,20 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   KeyRet key_ret = on_key_input(ctx, code, numlock, kime_state);
 
   if (ctx->preedit_visible || key_ret.has_preedit) {
+#if GTK_CHECK_VERSION(3, 98, 4)
+    // The GTK3-style deferral would swallow bypassed keys (Enter, Tab,
+    // arrows) here: gtk_im_context_filter_key() never reaches the widget and
+    // the outer `TRUE` marks the event handled. The deferral only works
+    // around GTK3 app quirks, so update the preedit synchronously and let the
+    // widget handle bypassed control keys itself.
+    update_preedit(ctx);
+
+    if (key_ret.bypassed) {
+      return commit_event(ctx, state, keyval);
+    }
+
+    return TRUE;
+#else
     guint mask = HANDLED_MASK;
 
     if (key_ret.bypassed) {
@@ -285,6 +304,7 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
 
     // never return `FALSE` here
     return TRUE;
+#endif
   } else if (key_ret.bypassed) {
     // debug("commit_event");
     return commit_event(ctx, state, keyval);

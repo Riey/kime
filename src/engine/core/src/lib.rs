@@ -90,20 +90,28 @@ impl InputEngine {
         }
     }
 
-    pub fn press_key(&mut self, mut key: Key, config: &Config) -> InputResult {
-        // Wayland delivers a modifier key's press with its own modifier bit
-        // already set, unlike X11 which reports the pre-event state; drop the
-        // key's own bit so exact hotkey matches like `AltR` behave the same
-        // on both (#725).
-        if let Some(modifier) = key.code.self_modifier() {
-            key.state.remove(modifier);
-        }
+    /// Look up `key` as-is first so explicit bindings like `M-AltR` stay
+    /// reachable, then retry without the key's own modifier bit: Wayland
+    /// delivers a modifier key's press with its own bit already set, unlike
+    /// X11 which reports the pre-event state, so a plain `AltR` binding
+    /// would otherwise never match there (#725).
+    fn try_hotkey_self_modifier(&self, key: Key, config: &Config) -> Option<Hotkey> {
+        self.try_hotkey(key, config).or_else(|| {
+            let modifier = key.code.self_modifier()?;
+            if key.state.contains(modifier) {
+                self.try_hotkey(Key::new(key.code, key.state.difference(modifier)), config)
+            } else {
+                None
+            }
+        })
+    }
 
+    pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         self.try_get_global_input_category_state(config);
 
         let mut ret = InputResult::empty();
 
-        if let Some(hotkey) = self.try_hotkey(key, config) {
+        if let Some(hotkey) = self.try_hotkey_self_modifier(key, config) {
             let mut processed = false;
             match hotkey.behavior() {
                 HotkeyBehavior::Switch(category) => {

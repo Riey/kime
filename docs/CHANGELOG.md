@@ -6,7 +6,7 @@
 
 ### Improve
 
-* fix(engine): strip a modifier key's own modifier bit before hotkey matching, so plain `AltR`/`ControlR` hotkeys fire in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma); supersedes the `M-AltR` default-hotkey workaround from [#719] and removes it from the default config [#725](https://github.com/Riey/kime/issues/725) [#760](https://github.com/Riey/kime/pull/760)
+* fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback [#725](https://github.com/Riey/kime/issues/725) [#760](https://github.com/Riey/kime/pull/760)
 
 ## 3.2.0
 

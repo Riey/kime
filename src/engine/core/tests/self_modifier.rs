@@ -69,6 +69,52 @@ fn combo_hotkey_on_modifier_key_still_matches() {
     assert_eq!(engine.category(), InputCategory::Latin);
 }
 
+/// A config that binds only `M-AltR` (the pre-existing Wayland workaround)
+/// must keep working: the exact modified key is looked up before the
+/// self-modifier fallback.
+#[test]
+fn explicit_same_class_binding_stays_reachable() {
+    let config = toggle_config(Key::alt(KeyCode::AltR));
+    let mut engine = InputEngine::new(&config);
+    engine.set_input_category(InputCategory::Hangul);
+
+    let ret = engine.press_key_code(ALT_R, ModifierState::ALT, false, &config);
+    assert!(ret.contains(InputResult::CONSUMED));
+    assert_eq!(engine.category(), InputCategory::Latin);
+}
+
+/// When both `AltR` and `M-AltR` are bound, the exact match must win over
+/// the self-modifier fallback.
+#[test]
+fn exact_match_beats_self_modifier_fallback() {
+    let mut engine_config = EngineConfig::default();
+    engine_config.global_hotkeys = [
+        (
+            Key::normal(KeyCode::AltR),
+            Hotkey::new(
+                HotkeyBehavior::Switch(InputCategory::Hangul),
+                HotkeyResult::Consume,
+            ),
+        ),
+        (
+            Key::alt(KeyCode::AltR),
+            Hotkey::new(
+                HotkeyBehavior::Switch(InputCategory::Latin),
+                HotkeyResult::Consume,
+            ),
+        ),
+    ]
+    .into_iter()
+    .collect();
+    engine_config.category_hotkeys.clear();
+    let config = Config::new(engine_config);
+    let mut engine = InputEngine::new(&config);
+    engine.set_input_category(InputCategory::Hangul);
+
+    engine.press_key_code(ALT_R, ModifierState::ALT, false, &config);
+    assert_eq!(engine.category(), InputCategory::Latin);
+}
+
 /// Non-modifier keys must keep their full state: `M-E` style hotkeys rely on
 /// the ALT bit staying put when E is pressed.
 #[test]

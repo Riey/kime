@@ -29,11 +29,11 @@
 * Fix mismatched cargoDeps in nix and update attribute syntax **[@nakoo]**
 * Updated NixOS configuration example to match updated attribute syntax.
 * Remove `kime-engine-cffi`
-* fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/715)
-* feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/719)
-* fix(hangul): Don't consume pass keys (numbers, symbols) so app shortcuts like `@`/`#` fire in Hangul mode [#719](https://github.com/Riey/kime/719)
+* fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/pull/715)
+* feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/issues/719)
+* fix(hangul): Don't consume pass keys (numbers, symbols) so app shortcuts like `@`/`#` fire in Hangul mode [#719](https://github.com/Riey/kime/issues/719)
 * Add Opensuse Build Service repository and modify README
-* fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
+* fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/issues/721)
 * Update dependencies:
   - wayland-client 0.29 → 0.31, wayland-protocols 0.29 → 0.32
   - wayland-protocols-misc 0.3 (신규), xdg 2.5 → 3.0, quick-xml 0.27 → 0.39

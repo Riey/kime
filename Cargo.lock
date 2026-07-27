@@ -1878,6 +1878,7 @@ dependencies = [
  "kime-engine-backend-math",
  "kime-engine-config",
  "kime-run-dir",
+ "log",
  "parking_lot",
  "pretty_assertions",
  "serde_yaml",

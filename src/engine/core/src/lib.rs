@@ -90,7 +90,15 @@ impl InputEngine {
         }
     }
 
-    pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
+    pub fn press_key(&mut self, mut key: Key, config: &Config) -> InputResult {
+        // Wayland delivers a modifier key's press with its own modifier bit
+        // already set, unlike X11 which reports the pre-event state; drop the
+        // key's own bit so exact hotkey matches like `AltR` behave the same
+        // on both (#725).
+        if let Some(modifier) = key.code.self_modifier() {
+            key.state.remove(modifier);
+        }
+
         self.try_get_global_input_category_state(config);
 
         let mut ret = InputResult::empty();

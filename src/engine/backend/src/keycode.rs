@@ -259,6 +259,17 @@ impl KeyCode {
             _ => None,
         }
     }
+
+    /// The modifier bit this key sets while held, if it is a modifier key.
+    pub const fn self_modifier(self) -> Option<ModifierState> {
+        match self {
+            Self::Shift => Some(ModifierState::SHIFT),
+            Self::ControlL | Self::ControlR => Some(ModifierState::CONTROL),
+            Self::AltL | Self::AltR => Some(ModifierState::ALT),
+            Self::SuperL | Self::SuperR => Some(ModifierState::SUPER),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

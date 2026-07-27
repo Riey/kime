@@ -36,11 +36,6 @@ engine:
       - Hangul
       - Latin
       result: Consume
-    M-AltR:
-      behavior: !Toggle
-      - Hangul
-      - Latin
-      result: Consume
     Hangul:
       behavior: !Toggle
       - Hangul

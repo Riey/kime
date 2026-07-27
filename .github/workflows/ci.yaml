@@ -9,6 +9,12 @@ on:
     branches:
       - "develop"
 
+# A superseded push cancels the older PR run so it stops occupying the
+# 4-slot docker-ci pool; pushes to develop always run to completion.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -18,58 +24,37 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      # init: none — the runner is an ephemeral container without systemd.
-      # The first substituter is a local caching proxy for cache.nixos.org;
-      # nix falls back to the real cache if it is unreachable.
-      - uses: DeterminateSystems/nix-installer-action@v22
-        with:
-          init: none
-          extra-conf: |
-            substituters = http://172.30.0.251:8080 https://cache.nixos.org
-      - name: Caching cargo and nix inputs
+      # nix and the kime devshell closure are baked into the runner image
+      # (~/actions-runner-docker/build.sh) — rebuild it on flake.lock bumps.
+      - name: Caching cargo
         uses: actions/cache@v6
         with:
-          # ~/.cache/nix holds fetched flake inputs (the nixpkgs tarball
-          # alone costs ~10s per run on the ephemeral runners)
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            ~/.cache/nix
             target
-          key: ${{ runner.os }}-nix-rustc-v1-1.97.1-${{ hashFiles('Cargo.lock', 'flake.lock') }}
+          # scoped to flake.lock so a toolchain bump never restores an
+          # incompatible target dir (the flake pins rustc)
+          key: ${{ runner.os }}-ci-v2-${{ hashFiles('flake.lock') }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-nix-rustc-v1-1.97.1-
+            ${{ runner.os }}-ci-v2-${{ hashFiles('flake.lock') }}-
       - run: nix develop -c meson setup build --buildtype=debug -Dcargo_profile=debug
       - run: nix develop -c ninja -C build
       - run: nix develop -c cargo test
 
+  # cargo-deny-action is a Docker action, which the self-hosted runner (a
+  # container without a docker socket) can't run — the cargo-deny binary and
+  # the toolchain it needs for `cargo metadata` are baked into the image.
   cargo-deny:
     runs-on: [self-hosted, docker-ci]
-    strategy:
-      matrix:
-        checks:
-          - bans licenses sources
-
-    # cargo-deny-action is a Docker action, which the self-hosted runner
-    # (a container without a docker socket) can't run — install the binary
-    # instead. cargo-deny shells out to `cargo metadata`, hence the toolchain.
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-deny
-      - run: cargo deny check ${{ matrix.checks }}
+      - run: cargo deny check bans licenses sources
 
   format:
     runs-on: [self-hosted, docker-ci]
-
     steps:
       - uses: actions/checkout@v7
-      # the runner image has no rustup; this installs it with rustfmt included
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
       - name: Check Rustfmt
         run: cargo fmt -- --check
 
@@ -77,4 +62,5 @@ jobs:
     runs-on: [self-hosted, docker-ci]
     steps:
       - uses: actions/checkout@v7
-      - uses: crate-ci/typos@master
+      # typos binary baked into the runner image; reads typos.toml
+      - run: typos

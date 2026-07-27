@@ -1,5 +1,6 @@
 [package]
 name = "kime-engine-backend-hangul"
+description = "Hangul composition backend (dubeolsik, sebeolsik, custom layouts)"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"
@@ -8,6 +9,7 @@ license = "GPL-3.0-or-later"
 [dependencies]
 kime-engine-backend = { path = "../../backend" }
 enumset = "1.1"
+log = "0.4"
 num-derive = "0.4"
 num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }

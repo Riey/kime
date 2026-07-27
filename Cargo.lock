@@ -1797,6 +1797,7 @@ version = "0.1.0"
 dependencies = [
  "enumset",
  "kime-engine-backend",
+ "log",
  "num-derive",
  "num-traits",
  "serde",

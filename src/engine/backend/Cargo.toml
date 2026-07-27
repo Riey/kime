@@ -1,5 +1,6 @@
 [package]
 name = "kime-engine-backend"
+description = "Shared traits, keycodes, and keymaps for kime engine backends"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

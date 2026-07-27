@@ -1,5 +1,6 @@
 [package]
 name = "kime-log"
+description = "Logger setup shared by kime binaries"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 static GType KIME_TYPE_IM_CONTEXT = 0;
+static GObjectClass *kime_parent_class = NULL;
 #if !GTK_CHECK_VERSION(3, 98, 4)
 // for many buggy gtk apps
 static const guint HANDLED_MASK = 1 << 25;
@@ -131,9 +132,14 @@ KeyRet process_input_result(KimeImContext *ctx, KimeInputResult ret) {
   }
 
   if (ret & KimeInputResult_HAS_COMMIT) {
+    // The "commit" handler may drop the last reference to this context (e.g.
+    // an app destroying the IM context from the handler); keep ctx and
+    // ctx->engine alive until we are done with them.
+    g_object_ref(ctx);
     str_buf_set_str(&ctx->buf, kime_engine_commit_str(ctx->engine));
     commit(ctx);
     kime_engine_clear_commit(ctx->engine);
+    g_object_unref(ctx);
   }
 
   return key_ret;
@@ -240,6 +246,13 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
   GdkDevice* device = gdk_event_get_device((GdkEvent*)key);
 #endif
 
+  // A signal handler may drop the last reference to this context (e.g.
+  // Inkscape destroys the IM context from its "commit" handler during tool
+  // teardown); keep it alive while signals are emitted and its fields are
+  // still used.
+  g_object_ref(ctx);
+  gboolean ret;
+
 #if !GTK_CHECK_VERSION(3, 98, 4)
   // delayed event
   if (state & HANDLED_MASK) {
@@ -247,10 +260,13 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     update_preedit(ctx);
 
     if (state & BYPASS_MASK) {
-      return commit_event(ctx, state, keyval);
+      ret = commit_event(ctx, state, keyval);
     } else {
-      return TRUE;
+      ret = TRUE;
     }
+
+    g_object_unref(ctx);
+    return ret;
   }
 #endif
 
@@ -286,10 +302,10 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     update_preedit(ctx);
 
     if (key_ret.bypassed) {
-      return commit_event(ctx, state, keyval);
+      ret = commit_event(ctx, state, keyval);
+    } else {
+      ret = TRUE;
     }
-
-    return TRUE;
 #else
     guint mask = HANDLED_MASK;
 
@@ -303,15 +319,18 @@ gboolean filter_keypress(GtkIMContext *im, EventType *key) {
     // debug("trip: preedit cur(%d) will(%d))", ctx->preedit_visible, key_ret.has_preedit);
 
     // never return `FALSE` here
-    return TRUE;
+    ret = TRUE;
 #endif
   } else if (key_ret.bypassed) {
     // debug("commit_event");
-    return commit_event(ctx, state, keyval);
+    ret = commit_event(ctx, state, keyval);
   } else {
     // debug("consume");
-    return TRUE;
+    ret = TRUE;
   }
+
+  g_object_unref(ctx);
+  return ret;
 }
 
 GtkWidget *client_get_widget(ClientType *client) {
@@ -409,10 +428,15 @@ void im_context_finalize(GObject *obj) {
   KIME_IM_CONTEXT(obj);
   str_buf_delete(&ctx->buf);
   if (ctx->widget) {
+    // set_client(NULL) may never be called; drop our handler here so a
+    // widget outliving this context can't call back into freed memory.
+    g_signal_handlers_disconnect_by_func(ctx->widget,
+                                         (GCallback)client_button_press, ctx);
     g_object_unref(ctx->widget);
     ctx->widget = NULL;
   }
   kime_engine_delete(ctx->engine);
+  kime_parent_class->finalize(obj);
 }
 
 void im_context_class_init(KimeImContextClass *klass, gpointer _data) {
@@ -437,8 +461,10 @@ void im_context_class_init(KimeImContextClass *klass, gpointer _data) {
   klass->parent.focus_in = focus_in;
   klass->parent.focus_out = focus_out;
 
-  GObjectClass *parent_class = G_OBJECT_CLASS(klass);
-  parent_class->finalize = im_context_finalize;
+  kime_parent_class = G_OBJECT_CLASS(g_type_class_peek_parent(klass));
+
+  GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+  gobject_class->finalize = im_context_finalize;
 }
 
 static const GTypeInfo TYPE_INFO = {

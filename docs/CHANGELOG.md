@@ -8,7 +8,9 @@
 
 * fix(wayland): only send the input-method-v2 `commit` request when protocol state actually changed — a bare commit on every key (still triggered by modifier and arrow keys) applied an empty-preedit transaction whose spurious `done` made Firefox/Chromium replace the current selection with an empty composition [#714](https://github.com/Riey/kime/issues/714) [#654](https://github.com/Riey/kime/issues/654) [#772](https://github.com/Riey/kime/pull/772)
 * fix(wayland): key repeat now crosses the preedit/text boundary correctly — repeat ticks the engine no longer consumes (e.g. holding Backspace past the preedit) are forwarded to the client as synthetic release+press events at kime's uniform repeat rate, instead of stopping entirely (3.2.0 regression) or letting the compositor restart its full repeat delay (the original complaint) [#666](https://github.com/Riey/kime/issues/666) [#772](https://github.com/Riey/kime/pull/772)
+* fix(qt): track `NOT_READY` so focus loss to the hanja candidate window no longer resets the engine and kills the popup [#757](https://github.com/Riey/kime/issues/757) [#771](https://github.com/Riey/kime/pull/771)
 * fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)
+* feat(engine): layout files support an optional `version:`/`keys:` format — files declaring a format version newer than kime supports are rejected with a clear error instead of breaking silently on a future format change, legacy flat-map layouts keep working unchanged, and user layout files that fail to load are logged with the reason instead of silently skipped [#540](https://github.com/Riey/kime/issues/540) [#774](https://github.com/Riey/kime/pull/774)
 
 ## 3.2.0
 
@@ -31,11 +33,11 @@
 * Fix mismatched cargoDeps in nix and update attribute syntax **[@nakoo]**
 * Updated NixOS configuration example to match updated attribute syntax.
 * Remove `kime-engine-cffi`
-* fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/715)
-* feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/719)
-* fix(hangul): Don't consume pass keys (numbers, symbols) so app shortcuts like `@`/`#` fire in Hangul mode [#719](https://github.com/Riey/kime/719)
+* fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/pull/715)
+* feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/issues/719)
+* fix(hangul): Don't consume pass keys (numbers, symbols) so app shortcuts like `@`/`#` fire in Hangul mode [#719](https://github.com/Riey/kime/issues/719)
 * Add Opensuse Build Service repository and modify README
-* fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
+* fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/issues/721)
 * Update dependencies:
   - wayland-client 0.29 → 0.31, wayland-protocols 0.29 → 0.32
   - wayland-protocols-misc 0.3 (신규), xdg 2.5 → 3.0, quick-xml 0.27 → 0.39

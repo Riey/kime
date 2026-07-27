@@ -1,5 +1,6 @@
 [package]
 name = "kime-candidate-window"
+description = "Candidate selection popup for hanja conversion"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

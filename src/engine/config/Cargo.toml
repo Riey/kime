@@ -1,5 +1,6 @@
 [package]
 name = "kime-engine-config"
+description = "Kime configuration types and config.yaml (de)serialization"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 license = "GPL-3.0-or-later"

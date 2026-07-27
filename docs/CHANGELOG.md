@@ -6,6 +6,7 @@
 
 ### Improve
 
+* docs(README): document snap/flatpak sandbox limitation, im-config under Wayland+zsh, and GNOME Wayland status [#423](https://github.com/Riey/kime/issues/423) [#767](https://github.com/Riey/kime/pull/767)
 * docs: document the Math/Hanja/Emoji input modes, the hotkey key format and `candidate_font`; fix the documented `xim_preedit_font` default (`Noto Sans CJK KR`, not `D2Coding`) [#671](https://github.com/Riey/kime/issues/671) [#583](https://github.com/Riey/kime/issues/583) [#572](https://github.com/Riey/kime/issues/572) [#773](https://github.com/Riey/kime/pull/773)
 * fix(qt): track `NOT_READY` so focus loss to the hanja candidate window no longer resets the engine and kills the popup [#757](https://github.com/Riey/kime/issues/757) [#771](https://github.com/Riey/kime/pull/771)
 * fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)

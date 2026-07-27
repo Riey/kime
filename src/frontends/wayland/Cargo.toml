@@ -1,5 +1,6 @@
 [package]
 name = "kime-wayland"
+description = "Kime Wayland input-method frontend"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

@@ -26,7 +26,7 @@ fn toggle_config(hotkey: Key) -> Config {
 /// On Wayland the press of a modifier key is delivered with its own modifier
 /// bit already set (X11 reports the pre-event state), e.g. AltR arrives as
 /// `Key { AltR, ALT }`. A config entry written as plain `AltR` must still
-/// match. Issue #725.
+/// match.
 #[test]
 fn altr_toggle_matches_when_own_modifier_is_set() {
     let config = toggle_config(Key::normal(KeyCode::AltR));

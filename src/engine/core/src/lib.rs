@@ -94,7 +94,7 @@ impl InputEngine {
     /// reachable, then retry without the key's own modifier bit: Wayland
     /// delivers a modifier key's press with its own bit already set, unlike
     /// X11 which reports the pre-event state, so a plain `AltR` binding
-    /// would otherwise never match there (#725).
+    /// would otherwise never match there.
     fn try_hotkey_self_modifier(&self, key: Key, config: &Config) -> Option<Hotkey> {
         self.try_hotkey(key, config).or_else(|| {
             let modifier = key.code.self_modifier()?;

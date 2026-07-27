@@ -6,6 +6,8 @@
 
 ### Improve
 
+* fix(wayland): only send the input-method-v2 `commit` request when protocol state actually changed — a bare commit on every key (still triggered by modifier and arrow keys) applied an empty-preedit transaction whose spurious `done` made Firefox/Chromium replace the current selection with an empty composition [#714](https://github.com/Riey/kime/issues/714) [#654](https://github.com/Riey/kime/issues/654) [#772](https://github.com/Riey/kime/pull/772)
+* fix(wayland): key repeat now crosses the preedit/text boundary correctly — repeat ticks the engine no longer consumes (e.g. holding Backspace past the preedit) are forwarded to the client as synthetic release+press events at kime's uniform repeat rate, instead of stopping entirely (3.2.0 regression) or letting the compositor restart its full repeat delay (the original complaint) [#666](https://github.com/Riey/kime/issues/666) [#772](https://github.com/Riey/kime/pull/772)
 * fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)
 
 ## 3.2.0

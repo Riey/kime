@@ -1,5 +1,6 @@
 [package]
 name = "kime-engine-core"
+description = "Kime input engine: category/mode state machine and hotkey dispatch"
 version = "2.0.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

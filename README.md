@@ -154,6 +154,26 @@ export XMODIFIERS=@im=kime
 
 if you use X, append above lines to file `~/.xprofile`
 
+#### Debian/Ubuntu on Wayland with zsh
+
+kime's deb package integrates with im-config, but under Wayland the im-config
+selection is applied through `/etc/profile.d/im-config_wayland.sh`, and zsh
+never sources it because zsh does not read `/etc/profile`. Either:
+
+* add `emulate sh -c 'source /etc/profile'` to `/etc/zsh/zprofile`, or
+* skip im-config and create `~/.config/environment.d/kime.conf` containing:
+
+  ```
+  GTK_IM_MODULE=kime
+  QT_IM_MODULE=kime
+  XMODIFIERS=@im=kime
+  ```
+
+  This is shell-independent and is the correct way to set environment
+  variables for Wayland sessions.
+
+See [#423](https://github.com/Riey/kime/issues/423).
+
 ### Start additional server
 
 kime.desktop file is installed in /etc/xdg/autostart when installing kime.
@@ -163,6 +183,14 @@ kime.desktop file is installed in /etc/xdg/autostart when installing kime.
 It is required to select `kime daemon` under System Settings > Input & Output > Keyboard > Virtual Keyboard.
 A logout and re-login is recommended afterwards.
 
+### GNOME Wayland
+
+Mutter implements neither `zwp_input_method_v2` nor `v1`, so `kime-wayland`
+cannot attach in a GNOME Wayland session. GTK and Qt applications still work
+through kime's input method modules, but Wayland-native and sandboxed
+applications do not. Tracked in
+[#422](https://github.com/Riey/kime/issues/422).
+
 ### Weston
 
 It is required to have the following lines in `~/.config/weston.ini`
@@ -170,6 +198,21 @@ It is required to have the following lines in `~/.config/weston.ini`
 [input-method]
 path=/usr/bin/kime
 ```
+
+### Sandboxed applications (snap, flatpak)
+
+kime's GTK/Qt input method modules cannot be loaded inside snap or flatpak
+sandboxes: the sandbox bundles its own GTK/Qt runtime, so `GTK_IM_MODULE=kime`
+and `QT_IM_MODULE=kime` have nothing to load there. The most common case is
+Firefox, which Ubuntu 22.04+ preinstalls as a snap — use the
+[mozilla.org build](https://www.mozilla.org/firefox/) instead if you need
+Korean input.
+
+On Wayland compositors that implement `zwp_input_method_v2` (KDE Plasma,
+sway and other wlroots compositors), sandboxed applications that speak
+text-input-v3 still work through the compositor, so this mainly affects X11
+sessions and GNOME. See [#346](https://github.com/Riey/kime/issues/346) and
+[#422](https://github.com/Riey/kime/issues/422).
 
 ### Configuration
 

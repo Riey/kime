@@ -152,6 +152,26 @@ export XMODIFIERS=@im=kime
 
 만약 X를 사용하신다면 .xprofile에 설정하시면 됩니다.
 
+### Wayland에서 zsh를 쓰는 데비안/우분투
+
+kime의 deb 패키지는 im-config과 연동되지만, Wayland에서는 im-config 설정이
+`/etc/profile.d/im-config_wayland.sh`를 통해 적용되는데 zsh는 `/etc/profile`을
+읽지 않기 때문에 이 파일이 실행되지 않습니다. 다음 중 하나로 해결할 수 있습니다.
+
+* `/etc/zsh/zprofile`에 `emulate sh -c 'source /etc/profile'` 추가
+* im-config 대신 `~/.config/environment.d/kime.conf` 파일을 만들어 다음 내용 넣기:
+
+  ```
+  GTK_IM_MODULE=kime
+  QT_IM_MODULE=kime
+  XMODIFIERS=@im=kime
+  ```
+
+  이 방법은 셸과 무관하며 Wayland 세션에서 환경 변수를 설정하는 올바른
+  방법입니다.
+
+[#423](https://github.com/Riey/kime/issues/423)을 참고하세요.
+
 ### 추가적인 서버를 실행
 
 kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설치합니다
@@ -163,12 +183,35 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 시스템 설정 > 입력과 출력 > 키보드 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.
 이후에 로그아웃 후 재로그인을 하는 것을 권장합니다.
 
+### GNOME Wayland
+
+Mutter는 `zwp_input_method_v2`와 `v1` 중 어느 것도 구현하지 않기 때문에 GNOME
+Wayland 세션에서는 `kime-wayland`가 동작하지 않습니다. GTK/Qt 앱은 kime의
+입력기 모듈을 통해 계속 사용할 수 있지만, Wayland 네이티브 앱이나 샌드박스
+앱에서는 입력할 수 없습니다.
+[#422](https://github.com/Riey/kime/issues/422)에서 추적하고 있습니다.
+
 ### Weston
 `~/.config/weston.ini`에 해당 내용이 있어야 합니다.
 ```
 [input-method]
 path=/usr/bin/kime
 ```
+
+### 샌드박스 앱 (snap, flatpak)
+
+snap이나 flatpak 샌드박스 안에서는 kime의 GTK/Qt 입력기 모듈을 불러올 수
+없습니다. 샌드박스가 자체 GTK/Qt 런타임을 포함하고 있어서
+`GTK_IM_MODULE=kime`, `QT_IM_MODULE=kime`이 불러올 모듈이 없기 때문입니다.
+가장 흔한 경우는 우분투 22.04 이상에서 snap으로 기본 설치되는 파이어폭스로,
+한글 입력이 필요하다면 [mozilla.org 빌드](https://www.mozilla.org/firefox/)를
+사용하는 것을 권장합니다.
+
+다만 `zwp_input_method_v2`를 구현한 Wayland 컴포지터(KDE Plasma, sway 등
+wlroots 계열)에서는 text-input-v3를 사용하는 샌드박스 앱도 컴포지터를 통해
+입력이 되므로, 이 문제는 주로 X11 세션과 GNOME에서 발생합니다.
+[#346](https://github.com/Riey/kime/issues/346),
+[#422](https://github.com/Riey/kime/issues/422)를 참고하세요.
 
 ### Configuration
 

@@ -6,6 +6,7 @@
 
 ### Improve
 
+* docs: document the Math/Hanja/Emoji input modes, the hotkey key format and `candidate_font`; fix the documented `xim_preedit_font` default (`Noto Sans CJK KR`, not `D2Coding`) [#671](https://github.com/Riey/kime/issues/671) [#583](https://github.com/Riey/kime/issues/583) [#572](https://github.com/Riey/kime/issues/572) [#773](https://github.com/Riey/kime/pull/773)
 * fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)
 
 ## 3.2.0

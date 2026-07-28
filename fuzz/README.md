@@ -8,7 +8,7 @@ crate is excluded from the root workspace and carries its own lockfile.
 | target | what it checks |
 |---|---|
 | `engine_key_stream` | arbitrary key/op sequences against `InputEngine`: no panic, and the `HAS_COMMIT`/`HAS_PREEDIT` flags stay in sync with the commit and preedit buffers |
-| `engine_diff_libhangul` | the same dubeolsik syllables through kime and through libhangul (the composition engine behind ibus-hangul and fcitx5-hangul) must produce the same text — the engine-level guard for last-syllable (끝글자) bugs |
+| `engine_diff_libhangul` | the same dubeolsik syllables through kime and through libhangul (the composition engine behind ibus-hangul and fcitx5-hangul) must produce the same text |
 | `layout_yaml` | `Layout::load_from` never panics on arbitrary input |
 | `config_yaml` | `RawConfig` deserialization never panics on arbitrary input |
 
@@ -17,7 +17,18 @@ second vowel, optional coda) rather than free key sequences. kime and
 libhangul genuinely disagree on consonant runs — kime commits a lone jamo
 where libhangul keeps building a cluster in its preedit — and that
 difference is reachable so easily that a free-form generator never gets
-past it to the commit-timing behaviour the target exists to check.
+past it to the composition behaviour the target exists to check.
+
+**What this target cannot find: last-syllable (끝글자) loss.** The
+comparison is `committed text + current preedit`, which counts a preedit
+as if it were already text, so a syllable dropped instead of committed
+does not register. And the drop does not happen in either engine: it
+happens when a frontend decides what to do on focus-out or teardown
+(kime's GTK3 path commits before resetting — `kime_reset` in
+`src/frontends/gtk3/src/immodule.c`), or when the application never
+receives the commit that was sent. Both are outside the engine, so no
+in-process differential can reach them; that is what the GUI-level
+comparison rig is for.
 
 ## Running
 

@@ -37,5 +37,11 @@ path = "fuzz_targets/engine_key_stream.rs"
 test = false
 doc = false
 
+[[bin]]
+name = "engine_diff_libhangul"
+path = "fuzz_targets/engine_diff_libhangul.rs"
+test = false
+doc = false
+
 [profile.release]
 debug = 1

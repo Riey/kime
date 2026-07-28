@@ -1,3 +1,5 @@
+pub mod diff;
+
 use arbitrary::Arbitrary;
 use kime_engine_config::{EngineConfig, HotkeyBehavior, InputCategory};
 use kime_engine_core::{Config, InputEngine, InputResult, ModifierState};

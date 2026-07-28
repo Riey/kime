@@ -18,6 +18,7 @@
 * fix(engine): reap the candidate window process after killing it so dismissed hanja popups no longer accumulate as zombie (`<defunct>`) processes [#617](https://github.com/Riey/kime/issues/617) [#769](https://github.com/Riey/kime/pull/769)
 * fix(engine): log config file open/parse errors instead of silently falling back to the default config, so a syntax error in `config.yaml` is diagnosable [#656](https://github.com/Riey/kime/issues/656) [#769](https://github.com/Riey/kime/pull/769)
 * feat(engine): layout files support an optional `version:`/`keys:` format — files declaring a format version newer than kime supports are rejected with a clear error instead of breaking silently on a future format change, legacy flat-map layouts keep working unchanged, and user layout files that fail to load are logged with the reason instead of silently skipped [#540](https://github.com/Riey/kime/issues/540) [#774](https://github.com/Riey/kime/pull/774)
+* fix(qt): the hanja candidate window no longer dies on focus-out — this completes the [#771] fix, which guarded `setFocusObject` but not `commit()`: Qt calls `commit()` first on focus-out, so the unconditional reset there still killed the just-spawned popup and discarded the syllable being converted. `commit()` now honours the same `engine_ready` guard, leaving normal commit-on-focus-out unchanged [#757](https://github.com/Riey/kime/issues/757) [#779](https://github.com/Riey/kime/issues/779) [#784](https://github.com/Riey/kime/pull/784)
 
 ## 3.2.0
 

@@ -1,0 +1,107 @@
+name: Fuzz
+
+on:
+  schedule:
+    # 03:00 KST daily. Scheduled workflows run on the default branch.
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: "space-separated fuzz targets"
+        default: "engine_key_stream engine_diff_libhangul layout_yaml config_yaml"
+      seconds_per_target:
+        description: "libFuzzer -max_total_time per target"
+        default: "900"
+
+jobs:
+  fuzz:
+    runs-on: [self-hosted, docker-ci]
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Caching cargo
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            fuzz/target
+          # fuzz/ is its own workspace with its own lockfile
+          key: ${{ runner.os }}-fuzz-v1-${{ hashFiles('flake.lock') }}-${{ hashFiles('fuzz/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-fuzz-v1-${{ hashFiles('flake.lock') }}-
+      # The grown corpus is the whole point of cron fuzzing: every run
+      # resumes from the last one's coverage frontier.
+      - name: Restore corpus
+        uses: actions/cache/restore@v6
+        with:
+          path: fuzz/corpus
+          key: fuzz-corpus-v1-${{ github.run_id }}
+          restore-keys: |
+            fuzz-corpus-v1-
+      - name: Pick devshell
+        run: |
+          shell=/opt/kime-fuzz-shell
+          [ -e "$shell" ] || { shell='.#fuzz'; echo "no baked fuzz shell — evaluating the repo flake"; }
+          for f in flake.nix flake.lock shell.nix nix/deps.nix; do
+            cmp -s "$f" "/opt/kime-flake/$f" || { shell='.#fuzz'; echo "$f differs from the baked image — evaluating the repo flake"; }
+          done
+          echo "DEVSHELL=$shell" >> "$GITHUB_ENV"
+      - name: Fuzz
+        env:
+          TARGETS: ${{ inputs.targets || 'engine_key_stream engine_diff_libhangul layout_yaml config_yaml' }}
+          SECONDS_PER_TARGET: ${{ inputs.seconds_per_target || '900' }}
+        run: |
+          mkdir -p fuzz-logs
+          fail=0
+          for t in $TARGETS; do
+            # seeds/ is read-only input: cargo-fuzz writes new inputs into
+            # the first corpus directory it is given, and the checked-in
+            # seeds must not grow into thousands of generated files.
+            mkdir -p "fuzz/corpus/$t"
+            [ -d "fuzz/seeds/$t" ] && cp -n "fuzz/seeds/$t"/* "fuzz/corpus/$t/" || true
+            echo "::group::$t"
+            # a crashing target must not eat the other targets' fuzz time
+            nix develop "$DEVSHELL" -c cargo fuzz run --fuzz-dir fuzz "$t" -- \
+              -max_total_time="$SECONDS_PER_TARGET" -print_final_stats=1 \
+              2>&1 | tee "fuzz-logs/$t.log" || fail=1
+            echo "::endgroup::"
+          done
+          exit $fail
+      - name: Save corpus
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: fuzz/corpus
+          key: fuzz-corpus-v1-${{ github.run_id }}
+      # The runner image points ACTIONS_RESULTS_URL at the LAN cache server,
+      # which serves the cache API only; the patched worker leaves the real
+      # service URL in ACTIONS_RESULTS_ORL (see the e2e job in ci.yaml).
+      - name: Artifact endpoint
+        if: failure()
+        id: artifacts
+        run: echo "url=$ACTIONS_RESULTS_ORL" >> "$GITHUB_OUTPUT"
+      - name: Upload crash artifacts
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        env:
+          ACTIONS_RESULTS_URL: ${{ steps.artifacts.outputs.url }}
+        with:
+          name: fuzz-crashes-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            fuzz/artifacts/
+            fuzz-logs/
+          retention-days: 30
+      # Fallback for when the artifact service is out of reach: the crashing
+      # inputs, hex-dumped inline in the job log.
+      - name: Dump crash inputs
+        if: failure()
+        run: |
+          for f in fuzz/artifacts/*/*; do
+            [ -f "$f" ] || continue
+            echo "::group::$f"
+            xxd "$f" | head -n 40
+            echo "::endgroup::"
+          done

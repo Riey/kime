@@ -13,7 +13,17 @@ KimeInputContext::KimeInputContext(kime::InputEngine *engine,
 
 void KimeInputContext::update(Qt::InputMethodQueries queries) {}
 
-void KimeInputContext::commit() { this->reset(); }
+void KimeInputContext::commit() {
+  // On focus-out Qt calls commit() *before* setFocusObject(nullptr), so the
+  // engine_ready guard there never gets a chance: an unconditional reset()
+  // here kills the just-spawned candidate window and discards the syllable it
+  // is converting (issue #779, residual of #757).
+  if (!this->engine_ready) {
+    return;
+  }
+
+  this->reset();
+}
 
 void KimeInputContext::reset() {
 #ifdef DEBUG

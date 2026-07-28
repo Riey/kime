@@ -17,6 +17,7 @@
 * fix(engine): volume keys (Mute/VolumeDown/VolumeUp) no longer act as Hangul/Hanja keys — hardware keycodes 121/122/123 were raw evdev values added by mistake; only the real X11 keycodes 130 (`<HNGL>`) and 131 (`<HJCV>`) map now [#603](https://github.com/Riey/kime/issues/603) [#769](https://github.com/Riey/kime/pull/769)
 * fix(engine): reap the candidate window process after killing it so dismissed hanja popups no longer accumulate as zombie (`<defunct>`) processes [#617](https://github.com/Riey/kime/issues/617) [#769](https://github.com/Riey/kime/pull/769)
 * fix(engine): log config file open/parse errors instead of silently falling back to the default config, so a syntax error in `config.yaml` is diagnosable [#656](https://github.com/Riey/kime/issues/656) [#769](https://github.com/Riey/kime/pull/769)
+* fix(qt5): pass the input context IID define to moc and the compiler so Qt5 apps load the kime input context again — broken since the meson migration ([#747]) which fixed only qt6 ([#756]) [#778](https://github.com/Riey/kime/issues/778) [#785](https://github.com/Riey/kime/pull/785)
 * feat(engine): layout files support an optional `version:`/`keys:` format — files declaring a format version newer than kime supports are rejected with a clear error instead of breaking silently on a future format change, legacy flat-map layouts keep working unchanged, and user layout files that fail to load are logged with the reason instead of silently skipped [#540](https://github.com/Riey/kime/issues/540) [#774](https://github.com/Riey/kime/pull/774)
 
 ## 3.2.0

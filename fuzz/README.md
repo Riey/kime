@@ -31,14 +31,19 @@ Without nix: `rustup toolchain install nightly`, `cargo install
 cargo-fuzz`, and install libhangul (every target links the crate, so its
 `.pc` file must be on `PKG_CONFIG_PATH` even for the parser targets).
 
-`seeds/<target>/` holds the checked-in starting inputs and must stay
-read-only: cargo-fuzz writes new inputs into the first corpus directory it
-is given. Copy them instead:
+Starting inputs are assembled into `corpus/<target>/` by
+`prepare-corpus.sh`, which CI runs too:
 
 ```sh
-mkdir -p corpus/layout_yaml && cp -n seeds/layout_yaml/* corpus/layout_yaml/
+./prepare-corpus.sh layout_yaml
 cargo fuzz run layout_yaml
 ```
+
+It never points cargo-fuzz at tracked files — cargo-fuzz writes what it
+discovers into the corpus directory, which would bury the inputs in
+thousands of generated files. `layout_yaml` gets the layouts kime ships
+(`src/engine/backends/hangul/data/`) copied in from where they live;
+`seeds/<target>/` holds only inputs that exist nowhere else.
 
 CI (`.github/workflows/fuzz.yaml`) runs every target daily at 03:00 KST,
 persisting `fuzz/corpus` across runs through actions/cache, and uploads

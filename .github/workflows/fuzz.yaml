@@ -56,11 +56,7 @@ jobs:
           mkdir -p fuzz-logs
           fail=0
           for t in $TARGETS; do
-            # seeds/ is read-only input: cargo-fuzz writes new inputs into
-            # the first corpus directory it is given, and the checked-in
-            # seeds must not grow into thousands of generated files.
-            mkdir -p "fuzz/corpus/$t"
-            [ -d "fuzz/seeds/$t" ] && cp -n "fuzz/seeds/$t"/* "fuzz/corpus/$t/" || true
+            fuzz/prepare-corpus.sh "$t"
             echo "::group::$t"
             # a crashing target must not eat the other targets' fuzz time
             nix develop "$DEVSHELL" -c cargo fuzz run --fuzz-dir fuzz "$t" -- \

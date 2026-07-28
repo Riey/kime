@@ -25,5 +25,11 @@ path = "fuzz_targets/config_yaml.rs"
 test = false
 doc = false
 
+[[bin]]
+name = "layout_yaml"
+path = "fuzz_targets/layout_yaml.rs"
+test = false
+doc = false
+
 [profile.release]
 debug = 1

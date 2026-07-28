@@ -17,6 +17,7 @@ if qt5_dep.found()
   qt5_moc = qt5_mod.preprocess(
     moc_headers: ['src/plugin.hpp', 'src/input_context.hpp'],
     dependencies: [qt5_dep, kime_engine_dep],
+    moc_extra_arguments: ['-DKIME_QT_IID="org.qt-project.Qt.QPlatformInputContextFactoryInterface.5.1"'],
   )
 
   shared_library('kimeplatforminputcontextplugin',
@@ -24,6 +25,7 @@ if qt5_dep.found()
     'src/input_context.cc',
     qt5_moc,
     dependencies: [qt5_dep, kime_engine_dep],
+    cpp_args: ['-DKIME_QT_IID="org.qt-project.Qt.QPlatformInputContextFactoryInterface.5.1"'],
     install: true,
     install_dir: qt5_plugindir / 'platforminputcontexts',
   )

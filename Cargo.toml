@@ -1,5 +1,8 @@
 [workspace]
 resolver = "2"
+# cargo-fuzz needs nightly; keeping fuzz/ out of the workspace keeps
+# stable builds, meson and CI oblivious to it (fuzz/ has its own lockfile)
+exclude = ["fuzz"]
 members = [
     "src/engine/capi",
     "src/engine/candidate",

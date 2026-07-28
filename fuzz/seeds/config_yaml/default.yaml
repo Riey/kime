@@ -1,0 +1,14 @@
+daemon:
+  modules:
+  - Xim
+  - Wayland
+  - Indicator
+log:
+  global_level: DEBUG
+engine:
+  default_category: Latin
+  global_category_state: false
+  hangul:
+    layout: dubeolsik
+    word_commit: false
+    preedit_johab: Needed

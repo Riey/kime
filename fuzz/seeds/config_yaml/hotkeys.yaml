@@ -1,0 +1,24 @@
+engine:
+  global_hotkeys:
+    M-C-E:
+      behavior: !Mode Emoji
+      result: ConsumeIfProcessed
+    AltR:
+      behavior: !Toggle
+      - Hangul
+      - Latin
+      result: Consume
+    Esc:
+      behavior: !Switch Latin
+      result: Bypass
+  category_hotkeys:
+    Hangul:
+      F9:
+        behavior: !Mode Hanja
+        result: ConsumeIfProcessed
+  hangul:
+    addons:
+      all:
+      - ComposeChoseongSsang
+      dubeolsik:
+      - TreatJongseongAsChoseong

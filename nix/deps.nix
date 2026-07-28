@@ -49,5 +49,15 @@
     xdotool # XTEST typing + window focus
     xprop # kime-xim readiness poll (XIM_SERVERS)
   ];
+
+  # The fuzz crate (fuzz/) — nightly-only, entered via `nix develop .#fuzz`.
+  kimeFuzzBuildInputs = with pkgs; [
+    libhangul # engine_diff_libhangul differential target
+  ];
+
+  kimeFuzzNativeBuildInputs = with pkgs; [
+    cargo-fuzz
+    pkg-config
+  ];
 }
 

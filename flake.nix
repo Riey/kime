@@ -19,6 +19,19 @@
         in
         {
           devShells.default = import ./shell.nix { inherit pkgs rustToolchain; };
+          # cargo-fuzz needs nightly, and libfuzzer-sys compiles C++, hence
+          # the clang stdenv. Pinned by flake.lock through rust-overlay.
+          devShells.fuzz =
+            let deps = import ./nix/deps.nix { inherit pkgs; };
+            in
+            (pkgs.mkShell.override { stdenv = pkgs.llvmPackages_18.stdenv; }) {
+              name = "kime-fuzz-shell";
+              buildInputs = deps.kimeFuzzBuildInputs;
+              nativeBuildInputs = deps.kimeFuzzNativeBuildInputs ++ [
+                pkgs.rust-bin.nightly.latest.default
+              ];
+              RUST_BACKTRACE = 1;
+            };
           packages.default = import ./default.nix { inherit pkgs rustToolchain; };
         }
       );

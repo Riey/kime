@@ -232,6 +232,21 @@ keys:
         );
     }
 
+    /// A layout file may bind a key with a modifier kime has no slot for.
+    /// Such an entry can never be looked up, so it must be dropped — not
+    /// crash the load. Found by the `layout_yaml` fuzz target (#793); the
+    /// `C-T: <` line is its minimized reproduction.
+    #[test]
+    fn non_shift_modifier_key_is_dropped() {
+        let layout = Layout::load_from("C-T: <\nQ: ㅂ\n")
+            .expect("a layout with an unusable key must still load");
+
+        assert!(
+            layout.lookup_kv(Key::normal(KeyCode::Q)).is_some(),
+            "the usable keys of the file must survive"
+        );
+    }
+
     #[test]
     fn builtin_layouts_all_parse() {
         for (name, content) in crate::BUILTIN_LAYOUTS {

@@ -93,12 +93,40 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{Key, KeyCode, KeyMap};
+    use super::{Key, KeyCode, KeyMap, ModifierState};
 
     #[test]
     fn insert() {
         let mut map = KeyMap::new();
         map.insert(Key::normal(KeyCode::Backspace), 123);
         assert_eq!(map.get(Key::normal(KeyCode::Backspace)), Some(123));
+    }
+
+    #[test]
+    fn insert_shift() {
+        let mut map = KeyMap::new();
+        map.insert(Key::shift(KeyCode::Q), 123);
+        assert_eq!(map.get(Key::shift(KeyCode::Q)), Some(123));
+        assert_eq!(map.get(Key::normal(KeyCode::Q)), None);
+    }
+
+    /// A key with a modifier other than Shift has no slot: `get` rejects
+    /// it, so `insert` must drop it rather than index past the two it
+    /// keeps. User-authored layout and translation-layer files can name
+    /// such keys, and a panic there kills kime on a config typo (#793).
+    #[test]
+    fn insert_ignores_non_shift_modifiers() {
+        for state in [
+            ModifierState::CONTROL,
+            ModifierState::ALT,
+            ModifierState::SUPER,
+            ModifierState::CONTROL | ModifierState::SHIFT,
+            ModifierState::CONTROL | ModifierState::ALT | ModifierState::SUPER,
+        ] {
+            let mut map = KeyMap::new();
+            let key = Key::new(KeyCode::T, state);
+            map.insert(key, 123);
+            assert_eq!(map.get(key), None, "{key} must not be stored");
+        }
     }
 }

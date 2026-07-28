@@ -31,5 +31,11 @@ path = "fuzz_targets/layout_yaml.rs"
 test = false
 doc = false
 
+[[bin]]
+name = "engine_key_stream"
+path = "fuzz_targets/engine_key_stream.rs"
+test = false
+doc = false
+
 [profile.release]
 debug = 1

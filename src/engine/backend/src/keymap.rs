@@ -37,8 +37,19 @@ impl<V: Copy> KeyMap<V> {
         }
     }
 
-    /// Key must don't have shift modifier
+    /// Store `value` for `key`, ignoring keys this map cannot hold.
+    ///
+    /// Only the unmodified and Shift variants of a keycode get a slot, and
+    /// `get` returns `None` for anything else — its `get_unchecked` is
+    /// sound only because of that. A key carrying another modifier is
+    /// therefore unreachable whatever we do with it here, so it is
+    /// dropped: layout and translation-layer files are user-authored, and
+    /// naming such a key must not kill kime.
     pub fn insert(&mut self, key: Key, value: V) {
+        if key.state.intersects(!ModifierState::SHIFT) {
+            return;
+        }
+
         self.arr[key.code][key.state.bits() as usize] = Some(value);
     }
 }

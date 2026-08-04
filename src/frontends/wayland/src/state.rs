@@ -765,6 +765,7 @@ impl Dispatch<ZwpInputMethodKeyboardGrabV2, ()> for AppState {
             } => {
                 let is_pressed = matches!(key_state, WEnum::Value(KeyState::Pressed))
                     || key_state == WEnum::Value(KeyState::Pressed)
+                    || matches!(key_state, WEnum::Value(KeyState::Repeated))
                     || matches!(&key_state, WEnum::Unknown(2)); // Repeated
 
                 let grab_activate = state
@@ -992,6 +993,7 @@ impl Dispatch<WlKeyboard, ()> for AppState {
                 ..
             } => {
                 let is_pressed = matches!(key_state, WEnum::Value(KeyState::Pressed))
+                    || matches!(key_state, WEnum::Value(KeyState::Repeated))
                     || matches!(&key_state, WEnum::Unknown(2)); // Repeated
 
                 let grab_activate = state

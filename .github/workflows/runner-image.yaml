@@ -17,6 +17,9 @@ on:
       - flake.lock
       - shell.nix
       - nix/**
+      # the rebuild script and the image definition live in the repo now
+      - ci/actions-runner-docker/**
+      - .github/workflows/runner-image.yaml
   workflow_dispatch:
 
 concurrency:
@@ -31,4 +34,4 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Rebuild kime-gha-runner with the current devshell
-        run: KIME_REPO="$GITHUB_WORKSPACE" "$HOME"/actions-runner-docker/build.sh
+        run: KIME_REPO="$GITHUB_WORKSPACE" ./ci/actions-runner-docker/build.sh

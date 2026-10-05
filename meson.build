@@ -15,11 +15,14 @@ cargo_profile = get_option('cargo_profile')
 
 if cargo_profile == 'release'
   cargo_args = ['--release']
-  target_dir = meson.project_source_root() / 'target' / 'release'
+  target_dir = meson.current_build_dir() / 'target' / 'release'
 else
   cargo_args = []
-  target_dir = meson.project_source_root() / 'target' / 'debug'
+  target_dir = meson.current_build_dir() / 'target' / 'debug'
 endif
+
+cargo_args += ['--target-dir', meson.current_build_dir() / 'target',
+               '--manifest-path', meson.project_source_root() / 'Cargo.toml']
 
 kime_engine_inc = include_directories('src/engine/capi')
 

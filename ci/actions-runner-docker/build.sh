@@ -27,6 +27,7 @@ rm -rf "$BLD"
 mkdir -p "$BLD"/nix
 cp "$KIME_REPO"/flake.nix "$KIME_REPO"/flake.lock \
    "$KIME_REPO"/shell.nix "$KIME_REPO"/default.nix \
+   "$KIME_REPO"/rust-toolchain.toml "$KIME_REPO"/Cargo.lock \
    "$KIME_REPO"/VERSION "$BLD"/
 cp "$KIME_REPO"/nix/deps.nix "$BLD"/nix/
 

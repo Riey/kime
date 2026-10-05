@@ -172,6 +172,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check Rustfmt
         run: cargo fmt -- --check
+      - name: Check Nixfmt
+        run: nix fmt -- --ci
 
   spell-check:
     runs-on: [self-hosted, docker-ci]

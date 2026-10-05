@@ -28,7 +28,7 @@ pub fn build_dir() -> PathBuf {
 pub fn target_dir() -> PathBuf {
     match std::env::var_os("KIME_E2E_TARGET_DIR") {
         Some(d) => PathBuf::from(d),
-        None => repo_root().join("target/debug"),
+        None => build_dir().join("target/debug"),
     }
 }
 

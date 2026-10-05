@@ -42,7 +42,7 @@ mkShell {
       pkgs.nixfmt
     ];
   LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
-  LD_LIBRARY_PATH = "./target/debug:${pkgs.wayland}/lib:${pkgs.libGL}/lib:${pkgs.libxkbcommon}/lib:${pkgs.mesa}/lib";
+  LD_LIBRARY_PATH = "./build/target/debug:./target/debug:${pkgs.wayland}/lib:${pkgs.libGL}/lib:${pkgs.libxkbcommon}/lib:${pkgs.mesa}/lib";
   # Software GL (llvmpipe) for the eframe candidate window on Xvfb, and a
   # font config, since the store has neither on a search path apps can guess.
   # D2Coding is the fallback family the engine queries for the candidate list

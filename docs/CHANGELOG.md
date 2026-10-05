@@ -6,6 +6,7 @@
 
 ### Improve
 
+* fix(e2e): locate cargo artifacts in meson build directory [#809](https://github.com/Riey/kime/pull/809)
 * fix(nix): resolve runtime wrappers and modernize expressions [#808](https://github.com/Riey/kime/pull/808)
 * fix(build): Cargo build artifacts are now written under Meson's build directory instead of the source tree — the `cargo build` invocation had no `--target-dir`/`--manifest-path` of its own, so it fell back to writing `target/` next to `Cargo.toml` regardless of where Meson's build directory was, which breaks out-of-tree builds (e.g. Gentoo's sandboxed, separate `WORKDIR`). `cargo` is now passed an explicit `--target-dir` under `meson.current_build_dir()` and `--manifest-path` pointing at the source tree's `Cargo.toml`
 * ci(runner): the runner image's Dockerfile and rebuild script now live in the repo (`ci/actions-runner-docker/`), and the `runner-image` workflow retriggers on image-definition changes as well as flake changes [#806](https://github.com/Riey/kime/pull/806)

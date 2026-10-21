@@ -59,12 +59,42 @@ struct InputMethodV2State {
     #[allow(dead_code)]
     grab: ZwpInputMethodKeyboardGrabV2,
     vk: ZwpVirtualKeyboardV1,
-    pending_activate: bool,
-    pending_deactivate: bool,
-    current_activate: bool,
-    current_deactivate: bool,
+    pending: PendingActivation,
     grab_activate: bool,
     keymap_init: bool,
+}
+
+/// `activate`/`deactivate` events received since the last `done`.
+///
+/// Both are double-buffered and only take effect on `done`, where the last
+/// one received wins. A compositor may send `deactivate` and `activate` in a
+/// single batch — Hyprland relays a text-input `reset` that way — and the
+/// input method must end up active, on a fresh text input.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+struct PendingActivation {
+    activate: bool,
+    deactivate: bool,
+}
+
+impl PendingActivation {
+    fn activate(&mut self) {
+        self.activate = true;
+    }
+
+    fn deactivate(&mut self) {
+        self.activate = false;
+        self.deactivate = true;
+    }
+
+    /// Clears the batch and returns `(deactivate, activate)`: what `done` has
+    /// to do to an input method that is currently `active`. Both are true when
+    /// an active input method is deactivated and reactivated in one batch.
+    fn take(&mut self, active: bool) -> (bool, bool) {
+        let pending = std::mem::take(self);
+        let deactivate = active && pending.deactivate;
+        let activate = pending.activate && (!active || deactivate);
+        (deactivate, activate)
+    }
 }
 
 impl InputMethodV2State {
@@ -195,10 +225,7 @@ impl AppState {
             im,
             grab,
             vk,
-            pending_activate: false,
-            pending_deactivate: false,
-            current_activate: false,
-            current_deactivate: false,
+            pending: PendingActivation::default(),
             grab_activate: false,
             keymap_init: false,
         });
@@ -659,12 +686,12 @@ impl Dispatch<ZwpInputMethodV2, ()> for AppState {
         match event {
             zwp_input_method_v2::Event::Activate => {
                 if let Some(ref mut im_state) = state.im_v2 {
-                    im_state.pending_activate = true;
+                    im_state.pending.activate();
                 }
             }
             zwp_input_method_v2::Event::Deactivate => {
                 if let Some(ref mut im_state) = state.im_v2 {
-                    im_state.pending_deactivate = true;
+                    im_state.pending.deactivate();
                 }
             }
             zwp_input_method_v2::Event::Unavailable => {
@@ -674,31 +701,12 @@ impl Dispatch<ZwpInputMethodV2, ()> for AppState {
             zwp_input_method_v2::Event::Done => {
                 state.serial += 1;
 
-                let (should_activate, should_deactivate) = {
-                    if let Some(ref im_state) = state.im_v2 {
-                        let activate = !im_state.current_activate && im_state.pending_activate;
-                        let deactivate =
-                            !im_state.current_deactivate && im_state.pending_deactivate;
-                        (activate, deactivate)
-                    } else {
-                        (false, false)
-                    }
+                let (should_deactivate, should_activate) = match state.im_v2 {
+                    Some(ref mut im_state) => im_state.pending.take(im_state.grab_activate),
+                    None => (false, false),
                 };
 
-                if should_activate {
-                    // The text input starts out with no preedit, so nothing we
-                    // sent to the previous one may suppress the next preedit.
-                    state.last_preedit.clear();
-                    state.engine.update_layout_state().ok();
-                    if !state.engine_ready && state.engine.check_ready() {
-                        let ret = state.engine.end_ready();
-                        state.process_input_result_v2(ret);
-                        state.engine_ready = true;
-                    }
-                    if let Some(ref mut im_state) = state.im_v2 {
-                        im_state.grab_activate = true;
-                    }
-                } else if should_deactivate {
+                if should_deactivate {
                     if state.engine_ready {
                         state.engine.reset();
                     }
@@ -713,11 +721,19 @@ impl Dispatch<ZwpInputMethodV2, ()> for AppState {
                     state.repeat_bypassed = false;
                 }
 
-                if let Some(ref mut im_state) = state.im_v2 {
-                    im_state.current_activate = im_state.pending_activate;
-                    im_state.current_deactivate = im_state.pending_deactivate;
-                    im_state.pending_activate = false;
-                    im_state.pending_deactivate = false;
+                if should_activate {
+                    // The text input starts out with no preedit, so nothing we
+                    // sent to the previous one may suppress the next preedit.
+                    state.last_preedit.clear();
+                    state.engine.update_layout_state().ok();
+                    if !state.engine_ready && state.engine.check_ready() {
+                        let ret = state.engine.end_ready();
+                        state.process_input_result_v2(ret);
+                        state.engine_ready = true;
+                    }
+                    if let Some(ref mut im_state) = state.im_v2 {
+                        im_state.grab_activate = true;
+                    }
                 }
             }
             _ => {}
@@ -1092,5 +1108,81 @@ impl Dispatch<WlKeyboard, ()> for AppState {
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::PendingActivation;
+
+    #[derive(Clone, Copy)]
+    enum Ev {
+        Activate,
+        Deactivate,
+    }
+
+    /// Feeds batches of events, each followed by `done`, to an inactive input
+    /// method and returns whether it ends up active.
+    fn run(batches: &[&[Ev]]) -> bool {
+        let mut pending = PendingActivation::default();
+        let mut active = false;
+        for batch in batches {
+            for ev in *batch {
+                match ev {
+                    Ev::Activate => pending.activate(),
+                    Ev::Deactivate => pending.deactivate(),
+                }
+            }
+            let (deactivate, activate) = pending.take(active);
+            if deactivate {
+                active = false;
+            }
+            if activate {
+                active = true;
+            }
+        }
+        active
+    }
+
+    use Ev::{Activate as A, Deactivate as D};
+
+    #[test]
+    fn single_events() {
+        assert!(run(&[&[A]]));
+        assert!(!run(&[&[A], &[D]]));
+        assert!(!run(&[&[D]]));
+        assert!(run(&[&[A], &[A]]));
+    }
+
+    #[test]
+    fn last_event_in_a_batch_wins() {
+        assert!(run(&[&[A], &[D, A]]));
+        assert!(!run(&[&[A], &[A, D]]));
+        assert!(run(&[&[D, A]]));
+    }
+
+    #[test]
+    fn reactivation_in_one_batch_restarts_the_input_method() {
+        let mut pending = PendingActivation::default();
+        pending.deactivate();
+        pending.activate();
+        assert_eq!(pending.take(true), (true, true));
+        assert_eq!(pending, PendingActivation::default());
+    }
+
+    #[test]
+    fn repeated_activate_is_ignored() {
+        let mut pending = PendingActivation::default();
+        pending.activate();
+        assert_eq!(pending.take(true), (false, false));
+    }
+
+    /// Hyprland relaying a Chromium omnibox focus change (text-input-v1
+    /// `reset` + `deactivate`, then `activate` + `reset`): the input method
+    /// used to end up inactive and bypass every key, the hangul toggle
+    /// included.
+    #[test]
+    fn hyprland_text_input_v1_focus_change() {
+        assert!(run(&[&[A], &[D, A], &[D], &[A], &[D, A]]));
     }
 }

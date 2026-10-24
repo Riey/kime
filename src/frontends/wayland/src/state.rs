@@ -953,6 +953,14 @@ impl Dispatch<ZwpInputMethodContextV1, ()> for AppState {
             zwp_input_method_context_v1::Event::CommitState { serial } => {
                 state.serial = serial;
             }
+            zwp_input_method_context_v1::Event::Reset => {
+                log::trace!("input_method_context_v1: Reset");
+                // The client already committed the preedit itself (e.g. Chromium on a mouse
+                // click), so discard it instead of committing it a second time.
+                if state.engine_ready {
+                    state.engine.reset();
+                }
+            }
             _ => {}
         }
     }

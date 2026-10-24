@@ -252,7 +252,10 @@ impl InputEngine {
         if !self.commit_buf.is_empty() {
             ret |= InputResult::HAS_COMMIT;
         }
-        if !self.engine_impl.check_ready() {
+        // This runs right after the candidate window is spawned, so it must not
+        // block: waiting here lets the window take focus before the frontend can
+        // clear the client's preedit, and the client then commits the syllable itself.
+        if self.engine_impl.is_pending() {
             ret |= InputResult::NOT_READY;
         }
         ret
@@ -418,6 +421,20 @@ macro_rules! connect {
 }
 
 impl EngineImpl {
+    /// Non-blocking counterpart of `check_ready` (inverted): the hanja window
+    /// is only polled, the other modes never block anyway.
+    pub fn is_pending(&self) -> bool {
+        match self.mode {
+            #[cfg(feature = "hanja")]
+            Some(InputMode::Hanja) => self.hanja_mode.is_pending(),
+            #[cfg(feature = "emoji")]
+            Some(InputMode::Emoji) => !self.emoji_mode.check_ready(),
+            #[cfg(feature = "math")]
+            Some(InputMode::Math) => !self.math_mode.check_ready(),
+            _ => false,
+        }
+    }
+
     pub fn check_ready(&self) -> bool {
         match self.mode {
             #[cfg(feature = "hanja")]

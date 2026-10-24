@@ -35,6 +35,11 @@ impl HanjaMode {
             false
         }
     }
+
+    /// Whether the candidate window has not answered yet, without waiting for it.
+    pub fn is_pending(&self) -> bool {
+        self.client.as_ref().is_some_and(|c| !c.is_ready_now())
+    }
 }
 
 impl InputEngineMode for HanjaMode {

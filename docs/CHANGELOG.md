@@ -6,6 +6,7 @@
 
 ### Improve
 
+* fix(wayland): on compositors that drive kime through input-method-v1 (KWin), clicking elsewhere while a syllable is being composed no longer makes that syllable reappear at the new cursor position (`동해물과 백두산이` → click after `과` → `마` gave `동해물과이마 백두산이`) — the client commits the preedit itself and KWin forwards that as the context `reset` event, which kime ignored, so the engine kept the syllable and committed it again with the next key. kime now discards the engine state on `reset` [#812](https://github.com/Riey/kime/issues/812) [#813](https://github.com/Riey/kime/pull/813)
 * fix(e2e): locate cargo artifacts in meson build directory [#809](https://github.com/Riey/kime/pull/809)
 * fix(nix): resolve runtime wrappers and modernize expressions [#808](https://github.com/Riey/kime/pull/808)
 * fix(build): Cargo build artifacts are now written under Meson's build directory instead of the source tree — the `cargo build` invocation had no `--target-dir`/`--manifest-path` of its own, so it fell back to writing `target/` next to `Cargo.toml` regardless of where Meson's build directory was, which breaks out-of-tree builds (e.g. Gentoo's sandboxed, separate `WORKDIR`). `cargo` is now passed an explicit `--target-dir` under `meson.current_build_dir()` and `--manifest-path` pointing at the source tree's `Cargo.toml`

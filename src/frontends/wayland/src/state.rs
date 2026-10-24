@@ -892,11 +892,6 @@ impl Dispatch<ZwpInputMethodV1, ()> for AppState {
                 // Fresh context: it shows no preedit yet.
                 state.last_preedit.clear();
                 state.engine.update_layout_state().ok();
-                if !state.engine_ready && state.engine.check_ready() {
-                    let ret = state.engine.end_ready();
-                    state.process_input_result_v1(ret);
-                    state.engine_ready = true;
-                }
 
                 // Grab keyboard
                 let keyboard = im_ctx.grab_keyboard(qh, ());
@@ -905,6 +900,15 @@ impl Dispatch<ZwpInputMethodV1, ()> for AppState {
                     im_state.im_ctx = Some(im_ctx);
                     im_state.keyboard = Some(keyboard);
                     im_state.grab_activate = true;
+                }
+
+                // The new context must be stored first: the text a candidate window
+                // produced while the context was gone would otherwise be committed
+                // into nothing and cleared.
+                if !state.engine_ready && state.engine.check_ready() {
+                    let ret = state.engine.end_ready();
+                    state.process_input_result_v1(ret);
+                    state.engine_ready = true;
                 }
             }
             zwp_input_method_v1::Event::Deactivate { context: im_ctx } => {

@@ -34,10 +34,19 @@ impl Client {
         Ok(Self { child })
     }
 
-    pub fn is_ready(&self) -> bool {
+    fn poll_ready(&self, timeout: PollTimeout) -> bool {
         let stdout: BorrowedFd = self.child.stdout.as_ref().unwrap().as_fd();
         let fds = &mut [PollFd::new(stdout, PollFlags::POLLIN)];
-        poll::poll(fds, PollTimeout::from(200u16)) == Ok(1)
+        poll::poll(fds, timeout) == Ok(1)
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.poll_ready(PollTimeout::from(200u16))
+    }
+
+    /// Like `is_ready` but returns immediately instead of waiting for the window.
+    pub fn is_ready_now(&self) -> bool {
+        self.poll_ready(PollTimeout::ZERO)
     }
 
     pub fn close(mut self) -> io::Result<Option<String>> {

@@ -6,6 +6,7 @@
 
 ### Improve
 
+* fix(wayland): picking a hanja from the candidate window now replaces the syllable on compositors that drive kime through input-method-v1 (KWin) — `한` → Hanja key → `韓` left `한`. The engine blocked for up to 200 ms polling the just-spawned candidate window before reporting `NOT_READY`, so the window took focus and the client committed its visible preedit before kime could clear it; `current_result()` now checks the window without blocking (focus-in `check_ready()` and `close()` keep the 200 ms grace). The v1 `Activate` handler also ran `end_ready()` before storing the new context, so the chosen hanja was cleared without being sent; the context is now stored first [#814](https://github.com/Riey/kime/issues/814) [#815](https://github.com/Riey/kime/pull/815)
 * fix(e2e): locate cargo artifacts in meson build directory [#809](https://github.com/Riey/kime/pull/809)
 * fix(nix): resolve runtime wrappers and modernize expressions [#808](https://github.com/Riey/kime/pull/808)
 * fix(build): Cargo build artifacts are now written under Meson's build directory instead of the source tree — the `cargo build` invocation had no `--target-dir`/`--manifest-path` of its own, so it fell back to writing `target/` next to `Cargo.toml` regardless of where Meson's build directory was, which breaks out-of-tree builds (e.g. Gentoo's sandboxed, separate `WORKDIR`). `cargo` is now passed an explicit `--target-dir` under `meson.current_build_dir()` and `--manifest-path` pointing at the source tree's `Cargo.toml`

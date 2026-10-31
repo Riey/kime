@@ -4,7 +4,12 @@ use nix::sys::signal::{kill, Signal};
 use nix::unistd::{daemon, Pid};
 use std::os::unix::io::AsRawFd;
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
-use std::{fs::File, io::Write, path::Path};
+use std::time::{Duration, Instant};
+use std::{
+    fs::{File, OpenOptions},
+    io::Write,
+    path::Path,
+};
 use std::{
     io,
     process::{Command, Stdio},
@@ -37,6 +42,20 @@ fn kill_daemon(pid_path: &Path) -> io::Result<()> {
     }
 }
 
+fn lock_pid(pid_path: &Path) -> io::Result<Flock<File>> {
+    // Don't truncate before locking, or the running daemon's pid is lost
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(pid_path)?;
+    let mut lock =
+        Flock::lock(file, FlockArg::LockExclusiveNonblock).map_err(|(_, e)| io::Error::from(e))?;
+    lock.set_len(0)?;
+    writeln!(lock, "{}", std::process::id())?;
+    Ok(lock)
+}
+
 fn main() -> Result<(), ()> {
     let mut args = kime_version::cli_boilerplate!(
         Ok(()),
@@ -52,6 +71,9 @@ fn main() -> Result<(), ()> {
             log::error!("Can't kill daemon: {}", err);
         });
     }
+
+    // Set when the compositor launches us with a privileged input-method socket
+    let compositor_launched = std::env::var_os("WAYLAND_SOCKET").is_some();
 
     if !args.contains(["-D", "--no-daemon"]) {
         let stderr_path = run_dir.join("kime.err");
@@ -87,15 +109,39 @@ fn main() -> Result<(), ()> {
     //   - File::create fails: permission denied, disk full, etc.
     //   - Flock::lock returns EWOULDBLOCK: another kime instance is running
     //   - Flock::lock returns other error: unexpected lock failure
-    let _pid_lock = match File::create(&pid).and_then(|file| {
-        Flock::lock(file, FlockArg::LockExclusiveNonblock).map_err(|(_, e)| io::Error::from(e))
-    }) {
-        Ok(mut lock) => {
-            writeln!(lock, "{}", std::process::id()).map_err(|err| {
-                log::error!("Can't daemonize kime: {}", err);
-            })?;
-            Some(lock)
+    let mut lock_result = lock_pid(&pid);
+
+    // The compositor launched us with a privileged WAYLAND_SOCKET, so take over
+    // from a daemon that was already started by XDG autostart.
+    if compositor_launched {
+        if let Err(err) = &lock_result {
+            if err.kind() == io::ErrorKind::WouldBlock {
+                log::info!("Take over the running kime daemon for the compositor socket");
+
+                if let Err(err) = kill_daemon(&pid) {
+                    log::error!("Can't kill daemon: {}", err);
+                }
+
+                let deadline = Instant::now() + Duration::from_secs(5);
+
+                lock_result = loop {
+                    match lock_pid(&pid) {
+                        Err(err) if err.kind() == io::ErrorKind::WouldBlock => {
+                            if Instant::now() >= deadline {
+                                log::error!("Timeout waiting for the running kime daemon to exit");
+                                return Err(());
+                            }
+                            std::thread::sleep(Duration::from_millis(100));
+                        }
+                        result => break result,
+                    }
+                };
+            }
         }
+    }
+
+    let _pid_lock = match lock_result {
+        Ok(lock) => Some(lock),
         Err(err) if err.kind() == io::ErrorKind::WouldBlock => {
             log::error!("Another instance of kime daemon is already running.");
             return Err(());
@@ -123,12 +169,18 @@ fn main() -> Result<(), ()> {
         .iter()
         .filter_map(|module| {
             let name = process_name(module);
-            match Command::new(name)
+            let mut command = Command::new(name);
+            command
                 .stdin(Stdio::null())
                 .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .spawn()
-            {
+                .stderr(Stdio::inherit());
+
+            // Only kime-wayland may inherit the compositor's input-method socket
+            if !matches!(module, Module::Wayland) {
+                command.env_remove("WAYLAND_SOCKET");
+            }
+
+            match command.spawn() {
                 Ok(p) => Some((name, p, false)),
                 Err(err) => {
                     log::error!("Can't spawn {}: {}", name, err);

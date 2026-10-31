@@ -30,6 +30,8 @@
 * Fix kime-wayland crash on KDE Plasma 6.5.5 by handling KeyState::Repeated
 * Fix indicator tray icon not showing/updating on KDE with tokio async I/O (ksni 0.3.3)
 * Rewrite kime-wayland for wayland-rs 0.31 API (Dispatch trait pattern)
+* Fix kime-wayland failing on KDE Wayland when the XDG autostart daemon starts before KWin launches kime as the virtual keyboard: a daemon launched with `WAYLAND_SOCKET` now takes over the running one, and only `kime-wayland` inherits that socket
+* Fix `kime-xdg-autostart` passing a literal `#@` to `kime` instead of its arguments [#629](https://github.com/Riey/kime/629)
 
 
 ## 3.1.1

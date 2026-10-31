@@ -78,6 +78,8 @@
 * Fix kime-wayland crash on KDE Plasma 6.5.5 by handling KeyState::Repeated
 * Fix indicator tray icon not showing/updating on KDE with tokio async I/O (ksni 0.3.3)
 * Rewrite kime-wayland for wayland-rs 0.31 API (Dispatch trait pattern)
+* Fix kime-wayland failing on KDE Wayland when the XDG autostart daemon starts before KWin launches kime as the virtual keyboard: a daemon launched with `WAYLAND_SOCKET` now takes over the running one, and only `kime-wayland` inherits that socket
+* Fix `kime-xdg-autostart` passing a literal `#@` to `kime` instead of its arguments [#629](https://github.com/Riey/kime/629)
 * fix(xim): degrade gracefully when the preedit font is missing instead of panicking [#706](https://github.com/Riey/kime/issues/706)
 * feat(engine): add `SuperL`/`SuperR` keycodes so Right-Super can be bound as a hotkey [#640](https://github.com/Riey/kime/issues/640)
 * fix(hangul): enable `ComposeJongseongSsang` by default for sebeolsik-3sin-p2 (ㄲ 받침) [#646](https://github.com/Riey/kime/issues/646)

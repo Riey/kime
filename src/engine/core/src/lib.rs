@@ -48,7 +48,7 @@ impl InputEngine {
     pub fn set_input_category(&mut self, category: InputCategory) {
         // Reset previous engine
         self.engine_impl.clear_preedit(&mut self.commit_buf);
-        self.engine_impl.mode = None;
+        self.engine_impl.leave_mode();
         self.engine_impl.category = category;
     }
 
@@ -90,12 +90,28 @@ impl InputEngine {
         }
     }
 
+    /// Look up `key` as-is first so explicit bindings like `M-AltR` stay
+    /// reachable, then retry without the key's own modifier bit: Wayland
+    /// delivers a modifier key's press with its own bit already set, unlike
+    /// X11 which reports the pre-event state, so a plain `AltR` binding
+    /// would otherwise never match there.
+    fn try_hotkey_self_modifier(&self, key: Key, config: &Config) -> Option<Hotkey> {
+        self.try_hotkey(key, config).or_else(|| {
+            let modifier = key.code.self_modifier()?;
+            if key.state.contains(modifier) {
+                self.try_hotkey(Key::new(key.code, key.state.difference(modifier)), config)
+            } else {
+                None
+            }
+        })
+    }
+
     pub fn press_key(&mut self, key: Key, config: &Config) -> InputResult {
         self.try_get_global_input_category_state(config);
 
         let mut ret = InputResult::empty();
 
-        if let Some(hotkey) = self.try_hotkey(key, config) {
+        if let Some(hotkey) = self.try_hotkey_self_modifier(key, config) {
             let mut processed = false;
             match hotkey.behavior() {
                 HotkeyBehavior::Switch(category) => {
@@ -147,7 +163,13 @@ impl InputEngine {
             // ignore shift key
         } else if matches!(
             key.code,
-            KeyCode::ControlL | KeyCode::ControlR | KeyCode::AltL | KeyCode::AltR | KeyCode::Shift
+            KeyCode::ControlL
+                | KeyCode::ControlR
+                | KeyCode::AltL
+                | KeyCode::AltR
+                | KeyCode::SuperL
+                | KeyCode::SuperR
+                | KeyCode::Shift
         ) {
             ret |= self.current_result();
             return ret;
@@ -269,6 +291,31 @@ impl EngineImpl {
         }
     }
 
+    /// Leave the current mode, giving it a chance to release what it owns.
+    ///
+    /// `mode` must never be cleared or replaced without this: `HanjaMode`
+    /// holds the `kime-candidate-window` child process and only its `reset`
+    /// closes it (`Client::close` kills and reaps), so dropping the mode
+    /// alone orphans the popup — it stays on screen and later turns into a
+    /// defunct process.
+    fn leave_mode(&mut self) {
+        match self.mode.take() {
+            #[cfg(feature = "hanja")]
+            Some(InputMode::Hanja) => {
+                self.hanja_mode.reset();
+            }
+            #[cfg(feature = "math")]
+            Some(InputMode::Math) => {
+                self.math_mode.reset();
+            }
+            #[cfg(feature = "emoji")]
+            Some(InputMode::Emoji) => {
+                self.emoji_mode.reset();
+            }
+            _ => {}
+        }
+    }
+
     pub fn set_mode(
         &mut self,
         mode: InputMode,
@@ -278,6 +325,7 @@ impl EngineImpl {
         match mode {
             InputMode::Math | InputMode::Emoji => {
                 self.clear_preedit(commit_buf);
+                self.leave_mode();
                 self.mode = Some(mode);
                 true
             }

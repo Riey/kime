@@ -1,0 +1,11 @@
+[package]
+name = "kime-e2e"
+description = "End-to-end GUI regression tests for kime frontends"
+version = "0.1.0"
+authors = ["Riey <creeper844@gmail.com>"]
+edition = "2021"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
+libc = "0.2"

@@ -67,6 +67,26 @@ struct InputMethodV2State {
     keymap_init: bool,
 }
 
+impl InputMethodV2State {
+    /// Forward a key to the virtual keyboard, unless no keymap was uploaded to
+    /// it yet — the compositor rejects keys before a keymap with a protocol
+    /// error, and a seat whose keyboard has no keymap produces no real keys
+    /// anyway. See the `Keymap` event handler for how that happens.
+    fn vk_key(&self, time: u32, key: u32, key_state: u32) {
+        if self.keymap_init {
+            self.vk.key(time, key, key_state);
+        }
+    }
+
+    /// Forward a modifier state to the virtual keyboard; rejected before a
+    /// keymap just like [`Self::vk_key`].
+    fn vk_modifiers(&self, depressed: u32, latched: u32, locked: u32, group: u32) {
+        if self.keymap_init {
+            self.vk.modifiers(depressed, latched, locked, group);
+        }
+    }
+}
+
 /// Input method v1 state
 struct InputMethodV1State {
     im_ctx: Option<ZwpInputMethodContextV1>,
@@ -85,7 +105,14 @@ pub struct AppState {
     serial: u32,
     timer: TimerFd,
     repeat_state: Option<(RepeatInfo, PressState)>,
-    last_preedit_len: usize,
+    /// `true` when a repeat tick of the currently pressed key was bypassed to
+    /// the client as a synthetic press, i.e. a synthetic press is outstanding.
+    /// Cleared on a new press and on the real key release.
+    repeat_bypassed: bool,
+    /// The preedit string last sent to the client, empty when the client has
+    /// no preedit. Reset whenever a text input is activated or deactivated,
+    /// since the client drops its preedit with the old context.
+    last_preedit: String,
     should_exit: bool,
 
     // Wayland state
@@ -115,7 +142,8 @@ impl AppState {
                 },
                 PressState::NotPressing,
             )),
-            last_preedit_len: 0,
+            repeat_bypassed: false,
+            last_preedit: String::new(),
             should_exit: false,
             globals: Globals {
                 seat: None,
@@ -318,17 +346,35 @@ impl AppState {
 
             // Emit key repeat event
             let elapsed_ms = pressed_at.elapsed().as_millis() as u32;
-            let _time = wayland_time.wrapping_add(elapsed_ms);
+            let time = wayland_time.wrapping_add(elapsed_ms);
 
             // Handle v2
-            if let Some(ref mut im_state) = self.im_v2 {
-                if im_state.grab_activate {
-                    let hwcode = (key + 8) as u16;
-                    if let Some(code) = KeyCode::from_hardware_code(hwcode, self.numlock) {
-                        let ret = self
-                            .engine
-                            .press_key(Key::new(code, self.mod_state), &self.config);
-                        self.process_input_result_v2(ret);
+            let v2_grab_activate = self
+                .im_v2
+                .as_ref()
+                .map(|s| s.grab_activate)
+                .unwrap_or(false);
+            if v2_grab_activate {
+                let hwcode = (key + 8) as u16;
+                if let Some(code) = KeyCode::from_hardware_code(hwcode, self.numlock) {
+                    let ret = self
+                        .engine
+                        .press_key(Key::new(code, self.mod_state), &self.config);
+                    let bypassed = self.process_input_result_v2(ret);
+                    if bypassed {
+                        // The engine no longer consumes the repeats of this key
+                        // (e.g. Backspace after the preedit is emptied), so keep
+                        // repeating it for the client ourselves. Send a release
+                        // before every press after the first so the client sees
+                        // one keystroke per tick instead of a held key that
+                        // would restart its own delayed repeat.
+                        if let Some(ref im_state) = self.im_v2 {
+                            if self.repeat_bypassed {
+                                im_state.vk_key(time, key, KeyState::Released as u32);
+                            }
+                            im_state.vk_key(time, key, KeyState::Pressed as u32);
+                        }
+                        self.repeat_bypassed = true;
                     }
                 }
             }
@@ -345,7 +391,14 @@ impl AppState {
                     let ret = self
                         .engine
                         .press_key(Key::new(code, self.mod_state), &self.config);
-                    self.process_input_result_v1(ret);
+                    let bypassed = self.process_input_result_v1(ret);
+                    if bypassed {
+                        if self.repeat_bypassed {
+                            self.key_v1(time, key, KeyState::Released);
+                        }
+                        self.key_v1(time, key, KeyState::Pressed);
+                        self.repeat_bypassed = true;
+                    }
                 }
             }
         }
@@ -363,27 +416,61 @@ impl AppState {
         }
 
         if let Some(ref im_state) = self.im_v2 {
-            if ret.contains(InputResult::HAS_PREEDIT) {
-                let preedit = self.engine.preedit_str();
-                let len = preedit.len();
-                im_state
-                    .im
-                    .set_preedit_string(preedit.into(), 0, len as i32);
-                self.last_preedit_len = len;
-            } else if self.last_preedit_len > 0 {
-                im_state.im.set_preedit_string(String::new(), -1, -1);
-                self.last_preedit_len = 0;
-            }
+            // `commit_str()`/`preedit_str()` are zero-copy borrows from the
+            // engine: the whole should-we-send decision runs on them, so a key
+            // that changes nothing (lone modifiers, volume keys, ... bypassed
+            // while composing — the engine still reports `HAS_PREEDIT` for
+            // those) allocates nothing and sends nothing (issue #781). Owned
+            // strings are made only for the protocol calls that demand them.
+            //
+            // `preedit_str` rebuilds into the engine's buffer under `&mut`, so
+            // its borrow cannot overlap `commit_str`'s — the commit text is
+            // therefore only borrowed right at its protocol call.
+            // HAS_COMMIT is set iff the commit buffer is non-empty
+            // (InputEngine::current_result), so the flag alone decides.
+            let has_commit = ret.contains(InputResult::HAS_COMMIT);
+            let preedit = if ret.contains(InputResult::HAS_PREEDIT) {
+                self.engine.preedit_str()
+            } else {
+                ""
+            };
 
-            if ret.contains(InputResult::HAS_COMMIT) {
-                let commit_str = self.engine.commit_str();
-                if !commit_str.is_empty() {
-                    im_state.im.commit_string(commit_str.into());
+            // A transaction is sent only when it carries something new. Text
+            // to commit always does; a preedit only when it differs from the
+            // one the client already shows — but an unchanged preedit is
+            // staged again whenever there is a commit string: `commit` resets
+            // the pending state, so the preedit has to be part of every
+            // transaction that survives it.
+            if has_commit || preedit != self.last_preedit {
+                if !preedit.is_empty() {
+                    im_state
+                        .im
+                        .set_preedit_string(preedit.into(), 0, preedit.len() as i32);
+                } else if !self.last_preedit.is_empty() {
+                    im_state.im.set_preedit_string(String::new(), -1, -1);
                 }
-                self.engine.clear_commit();
-            }
 
-            im_state.im.commit(self.serial);
+                // Remember what the client will show, reusing the buffer.
+                // Also the last use of `preedit`, releasing the engine borrow.
+                self.last_preedit.clear();
+                self.last_preedit.push_str(preedit);
+
+                if has_commit {
+                    im_state.im.commit_string(self.engine.commit_str().into());
+                }
+
+                // Under the double-buffered input-method-v2 -> text-input-v3
+                // semantics a bare `commit` applies an "empty preedit, no
+                // commit string" state and yields a spurious `done` at the
+                // client, which Firefox/Chromium interpret as an empty
+                // composition that replaces the current selection (issue
+                // #714), so `commit` is only ever sent with state above it.
+                im_state.im.commit(self.serial);
+            }
+        }
+
+        if ret.contains(InputResult::HAS_COMMIT) {
+            self.engine.clear_commit();
         }
 
         !ret.contains(InputResult::CONSUMED)
@@ -400,31 +487,58 @@ impl AppState {
 
         if let Some(ref im_state) = self.im_v1 {
             if let Some(ref im_ctx) = im_state.im_ctx {
-                if ret.contains(InputResult::HAS_COMMIT) {
-                    let commit_str = self.engine.commit_str();
-                    if !commit_str.is_empty() {
-                        im_ctx.commit_string(self.serial, commit_str.into());
-                    }
-                    self.engine.clear_commit();
-                }
+                // Zero-copy borrows with the same discipline as the v2 path.
+                // v1 must send `commit_string` (which clears the client's
+                // preedit) BEFORE re-sending the preedit, so the preedit is
+                // borrowed twice: once for the decision, once for the send —
+                // still no allocation on the nothing-changed path.
+                // HAS_COMMIT implies a non-empty commit buffer, as in v2.
+                let has_commit = ret.contains(InputResult::HAS_COMMIT);
+                let preedit_changed = {
+                    let preedit = if ret.contains(InputResult::HAS_PREEDIT) {
+                        self.engine.preedit_str()
+                    } else {
+                        ""
+                    };
+                    preedit != self.last_preedit
+                };
 
-                if ret.contains(InputResult::HAS_PREEDIT) {
-                    let preedit = self.engine.preedit_str();
-                    let len = preedit.len();
-                    im_ctx.preedit_cursor(len as i32);
-                    im_ctx.preedit_styling(
-                        0,
-                        len as u32,
-                        ZWP_TEXT_INPUT_V1_PREEDIT_STYLE_UNDERLINE,
-                    );
-                    im_ctx.preedit_string(self.serial, preedit.to_string(), preedit.into());
-                    self.last_preedit_len = len;
-                } else if self.last_preedit_len > 0 {
-                    im_ctx.preedit_cursor(0);
-                    im_ctx.preedit_string(self.serial, String::new(), String::new());
-                    self.last_preedit_len = 0;
+                // Same rule as the v2 path: skip a preedit identical to the one
+                // the client already shows (issue #781), but always re-send it
+                // together with a commit string, which clears the preedit at
+                // the client.
+                if has_commit || preedit_changed {
+                    if has_commit {
+                        im_ctx.commit_string(self.serial, self.engine.commit_str().into());
+                    }
+
+                    let preedit = if ret.contains(InputResult::HAS_PREEDIT) {
+                        self.engine.preedit_str()
+                    } else {
+                        ""
+                    };
+                    if !preedit.is_empty() {
+                        let len = preedit.len();
+                        im_ctx.preedit_cursor(len as i32);
+                        im_ctx.preedit_styling(
+                            0,
+                            len as u32,
+                            ZWP_TEXT_INPUT_V1_PREEDIT_STYLE_UNDERLINE,
+                        );
+                        im_ctx.preedit_string(self.serial, preedit.into(), preedit.into());
+                    } else if !self.last_preedit.is_empty() {
+                        im_ctx.preedit_cursor(0);
+                        im_ctx.preedit_string(self.serial, String::new(), String::new());
+                    }
+
+                    self.last_preedit.clear();
+                    self.last_preedit.push_str(preedit);
                 }
             }
+        }
+
+        if ret.contains(InputResult::HAS_COMMIT) {
+            self.engine.clear_commit();
         }
 
         !ret.contains(InputResult::CONSUMED)
@@ -572,6 +686,9 @@ impl Dispatch<ZwpInputMethodV2, ()> for AppState {
                 };
 
                 if should_activate {
+                    // The text input starts out with no preedit, so nothing we
+                    // sent to the previous one may suppress the next preedit.
+                    state.last_preedit.clear();
                     state.engine.update_layout_state().ok();
                     if !state.engine_ready && state.engine.check_ready() {
                         let ret = state.engine.end_ready();
@@ -585,6 +702,7 @@ impl Dispatch<ZwpInputMethodV2, ()> for AppState {
                     if state.engine_ready {
                         state.engine.reset();
                     }
+                    state.last_preedit.clear();
                     if let Some(ref mut im_state) = state.im_v2 {
                         im_state.grab_activate = false;
                     }
@@ -592,6 +710,7 @@ impl Dispatch<ZwpInputMethodV2, ()> for AppState {
                     if let Some((_, ref mut ps)) = state.repeat_state {
                         *ps = PressState::NotPressing;
                     }
+                    state.repeat_bypassed = false;
                 }
 
                 if let Some(ref mut im_state) = state.im_v2 {
@@ -620,8 +739,21 @@ impl Dispatch<ZwpInputMethodKeyboardGrabV2, ()> for AppState {
             zwp_input_method_keyboard_grab_v2::Event::Keymap { format, fd, size } => {
                 if let Some(ref mut im_state) = state.im_v2 {
                     if !im_state.keymap_init {
-                        im_state.vk.keymap(format.into(), fd.as_fd(), size);
-                        im_state.keymap_init = true;
+                        // A seat whose keyboard has no keymap is reported as
+                        // `no_keymap` with size 0. The virtual keyboard can't mmap
+                        // that, so forwarding it kills the connection; wait for a
+                        // real keymap instead, which the compositor sends once the
+                        // seat has a keyboard with one.
+                        if matches!(format, WEnum::Value(KeymapFormat::XkbV1)) && size > 0 {
+                            im_state.vk.keymap(format.into(), fd.as_fd(), size);
+                            im_state.keymap_init = true;
+                        } else {
+                            log::debug!(
+                                "Ignoring empty keymap (format={:?}, size={})",
+                                format,
+                                size
+                            );
+                        }
                     }
                 }
             }
@@ -633,6 +765,7 @@ impl Dispatch<ZwpInputMethodKeyboardGrabV2, ()> for AppState {
             } => {
                 let is_pressed = matches!(key_state, WEnum::Value(KeyState::Pressed))
                     || key_state == WEnum::Value(KeyState::Pressed)
+                    || matches!(key_state, WEnum::Value(KeyState::Repeated))
                     || matches!(&key_state, WEnum::Unknown(2)); // Repeated
 
                 let grab_activate = state
@@ -652,7 +785,7 @@ impl Dispatch<ZwpInputMethodKeyboardGrabV2, ()> for AppState {
 
                         if bypassed {
                             if let Some(ref im_state) = state.im_v2 {
-                                im_state.vk.key(time, key, key_state.into());
+                                im_state.vk_key(time, key, key_state.into());
                             }
                         } else {
                             // Handle key repeat
@@ -668,26 +801,30 @@ impl Dispatch<ZwpInputMethodKeyboardGrabV2, ()> for AppState {
                                         key,
                                         wayland_time: time,
                                     };
+                                    state.repeat_bypassed = false;
                                 }
                             }
                         }
                     } else if let Some(ref im_state) = state.im_v2 {
-                        im_state.vk.key(time, key, key_state.into());
+                        im_state.vk_key(time, key, key_state.into());
                     }
                 } else if matches!(key_state, WEnum::Value(KeyState::Released)) {
                     if let Some((.., ref mut press_state)) = state.repeat_state {
                         if press_state.is_pressing(key) {
                             let _ = state.timer.set_timeout_oneshot(Duration::ZERO);
                             *press_state = PressState::NotPressing;
+                            // The release below balances any synthetic press
+                            // emitted for a bypassed repeat tick.
+                            state.repeat_bypassed = false;
                         }
                     }
                     if let Some(ref im_state) = state.im_v2 {
-                        im_state.vk.key(time, key, key_state.into());
+                        im_state.vk_key(time, key, key_state.into());
                     }
                 } else {
                     // is_pressed && !grab_activate - bypass
                     if let Some(ref im_state) = state.im_v2 {
-                        im_state.vk.key(time, key, key_state.into());
+                        im_state.vk_key(time, key, key_state.into());
                     }
                 }
             }
@@ -714,9 +851,7 @@ impl Dispatch<ZwpInputMethodKeyboardGrabV2, ()> for AppState {
                 state.numlock = mods_depressed & 0x10 != 0;
 
                 if let Some(ref im_state) = state.im_v2 {
-                    im_state
-                        .vk
-                        .modifiers(mods_depressed, mods_latched, mods_locked, group);
+                    im_state.vk_modifiers(mods_depressed, mods_latched, mods_locked, group);
                 }
             }
             zwp_input_method_keyboard_grab_v2::Event::RepeatInfo { rate, delay } => {
@@ -754,6 +889,8 @@ impl Dispatch<ZwpInputMethodV1, ()> for AppState {
         match event {
             zwp_input_method_v1::Event::Activate { id: im_ctx } => {
                 log::trace!("input_method_v1: Activate");
+                // Fresh context: it shows no preedit yet.
+                state.last_preedit.clear();
                 state.engine.update_layout_state().ok();
                 if !state.engine_ready && state.engine.check_ready() {
                     let ret = state.engine.end_ready();
@@ -775,12 +912,14 @@ impl Dispatch<ZwpInputMethodV1, ()> for AppState {
                 if state.engine_ready {
                     state.engine.reset();
                 }
+                state.last_preedit.clear();
 
                 // Stop repeating
                 let _ = state.timer.set_timeout_oneshot(Duration::ZERO);
                 if let Some((_, ref mut press_state)) = state.repeat_state {
                     *press_state = PressState::NotPressing;
                 }
+                state.repeat_bypassed = false;
 
                 im_ctx.destroy();
 
@@ -854,6 +993,7 @@ impl Dispatch<WlKeyboard, ()> for AppState {
                 ..
             } => {
                 let is_pressed = matches!(key_state, WEnum::Value(KeyState::Pressed))
+                    || matches!(key_state, WEnum::Value(KeyState::Repeated))
                     || matches!(&key_state, WEnum::Unknown(2)); // Repeated
 
                 let grab_activate = state
@@ -889,6 +1029,7 @@ impl Dispatch<WlKeyboard, ()> for AppState {
                                         key,
                                         wayland_time: time,
                                     };
+                                    state.repeat_bypassed = false;
                                 }
                             }
                         }
@@ -900,6 +1041,9 @@ impl Dispatch<WlKeyboard, ()> for AppState {
                         if press_state.is_pressing(key) {
                             let _ = state.timer.set_timeout_oneshot(Duration::ZERO);
                             *press_state = PressState::NotPressing;
+                            // The release below balances any synthetic press
+                            // emitted for a bypassed repeat tick.
+                            state.repeat_bypassed = false;
                         }
                     }
                     if let WEnum::Value(ks) = key_state {

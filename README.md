@@ -101,10 +101,6 @@ Building with docker does not requires any other dependencies.
 git clone https://github.com/riey/kime
 cd kime
 
-export DOCKER_BUILDKIT=0
-export COMPOSE_DOCKER_CLI_BUILD=0
-# This is Docker build image using legacy
-
 docker build --file build-docker/<distro path>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
 docker cp kime:/opt/kime-out/kime.tar.zst .
@@ -114,20 +110,18 @@ docker cp kime:/opt/kime-out/kime.tar.zst .
 
 #### Manual build
 
-Make sure that **cargo** and other dependencies listed below are installed before build.
+Make sure that **cargo**, **meson**, **ninja**, and other dependencies listed below are installed before build.
 
 ```sh
 git clone https://github.com/Riey/kime
 cd kime
 
-scripts/build.sh -ar
+meson setup build
+ninja -C build
+sudo ninja -C build install
 ```
 
-Every files needed for manual install is in `build/out` directory.
-
-`scripts/install.sh <install-prefix>` can be used for packaging.
-
-`scripts/release-deb.sh <deb-out-path>` can be used for packaging `deb` package.
+Enable/disable the frontends by toggling `-Dgtk3=true`, `-Dqt5=false`, etc.
 
 #### GTK
 
@@ -139,12 +133,6 @@ sudo gtk-query-immodules-3.0 --update-cache
 # for gtk4
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
-
-## Development
-
-### C/C++
-
-Run `./scripts/generate_properties.sh` for using intellisense C/C++ in vscode
 
 ## Configuration
 
@@ -166,14 +154,42 @@ export XMODIFIERS=@im=kime
 
 if you use X, append above lines to file `~/.xprofile`
 
+#### Debian/Ubuntu on Wayland with zsh
+
+kime's deb package integrates with im-config, but under Wayland the im-config
+selection is applied through `/etc/profile.d/im-config_wayland.sh`, and zsh
+never sources it because zsh does not read `/etc/profile`. Either:
+
+* add `emulate sh -c 'source /etc/profile'` to `/etc/zsh/zprofile`, or
+* skip im-config and create `~/.config/environment.d/kime.conf` containing:
+
+  ```
+  GTK_IM_MODULE=kime
+  QT_IM_MODULE=kime
+  XMODIFIERS=@im=kime
+  ```
+
+  This is shell-independent and is the correct way to set environment
+  variables for Wayland sessions.
+
+See [#423](https://github.com/Riey/kime/issues/423).
+
 ### Start additional server
 
 kime.desktop file is installed in /etc/xdg/autostart when installing kime.
 
 ### KDE Plasma Wayland
 
-It is required to select `kime daemon` under System Settings > Input & Output > Keyboard > Virtual Keyboard.  
+It is required to select `kime daemon` under System Settings > Input & Output > Keyboard > Virtual Keyboard.
 A logout and re-login is recommended afterwards.
+
+### GNOME Wayland
+
+Mutter implements neither `zwp_input_method_v2` nor `v1`, so `kime-wayland`
+cannot attach in a GNOME Wayland session. GTK and Qt applications still work
+through kime's input method modules, but Wayland-native and sandboxed
+applications do not. Tracked in
+[#422](https://github.com/Riey/kime/issues/422).
 
 ### Weston
 
@@ -182,6 +198,21 @@ It is required to have the following lines in `~/.config/weston.ini`
 [input-method]
 path=/usr/bin/kime
 ```
+
+### Sandboxed applications (snap, flatpak)
+
+kime's GTK/Qt input method modules cannot be loaded inside snap or flatpak
+sandboxes: the sandbox bundles its own GTK/Qt runtime, so `GTK_IM_MODULE=kime`
+and `QT_IM_MODULE=kime` have nothing to load there. The most common case is
+Firefox, which Ubuntu 22.04+ preinstalls as a snap — use the
+[mozilla.org build](https://www.mozilla.org/firefox/) instead if you need
+Korean input.
+
+On Wayland compositors that implement `zwp_input_method_v2` (KDE Plasma,
+sway and other wlroots compositors), sandboxed applications that speak
+text-input-v3 still work through the compositor, so this mainly affects X11
+sessions and GNOME. See [#346](https://github.com/Riey/kime/issues/346) and
+[#422](https://github.com/Riey/kime/issues/422).
 
 ### Configuration
 
@@ -207,7 +238,8 @@ These dependencies are optional depending on your environments. For example, qt6
 
 #### Required
 
-* cmake
+* meson
+* ninja
 * cargo
 * libclang
 * pkg-config

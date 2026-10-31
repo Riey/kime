@@ -1,5 +1,6 @@
 [package]
 name = "kime-engine-dict"
+description = "Hanja, math symbol, and emoji annotation dictionaries"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

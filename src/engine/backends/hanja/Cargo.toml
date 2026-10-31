@@ -1,5 +1,6 @@
 [package]
 name = "kime-engine-backend-hanja"
+description = "Hanja conversion mode driven by the candidate window"
 version = "0.1.0"
 authors = ["Riey <creeper844@gmail.com>"]
 edition = "2021"

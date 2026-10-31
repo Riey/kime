@@ -146,13 +146,34 @@ fn number() {
         (Key::normal(S), "안", ""),
         (Key::normal(G), "않", ""),
         (Key::normal(E), "ㄷ", "않"),
+        // a pass key commits the pending preedit, then commits its own literal
         (Key::normal(One), "", "ㄷ1"),
     ]);
 }
 
 #[test]
 fn exclamation_mark() {
+    // '!' commits the pending preedit, then commits itself
     test_input(&[(Key::shift(R), "ㄲ", ""), (Key::shift(One), "", "ㄲ!")]);
+}
+
+// issue #754: plain special-character (pass) keys must be typed in Hangul mode,
+// not bypassed to the application.
+#[test]
+fn special_char_commit() {
+    // with a pending composition, '@' commits it and then commits '@'
+    test_input(&[(Key::normal(R), "ㄱ", ""), (Key::shift(Two), "", "ㄱ@")]);
+    // with no pending composition, '@' is committed
+    test_input(&[(Key::shift(Two), "", "@")]);
+}
+
+// issue #754/#719: a shortcut-modified key (Ctrl+...) has no layout entry, so it
+// is bypassed to the application by the caller — shortcut handling lives there,
+// not in the pass-key path.
+#[test]
+fn ctrl_shortcut_bypass() {
+    use kime_engine_core::ModifierState;
+    test_input(&[(Key::new(Two, ModifierState::CONTROL), "", "PASS")]);
 }
 
 #[test]

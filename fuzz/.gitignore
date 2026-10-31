@@ -1,0 +1,6 @@
+target/
+artifacts/
+coverage/
+# grown at runtime (locally and via the CI corpus cache); committed seed
+# inputs live in seeds/<target>/ instead
+corpus/

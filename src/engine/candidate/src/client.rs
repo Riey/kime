@@ -45,6 +45,9 @@ impl Client {
             Ok(String::from_utf8(self.child.wait_with_output()?.stdout).ok())
         } else {
             self.child.kill()?;
+            // Reap the killed child; otherwise every dismissed candidate
+            // window stays around as a zombie (defunct) process.
+            self.child.wait()?;
             Ok(None)
         }
     }

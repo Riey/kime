@@ -6,13 +6,61 @@
 
 ### Improve
 
+* fix(e2e): locate cargo artifacts in meson build directory [#809](https://github.com/Riey/kime/pull/809)
+* fix(nix): resolve runtime wrappers and modernize expressions [#808](https://github.com/Riey/kime/pull/808)
+* fix(build): Cargo build artifacts are now written under Meson's build directory instead of the source tree — the `cargo build` invocation had no `--target-dir`/`--manifest-path` of its own, so it fell back to writing `target/` next to `Cargo.toml` regardless of where Meson's build directory was, which breaks out-of-tree builds (e.g. Gentoo's sandboxed, separate `WORKDIR`). `cargo` is now passed an explicit `--target-dir` under `meson.current_build_dir()` and `--manifest-path` pointing at the source tree's `Cargo.toml`
+* ci(runner): the runner image's Dockerfile and rebuild script now live in the repo (`ci/actions-runner-docker/`), and the `runner-image` workflow retriggers on image-definition changes as well as flake changes [#806](https://github.com/Riey/kime/pull/806)
+* fix(xim): GTK3 apps on the XIM bridge (`GTK_IM_MODULE=xim`) no longer hang on the first composing key — such clients draw the preedit themselves and report the moved cursor back with `SetICValues(XNSpotLocation)`, which kime answered by redrawing the preedit, moving the cursor again: an endless PreeditDone/PreeditStart/PreeditDraw echo at ~100k messages per second that never committed. The spot location is now only acted on for the server-drawn preedit popup [#783](https://github.com/Riey/kime/issues/783) [#786](https://github.com/Riey/kime/pull/786)
+* fix(wayland): kime no longer dies when the seat's keyboard has no keymap — the compositor reports it as an empty `no_keymap` keymap, which kime forwarded verbatim to its own virtual keyboard until the compositor killed the connection with a `no memory` error (naive headless/CI setups never got an input method). Empty keymaps are now skipped, as are key and modifier events sent before a real keymap arrives [#782](https://github.com/Riey/kime/issues/782) [#789](https://github.com/Riey/kime/pull/789)
+* fix(wayland): only send the input-method-v2 `commit` request when protocol state actually changed — a bare commit on every key (still triggered by modifier and arrow keys) applied an empty-preedit transaction whose spurious `done` made Firefox/Chromium replace the current selection with an empty composition [#714](https://github.com/Riey/kime/issues/714) [#654](https://github.com/Riey/kime/issues/654) [#772](https://github.com/Riey/kime/pull/772)
+* fix(wayland): key repeat now crosses the preedit/text boundary correctly — repeat ticks the engine no longer consumes (e.g. holding Backspace past the preedit) are forwarded to the client as synthetic release+press events at kime's uniform repeat rate, instead of stopping entirely (3.2.0 regression) or letting the compositor restart its full repeat delay (the original complaint) [#666](https://github.com/Riey/kime/issues/666) [#772](https://github.com/Riey/kime/pull/772)
+* fix(gtk): GTK4 no longer swallows bypassed keys (Enter, Tab, arrows) while a preedit is visible — the GTK3-style deferred event re-injection can't reach the widget on GTK4, so the GTK4 build now updates the preedit synchronously and lets the widget handle bypassed control keys on the first press (Enter no longer needs to be pressed twice in Hangul mode) [#606](https://github.com/Riey/kime/issues/606) [#775](https://github.com/Riey/kime/pull/775)
+* fix(gtk): harden IM context lifetime — hold a reference across signal emission so an app destroying the context from a `commit` handler (Inkscape tool teardown) can't leave dangling pointers, disconnect the button-press handler in finalize so a widget outliving the context can't call into freed memory, and chain up to the parent class finalize [#579](https://github.com/Riey/kime/issues/579) [#775](https://github.com/Riey/kime/pull/775)
+* docs(README): document snap/flatpak sandbox limitation, im-config under Wayland+zsh, and GNOME Wayland status [#423](https://github.com/Riey/kime/issues/423) [#767](https://github.com/Riey/kime/pull/767)
+* docs: document the Math/Hanja/Emoji input modes, the hotkey key format and `candidate_font`; fix the documented `xim_preedit_font` default (`Noto Sans CJK KR`, not `D2Coding`) [#671](https://github.com/Riey/kime/issues/671) [#583](https://github.com/Riey/kime/issues/583) [#572](https://github.com/Riey/kime/issues/572) [#773](https://github.com/Riey/kime/pull/773)
+* fix(qt): track `NOT_READY` so focus loss to the hanja candidate window no longer resets the engine and kills the popup [#757](https://github.com/Riey/kime/issues/757) [#771](https://github.com/Riey/kime/pull/771)
+* fix(engine): hotkey lookup falls back to the key without its own modifier bit — Wayland delivers a modifier key's press with its own modifier already set (X11 reports the pre-event state), so plain `AltR`/`ControlR` hotkeys never fired in Wayland-native apps (hangul toggle in Konsole and other Qt apps on KDE Plasma). Exact bindings such as `M-AltR` keep priority over the fallback; the redundant `M-AltR` default hotkey from [#719] is removed [#760](https://github.com/Riey/kime/pull/760)
+* fix(engine): volume keys (Mute/VolumeDown/VolumeUp) no longer act as Hangul/Hanja keys — hardware keycodes 121/122/123 were raw evdev values added by mistake; only the real X11 keycodes 130 (`<HNGL>`) and 131 (`<HJCV>`) map now [#603](https://github.com/Riey/kime/issues/603) [#769](https://github.com/Riey/kime/pull/769)
+* fix(engine): reap the candidate window process after killing it so dismissed hanja popups no longer accumulate as zombie (`<defunct>`) processes [#617](https://github.com/Riey/kime/issues/617) [#769](https://github.com/Riey/kime/pull/769)
+* fix(engine): log config file open/parse errors instead of silently falling back to the default config, so a syntax error in `config.yaml` is diagnosable [#656](https://github.com/Riey/kime/issues/656) [#769](https://github.com/Riey/kime/pull/769)
+* fix(wayland): an unchanged preedit is no longer re-sent — the engine reports `HAS_PREEDIT` for the keys it bypasses, so while composing every lone modifier or volume key produced another identical `set_preedit_string` + `commit` and a duplicate `preedit-changed` event at the client; a transaction is now sent only when it carries a commit string or a preedit that differs from the one the client already shows [#781](https://github.com/Riey/kime/issues/781) [#788](https://github.com/Riey/kime/pull/788)
+* fix(qt5): pass the input context IID define to moc and the compiler so Qt5 apps load the kime input context again — broken since the meson migration ([#747]) which fixed only qt6 ([#756]) [#778](https://github.com/Riey/kime/issues/778) [#785](https://github.com/Riey/kime/pull/785)
+* feat(engine): layout files support an optional `version:`/`keys:` format — files declaring a format version newer than kime supports are rejected with a clear error instead of breaking silently on a future format change, legacy flat-map layouts keep working unchanged, and user layout files that fail to load are logged with the reason instead of silently skipped [#540](https://github.com/Riey/kime/issues/540) [#774](https://github.com/Riey/kime/pull/774)
+* fix(engine): dismissing the hanja candidate window with a global hotkey no longer leaks the popup process — Esc, the hangul/latin toggles and the emoji/math mode hotkeys all stay active in hanja mode, and they cleared the input mode without closing its candidate window, leaving `kime-candidate-window` running (and later `<defunct>`) [#780](https://github.com/Riey/kime/issues/780) [#787](https://github.com/Riey/kime/pull/787)
+* fix(engine): a layout or translation-layer file naming a key with a modifier other than Shift no longer crashes kime — `KeyMap` keeps one slot per keycode for the unmodified and Shift variants, and `insert` indexed that two-element array with the raw modifier bits, so a single `C-T: <` line panicked with an index-out-of-bounds while loading. Such a key can never be looked up (`get` rejects it), so the entry is now dropped and the rest of the file keeps working [#793](https://github.com/Riey/kime/issues/793) [#795](https://github.com/Riey/kime/pull/795)
+* test(fuzz): add a cargo-fuzz suite (`fuzz/`) fuzzed nightly in CI with a corpus that persists across runs — arbitrary key/op sequences against the engine (asserting the `HAS_COMMIT`/`HAS_PREEDIT` flags match the buffers), no-panic targets for the layout and config YAML parsers, and a differential target comparing kime's dubeolsik composition against libhangul, the engine behind ibus-hangul and fcitx5-hangul [#792](https://github.com/Riey/kime/pull/792)
+* test(fuzz): add a `frontend_commit_protocol` fuzz target — a Rust transcription of the GTK immodule's commit/emit/reset protocol drives the real engine against a hostile client that re-enters `reset()` from its commit and preedit handlers at arbitrary depths, asserting every committed character reaches the client exactly once, in order; this guards the snapshot-and-clear-before-emit ordering the [#562] fix ([#799]) introduced, and a unit test keeps the pre-fix ordering failing so the oracle provably catches that bug class [#801](https://github.com/Riey/kime/pull/801)
+* fix(gtk): a client calling `gtk_im_context_reset()` from inside its `commit` handler (the [#562] Firefox pattern) no longer gets the commit delivered twice — the immodule emitted the signal before clearing the engine's commit buffer and `reset` re-read it, so mid-word the re-entrant reset also swallowed the live preedit and destroyed the composition (오랜 became 오오래ㄴ). The buffer is now snapshotted and cleared before emitting, so a re-entrant reset only commits the live preedit; the [#563] `is_committing` guard for this was removed in [#570] [#562](https://github.com/Riey/kime/issues/562) [#799](https://github.com/Riey/kime/pull/799)
+* fix(qt): the Qt input context (shared by the qt5 and qt6 plugins) had the same [#562]-class hole — it emitted the commit `QInputMethodEvent` through the synchronous `QCoreApplication::sendEvent` before clearing the engine's commit buffer, and `reset()` re-read it, so a widget calling `QInputMethod::reset()` from its `inputMethodEvent()` received the text twice. The buffer is now snapshotted and cleared before emitting, and a reset with nothing pending no longer sends an empty `QInputMethodEvent` [#562](https://github.com/Riey/kime/issues/562) [#799](https://github.com/Riey/kime/pull/799)
+* fix(qt): the hanja candidate window no longer dies on focus-out — this completes the [#771] fix, which guarded `setFocusObject` but not `commit()`: Qt calls `commit()` first on focus-out, so the unconditional reset there still killed the just-spawned popup and discarded the syllable being converted. `commit()` now honours the same `engine_ready` guard, leaving normal commit-on-focus-out unchanged [#757](https://github.com/Riey/kime/issues/757) [#779](https://github.com/Riey/kime/issues/779) [#784](https://github.com/Riey/kime/pull/784)
+* fix(wayland): held keys repeat through the engine again on compositors that deliver the repeats themselves — a `wl_seat` v10 compositor (KWin 6.7) announces `repeat_info(rate=0)`, meaning the client must not run its own repeat, and sends every repeat as a `wl_keyboard.key` event in the `repeated` state. kime tested for that state as `WEnum::Unknown(2)`, but `wayland-client` has carried the enum variant since wayland 1.24 and decodes it as `KeyState::Repeated`, so a repeat matched neither the pressed nor the released branch and fell through to the raw-key bypass. Bypassing is what Latin mode wants anyway, so only Hangul mode broke: holding a key emitted the literal QWERTY letters next to a stuck preedit (`ㄱrrrrrrrrrr`) instead of repeating the composed jamo, and with `rate=0` disabling kime's own repeat timer there was no fallback [#802](https://github.com/Riey/kime/issues/802) [#803](https://github.com/Riey/kime/pull/803)
+
+## 3.2.0
+
+### Breaking
+
+### Improve
+
+* fix(qt6): pass the input context IID define to moc so the Qt6 immodule plugin metadata is generated correctly **[@isac322]** [#756](https://github.com/Riey/kime/pull/756)
+* fix(hangul): revert [#719] — pass keys (layout symbol/number layers such as the sebeolsik shifted right-half) are committed in Hangul mode again instead of being bypassed to the application. Shortcut-modified keys (Ctrl/Alt/Super) have no layout entry and are already passed through by the caller, so the special-case bypass was unnecessary and regressed every Hangul layout. [#754](https://github.com/Riey/kime/issues/754)
+* Replace cmake build system with meson
+  - cargo builds via `custom_target()`, GTK/Qt frontends as `shared_library()`
+  - Per-component build options (gtk3, gtk4, qt5, qt6, check, indicator, etc.), enabled by default
+  - `kime` and other binaries build by default when running `ninja`
+  - `system_engine` mode for building frontends against system-installed engine
+  - Qt plugin dir override options for nix compatibility
+* Remove EOL distro Dockerfiles (ubuntu 18.04~22.10, debian buster)
+* Add debian-trixie Dockerfile
+* Update release workflow: Qt5/Qt6 multi-version matrix builds, softprops/action-gh-release@v2
+* nix: switch to fetchCargoVendor, parameterize frontend toggles
 * Fix mismatched cargoDeps in nix and update attribute syntax **[@nakoo]**
 * Updated NixOS configuration example to match updated attribute syntax.
 * Remove `kime-engine-cffi`
-* fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/715)
-* feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/719)
+* fix(wayland input_method_v2): not return unwarp **[@racakenon]** [#715](https://github.com/Riey/kime/pull/715)
+* feat(engine): Let default `Alt_R` hotkey accept `Alt` modifier [#719](https://github.com/Riey/kime/issues/719)
+* fix(hangul): Don't consume pass keys (numbers, symbols) so app shortcuts like `@`/`#` fire in Hangul mode [#719](https://github.com/Riey/kime/issues/719)
 * Add Opensuse Build Service repository and modify README
-* fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/721)
+* fix(xim): handle None from from_hardware_code without panic [#721](https://github.com/Riey/kime/issues/721)
 * Update dependencies:
   - wayland-client 0.29 → 0.31, wayland-protocols 0.29 → 0.32
   - wayland-protocols-misc 0.3 (신규), xdg 2.5 → 3.0, quick-xml 0.27 → 0.39
@@ -32,6 +80,18 @@
 * Rewrite kime-wayland for wayland-rs 0.31 API (Dispatch trait pattern)
 * Fix kime-wayland failing on KDE Wayland when the XDG autostart daemon starts before KWin launches kime as the virtual keyboard: a daemon launched with `WAYLAND_SOCKET` now takes over the running one, and only `kime-wayland` inherits that socket
 * Fix `kime-xdg-autostart` passing a literal `#@` to `kime` instead of its arguments [#629](https://github.com/Riey/kime/629)
+* fix(xim): degrade gracefully when the preedit font is missing instead of panicking [#706](https://github.com/Riey/kime/issues/706)
+* feat(engine): add `SuperL`/`SuperR` keycodes so Right-Super can be bound as a hotkey [#640](https://github.com/Riey/kime/issues/640)
+* fix(hangul): enable `ComposeJongseongSsang` by default for sebeolsik-3sin-p2 (ㄲ 받침) [#646](https://github.com/Riey/kime/issues/646)
+* fix(latin): repair the malformed Dvorak layout so it parses and works [#626](https://github.com/Riey/kime/issues/626)
+* fix(hangul): Sebeolsik composition bug when typing `v` instead of `/` [#679](https://github.com/Riey/kime/issues/679)
+* Qt6 immodule: append `.5.1` suffix to the plugin IID so it builds without `qt5-base` installed (fixes Arch/AUR build) [#732](https://github.com/Riey/kime/issues/732) [#736](https://github.com/Riey/kime/pull/736)
+* Add `qt5` dependency to fix the frontend build failure on Arch Linux [#724](https://github.com/Riey/kime/pull/724)
+* Release: build Qt6 immodules per-version like Qt5 and add Qt 6.9 / 6.10 to the build matrix [#749](https://github.com/Riey/kime/pull/749)
+* Packaging: include gtk4 and qt6 immodules in the `.deb` packages, including ubuntu-22.04 [#734](https://github.com/Riey/kime/issues/734) [#750](https://github.com/Riey/kime/pull/750)
+* Build Dockerfiles for Ubuntu 24.04 and Debian Bookworm [#726](https://github.com/Riey/kime/pull/726)
+* fix(wayland): prevent text selection deletion on Ctrl/modifier shortcuts [#714](https://github.com/Riey/kime/issues/714) [#718](https://github.com/Riey/kime/pull/718)
+* fix(wayland): bypass key events when input is not activated [#745](https://github.com/Riey/kime/pull/745)
 
 
 ## 3.1.1

@@ -1,0 +1,12 @@
+# nextest configuration — used by the e2e GUI suite (tests/e2e/run.sh and the
+# `e2e` CI job). Each e2e test spawns its own compositor/X server, so tests
+# run in parallel processes; see tests/e2e/README.md.
+
+[profile.default]
+# Show every red test at the end of the run — several e2e tests are red by
+# design while their fix PRs are open (tracker #777).
+fail-fast = false
+# A wedged compositor/probe must not hold the run (or a CI slot): flag a test
+# as slow after 60s, SIGTERM it after 2 periods (RAII teardown kills the
+# test's own process tree), SIGKILL if it still lingers.
+slow-timeout = { period = "60s", terminate-after = 2 }

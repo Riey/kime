@@ -73,6 +73,14 @@ impl HangulEngine {
     pub fn key(&mut self, kv: KeyValue, addons: EnumSet<Addon>, commit_buf: &mut String) -> bool {
         let ret = match kv {
             KeyValue::Pass(pass) => {
+                // A pass key is a literal character defined by the layout (e.g.
+                // the sebeolsik number/symbol layer). Commit any pending
+                // composition, then emit the literal (issue #754).
+                //
+                // Keys carrying a shortcut modifier (Ctrl/Alt/Super) never reach
+                // here: the layout only has plain/Shift entries, so the lookup
+                // misses and the caller passes the key through to the
+                // application — which is where shortcut handling belongs.
                 self.clear_preedit(commit_buf);
                 commit_buf.push(pass);
                 return true;
@@ -532,6 +540,28 @@ mod tests {
             }),
             state.jung(Jungseong::A, true, addons)
         );
+    }
+
+    // issue #754: a pass key (layout literal) commits its character in Hangul mode.
+    #[test]
+    fn pass_key() {
+        let mut engine = HangulEngine::new(false, PreeditJohabLevel::Needed);
+        let mut commit = String::new();
+
+        // compose ㄱ
+        assert!(engine.key(
+            KeyValue::Choseong {
+                cho: Choseong::Giyeok
+            },
+            EnumSet::empty(),
+            &mut commit
+        ));
+        assert!(engine.has_preedit());
+
+        // a pass key commits the pending preedit and then its own literal
+        assert!(engine.key(KeyValue::Pass('@'), EnumSet::empty(), &mut commit));
+        assert_eq!(commit, "ㄱ@");
+        assert!(!engine.has_preedit());
     }
 
     #[test]

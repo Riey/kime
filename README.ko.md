@@ -99,33 +99,27 @@ zypper in kime
 git clone https://github.com/riey/kime
 cd kime
 
-export DOCKER_BUILDKIT=0
-export COMPOSE_DOCKER_CLI_BUILD=0
-# 도커 빌드시 Buildkit을 쓰지 않고 레거시 방식으로 빌드하기 위함
-
 docker build --file build-docker/<배포판 경로>/Dockerfile --tag kime-build:git .
 docker run --name kime kime-build:git
-docker cp kime:/opt/kime-out/kime.tar.xz .
+docker cp kime:/opt/kime-out/kime.tar.zst .
 # deb 파일을 얻으시려면 대신 이 명령어를 실행하세요
 # docker cp kime:/opt/kime-out/kime_amd64.deb .
 ```
 
 ### 직접 빌드
 
-빌드하기 전에 **cargo** 및 아래 나열되어 있는 기타 종속성이 설치되어 있는지 확인하세요.
+빌드하기 전에 **cargo**, **meson**, **ninja** 및 아래 나열되어 있는 기타 종속성이 설치되어 있는지 확인하세요.
 
 ```sh
-git clone https://github.com/riey/kime
+git clone https://github.com/Riey/kime
 cd kime
 
-scripts/build.sh -ar
+meson setup build
+ninja -C build
+sudo ninja -C build install
 ```
 
-이제 모든 파일은 build/out 경로에 있습니다. 만약 수동 설치를 원하시면 쓰시면 됩니다.
-
-`scripts/install.sh <install-prefix>` 스크립트를 쓸 수도 있습니다. 패키징할 때 유용합니다.
-
-`scripts/release-deb.sh <deb-out-path>` 스크립트를 사용하시면 `deb` 파일을 생성합니다.
+필요한 프론트엔드만 `-Dgtk3=true`, `-Dqt5=true` 등으로 선택 또는 해제 하세요.
 
 #### GTK
 
@@ -139,12 +133,6 @@ sudo gtk-query-immodules-3.0 --update-cache
 # GTK4 설치 시
 sudo gio-querymodules /usr/lib/gtk-4.0/4.0.0/immodules
 ```
-
-## 개발
-
-### C/C++
-
-`./scripts/generate_properties.sh`을 실행해서 vscode에서 C/C++ 코드의 인텔리센스 기능을 사용할 수 있습니다.
 
 ## 설정
 
@@ -164,6 +152,26 @@ export XMODIFIERS=@im=kime
 
 만약 X를 사용하신다면 .xprofile에 설정하시면 됩니다.
 
+### Wayland에서 zsh를 쓰는 데비안/우분투
+
+kime의 deb 패키지는 im-config과 연동되지만, Wayland에서는 im-config 설정이
+`/etc/profile.d/im-config_wayland.sh`를 통해 적용되는데 zsh는 `/etc/profile`을
+읽지 않기 때문에 이 파일이 실행되지 않습니다. 다음 중 하나로 해결할 수 있습니다.
+
+* `/etc/zsh/zprofile`에 `emulate sh -c 'source /etc/profile'` 추가
+* im-config 대신 `~/.config/environment.d/kime.conf` 파일을 만들어 다음 내용 넣기:
+
+  ```
+  GTK_IM_MODULE=kime
+  QT_IM_MODULE=kime
+  XMODIFIERS=@im=kime
+  ```
+
+  이 방법은 셸과 무관하며 Wayland 세션에서 환경 변수를 설정하는 올바른
+  방법입니다.
+
+[#423](https://github.com/Riey/kime/issues/423)을 참고하세요.
+
 ### 추가적인 서버를 실행
 
 kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설치합니다
@@ -172,8 +180,16 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 
 ### KDE Plasma Wayland
 
-시스템 설정 > 입력과 출력 > 키보드 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.  
+시스템 설정 > 입력과 출력 > 키보드 > 가상 키보드에서 `kime 데몬`을 선택해야 합니다.
 이후에 로그아웃 후 재로그인을 하는 것을 권장합니다.
+
+### GNOME Wayland
+
+Mutter는 `zwp_input_method_v2`와 `v1` 중 어느 것도 구현하지 않기 때문에 GNOME
+Wayland 세션에서는 `kime-wayland`가 동작하지 않습니다. GTK/Qt 앱은 kime의
+입력기 모듈을 통해 계속 사용할 수 있지만, Wayland 네이티브 앱이나 샌드박스
+앱에서는 입력할 수 없습니다.
+[#422](https://github.com/Riey/kime/issues/422)에서 추적하고 있습니다.
 
 ### Weston
 `~/.config/weston.ini`에 해당 내용이 있어야 합니다.
@@ -181,6 +197,21 @@ kime은 kime 데몬을 위한 kime.desktop 파일을 /etc/xdg/autostart에 설�
 [input-method]
 path=/usr/bin/kime
 ```
+
+### 샌드박스 앱 (snap, flatpak)
+
+snap이나 flatpak 샌드박스 안에서는 kime의 GTK/Qt 입력기 모듈을 불러올 수
+없습니다. 샌드박스가 자체 GTK/Qt 런타임을 포함하고 있어서
+`GTK_IM_MODULE=kime`, `QT_IM_MODULE=kime`이 불러올 모듈이 없기 때문입니다.
+가장 흔한 경우는 우분투 22.04 이상에서 snap으로 기본 설치되는 파이어폭스로,
+한글 입력이 필요하다면 [mozilla.org 빌드](https://www.mozilla.org/firefox/)를
+사용하는 것을 권장합니다.
+
+다만 `zwp_input_method_v2`를 구현한 Wayland 컴포지터(KDE Plasma, sway 등
+wlroots 계열)에서는 text-input-v3를 사용하는 샌드박스 앱도 컴포지터를 통해
+입력이 되므로, 이 문제는 주로 X11 세션과 GNOME에서 발생합니다.
+[#346](https://github.com/Riey/kime/issues/346),
+[#422](https://github.com/Riey/kime/issues/422)를 참고하세요.
 
 ### Configuration
 
@@ -207,7 +238,8 @@ path=/usr/bin/kime
 
 #### 필수
 
-* cmake
+* meson
+* ninja
 * cargo
 * libclang
 * pkg-config

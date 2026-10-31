@@ -107,21 +107,45 @@ impl Config {
 }
 
 #[cfg(unix)]
+fn load_raw_config(dir: &xdg::BaseDirectories) -> RawConfig {
+    let Some(path) = dir.find_config_file("config.yaml") else {
+        return RawConfig::default();
+    };
+
+    let file = match std::fs::File::open(&path) {
+        Ok(file) => file,
+        Err(err) => {
+            log::error!(
+                "Can't open config file `{}`, falling back to the default config: {err}",
+                path.display()
+            );
+            return RawConfig::default();
+        }
+    };
+
+    match serde_yaml::from_reader(file) {
+        Ok(config) => config,
+        Err(err) => {
+            log::error!(
+                "Can't parse config file `{}`, falling back to the default config: {err}",
+                path.display()
+            );
+            RawConfig::default()
+        }
+    }
+}
+
+#[cfg(unix)]
 pub fn load_raw_config_from_config_dir() -> RawConfig {
     let dir = xdg::BaseDirectories::with_prefix("kime");
 
-    dir.find_config_file("config.yaml")
-        .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
-        .unwrap_or_default()
+    load_raw_config(&dir)
 }
 
 #[cfg(unix)]
 pub fn load_engine_config_from_config_dir() -> Option<Config> {
     let dir = xdg::BaseDirectories::with_prefix("kime");
-    let config: RawConfig = dir
-        .find_config_file("config.yaml")
-        .and_then(|config| serde_yaml::from_reader(std::fs::File::open(config).ok()?).ok())
-        .unwrap_or_default();
+    let config = load_raw_config(&dir);
 
     Some(Config::from_engine_config_with_dir(config.engine, &dir))
 }

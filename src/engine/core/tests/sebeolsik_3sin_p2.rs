@@ -19,6 +19,17 @@ fn double_jongseong() {
 }
 
 #[test]
+fn compose_jongseong_ssang_giyeok() {
+    // 신세벌식 P2: 쌍기역 받침은 ㄱ 받침(C 키)을 두 번 눌러 입력한다.
+    test_input(&[
+        (Key::normal(J), "ㅇ", ""),
+        (Key::normal(F), "아", ""),
+        (Key::normal(C), "악", ""),
+        (Key::normal(C), "앆", ""),
+    ]);
+}
+
+#[test]
 fn hello() {
     test_input(&[
         (Key::normal(J), "ㅇ", ""),

@@ -24,7 +24,7 @@ public:
   void setFocusObject(QObject *object) override;
 
 private:
-  void commit_str(kime::RustStr s);
+  void commit_str(const QString &s);
   void preedit_str(kime::RustStr s);
   bool process_input_result(kime::InputResult ret);
 

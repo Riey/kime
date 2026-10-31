@@ -46,6 +46,7 @@ fn issue_521() {
     ]);
 }
 
+// issue #754: a pass key (here ':') is committed in Hangul mode, not bypassed.
 #[test]
 fn colon() {
     test_input(&[(Key::normal(Backslash), "", ":")]);

@@ -124,6 +124,8 @@ pub enum KeyCode {
     Henkan,
     AltL,
     AltR,
+    SuperL,
+    SuperR,
     Hangul,
     HangulHanja,
 
@@ -230,8 +232,10 @@ impl KeyCode {
             102 => Some(Self::Muhenkan),
             64 => Some(Self::AltL),
             108 => Some(Self::AltR),
-            122 | 130 => Some(Self::Hangul),
-            121 | 123 | 131 => Some(Self::HangulHanja),
+            133 => Some(Self::SuperL),
+            134 => Some(Self::SuperR),
+            130 => Some(Self::Hangul),
+            131 => Some(Self::HangulHanja),
 
             113 => Some(Self::Left),
             114 => Some(Self::Right),
@@ -252,6 +256,17 @@ impl KeyCode {
             95 => Some(Self::F11),
             96 => Some(Self::F12),
 
+            _ => None,
+        }
+    }
+
+    /// The modifier bit this key sets while held, if it is a modifier key.
+    pub const fn self_modifier(self) -> Option<ModifierState> {
+        match self {
+            Self::Shift => Some(ModifierState::SHIFT),
+            Self::ControlL | Self::ControlR => Some(ModifierState::CONTROL),
+            Self::AltL | Self::AltR => Some(ModifierState::ALT),
+            Self::SuperL | Self::SuperR => Some(ModifierState::SUPER),
             _ => None,
         }
     }
@@ -379,4 +394,47 @@ fn key_parse() {
     assert_eq!("S-4".parse::<Key>().unwrap(), Key::shift(KeyCode::Four));
     assert_eq!("C-Space".parse::<Key>().unwrap(), Key::ctrl(KeyCode::Space));
     assert_eq!("M-X".parse::<Key>().unwrap(), Key::alt(KeyCode::X));
+}
+
+#[test]
+fn super_keys() {
+    // X11 hardware keycodes for Super_L (133) / Super_R (134),
+    // e.g. Apple right-command, so they can be bound as a category toggle.
+    assert_eq!(
+        KeyCode::from_hardware_code(133, false),
+        Some(KeyCode::SuperL)
+    );
+    assert_eq!(
+        KeyCode::from_hardware_code(134, false),
+        Some(KeyCode::SuperR)
+    );
+
+    // The variants must round-trip through their string form so they can be
+    // written in the config like the existing AltR toggle.
+    assert_eq!("SuperL".parse::<KeyCode>().unwrap(), KeyCode::SuperL);
+    assert_eq!("SuperR".parse::<KeyCode>().unwrap(), KeyCode::SuperR);
+    assert_eq!(
+        "SuperR".parse::<Key>().unwrap(),
+        Key::normal(KeyCode::SuperR)
+    );
+}
+
+#[test]
+fn hangul_hanja_keys() {
+    // X11 hardware keycodes for Hangul (130, <HNGL>) / Hangul_Hanja (131, <HJCV>).
+    assert_eq!(
+        KeyCode::from_hardware_code(130, false),
+        Some(KeyCode::Hangul)
+    );
+    assert_eq!(
+        KeyCode::from_hardware_code(131, false),
+        Some(KeyCode::HangulHanja)
+    );
+
+    // 121/122/123 are XF86AudioMute/LowerVolume/RaiseVolume in X11 keycode
+    // space (evdev + 8). They were added as raw evdev values by mistake and
+    // must not map to Hangul/HangulHanja, or volume keys trigger the IME.
+    assert_eq!(KeyCode::from_hardware_code(121, false), None);
+    assert_eq!(KeyCode::from_hardware_code(122, false), None);
+    assert_eq!(KeyCode::from_hardware_code(123, false), None);
 }

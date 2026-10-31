@@ -1,0 +1,53 @@
+[package]
+name = "kime-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+kime-engine-core = { path = "../src/engine/core" }
+kime-engine-config = { path = "../src/engine/config", features = ["config-serde"] }
+kime-engine-backend = { path = "../src/engine/backend" }
+kime-engine-backend-hangul = { path = "../src/engine/backends/hangul" }
+
+[build-dependencies]
+pkg-config = "0.3"
+
+[[bin]]
+name = "config_yaml"
+path = "fuzz_targets/config_yaml.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "layout_yaml"
+path = "fuzz_targets/layout_yaml.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "engine_key_stream"
+path = "fuzz_targets/engine_key_stream.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "frontend_commit_protocol"
+path = "fuzz_targets/frontend_commit_protocol.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "engine_diff_libhangul"
+path = "fuzz_targets/engine_diff_libhangul.rs"
+test = false
+doc = false
+
+[profile.release]
+debug = 1

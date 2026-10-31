@@ -8,55 +8,176 @@ on:
   pull_request:
     branches:
       - "develop"
+      # Convention: branches under bases/ serve as PR base branches for
+      # stacked work (e.g. fix PRs targeting the e2e suite branch so their
+      # CI shows the guarded e2e test flip red->green).
+      - "bases/*"
+
+# A superseded push cancels the older PR run so it stops occupying the
+# 4-slot docker-ci pool; pushes to develop always run to completion.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, docker-ci]
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v18
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v7
+      # nix and the kime devshell closure are baked into the runner image
+      # (~/actions-runner-docker/build.sh) — rebuild it on flake.lock bumps.
       - name: Caching cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-nix-rustc-v1-1.55.0-${{ hashFiles('Cargo.lock') }}
+          # scoped to flake.lock so a toolchain bump never restores an
+          # incompatible target dir (the flake pins rustc)
+          key: ${{ runner.os }}-ci-v2-${{ hashFiles('flake.lock') }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-nix-rustc-v1-1.55.0-
-      - run: nix develop -c bash scripts/build.sh -ad
-      - run: nix develop -c cargo test
+            ${{ runner.os }}-ci-v2-${{ hashFiles('flake.lock') }}-
+      # Evaluating the repo flake copies the whole tree to the nix store
+      # (~8s/run). When the files that define the devshell match the copies
+      # baked into the image, enter the pre-built profile instead (~1s);
+      # otherwise fall back to the repo flake so a lock bump is never
+      # silently ignored.
+      - name: Pick devshell
+        run: |
+          shell=/opt/kime-devshell
+          for f in flake.nix flake.lock shell.nix nix/deps.nix; do
+            cmp -s "$f" "/opt/kime-flake/$f" || { shell=.; echo "$f differs from the baked image — evaluating the repo flake"; }
+          done
+          echo "DEVSHELL=$shell" >> "$GITHUB_ENV"
+      - run: nix develop "$DEVSHELL" -c meson setup build --buildtype=debug -Dcargo_profile=debug
+      - run: nix develop "$DEVSHELL" -c ninja -C build
+      - run: nix develop "$DEVSHELL" -c cargo test
 
-  cargo-deny:
-    runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        checks:
-          - bans licenses sources
+  # The headless GUI suite (tests/e2e): spawns its own sway/Xvfb per test, so
+  # it needs no display, no uinput and no privileges — just the devshell tools
+  # (nix/deps.nix kimeE2eNativeBuildInputs) and a writable XDG_RUNTIME_DIR.
+  e2e:
+    runs-on: [self-hosted, docker-ci]
+    # A hung compositor must not hold a pool slot until the 6h default.
+    timeout-minutes: 45
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      - uses: actions/checkout@v7
+      - name: Caching cargo
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          # own namespace: this job's target dir also holds the e2e test
+          # binaries, and sharing a key with `build` would make both jobs
+          # race to save the same entry
+          key: ${{ runner.os }}-e2e-v1-${{ hashFiles('flake.lock') }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-e2e-v1-${{ hashFiles('flake.lock') }}-
+      - name: Pick devshell
+        run: |
+          shell=/opt/kime-devshell
+          for f in flake.nix flake.lock shell.nix nix/deps.nix; do
+            cmp -s "$f" "/opt/kime-flake/$f" || { shell=.; echo "$f differs from the baked image — evaluating the repo flake"; }
+          done
+          echo "DEVSHELL=$shell" >> "$GITHUB_ENV"
+      # Every frontend the suite covers must exist: with `auto` a devshell
+      # missing gtk4 (say) would silently drop the artifact and the tests
+      # would fail as if the frontend were broken. qt5 stays `auto` — nixpkgs
+      # refuses Qt5 and Qt6 in one environment, and qt::q5_smoke skips when
+      # the plugin is absent.
+      - run: nix develop "$DEVSHELL" -c meson setup build --buildtype=debug -Dcargo_profile=debug -Dgtk3=enabled -Dgtk4=enabled -Dqt6=enabled -Dxim=enabled -Dwayland=enabled -Dcandidate_window=enabled
+      - run: nix develop "$DEVSHELL" -c ninja -C build
+      - name: Run the e2e GUI suite
+        env:
+          # keep every test's scratch dir, not just the failures', so the
+          # artifact below explains a failure in context
+          KIME_E2E_KEEP_LOGS: "1"
+        run: |
+          # wayland sockets live in XDG_RUNTIME_DIR; the runner container has
+          # no logind to create one
+          if [ ! -w "${XDG_RUNTIME_DIR:-/nonexistent}" ]; then
+            XDG_RUNTIME_DIR="$(mktemp -d)"
+            chmod 700 "$XDG_RUNTIME_DIR"
+            export XDG_RUNTIME_DIR
+          fi
+          # the restored cache may carry a previous run's kept logs and
+          # probe binaries; neither must be mistaken for this run's
+          rm -rf target/e2e target/e2e-clients
+          mkdir -p target/e2e
+          set -o pipefail
+          # nextest: parallel, one process per test, wedged tests killed —
+          # fail-fast is off in .config/nextest.toml so one red frontend
+          # doesn't hide the others (several tests are red by design until
+          # their fix PR merges; tests/e2e/README.md, tracker #777)
+          nix develop "$DEVSHELL" -c cargo nextest run -p kime-e2e \
+            --run-ignored ignored-only 2>&1 | tee target/e2e/nextest.log
+      # The runner image points ACTIONS_RESULTS_URL at the LAN cache server
+      # (see ~/actions-runner-docker/Dockerfile), which serves the cache API
+      # only. The patched worker leaves the real service URL in
+      # ACTIONS_RESULTS_ORL — hand that to the artifact upload alone.
+      - name: Artifact endpoint
+        if: failure()
+        id: artifacts
+        run: echo "url=$ACTIONS_RESULTS_ORL" >> "$GITHUB_OUTPUT"
+      - name: Upload e2e logs
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        env:
+          ACTIONS_RESULTS_URL: ${{ steps.artifacts.outputs.url }}
+        with:
+          name: e2e-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/e2e/
+          retention-days: 14
+      # Fallback for when the artifact service is out of reach: the failing
+      # test's own scratch dir, inline in the job log.
+      - name: Dump kept logs
+        if: failure()
+        run: |
+          for d in target/e2e/*/; do
+            echo "::group::$d"
+            for f in "$d"*; do
+              [ -f "$f" ] || continue
+              echo "--- $f (last 40 lines) ---"
+              tail -n 40 "$f"
+            done
+            echo "::endgroup::"
+          done
+      # Runs before the cache post-step, so the kept logs never enter the
+      # saved target dir.
+      - name: Prune e2e logs from the cached target dir
+        if: always()
+        run: rm -rf target/e2e
+
+  # cargo-deny-action is a Docker action, which the self-hosted runner (a
+  # container without a docker socket) can't run — the cargo-deny binary and
+  # the toolchain it needs for `cargo metadata` are baked into the image.
+  cargo-deny:
+    runs-on: [self-hosted, docker-ci]
+    steps:
+      - uses: actions/checkout@v7
+      - run: cargo deny check bans licenses sources
 
   format:
-    runs-on: ubuntu-24.04
-
+    runs-on: [self-hosted, docker-ci]
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Rustfmt
-        run: rustup component add rustfmt
+      - uses: actions/checkout@v7
       - name: Check Rustfmt
         run: cargo fmt -- --check
+      - name: Check Nixfmt
+        run: nix fmt -- --ci
 
   spell-check:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, docker-ci]
     steps:
-      - uses: actions/checkout@v4
-      - uses: crate-ci/typos@master
+      - uses: actions/checkout@v7
+      # typos binary baked into the runner image; reads typos.toml
+      - run: typos

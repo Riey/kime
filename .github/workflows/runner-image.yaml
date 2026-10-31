@@ -1,0 +1,37 @@
+name: Runner image
+
+# Rebuild the kime-gha-runner docker image whenever the files that define
+# the CI devshell change on develop, so the closure baked into the image
+# (see ci.yaml) tracks the repo. No runner restart needed: the ephemeral
+# docker-ci runners resolve :latest on every respawn, so each serves at
+# most one more job on the old image — and that job still works because
+# ci.yaml falls back to evaluating the repo flake when the baked copies
+# don't match.
+
+on:
+  push:
+    branches:
+      - "develop"
+    paths:
+      - flake.nix
+      - flake.lock
+      - shell.nix
+      - nix/**
+      # the rebuild script and the image definition live in the repo now
+      - ci/actions-runner-docker/**
+      - .github/workflows/runner-image.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: runner-image
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    # the trusted host runner: it has docker access and only ever runs
+    # code already merged to develop (or manually dispatched refs)
+    runs-on: [self-hosted, arch]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Rebuild kime-gha-runner with the current devshell
+        run: KIME_REPO="$GITHUB_WORKSPACE" ./ci/actions-runner-docker/build.sh
